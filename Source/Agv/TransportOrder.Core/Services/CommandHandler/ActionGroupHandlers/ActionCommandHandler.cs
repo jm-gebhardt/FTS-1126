@@ -1200,7 +1200,18 @@ public class ActionCommandHandler :
             return;
         }
         var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
-        //if action group was queueing order, set AGV free of queuing
+        //if action group was queueing order, remove from queue and set AGV free of queuing
+        if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && assignedAgv.IsQueueing)
+        {
+            var action = actionGroup.Actions.FirstOrDefault(a => !a.ShouldSkip && a.State != ActionState.Completed);
+            if (action?.Target.NodeId != null)
+            {
+                if (await _queueManager.RemoveAgvFromQueueEntry(assignedAgv.CorrelationId, action.Target.NodeId.Value))
+                {
+                    await context.Publish(new LeaveQueue(assignedAgv.CorrelationId));
+                }
+            }
+        }
         if (actionGroup.OrderId.Equals(QueuingOrderId))
         {
             assignedAgv.IsQueueing = false;
