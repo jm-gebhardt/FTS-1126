@@ -1085,6 +1085,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupQueued>();
         actionGroupCreatedEvent.CorrelationId.ShouldBe(actionGroup.CorrelationId);
         actionGroupCreatedEvent.ActionGroup.State.ShouldBe(ActionGroupState.Invalid);
 
@@ -1112,6 +1113,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
         fixture.IsActionGroupSaved(Times.Never());
     }
@@ -1130,6 +1132,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldHavePublishedAsync<Success>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
@@ -1147,6 +1150,7 @@ public class ActionCommandHandlerTest
         await fixture.PublishMessageAsync(new CreateActionGroup(fixture.Mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup)));
 
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
 
@@ -1164,6 +1168,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldNotHavePublishedAsync<Success>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
@@ -1182,6 +1187,7 @@ public class ActionCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
@@ -1201,6 +1207,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<QueueActionGroup>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupQueued>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupInvalid>();
     }
 

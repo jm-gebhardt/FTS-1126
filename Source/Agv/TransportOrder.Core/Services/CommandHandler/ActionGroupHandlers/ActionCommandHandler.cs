@@ -681,6 +681,10 @@ public class ActionCommandHandler :
                 actionGroupMessageContent.CorrelationId, "Order Queued", $"Order {actionGroupMessageContent.OrderId} has been queued",
                 new Dictionary<string, object?> { { LogLabels.OrderId, actionGroupMessageContent.OrderId } });
             await _bus.Publish(new ActionGroupChanged(actionGroupMessageContent, actionGroup.CorrelationId), cancellationToken);
+            if (updated)
+            {
+                await context.Publish(new ActionGroupQueued(actionGroupMessageContent, actionGroup.CorrelationId, actionGroup.AssignedAgv), context.CancellationToken);
+            }
         }
 
         if (actionGroupMessageContent.AssignedAgv != null && actionGroup.IsQueued)
