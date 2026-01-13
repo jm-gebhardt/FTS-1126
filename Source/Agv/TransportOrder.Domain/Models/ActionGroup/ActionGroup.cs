@@ -360,17 +360,20 @@ public class ActionGroup
     /// Sets the AssignedAgv of ActionGroup if not already assigned.
     /// </summary>
     /// <param name="agvToAssign">The agv to assign.</param>
+    /// <param name="force">Force assignment independent of whether it was previously assigned.</param>
     /// <exception cref="ActionGroupAlreadyAssignedException">If the action group was already assigned.</exception>
-    public void Assign(Guid agvToAssign)
+    public void Assign(Guid agvToAssign, bool force=false)
     {
         if (AssignedAgv == null)
         {
             AssignedAgv = agvToAssign;
+            return;
         }
-        else if (AssignedAgv != agvToAssign)
+        if (AssignedAgv != agvToAssign && !force)
         {
             throw new ActionGroupAlreadyAssignedException(this, agvToAssign);
         }
+        AssignedAgv = agvToAssign;
     }
 
     /// <summary>

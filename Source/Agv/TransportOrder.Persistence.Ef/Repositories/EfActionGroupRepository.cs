@@ -881,7 +881,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null, Guid? assignedAgv=null)
+    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null)
     {
         ordersToIgnore ??= [];
         await using var context = await _dbContextFactory.CreateDbContextAsync();
@@ -891,13 +891,12 @@ public class EfActionGroupRepository : IActionGroupRepository
                         && !ordersToIgnore.Contains(a.CorrelationId)
                         && a.CompletedDate == null
                         && a.StartedDate == null
-                        && a.AssignedAgv == assignedAgv
                         && a.Actions.Any(ac => ac.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate)
             .ToListAsync();
 
         return candidates.FirstOrDefault(a =>
-            a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
+            a.Actions.Any(ac => ac is { ActionType: ActionType.Pick, DoppelspielPartner: null } &&
                                 ((ac.Target.Node != null && ac.Target.Node.Id == pickNode.Id) ||
                                  ac.Target.StationOptions.Contains(pickNode.Name))));
     }
@@ -1016,6 +1015,14 @@ public class EfActionGroupRepository : IActionGroupRepository
              &&  (a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null) ||
                   a.Actions.Any(ac => ac.ActionType == ActionType.Pick && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null)))
             .AnyAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> IsActionGroupQueued(Guid correlationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var actionGroup = await context.Set<ActionGroup>().SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
+        return actionGroup?.IsQueued ?? false;
     }
 
     private async Task<IReadOnlyList<ActionGroup>> GetAgvActionGroupsInState(Guid agvCorrelationId, List<ActionGroupState> actionGroupStates)

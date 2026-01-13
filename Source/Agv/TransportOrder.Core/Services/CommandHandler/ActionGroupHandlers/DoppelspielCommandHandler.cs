@@ -214,14 +214,30 @@ public class DoppelspielCommandHandler(
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
             delayedOrder.SetDoppelspielpartner(actionGroupCorrelationId, ActionType.Pick, pickNode);
-            delayedOrder.Assign(agvCorrelationId);
+            delayedOrder.Assign(agvCorrelationId, true);
             actionGroup.SetDoppelspielpartner(delayedOrder.CorrelationId, ActionType.Drop);
             await actionGroupRepository.UpdateAsync(delayedOrder);
             await actionGroupRepository.UpdateAsync(actionGroup);
             await context.Publish(new QueueActionGroup(mapper.Map<ActionGroup>(delayedOrder), false));
+            await WaitUntilQueued(delayedOrder.CorrelationId);
             await context.RespondAsync(new DoppelspielPartnerQueued(delayedOrder.CorrelationId));
             logger.LogInformation("Queued order {HostOrder} with pick node {Node} as Doppelspielpartner for Order {DropOrder} during late Doppelspiel", delayedOrder.CorrelationId, pickNode, actionGroup.CorrelationId);
         });
+    }
+
+    private async Task WaitUntilQueued(Guid actionGroupCorrelationId)
+    {
+        const int tries = 3;
+        var delayBetweenTriesSec = TimeSpan.FromSeconds(5);
+        for (int i = 0; i < tries; i++)
+        {
+            bool isQueued = await actionGroupRepository.IsActionGroupQueued(actionGroupCorrelationId);
+            if (isQueued)
+            {
+                break;
+            }
+            await Task.Delay(delayBetweenTriesSec);
+        }
     }
 
     /// <inheritdoc/>
@@ -307,7 +323,7 @@ public class DoppelspielCommandHandler(
             await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, actionGroup.CorrelationId, null));
             return;
         }
-        var delayedOrder = await actionGroupRepository.GetNextPickForStation(action.Target.Node!, assignedAgv: actionGroup.AssignedAgv);
+        var delayedOrder = await actionGroupRepository.GetNextPickForStation(action.Target.Node!);
         if (delayedOrder == null)
         {
             logger.LogInformation("Order {OrderCorrelationId} has no next Doppelspiel pick at station {StationName}", actionGroup.CorrelationId, dropTarget.Name);
@@ -335,7 +351,7 @@ public class DoppelspielCommandHandler(
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
             delayedOrder.SetDoppelspielpartner(actionGroup.CorrelationId, ActionType.Pick, action.Target.Node!);
-            delayedOrder.Assign(actionGroup.AssignedAgv.GetValueOrDefault());
+            delayedOrder.Assign(actionGroup.AssignedAgv.GetValueOrDefault(), true);
             actionGroup.SetDoppelspielpartner(delayedOrder.CorrelationId, ActionType.Drop);
             await actionGroupRepository.UpdateAsync(delayedOrder);
             await actionGroupRepository.UpdateAsync(actionGroup);

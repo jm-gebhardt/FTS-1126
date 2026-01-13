@@ -371,9 +371,8 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="pickNode">The station id.</param>
     /// <param name="ordersToIgnore">The orders that should not be considered.</param>
-    /// <param name="assignedAgv">The agv that is assigned to it.</param>
     /// <returns></returns>
-    Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null, Guid? assignedAgv = null);
+    Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null);
 
     /// <summary>
     /// Get the next drop order that was registered for Doppelspiel, but has no matching partner.
@@ -398,4 +397,10 @@ public interface IActionGroupRepository
     /// <param name="agvCorrelationId">The correlation id of the AGV that is excluded from the check.</param>
     /// <returns>True, if there are host orders (of a different or unassigned Agv) to this station group already queued or running. This includes not running, but queued orders.</returns>
     Task<bool> HasActionGroupsForStationGroup(ICollection<Guid> stations, Guid? agvCorrelationId);
+
+    /// <summary>
+    /// True, if the given action group is queued.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the action group</param>
+    Task<bool> IsActionGroupQueued(Guid correlationId);
 }
