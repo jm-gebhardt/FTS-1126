@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Repositories;
@@ -17,8 +18,8 @@ public class EfGridCellStayRepositoryTest
     [TestInitialize]
     public void Setup()
     {
-        _grid = new Grid("1x1", 1, 1);
-        _map = new Map(Guid.NewGuid(), _grid.GridId, 1, 1, 2, 2);
+        _grid = GridGenerator.GenerateGrid();
+        _map = MapGenerator.GenerateMap(1, 1, 2, 2, null, _grid.GridId);
         _gridCell = new GridCell(1, 1, 1, 2, 1, 2, _grid);
         _mapGridCell = new MapGridCell(_map, _gridCell);
         _cellStay = new GridCellStay("agv".ToGuid(), _gridCell, DateTime.UtcNow, TimeSpan.FromSeconds(1));

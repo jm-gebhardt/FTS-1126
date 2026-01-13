@@ -1,10 +1,21 @@
-﻿namespace Gebhardt.Acc.Statistics.Messages.Requests;
+﻿using JetBrains.Annotations;
+using MassTransit;
+
+namespace Gebhardt.Acc.Statistics.Messages.Requests;
 
 /// <summary>
 /// Provides a request to get the heatmap for a map on a specific grid.
 /// </summary>
-public record GetHeatmap
+public record GetHeatmap : CorrelatedBy<Guid>
 {
+    /// <inheritdoc />
+    public Guid CorrelationId
+    {
+        get;
+        [UsedImplicitly]
+        init;
+    } = Guid.NewGuid();
+
     /// <summary>The id of the grid the position is on.</summary>
     public Guid GridId { get; init; }
 

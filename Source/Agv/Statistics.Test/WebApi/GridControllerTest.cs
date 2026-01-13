@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.ReadModels;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Gebhardt.Acc.Statistics.WebApi.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -12,7 +13,7 @@ public class GridControllerTest
     [TestMethod]
     public async Task GetGrids_ValidData_ReturnsGridDtos()
     {
-        var grids = new List<Grid> { new("a grid", 1, 1) { Maps = [new Map(Guid.Empty, Guid.Empty, 0, 0, 0, 0)] } };
+        var grids = new List<Grid> { new("a grid", 1, 1) { Maps = [MapGenerator.GenerateMap()] } };
         var fixture = new GridControllerTestFixture()
             .WithGrids(grids)
             .Build();
@@ -46,7 +47,7 @@ public class GridControllerTest
             .WithScalarHeatmap(positionFrequency)
             .Build();
 
-        var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetPositionFrequency(gridId, mapId, fromDate, toDate));
+        var positionFrequencyDto = await fixture.GetControllerResultValueAsync(c => c.GetPositionFrequency(gridId, mapId, fromDate, toDate, []));
 
         positionFrequencyDto.GridId.ShouldBe(gridId);
         positionFrequencyDto.MapId.ShouldBe(mapId);

@@ -6,6 +6,7 @@ using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Extensions;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Moq;
 
 namespace Gebhardt.Acc.Statistics.Test.Services.EventHandler;
@@ -17,7 +18,7 @@ public class AgvErrorEventHandlerTest
     public async Task HandleWithGridIds_PublishesAddError()
     {
         var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(), new AgvPosition(true, 1, 1, 0, 0), "agv");
-        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, new Grid("", 1, 1));
+        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, GridGenerator.GenerateGrid());
         GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
 
         await fixture.Handler.HandleTestMessageDirectly(msg, [gridCell]);

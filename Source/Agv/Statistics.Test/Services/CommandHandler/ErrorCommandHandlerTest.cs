@@ -4,6 +4,7 @@ using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.CommandHandler;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Services.CommandHandler;
@@ -14,7 +15,7 @@ public class ErrorCommandHandlerTest
     [TestMethod]
     public async Task ConsumeAddError_AgvError_AgvErrorAdded()
     {
-        var position = new GridCell(1, 1, 1m, 1m, 2m, 2m, new Grid("grid", 1, 1));
+        var position = new GridCell(1, 1, 1m, 1m, 2m, 2m, GridGenerator.GenerateGrid());
         MockDbConsumerTestFixture<ErrorCommandHandler> fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
             .WithGridCells([position]);
         var error = AgvErrorGenerator.GenerateAgvError();
@@ -26,7 +27,7 @@ public class ErrorCommandHandlerTest
     [TestMethod]
     public async Task ConsumeAddError_FieldViolation_AgvFieldViolationAdded()
     {
-        var position = new GridCell(1, 1, 1m, 1m, 2m, 2m, new Grid("grid", 1, 1));
+        var position = new GridCell(1, 1, 1m, 1m, 2m, 2m, GridGenerator.GenerateGrid());
         MockDbConsumerTestFixture<ErrorCommandHandler> fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
             .WithGridCells([position]);
         var fieldViolation = new FieldViolation(Guid.NewGuid(), DateTime.UtcNow);

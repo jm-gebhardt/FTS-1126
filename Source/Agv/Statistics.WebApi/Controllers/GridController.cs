@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Messages.Requests;
@@ -53,7 +52,7 @@ public class GridController : Controller
     [Route("/grids/")]
     public async Task<ActionResult<IEnumerable<GridDto>>> GetGrids()
     {
-        Response<GotGrids> response = await _getGridsClient.GetResponse<GotGrids>(new GetGrids());
+        Response<GotGrids> response = await _getGridsClient.GetResponse<GotGrids>(new GetGrids(Guid.NewGuid()));
         var grids = _mapper.Map<List<GridDto>>(response.Message.Grids);
         return Ok(grids);
     }
@@ -77,11 +76,12 @@ public class GridController : Controller
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
+    /// <param name="agvCorrelationIds">Optional. An array of AGV CorrelationIds to filter the results. If null or empty, results will include all AGVs without filtering.</param>
     /// <response code="200">Ok</response>
     /// <returns>Object containing mapId, gridId, and frequencies [[x-index, y-index, count], ...]</returns>
     [HttpGet]
     [Route("/grid/{gridId:guid}/positionFrequency")]
-    public async Task<ActionResult<ScalarHeatmapDto>> GetPositionFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate)
+    public async Task<ActionResult<ScalarHeatmapDto>> GetPositionFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds)
     {
         Response<GotStayDurations> response = await _getStayDurationsClient.GetResponse<GotStayDurations>(
             new GetStayDurations
@@ -90,7 +90,7 @@ public class GridController : Controller
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvCorrelationIds = []
+                AgvCorrelationIds = agvCorrelationIds ?? []
             });
         var positionFrequency = _mapper.Map<ScalarHeatmapDto>(response.Message.PositionFrequency);
         return Ok(positionFrequency);
@@ -103,13 +103,13 @@ public class GridController : Controller
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
-    /// <param name="agvSerialNumbers">Serial numbers of agvs (optional) for which the errors occured.</param>
+    /// <param name="agvCorrelationIds">Optional. An array of AGV CorrelationIds to filter the results. If null or empty, results will include all AGVs without filtering.</param>
     /// <param name="errorCode">The error code.</param>
     /// <response code="200">Ok</response>
     /// <returns>Object containing mapId, gridId, and frequencies [[x-index, y-index, count], ...]</returns>
     [HttpGet]
     [Route("/grid/{gridId:guid}/errorFrequency")]
-    public async Task<ActionResult<ScalarHeatmapDto>> GetErrorFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers, string? errorCode)
+    public async Task<ActionResult<ScalarHeatmapDto>> GetErrorFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds, string? errorCode)
     {
         Response<GotStayDurations> response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
             new GetErrorFrequencies
@@ -118,7 +118,7 @@ public class GridController : Controller
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvCorrelationIds = agvSerialNumbers.ToGuidArray(),
+                AgvCorrelationIds = agvCorrelationIds ?? [],
                 ErrorLevel = ErrorLevel.Fatal,
                 ErrorCode = errorCode
             }
@@ -134,13 +134,13 @@ public class GridController : Controller
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
-    /// <param name="agvSerialNumbers">Serial numbers of agvs (optional) for which the errors occured.</param>
+    /// <param name="agvCorrelationIds">Optional. An array of AGV CorrelationIds to filter the results. If null or empty, results will include all AGVs without filtering.</param>
     /// <param name="errorCode">The error code.</param>
     /// <response code="200">Ok</response>
     /// <returns>Object containing mapId, gridId, and frequencies [[x-index, y-index, count], ...]</returns>
     [HttpGet]
     [Route("/grid/{gridId:guid}/warningFrequency")]
-    public async Task<ActionResult<ScalarHeatmapDto>> GetWarningFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers, string? errorCode)
+    public async Task<ActionResult<ScalarHeatmapDto>> GetWarningFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds, string? errorCode)
     {
         Response<GotStayDurations> response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
             new GetErrorFrequencies
@@ -149,7 +149,7 @@ public class GridController : Controller
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvCorrelationIds = agvSerialNumbers.ToGuidArray(),
+                AgvCorrelationIds = agvCorrelationIds ?? [],
                 ErrorLevel = ErrorLevel.Warning,
                 ErrorCode = errorCode
             });
@@ -164,12 +164,12 @@ public class GridController : Controller
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
-    /// <param name="agvSerialNumbers">Serial numbers of agvs (optional) for which the errors occured.</param>
+    /// <param name="agvCorrelationIds">Optional. An array of AGV CorrelationIds to filter the results. If null or empty, results will include all AGVs without filtering.</param>
     /// <response code="200">Ok</response>
     /// <returns>Object containing mapId, gridId, and frequencies [[x-index, y-index, count], ...]</returns>
     [HttpGet]
     [Route("/grid/{gridId:guid}/safetyFieldViolationFrequency")]
-    public async Task<ActionResult<ScalarHeatmapDto>> GetFieldViolationFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers)
+    public async Task<ActionResult<ScalarHeatmapDto>> GetFieldViolationFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds)
     {
         Response<GotStayDurations> response = await _getFieldViolationFrequencyClient.GetResponse<GotStayDurations>(
             new GetFieldViolationFrequencies
@@ -178,7 +178,7 @@ public class GridController : Controller
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvCorrelationIds = agvSerialNumbers.ToGuidArray()
+                AgvCorrelationIds = agvCorrelationIds ?? []
             });
         var positionFrequency = _mapper.Map<ScalarHeatmapDto>(response.Message.PositionFrequency);
         return Ok(positionFrequency);
@@ -191,12 +191,12 @@ public class GridController : Controller
     /// <param name="mapId">The CorrelationId of the Map.</param>
     /// <param name="fromDate">The UTC from Date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to Date, only items with a less CreatedDate will be considered.</param>
-    /// <param name="agvSerialNumbers">Serial numbers of agvs (optional) for which the metrics were recorded.</param>
+    /// <param name="agvCorrelationIds">Optional. An array of AGV CorrelationIds to filter the results. If null or empty, results will include all AGVs without filtering.</param>
     /// <response code="200">Ok</response>
     /// <returns>Object containing mapId, gridId, and signal strength values [[x-index, y-index, dBm], ...]</returns>
     [HttpGet]
     [Route("/grid/{gridId:guid}/wifiSignalStrength")]
-    public async Task<ActionResult<ScalarHeatmapDto>> GetWifiSignalStrength([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, string[]? agvSerialNumbers)
+    public async Task<ActionResult<ScalarHeatmapDto>> GetWifiSignalStrength([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds)
     {
         Response<GotWifiSignalStrength> response = await _getWifiSignalStrengthClient.GetResponse<GotWifiSignalStrength>(
             new GetWifiSignalStrength
@@ -205,7 +205,7 @@ public class GridController : Controller
                 MapId = mapId,
                 FromDate = fromDate,
                 ToDate = toDate,
-                AgvCorrelationIds = agvSerialNumbers.ToGuidArray()
+                AgvCorrelationIds = agvCorrelationIds ?? []
             });
         var signalStrength = _mapper.Map<ScalarHeatmapDto>(response.Message.SignalStrength);
         return Ok(signalStrength);

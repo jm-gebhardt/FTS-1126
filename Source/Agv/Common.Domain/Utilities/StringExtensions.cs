@@ -57,6 +57,7 @@ public static class StringExtensions
         /// Converts an array of strings to an array of GUIDs by using the <see cref="ToGuid"/> method.
         /// If the input array is null, it treats it as an empty array.
         /// </summary>
+        [PublicAPI]
         public Guid[] ToGuidArray() => (stringArray ?? []).Select(s => s.ToGuid()).ToArray();
     }
 }

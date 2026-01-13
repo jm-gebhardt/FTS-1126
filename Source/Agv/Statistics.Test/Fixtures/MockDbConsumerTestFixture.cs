@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Statistics.Domain.Exceptions;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.ReadModels;
@@ -43,7 +44,7 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
 
     public MockDbConsumerTestFixture<TConsumer> WithGrids(List<Grid> grids)
     {
-        StatisticsDbMock.Setup(x => x.Grids.GetAll()).ReturnsAsync(grids);
+        StatisticsDbMock.Setup(x => x.Grids.GetGridsAsync()).ReturnsAsync(grids);
         _gridCellRepoMock.Setup(x => x.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>())).ReturnsAsync([]);
         StatisticsDbMock.Setup(x => x.Grids.ThrowIfNotExistAsync(It.IsAny<Guid>()))
             .Callback((Guid gridId) =>
@@ -77,6 +78,31 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
             .ReturnsAsync((decimal x, decimal y) => gridCells.Where(p =>
                     p.XMin <= x && p.XMax >= x && p.YMin <= y && p.YMax >= y)
                 .ToList());
+        return this;
+    }
+
+    public MockDbConsumerTestFixture<TConsumer> WithStayDurations(ScalarHeatmap heatMap)
+    {
+        StatisticsDbMock.Setup(x => x.GridCellStay.GetStayDurations(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<Guid[]>()))
+            .ReturnsAsync(heatMap);
+        return this;
+    }
+
+    public MockDbConsumerTestFixture<TConsumer> WithErrorOccurence(ScalarHeatmap heatMap)
+    {
+        StatisticsDbMock.Setup(x => x.GridAgvErrors.GetErrorOccurence(
+            It.IsAny<Guid>(),
+            It.IsAny<Guid>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<Guid[]>(),
+            It.IsAny<ErrorLevel>(),
+            It.IsAny<string?>())).ReturnsAsync(heatMap);
         return this;
     }
 

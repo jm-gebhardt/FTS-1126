@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Extensions;
-using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Extensions;
@@ -19,7 +19,7 @@ public class GridExtensionsTest
     {
         const decimal step = 1;
         const string name = "grid";
-        var grid = new Grid(name, step, step);
+        var grid = GridGenerator.GenerateGrid(name, step, step);
         grid.GridName.ShouldBe(name);
         grid.XStep.ShouldBe(step);
         grid.YStep.ShouldBe(step);

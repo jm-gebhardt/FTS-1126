@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Shouldly;
 using AgvError = Gebhardt.Acc.Statistics.Domain.Models.AgvError;
 
@@ -19,8 +20,8 @@ public class EfAgvErrorRepositoryTest
     [TestInitialize]
     public void Setup()
     {
-        _grid = new Grid("1x1", 1, 1);
-        _map = new Map(Guid.NewGuid(), _grid.GridId, 1, 1, 12, 12);
+        _grid = GridGenerator.GenerateGrid();
+        _map = MapGenerator.GenerateMap(1, 1, 12, 12, null, _grid.GridId);
         _gridCell = new GridCell(1, 1, 1, 1, 2, 2, _grid);
         _mapGridCell = new MapGridCell(_map, _gridCell);
     }

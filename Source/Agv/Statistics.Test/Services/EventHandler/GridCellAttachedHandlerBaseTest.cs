@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using Gebhardt.Acc.Statistics.Test.Models;
 using Shouldly;
 
@@ -12,7 +13,7 @@ public class GridCellAttachedHandlerBaseTest
     public async Task Consume_WithCachedPosition_CallsHandleAsync()
     {
         var message = new TestMessage();
-        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, new Grid("a grid", 1, 1));
+        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, GridGenerator.GenerateGrid());
 
         var fixture = new GridPositionAttachedTestHandlerTestFixture()
             .WithGridCells([gridCell]);

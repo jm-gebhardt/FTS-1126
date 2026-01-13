@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
+using Gebhardt.Acc.Statistics.Test.Helper;
 using JetBrains.Annotations;
 using Shouldly;
 
@@ -17,7 +18,7 @@ public class MapTest
     [DataRow(49, 71, false)]
     public void IsWithinMap_ReturnsBooleanValue(int xIndex, int yIndex, bool expected)
     {
-        var map = new Map(Guid.NewGuid(), Guid.NewGuid(), 15, 25, 48, 70);
+        var map = MapGenerator.GenerateMap( 15, 25, 48, 70);
         map.IsWithinMap(xIndex, yIndex).ShouldBe(expected);
     }
 }
