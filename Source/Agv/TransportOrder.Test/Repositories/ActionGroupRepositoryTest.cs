@@ -137,6 +137,67 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
+    public async Task UpdateAsync_WhenActionNodesAreReplaced_OldNodesAreRemovedAndNewNodesAreAdded()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .BuildAsync();
+
+        await fixture.AddNodesAsync(actionGroup, true);
+
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var initialNode1 = new GraphNode(Guid.NewGuid(), "InitialNode1");
+        var initialNode2 = new GraphNode(Guid.NewGuid(), "InitialNode2");
+        var initialNode3 = new GraphNode(Guid.NewGuid(), "InitialNode3");
+
+        await fixture.AddNodesAsync([initialNode1, initialNode2, initialNode3]);
+
+        pickAction.AgvActionNodes = new List<AgvActionNode>
+        {
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode1.Id, Index = 0, Node = initialNode1 },
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode2.Id, Index = 1, Node = initialNode2 },
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode3.Id, Index = 2, Node = initialNode3 }
+        };
+
+        await fixture.ActionGroupRepository.AddAsync(actionGroup);
+
+        var actionGroupBeforeUpdate = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
+        actionGroupBeforeUpdate.ShouldNotBeNull();
+        var pickActionBeforeUpdate = actionGroupBeforeUpdate.Actions.First(a => a.ActionType == ActionType.Pick);
+        pickActionBeforeUpdate.AgvActionNodes.Count.ShouldBe(3);
+        pickActionBeforeUpdate.AgvActionNodes.Select(n => n.NodeId).ShouldBe(new[] { initialNode1.Id, initialNode2.Id, initialNode3.Id });
+
+        var newNode1 = new GraphNode(Guid.NewGuid(), "NewNode1");
+        var newNode2 = new GraphNode(Guid.NewGuid(), "NewNode2");
+
+        await fixture.AddNodesAsync([newNode1, newNode2]);
+
+        pickAction.AgvActionNodes = new List<AgvActionNode>
+        {
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = newNode1.Id, Index = 0, Node = newNode1 },
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = newNode2.Id, Index = 1, Node = newNode2 }
+        };
+
+        await fixture.ActionGroupRepository.UpdateAsync(actionGroup);
+
+        var actionGroupAfterUpdate = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
+        actionGroupAfterUpdate.ShouldNotBeNull();
+        var pickActionAfterUpdate = actionGroupAfterUpdate.Actions.First(a => a.ActionType == ActionType.Pick);
+
+        pickActionAfterUpdate.AgvActionNodes.Count.ShouldBe(2);
+
+        List<Guid> nodeIds = pickActionAfterUpdate.AgvActionNodes.Select(n => n.NodeId).ToList();
+        nodeIds.ShouldContain(newNode1.Id);
+        nodeIds.ShouldContain(newNode2.Id);
+        nodeIds.ShouldNotContain(initialNode1.Id);
+        nodeIds.ShouldNotContain(initialNode2.Id);
+        nodeIds.ShouldNotContain(initialNode3.Id);
+
+        pickActionAfterUpdate.AgvActionNodes.First(n => n.NodeId == newNode1.Id).Index.ShouldBe(0);
+        pickActionAfterUpdate.AgvActionNodes.First(n => n.NodeId == newNode2.Id).Index.ShouldBe(1);
+    }
+
+    [TestMethod]
     [DataRow(ActionGroupState.Created, 2, 10)]
     [DataRow(ActionGroupState.Created, 0, 10)]
     [DataRow(ActionGroupState.Created, 10, 0)]

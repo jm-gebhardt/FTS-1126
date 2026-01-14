@@ -99,7 +99,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         if (await context.Set<ActionGroup>().AnyAsync(a => a.CorrelationId == actionGroup.CorrelationId))
         {
             await UpdateActionGroupAndActions(actionGroup, context);
-        RestoreNodes(actionGroup, savedNodes);
+            RestoreNodes(actionGroup, savedNodes);
             return true;
         }
         await context.AddAsync(actionGroup);
@@ -637,15 +637,33 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        context.Set<ActionGroup>().Update(actionGroup);
-        int result = await context.SaveChangesAsync();
-        _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
-        await context.Entry(actionGroup).ReloadAsync();
-        RestoreNodes(actionGroup, savedNodes);
-        _logger.LogDebug("Action group {ActionGroupCorrelationId} state after saving update {State}", actionGroup.CorrelationId, actionGroup.State);
-        foreach (var action in actionGroup.Actions)
+
+        await using var transaction = await context.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Snapshot);
+
+        try
         {
-            _logger.LogDebug("Action {ActionType} of group {ActionGroupCorrelationId} has DoppelspielPartner {Partner} and is registered {IsRegistered}", action.ActionType, actionGroup.CorrelationId, action.DoppelspielPartner, action.IsRegisteredForDoppelspiel);
+            var existing = await context.Set<ActionGroup>()
+                .FirstOrDefaultAsync(g => g.CorrelationId == actionGroup.CorrelationId);
+
+            if (existing != null)
+            {
+                context.Set<ActionGroup>().Remove(existing);
+            }
+
+            context.Set<ActionGroup>().Add(actionGroup);
+
+            int result = await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
+            await context.Entry(actionGroup).ReloadAsync();
+            RestoreNodes(actionGroup, savedNodes);
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
         }
     }
 
@@ -861,9 +879,9 @@ public class EfActionGroupRepository : IActionGroupRepository
             .ToListAsync();
 
         return candidates.Where(o =>
-            o.Actions.Any(a => a.ActionType == ActionType.Drop &&
-                               ((a.Target.Node != null && targets.Contains(a.Target.Node.Name)) ||
-                                targets.All(t => a.Target.StationOptions.Contains(t)))))
+                o.Actions.Any(a => a.ActionType == ActionType.Drop &&
+                                   ((a.Target.Node != null && targets.Contains(a.Target.Node.Name)) ||
+                                    targets.All(t => a.Target.StationOptions.Contains(t)))))
             .OrderBy(o => o.StartedDate)
             .ThenBy(o => o.ConsideredForDoppelspielDate).FirstOrDefault();
     }
@@ -874,9 +892,9 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .Where(a => !a.IsQueued
-            && a.CompletedDate == null
-            && a.StartedDate == null
-            && a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id)))
+                        && a.CompletedDate == null
+                        && a.StartedDate == null
+                        && a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id)))
             .OrderBy(a => a.CreatedDate).FirstOrDefaultAsync();
     }
 
@@ -913,8 +931,8 @@ public class EfActionGroupRepository : IActionGroupRepository
                         a.CompletedDate == null &&
                         a.StartedDate == null &&
                         a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
-                                           ac.IsRegisteredForDoppelspiel &&
-                                           ac.DoppelspielPartner == null))
+                                            ac.IsRegisteredForDoppelspiel &&
+                                            ac.DoppelspielPartner == null))
             .OrderBy(h => h.CreatedDate)
             .ToListAsync();
 
@@ -930,8 +948,8 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Where(a => a.CanRunDoppelspiel &&
                         a.CompletedDate == null &&
                         a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
-                                           ac.IsRegisteredForDoppelspiel &&
-                                           ac.DoppelspielPartner == null))
+                                            ac.IsRegisteredForDoppelspiel &&
+                                            ac.DoppelspielPartner == null))
             .OrderBy(h => h.ConsideredForDoppelspielDate)
             .ToListAsync();
 
@@ -963,10 +981,10 @@ public class EfActionGroupRepository : IActionGroupRepository
                         && a.CompletedDate == null
                         && a.StartedDate == null
                         && a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
-                                              ac.IsRegisteredForDoppelspiel &&
-                                              ac.DoppelspielPartner == null && 
-                                              ac.Target.DoppelspielMode != DoppelspielMode.Always &&
-                                              ac.Target.DoppelspielMode != DoppelspielMode.None))
+                                               ac.IsRegisteredForDoppelspiel &&
+                                               ac.DoppelspielPartner == null &&
+                                               ac.Target.DoppelspielMode != DoppelspielMode.Always &&
+                                               ac.Target.DoppelspielMode != DoppelspielMode.None))
             .OrderBy(h => h.CreatedDate)
             .ToListAsync();
 
@@ -984,7 +1002,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                         a.CorrelationId != orderToIgnore &&
                         a.CompletedDate == null &&
                         a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
-                                           ac.DoppelspielPartner == null))
+                                            ac.DoppelspielPartner == null))
             .OrderBy(h => h.ConsideredForDoppelspielDate)
             .ToListAsync();
 
@@ -1010,10 +1028,10 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .Where(a => a.IsQueued
-             && a.CompletedDate == null
-             && (a.AssignedAgv == null || a.AssignedAgv != agvCorrelationId)
-             &&  (a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null) ||
-                  a.Actions.Any(ac => ac.ActionType == ActionType.Pick && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null)))
+                        && a.CompletedDate == null
+                        && (a.AssignedAgv == null || a.AssignedAgv != agvCorrelationId)
+                        && (a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null) ||
+                            a.Actions.Any(ac => ac.ActionType == ActionType.Pick && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null)))
             .AnyAsync();
     }
 
