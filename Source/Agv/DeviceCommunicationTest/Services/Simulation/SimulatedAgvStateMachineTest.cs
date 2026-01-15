@@ -316,10 +316,9 @@ public class SimulatedAgvStateMachineTest
 
         var agvSaga = SimulatedAgvSagaGenerator.Generate(
             currentState: nameof(SimulatedAgvStateMachine.Idle),
-            currentAction:
-            moveAction,
-            agvGraph:
-            graph);
+            currentAction: moveAction,
+            agvGraph: graph,
+            simulationSpeed: 2);
         var correlationId = agvSaga.CorrelationId;
         var fixture = new SimulatedAgvStateMachineTestFixture(inactivityTimeout: TimeSpan.FromSeconds(6))
             .WithAgv(agvSaga)

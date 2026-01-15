@@ -27,4 +27,23 @@ public class EfStationRepository(IDbContextFactory<OrderTranslatorDbContext> con
         return await context.Set<Station>()
             .SingleOrDefaultAsync(s => s.Name == name);
     }
+
+    /// <inheritdoc cref="IStationRepository"/>
+    public async Task AddOrUpdateAsync(Station station)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync();
+        DbSet<Station> dbSet = context.Set<Station>();
+
+        var existingStation = await dbSet.FirstOrDefaultAsync(s => s.Name == station.Name);
+        if (existingStation == null)
+        {
+            dbSet.Add(station);
+        }
+        else
+        {
+            context.Entry(existingStation).CurrentValues.SetValues(station);
+        }
+
+        await context.SaveChangesAsync();
+    }
 }

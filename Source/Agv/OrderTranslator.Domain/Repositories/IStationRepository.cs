@@ -21,4 +21,10 @@ public interface IStationRepository: IRepository<Station>
     /// <param name="name">The station name.</param>
     /// <returns>The station.</returns>
     Task<Station?> GetStationByName(string name);
+
+    /// <summary>
+    /// Adds a new station or updates an existing one by name.
+    /// </summary>
+    /// <param name="station">The station to add or update.</param>
+    Task AddOrUpdateAsync(Station station);
 }

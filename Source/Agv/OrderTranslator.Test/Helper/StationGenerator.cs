@@ -20,18 +20,16 @@ public static class StationGenerator
         ICollection<string>? outputLanes = null
         )
     {
-        return new Station()
-        {
-            Name = name,
-            NeedsCargoReporting = needsCargoReporting,
-            NeedsPalletReporting = needsPalletReporting,
-            PickRouting = pickRouting ?? [],
-            DropRouting = dropRouting ?? [],
-            StationGroup = stationGroup ?? [],
-            PickDoppelspielMode = pickDoppelspielMode, 
-            DropDoppelspielMode = dropDoppelspielMode,
-            InputLanes = inputLanes ?? [],
-            OutputLanes = outputLanes ?? []
-        };
+        return new Station(
+            name,
+            needsCargoReporting,
+            needsPalletReporting,
+            pickDoppelspielMode,
+            dropDoppelspielMode,
+            inputLanes ?? [],
+            outputLanes ?? [],
+            pickRouting ?? [],
+            dropRouting ?? [],
+            stationGroup ?? []);
     }
 }

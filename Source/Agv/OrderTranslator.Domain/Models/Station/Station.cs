@@ -15,7 +15,7 @@ public class Station
     /// <summary>
     /// The id of the station.
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid Id { get; private set; }
 
     /// <summary>
     /// The name of the station
@@ -107,6 +107,14 @@ public class Station
     public Station()
     {
         Id = Guid.NewGuid();
+    }
+    
+    /// <summary>
+    /// Reset Id
+    /// </summary>
+    public void ResetId()
+    {
+        Id = Name.ToGuid();
     }
 }
 

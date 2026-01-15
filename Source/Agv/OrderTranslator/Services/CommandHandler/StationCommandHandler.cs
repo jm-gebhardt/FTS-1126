@@ -18,8 +18,9 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
     public async Task Consume(ConsumeContext<CreateStation> context)
     {
         var station = context.Message.Station;
+        station.ResetId();
 
-        await stationRepository.AddAsync(station);
-        logger.LogInformation("Station {Name} created", station.Name);
+        await stationRepository.AddOrUpdateAsync(station);
+        logger.LogInformation("Station {Name} created or updated", station.Name);
     }
 }
