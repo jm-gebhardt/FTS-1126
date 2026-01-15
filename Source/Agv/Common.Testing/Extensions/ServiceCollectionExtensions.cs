@@ -1,6 +1,5 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.Common.Testing.Extensions;
@@ -13,8 +12,6 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddDbContextFactory<TContext>(options =>
         {
             options.UseInMemoryDatabase((id == Guid.Empty ? Guid.NewGuid() : id).ToString());
-            options.ConfigureWarnings(warnings =>
-                warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning));
         });
         return serviceCollection;
     }

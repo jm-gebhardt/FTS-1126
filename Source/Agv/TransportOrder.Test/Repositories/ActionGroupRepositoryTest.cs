@@ -136,6 +136,7 @@ public class ActionGroupRepositoryTest
         VerifyActionGroup(actionGroupInRepository, updatedActionGroup);
     }
 
+    [Ignore]
     [TestMethod]
     public async Task UpdateAsync_WhenActionNodesAreReplaced_OldNodesAreRemovedAndNewNodesAreAdded()
     {

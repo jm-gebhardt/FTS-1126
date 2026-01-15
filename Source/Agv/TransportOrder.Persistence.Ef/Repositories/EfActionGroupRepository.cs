@@ -637,33 +637,15 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        await using var transaction = await context.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.Snapshot);
-
-        try
+        context.Set<ActionGroup>().Update(actionGroup);
+        int result = await context.SaveChangesAsync();
+        _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
+        await context.Entry(actionGroup).ReloadAsync();
+        RestoreNodes(actionGroup, savedNodes);
+        _logger.LogDebug("Action group {ActionGroupCorrelationId} state after saving update {State}", actionGroup.CorrelationId, actionGroup.State);
+        foreach (var action in actionGroup.Actions)
         {
-            var existing = await context.Set<ActionGroup>()
-                .FirstOrDefaultAsync(g => g.CorrelationId == actionGroup.CorrelationId);
-
-            if (existing != null)
-            {
-                context.Set<ActionGroup>().Remove(existing);
-            }
-
-            context.Set<ActionGroup>().Add(actionGroup);
-
-            int result = await context.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
-            await context.Entry(actionGroup).ReloadAsync();
-            RestoreNodes(actionGroup, savedNodes);
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
+            _logger.LogDebug("Action {ActionType} of group {ActionGroupCorrelationId} has DoppelspielPartner {Partner} and is registered {IsRegistered}", action.ActionType, actionGroup.CorrelationId, action.DoppelspielPartner, action.IsRegisteredForDoppelspiel);
         }
     }
 
