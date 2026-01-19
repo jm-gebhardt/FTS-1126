@@ -35,9 +35,9 @@ public static class AgvInformationGenerator
         string state = _agvStates[i];
         var correlationId = agvCorrelationId != Guid.Empty ? agvCorrelationId : agvSerialNumber.ToGuid();
         var actionGroupId = Guid.Empty;
-        var agvStatus = new AgvStatus(correlationId, order, state == "Busy", true, 25 * i, _chargingState[i], 48, _chargingState[i] ? 20 : -10, 20, false, _sources[i].ToGuid(), null, null, null, null, 42f, 30f);
-        var agvGraph = new AgvGraph(correlationId, GetNodes(), GetEdges());
-        var agvAction = new AgvAction($"Action#{agvSerialNumber}".ToGuid(), ActionType.Pick, "Drop5".ToGraphNode(), actionGroupId);
+        var agvStatus = AgvStatusGenerator.Generate(agvCorrelationId: correlationId, orderId: order, busy: state == "Busy", batteryCharge: 25 * i, charging: _chargingState[i], lastNodeName: _sources[i], totalDistance: 42f, totalLifetime: 30f);
+        var agvGraph = AgvGraphGenerator.Generate(GetNodes(), GetEdges(), correlationId);
+        var agvAction = AgvActionGenerator.GenerateAction(targetNodeId: "Drop5", actionType: ActionType.Pick, correlationId: $"Action#{agvSerialNumber}".ToGuid(), parentId: actionGroupId);
         var agvInformation = GetAgvInformation(agvStatus, agvGraph, agvAction);
         return agvInformation;
     }

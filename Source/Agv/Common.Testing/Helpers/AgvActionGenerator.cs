@@ -69,9 +69,14 @@ public static class AgvActionGenerator
     }
 
     [UsedImplicitly]
-    public static AgvAction GenerateChargeAction(string startNodeId = "CRG1", string targetNodeId = "CRG1", Guid? parentId = null)
+    public static AgvAction GenerateChargeAction(
+        string startNodeId = "CRG1",
+        string targetNodeId = "CRG1",
+        Guid? parentId = null,
+        Guid? actionId = null,
+        Dictionary<InfoToAgvKey, string>? infoToAgv = null)
     {
-        var action = new AgvAction(Guid.NewGuid(), ActionType.Charge, targetNodeId.ToGraphNode(), parentId ?? Guid.NewGuid())
+        var action = new AgvAction(actionId ?? Guid.NewGuid(), ActionType.Charge, targetNodeId.ToGraphNode(), parentId ?? Guid.NewGuid(), infoToAgv)
         {
             Nodes =
             [
@@ -97,6 +102,18 @@ public static class AgvActionGenerator
     }
 
     /// <summary>
+    /// Generates a move action to a coordinate target.
+    /// </summary>
+    /// <param name="target">The coordinate target position</param>
+    /// <param name="parentId"></param>
+    /// <param name="actionId">The correlation Id of the action. If null, a new Guid will be generated.</param>
+    /// <returns></returns>
+    public static AgvAction GenerateMoveToCoordinateAction(ActionTarget target, Guid? parentId = null, Guid? actionId = null)
+    {
+        return new AgvAction(actionId ?? Guid.NewGuid(), ActionType.Move, target, parentId ?? Guid.NewGuid());
+    }
+
+    /// <summary>
     /// Generates an action with the given parameters.
     /// </summary>
     /// <param name="startNodeId"></param>
@@ -105,13 +122,42 @@ public static class AgvActionGenerator
     /// <param name="numberOfNodes">Creates this number of nodes in total in the action. The nodes in between are taken from the availableNodes parameter</param>
     /// <param name="targetNodeId"></param>
     /// <param name="parentId"></param>
+    /// <param name="correlationId">The correlation Id of the action. If null, a new Guid will be generated.</param>
+    /// <param name="infoToAgv">Additional information to pass to the AGV</param>
+    /// <param name="nodes">The nodes of the route. If provided, numberOfNodes and startNodeId are ignored for node generation.</param>
+    /// <param name="edges">The edges of the route</param>
+    /// <param name="sequence">The sequence number of the action</param>
+    /// <param name="isSkipped">Whether the action should be skipped</param>
     /// <returns></returns>
-    public static AgvAction GenerateAction(string startNodeId = "N1", ActionType actionType = ActionType.Move, IEnumerable<GraphNode>? availableNodes = null, int numberOfNodes = 2, string targetNodeId = "Move-1", Guid? parentId = null)
+    public static AgvAction GenerateAction(
+        string startNodeId = "N1",
+        ActionType actionType = ActionType.Move,
+        IEnumerable<GraphNode>? availableNodes = null,
+        int numberOfNodes = 2,
+        string targetNodeId = "Move-1",
+        Guid? parentId = null,
+        Guid? correlationId = null,
+        Dictionary<InfoToAgvKey, string>? infoToAgv = null,
+        GraphNode[]? nodes = null,
+        Guid[]? edges = null,
+        int? sequence = null,
+        bool? isSkipped = null)
     {
-        var action = new AgvAction(Guid.NewGuid(), actionType, targetNodeId.ToGraphNode(), parentId ?? Guid.NewGuid())
+        var action = new AgvAction(correlationId ?? Guid.NewGuid(), actionType, targetNodeId.ToGraphNode(), parentId ?? Guid.NewGuid(), infoToAgv)
         {
-            Nodes = GetNodes(startNodeId, targetNodeId, numberOfNodes, availableNodes)
+            Nodes = nodes ?? GetNodes(startNodeId, targetNodeId, numberOfNodes, availableNodes),
+            Sequence = sequence ?? 0
         };
+
+        if (edges != null)
+        {
+            action.Edges = edges;
+        }
+
+        if (isSkipped.HasValue)
+        {
+            action.IsSkipped = isSkipped.Value;
+        }
 
         return action;
     }

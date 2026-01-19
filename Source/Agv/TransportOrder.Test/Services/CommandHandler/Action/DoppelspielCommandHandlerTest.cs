@@ -13,6 +13,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Moq;
 using Shouldly;
+using AgvStatusGenerator = Gebhardt.Acc.Common.Testing.Helpers.AgvStatusGenerator;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 
@@ -155,7 +156,7 @@ public class DoppelspielCommandHandlerTest
     [TestMethod]
     public async Task Consume_AgvLeftStation_DelayedOrderForStationGroup_StillAgvStationLimited_DoesNotPublishQueueActionGroup()
     {
-        var station = StationGenerator.GetPickDropStation("AP01",stationGroup: ["AP02".ToGuid()]);
+        var station = StationGenerator.GetPickDropStation("AP01", stationGroup: ["AP02".ToGuid()]);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false, destination: station.Name);
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
@@ -170,7 +171,7 @@ public class DoppelspielCommandHandlerTest
     [TestMethod]
     public async Task Consume_AgvLeftStation_NoDelayedOrderForStationGroup_DoesNotPublishQueueActionGroup()
     {
-        var station = StationGenerator.GetPickDropStation("AP01",  stationGroup: ["AP02".ToGuid()]);
+        var station = StationGenerator.GetPickDropStation("AP01", stationGroup: ["AP02".ToGuid()]);
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextDelayedDropForStations(null);
@@ -196,7 +197,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_AgvPassedDoppelspielTriggerPoint_NoActionGroupInMessage_DoesNotPublish()
     {
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var fixture = new DoppelspielCommandHandlerTestFixture();
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, null, [], [], "StationName");
@@ -214,7 +215,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_AgvPassedDoppelspielTriggerPoint_NoPickDropActionGroup_DoesNotPublish()
     {
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GenerateChargeActionGroup();
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
@@ -353,7 +354,7 @@ public class DoppelspielCommandHandlerTest
     {
         const string station = "PS01";
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -377,7 +378,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_AgvPassedDoppelspielTriggerPoint_ActionHasDifferentTarget_DoesNotPublish()
     {
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -402,7 +403,7 @@ public class DoppelspielCommandHandlerTest
     {
         const string station = "PS01";
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -428,7 +429,7 @@ public class DoppelspielCommandHandlerTest
     {
         const string station = "PS01";
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -456,7 +457,7 @@ public class DoppelspielCommandHandlerTest
     {
         const string station = "PS01";
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -482,7 +483,7 @@ public class DoppelspielCommandHandlerTest
         var station = StationGenerator.GetPickDropStation("PS01");
         var agv = AgvGenerator.GenerateBusyAgv();
         var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -491,7 +492,7 @@ public class DoppelspielCommandHandlerTest
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.None;
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
-                .WithStation(station)
+            .WithStation(station)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
 
@@ -516,7 +517,7 @@ public class DoppelspielCommandHandlerTest
         var station = StationGenerator.GetPickDropStation("PS01");
         var agv = AgvGenerator.GenerateBusyAgv();
         var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -525,7 +526,7 @@ public class DoppelspielCommandHandlerTest
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
-                .WithStation(station)
+            .WithStation(station)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
 
@@ -551,7 +552,7 @@ public class DoppelspielCommandHandlerTest
         var station = StationGenerator.GetPickDropStation("PS01");
         var agv = AgvGenerator.GenerateBusyAgv();
         var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -560,8 +561,8 @@ public class DoppelspielCommandHandlerTest
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
-                .WithStation(station)
-                .WithNextPickForStation(null)
+            .WithStation(station)
+            .WithNextPickForStation(null)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
 
@@ -587,7 +588,7 @@ public class DoppelspielCommandHandlerTest
         var station = StationGenerator.GetPickDropStation("PS01");
         var agv = AgvGenerator.GenerateBusyAgv();
         var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -602,9 +603,9 @@ public class DoppelspielCommandHandlerTest
             pickActionState: ActionState.Created, source: station.Name,
             dropActionState: ActionState.Created, destination: "AP01");
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
-                .WithStation(station)
-                .WithNextPickForStation(nextPickActionGroup)
-                .WithStationGroupLimit(false)
+            .WithStation(station)
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithStationGroupLimit(false)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
 
@@ -630,7 +631,7 @@ public class DoppelspielCommandHandlerTest
         var station = StationGenerator.GetPickDropStation("PS01");
         var agv = AgvGenerator.GenerateBusyAgv(batteryCharge: -100);
         var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -652,11 +653,11 @@ public class DoppelspielCommandHandlerTest
             dropActionState: ActionState.Created, destination: "AP01");
         unmatchPickActionGroup.RegisterDoppelspiel(ActionType.Pick);
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
-                .WithStation(station)
-                .WithNextPickForStation(nextPickActionGroup)
-                .WithUnmatchedPick(unmatchPickActionGroup)
-                .WithAgvMustCharge()
-                .WithStationGroupLimit(false)
+            .WithStation(station)
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithUnmatchedPick(unmatchPickActionGroup)
+            .WithAgvMustCharge()
+            .WithStationGroupLimit(false)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
 
@@ -683,7 +684,7 @@ public class DoppelspielCommandHandlerTest
         var station = StationGenerator.GetPickDropStation("PS01");
         var agv = AgvGenerator.GenerateBusyAgv();
         var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
-        var status = new AgvStatus() { CorrelationId = agvData.CorrelationId };
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.CorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
             assignedAgv: Guid.NewGuid(),
             handlingUnit: "HU",
@@ -699,10 +700,10 @@ public class DoppelspielCommandHandlerTest
             dropActionState: ActionState.Created, destination: "AP01");
         var nextPick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
-                .WithStation(station)
-                .WithAgvMustCharge(false)
-                .WithNextPickForStation(nextPickActionGroup)
-                .WithStationGroupLimit(true)
+            .WithStation(station)
+            .WithAgvMustCharge(false)
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithStationGroupLimit(true)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
 

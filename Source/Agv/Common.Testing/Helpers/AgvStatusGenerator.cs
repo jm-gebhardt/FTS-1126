@@ -7,28 +7,79 @@ public static class AgvStatusGenerator
 {
     public static AgvStatus Generate(
         Guid? agvCorrelationId = null,
-        string orderId = "order",
+        string? orderId = "order",
         bool busy = false,
+        bool automatic = true,
         double batteryCharge = 40,
         bool charging = false,
-        string? lastNodeId = null,
+        bool disturbed = false,
+        string? lastNodeName = null,
+        double batteryVoltage = 48,
+        double? batteryCurrent = null,
+        double batteryTemperature = 20,
+        DateTime? estimatedFullyChargedTime = null,
+        DateTime? lastBatteryReplacement = null,
         ICollection<string>? zoneIds = null,
-        ICollection<string>? stationIds = null
+        ICollection<string>? stationIds = null,
+        float totalDistance = 0,
+        float totalLifetime = 0
     )
     {
         return new AgvStatus(agvCorrelationId ?? Guid.NewGuid(),
             orderId,
             busy,
-            true,
+            automatic,
             batteryCharge,
             charging,
-            48,
-            charging ? 20 : -10,
-            20,
-            false,
-            lastNodeId?.ToGuid(),
-            null,
-            null,
-            zoneIds, stationIds);
+            batteryVoltage,
+            batteryCurrent ?? (charging ? 20 : -10),
+            batteryTemperature,
+            disturbed,
+            lastNodeName?.ToGuid(),
+            estimatedFullyChargedTime,
+            lastBatteryReplacement,
+            zoneIds,
+            stationIds,
+            totalDistance,
+            totalLifetime);
+    }
+
+    public static AgvStatus Generate(
+        Guid agvCorrelationId,
+        string? orderId,
+        bool busy,
+        bool automatic,
+        double batteryCharge,
+        bool charging,
+        bool disturbed,
+        Guid? lastNodeIdGuid = null,
+        double batteryVoltage = 48,
+        double? batteryCurrent = null,
+        double batteryTemperature = 20,
+        DateTime? estimatedFullyChargedTime = null,
+        DateTime? lastBatteryReplacement = null,
+        ICollection<string>? zoneIds = null,
+        ICollection<string>? stationIds = null,
+        float totalDistance = 0,
+        float totalLifetime = 0
+    )
+    {
+        return new AgvStatus(agvCorrelationId,
+            orderId,
+            busy,
+            automatic,
+            batteryCharge,
+            charging,
+            batteryVoltage,
+            batteryCurrent ?? (charging ? 20 : -10),
+            batteryTemperature,
+            disturbed,
+            lastNodeIdGuid,
+            estimatedFullyChargedTime,
+            lastBatteryReplacement,
+            zoneIds,
+            stationIds,
+            totalDistance,
+            totalLifetime);
     }
 }

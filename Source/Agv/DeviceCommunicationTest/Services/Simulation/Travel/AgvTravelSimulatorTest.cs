@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation.Travel;
 [TestClass]
 public class AgvTravelSimulatorTest
 {
-    private ( GraphNode[] nodes, Guid[]edges) GetArbitraryRoute(string targetNodeName, AgvGraph graph)
+    private static ( GraphNode[] nodes, Guid[]edges) GetArbitraryRoute(string targetNodeName, AgvGraph graph)
     {
         var edges = new List<Guid>();
         var targetNode = graph.Nodes.Single(n => n.Name == targetNodeName);
@@ -38,7 +38,7 @@ public class AgvTravelSimulatorTest
         return (nodes.ToArray(), edges.ToArray());
     }
 
-    private readonly AgvGraph _wikiExample = new(Guid.Empty,
+    private readonly AgvGraph _wikiExample = AgvGraphGenerator.Generate(
         new[]
         {
             NodeGenerator.GenerateNode(nodeName: "Nairobi", nodeType: AgvGraph.NodeType.PickDrop, x: 0f, y: 0f, z: 0f),

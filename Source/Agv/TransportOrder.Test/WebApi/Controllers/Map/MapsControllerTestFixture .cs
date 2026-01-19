@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Map;
 
@@ -80,7 +81,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             string orderId = _orders[i];
             var state = _states[i];
             var correlationId = _correlationIds[i];
-            var agvStatus = new AgvStatus(correlationId, orderId, true, true, 10, true, true);
+            var agvStatus = AgvStatusGenerator.Generate(correlationId, orderId, true, true, 10, true, true);
 
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);

@@ -47,7 +47,7 @@ using ActionProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.ActionProfile;
 using AgvData = Gebhardt.Acc.Common.Domain.Models.AgvData;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvPositionProfile = Gebhardt.Acc.TransportOrder.WebApi.Profiles.AgvPositionProfile;
-using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
+using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -153,7 +153,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             var state = States[i];
             string ip = Ips[i];
             var correlationId = GetGuid(agvSerialNumber);
-            var agvStatus = agvSerialNumber == "AGV003" ? null : new AgvStatus(correlationId, orderId, true, true, 10, true, true, "WAY3".ToGuid(), 2.5, 11.3, 20.5, null, null, null, null, 42, 24);
+            var agvStatus = agvSerialNumber == "AGV003" ? null : AgvStatusGenerator.Generate(correlationId, orderId, true, true, 10, true, true, lastNodeIdGuid: "WAY3".ToGuid(), batteryVoltage: 2.5, batteryCurrent: 11.3, batteryTemperature: 20.5, totalDistance: 42, totalLifetime: 24);
             var agvData = AgvDataGenerator.GenerateAgvData(correlationId: correlationId, ipV4Address: ip);
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv, false);

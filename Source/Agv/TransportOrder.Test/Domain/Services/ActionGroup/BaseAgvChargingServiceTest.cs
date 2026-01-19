@@ -23,7 +23,7 @@ public class BaseAgvChargingServiceTest
     private Agv CreateAgv(string serialNumber, int batteryCharge, bool charging)
     {
         var correlationId = serialNumber.ToGuid();
-        var agvStatus = new AgvStatus(correlationId, "", true, true, batteryCharge, charging, false);
+        var agvStatus = AgvStatusGenerator.Generate(correlationId, "", true, true, batteryCharge, charging, disturbed: false);
         var agv = AgvGenerator.GenerateRawAgv(correlationId, serialNumber, agvStatus);
         agv = AgvGenerator.SetAgvState(charging ? AgvState.Busy : AgvState.Idle, agv);
         return agv;

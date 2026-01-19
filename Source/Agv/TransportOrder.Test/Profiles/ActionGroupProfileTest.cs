@@ -16,8 +16,8 @@ public class ActionGroupProfileTest
         var correlationId = Guid.NewGuid();
         var actionGroup = new ActionGroup(correlationId, "orderId", new List<AgvAction>
         {
-            new(Guid.NewGuid(), ActionType.Drop, "D1".ToGraphNode(), correlationId) { Sequence = 1, IsSkipped = true },
-            new(Guid.NewGuid(), ActionType.Pick, "S1".ToGraphNode(), correlationId) { Sequence = 0 }
+            AgvActionGenerator.GenerateAction(targetNodeId: "D1", actionType: ActionType.Drop, parentId: correlationId, sequence: 1, isSkipped: true),
+            AgvActionGenerator.GenerateAction(targetNodeId: "S1", actionType: ActionType.Pick, parentId: correlationId, sequence: 0)
         }, ActionGroupCreator.Wms, isQueued: true);
         var mappedActionGroup = mapper.Map<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(actionGroup);
         mappedActionGroup.FirstNotStartedAction!.ActionType.ShouldBe(ActionType.Pick);
@@ -37,7 +37,7 @@ public class ActionGroupProfileTest
             new(Guid.NewGuid(), ActionType.Drop, "D1".ToGraphNode(), correlationId) { Sequence = 0 },
             new(Guid.NewGuid(), ActionType.Pick, targetNode: null, correlationId) { Sequence = 2 }
         }, ActionGroupCreator.Wms, isQueued: true);
-        
+
         var mappedActionGroup = mapper.Map<ActionGroup>(actionGroup);
         mappedActionGroup.Actions.Count.ShouldBe(2);
         mappedActionGroup.Actions.First(a => a.Sequence == 0).Target.Node.ShouldNotBeNull();

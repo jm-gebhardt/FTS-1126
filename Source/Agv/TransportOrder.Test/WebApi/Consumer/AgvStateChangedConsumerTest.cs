@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using MassTransit;
 using Moq;
+using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -25,7 +26,7 @@ public class AgvStateChangedConsumerTest
     public async Task Receiving_AgvStateChanged_WhenCurrentStateIsNotInitial_SendAgvStateChangedToAllClients(AgvState currentState, AgvState? previousState)
     {
         var currentNode = NodeGenerator.GenerateParkingNode();
-        var agvStatus = new AgvStatus(Guid.NewGuid(), null, false, true, 100.0d, false, false, currentNode.Id);
+        var agvStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, true, 100.0d, lastNodeIdGuid: currentNode.Id);
         var agv = new Agv(AgvSerialNumber.ToGuid(), Guid.NewGuid(), AgvSerialNumber, agvStatus);
         agv.SetOnline();
         agv = AgvGenerator.SetAgvState(currentState, agv, false);

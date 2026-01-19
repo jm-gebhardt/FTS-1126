@@ -2,6 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
+using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.Agv;
 
@@ -39,7 +40,7 @@ public class AgvTest
     [TestMethod]
     public void UpdateAgvStatus_WasNull_StatusUpdated()
     {
-        var status = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, totalDistance: 2.5f, totalLifetime: 4.3f);
+        var status = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, totalDistance: 2.5f, totalLifetime: 4.3f);
         var agv = new TransportOrder.Domain.Models.Agv.Agv();
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(status);
@@ -54,10 +55,10 @@ public class AgvTest
     public void UpdateAgvStatus_BatteryChanged_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
         const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeDischargingThreshold * 1.01d;
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, bool batteryChargeChanged, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -72,10 +73,10 @@ public class AgvTest
     public void UpdateAgvStatus_BatteryChangedAndVoltageCurrentTemperature_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, 10d, 30.5d, 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, batteryVoltage: 10d, batteryCurrent: 30.5d, batteryTemperature: 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
         const double noticeableBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeDischargingThreshold * 1.01d;
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, false, false, _lastNodeId, 15d, 35.5d, 25.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge - noticeableBatteryChange, lastNodeIdGuid: _lastNodeId, batteryVoltage: 15d, batteryCurrent: 35.5d, batteryTemperature: 25.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -89,10 +90,10 @@ public class AgvTest
     public void UpdateAgvStatus_VoltageChanged_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, 10d, 30.5d, 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, batteryVoltage: 10d, batteryCurrent: 30.5d, batteryTemperature: 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
         double newVoltage = TransportOrder.Domain.Models.Agv.Agv.BatteryVoltageThreshold * 1.01d + previousStatus.BatteryVoltage;
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, 100.0f, false, false, _lastNodeId, newVoltage, 30.5d, 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, 100.0f, lastNodeIdGuid: _lastNodeId, batteryVoltage: newVoltage, batteryCurrent: 30.5d, batteryTemperature: 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -119,10 +120,10 @@ public class AgvTest
     public void UpdateAgvStatus_CurrentChanged_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, 10d, 30.5d, 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, batteryVoltage: 10d, batteryCurrent: 30.5d, batteryTemperature: 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
         double newCurrent = TransportOrder.Domain.Models.Agv.Agv.BatteryCurrentIdleThreshold * 1.01d + previousStatus.BatteryCurrent;
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, 100.0f, false, false, _lastNodeId, 10d, newCurrent, 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, 100.0f, lastNodeIdGuid: _lastNodeId, batteryVoltage: 10d, batteryCurrent: newCurrent, batteryTemperature: 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -136,10 +137,10 @@ public class AgvTest
     public void UpdateAgvStatus_TemperatureChanged_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, 10d, 30.5d, 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, batteryVoltage: 10d, batteryCurrent: 30.5d, batteryTemperature: 20.2d, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
         double newTemperature = TransportOrder.Domain.Models.Agv.Agv.BatteryTemperatureThreshold * 1.01d + previousStatus.BatteryTemperature;
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, 100.0f, false, false, _lastNodeId, 10d, 30.5d, newTemperature, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, 100.0f, lastNodeIdGuid: _lastNodeId, batteryVoltage: 10d, batteryCurrent: 30.5d, batteryTemperature: newTemperature, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -153,10 +154,10 @@ public class AgvTest
     public void UpdateAgvStatus_BatteryLevelChangedInsignificantly_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, true, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, true, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
         const double insignificantBatteryChange = TransportOrder.Domain.Models.Agv.Agv.BatteryChargeDischargingThreshold * 0.99d;
-        var newStatus = new AgvStatus(agv.CorrelationId, "orderId", true, false, agv.AgvStatus!.BatteryCharge - insignificantBatteryChange, true, true, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, "orderId", true, false, agv.AgvStatus!.BatteryCharge - insignificantBatteryChange, true, true, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -175,9 +176,9 @@ public class AgvTest
     public void UpdateAgvStatus_LastNodeIdChanged_StatusUpdated()
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, lastNodeId: null, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: null, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -194,9 +195,9 @@ public class AgvTest
     public void UpdateAgvStatus_OperatingDataChangedSignificant_StatusUpdated(float oldDistance, float newDistance, float oldTimeLife, float newTimeLife)
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: oldDistance, totalLifetime: oldTimeLife);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: oldDistance, totalLifetime: oldTimeLife);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: newDistance, totalLifetime: newTimeLife);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: newDistance, totalLifetime: newTimeLife);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -213,9 +214,9 @@ public class AgvTest
     public void UpdateAgvStatus_OperatingDataChangedNotSignificant_StatusNotUpdated(float oldDistance, float newDistance, float oldTimeLife, float newTimeLife)
     {
         var now = DateTime.UtcNow;
-        var previousStatus = new AgvStatus(Guid.NewGuid(), null, false, false, 100.0d, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: oldDistance, totalLifetime: oldTimeLife);
+        var previousStatus = AgvStatusGenerator.Generate(Guid.NewGuid(), null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: oldDistance, totalLifetime: oldTimeLife);
         var agv = AgvGenerator.GenerateIdleAgv(previousStatus);
-        var newStatus = new AgvStatus(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: newDistance, totalLifetime: newTimeLife);
+        var newStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, agv.AgvStatus!.BatteryCharge, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: newDistance, totalLifetime: newTimeLife);
 
         (bool batteryStatusChanged, _, bool lastNodeIdChanged, bool operatingDataChanged) = agv.UpdateAgvStatus(newStatus);
 
@@ -223,7 +224,7 @@ public class AgvTest
         lastNodeIdChanged.ShouldBeFalse();
         operatingDataChanged.ShouldBeFalse();
         // CorrelationId is overwritten in GenerateIdleAgv
-        var compareStatus = new AgvStatus(agv.CorrelationId, null, false, false, 100.0d, false, false, _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: oldDistance, totalLifetime: oldTimeLife);
+        var compareStatus = AgvStatusGenerator.Generate(agv.CorrelationId, null, false, false, 100.0d, lastNodeIdGuid: _lastNodeId, estimatedFullyChargedTime: now, lastBatteryReplacement: now, totalDistance: oldDistance, totalLifetime: oldTimeLife);
         agv.AgvStatus.ShouldBe(compareStatus);
     }
 

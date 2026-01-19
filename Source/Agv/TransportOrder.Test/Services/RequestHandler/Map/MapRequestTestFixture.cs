@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Map;
 
@@ -85,7 +86,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
             string order = _orders[i];
             var state = _states[i];
             var correlationId = _correlationIds[i];
-            var agvStatus = new AgvStatus(correlationId, order, true, true, 10, true, true);
+            var agvStatus = AgvStatusGenerator.Generate(correlationId, order, true, true, 10, true, true);
 
             var agv = AgvGenerator.GenerateRawAgv(correlationId, agvSerialNumber, agvStatus);
             agv = AgvGenerator.SetAgvState(state, agv);
@@ -103,7 +104,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
         MapRepositoryMock
             .Setup(r => r.GetBackgroundImageAsync(background.CorrelationId))
             .ReturnsAsync(background.Image);
-        
+
         return this;
     }
 }

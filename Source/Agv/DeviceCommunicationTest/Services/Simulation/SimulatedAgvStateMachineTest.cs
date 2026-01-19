@@ -249,12 +249,14 @@ public class SimulatedAgvStateMachineTest
         if (moveActionToDropAction != null)
         {
             (ICollection<GraphNode> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar);
-            var updatedMoveAction = new AgvAction(moveAction.CorrelationId, moveActionToDropAction.ActionType, AgvGraphGenerator.DestinationFar, moveActionToDropAction.ParentId, moveActionToDropAction.InfoToAgv)
-            {
-                // Skip on node to simulate running AGV
-                Nodes = dropRoute.dropNodes.Skip(1).ToArray(),
-                Edges = dropRoute.dropEdges.Skip(1).ToArray()
-            };
+            var updatedMoveAction = AgvActionGenerator.GenerateAction(
+                correlationId: moveAction.CorrelationId,
+                actionType: moveActionToDropAction.ActionType,
+                targetNodeId: AgvGraphGenerator.DestinationFar.Name,
+                parentId: moveActionToDropAction.ParentId,
+                infoToAgv: moveActionToDropAction.InfoToAgv,
+                nodes: dropRoute.dropNodes.Skip(1).ToArray(),
+                edges: dropRoute.dropEdges.Skip(1).ToArray());
 
             // Start move action 
             await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
@@ -329,12 +331,14 @@ public class SimulatedAgvStateMachineTest
         if (moveActionToDropAction != null)
         {
             (ICollection<GraphNode> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar);
-            var updatedMoveAction = new AgvAction(moveAction.CorrelationId, moveActionToDropAction.ActionType, AgvGraphGenerator.DestinationFar, moveActionToDropAction.ParentId, moveActionToDropAction.InfoToAgv)
-            {
-                // Skip on node to simulate running AGV
-                Nodes = dropRoute.dropNodes.Skip(1).ToArray(),
-                Edges = dropRoute.dropEdges.Skip(1).ToArray()
-            };
+            var updatedMoveAction = AgvActionGenerator.GenerateAction(
+                correlationId: moveAction.CorrelationId,
+                actionType: moveActionToDropAction.ActionType,
+                targetNodeId: AgvGraphGenerator.DestinationFar.Name,
+                parentId: moveActionToDropAction.ParentId,
+                infoToAgv: moveActionToDropAction.InfoToAgv,
+                nodes: dropRoute.dropNodes.Skip(1).ToArray(),
+                edges: dropRoute.dropEdges.Skip(1).ToArray());
 
             // Start move action 
             await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(

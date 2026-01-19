@@ -7,9 +7,8 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 [TestClass]
 public abstract class AgvGraphTestData
 {
-    public AgvGraph Graph { get; } = new(Guid.Empty,
-        new[]
-        {
+    public AgvGraph Graph { get; } = AgvGraphGenerator.Generate(
+        [
             NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 0f, nodeName: "Nairobi"),
             NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 42f, 80f, nodeName: "Tokyo"),
             NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, 100f, nodeName: "Marseille"),
@@ -19,7 +18,7 @@ public abstract class AgvGraphTestData
             NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 200f, 92f, nodeName: "Rio"),
             NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, -50f, -50f, nodeName: "Oslo"),
             NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, -100f, -100f, nodeName: "LoneDestination")
-        },
+        ],
         new[]
         {
             GraphEdge.CreateDirect("Nairobi".ToGuid(), "Tokyo".ToGuid(), 70f),

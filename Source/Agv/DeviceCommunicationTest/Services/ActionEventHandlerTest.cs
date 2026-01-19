@@ -1,7 +1,7 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
@@ -22,13 +22,7 @@ public class ActionEventHandlerTest
             .WithVehicleOrderId(null);
         await fixture.AddAgv(agvInformation);
 
-        var actionCorrelationId = Guid.NewGuid();
-        const string orderId = "1234";
-        var orderCorrelationId = orderId.ToGuid();
-        const string toStationId = "Drop5";
-
-        // TODO: user generator
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId.ToGraphNode(), orderCorrelationId);
+        var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick);
         var message = new ActionAborted(agvCorrelationId, action);
 
         await fixture.TestHarness.Bus.Publish(message);
@@ -52,13 +46,7 @@ public class ActionEventHandlerTest
             .WithVehicleOrderId(vehicleOrderId);
         await fixture.AddAgv(agvInformation);
 
-        var actionCorrelationId = Guid.NewGuid();
-        const string orderId = "1234";
-        var orderCorrelationId = orderId.ToGuid();
-        const string toStationId = "Drop5";
-
-        // TODO: user generator
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId.ToGraphNode(), orderCorrelationId);
+        var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick);
         var message = new ActionAborted(agvCorrelationId, action);
 
         await fixture.TestHarness.Bus.Publish(message);
@@ -78,13 +66,7 @@ public class ActionEventHandlerTest
         MqttConsumerTestFixture<ActionAbortedConsumer> fixture = new ActionEventConsumerMqttFixture()
             .WithVehicleOrderId(null);
 
-        var actionCorrelationId = Guid.NewGuid();
-        const string orderId = "1234";
-        var orderCorrelationId = orderId.ToGuid();
-        const string toStationId = "Drop5";
-
-        // TODO: user generator
-        var action = new AgvAction(actionCorrelationId, ActionType.Pick, toStationId.ToGraphNode(), orderCorrelationId);
+        var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick);
         var correlationId = Guid.NewGuid();
         var message = new ActionAborted(correlationId, action);
 

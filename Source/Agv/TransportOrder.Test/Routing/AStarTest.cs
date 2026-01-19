@@ -31,7 +31,7 @@ public class AStarTest
 
     public AStarTest()
     {
-        _graph = new AgvGraph(Guid.Empty,
+        _graph = AgvGraphGenerator.Generate(
             new[]
             {
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 5f, nodeName: "1"),
@@ -123,11 +123,10 @@ public class AStarTest
             }
             ++y;
         }
-        _grid = new AgvGraph(Guid.Empty, nodes.ToArray(), edges.ToArray());
+        _grid = AgvGraphGenerator.Generate(nodes, edges);
 
-        _wikiExample = new AgvGraph(Guid.Empty,
-            new[]
-            {
+        _wikiExample = AgvGraphGenerator.Generate(
+            [
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 0f, nodeName: "Nairobi"),
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 42f, 80f, nodeName: "Tokyo"),
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, 100f, nodeName: "Marseille"),
@@ -135,7 +134,7 @@ public class AStarTest
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 104f, -10f, nodeName: "Denver"),
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 150f, 20f, nodeName: "Helsinki"),
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 200f, 92f, nodeName: "Rio")
-            },
+            ],
             new[]
             {
                 GraphEdge.CreateDirect("Nairobi".ToGuid(), "Tokyo".ToGuid(), 70f),
@@ -312,12 +311,11 @@ public class AStarTest
     [TestMethod]
     public void CalculateRoute_ReturnsNull_WhenRouteNotPlausible()
     {
-        var graph = new AgvGraph(Guid.Empty,
-            new[]
-            {
+        var graph = AgvGraphGenerator.Generate(
+            [
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop, 0f, 5f, nodeName: "1"),
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.Drop, 1f, 5f, nodeName: "2")
-            },
+            ],
             new[]
             {
                 GraphEdge.CreateDirect("1".ToGuid(), "2".ToGuid()),
@@ -404,8 +402,7 @@ public class AStarTest
             new(1, 1)
         });
 
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             new List<GraphNode>
             {
                 NodeGenerator.GenerateNode(x: 0, y: 0, nodeName: "01"),
@@ -422,8 +419,7 @@ public class AStarTest
                 GraphEdge.CreateBezier2("01".ToGuid(), "02Bez".ToGuid(), (float) bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("02Bez".ToGuid(), "03".ToGuid()),
                 GraphEdge.CreateDirect("02Bez".ToGuid(), "04".ToGuid(), (float) Math.Sqrt(2))
-            }
-        );
+            });
 
         var aStar = new AStar(graph, _slowTurnAgvData);
 
@@ -450,8 +446,7 @@ public class AStarTest
             new(1, 1)
         });
 
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             new List<GraphNode>
             {
                 NodeGenerator.GenerateNode(x: 0, y: 0, nodeName: "01"),
@@ -465,8 +460,7 @@ public class AStarTest
                 GraphEdge.CreateBezier2("01".ToGuid(), "Bez".ToGuid(), (float) bezier.GetLength(100), 1, 0),
                 GraphEdge.CreateDirect("Bez".ToGuid(), "03".ToGuid()),
                 GraphEdge.CreateDirect("Dir".ToGuid(), "03".ToGuid(), 0.1f)
-            }
-        );
+            });
 
         var aStar = new AStar(graph, _slowTurnAgvData);
 
@@ -512,8 +506,7 @@ public class AStarTest
             NodeGenerator.GenerateNode(x: 1, y: 2, nodeName: "03"),
             NodeGenerator.GenerateNode(x: 2, y: 2, nodeName: "04")
         };
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             nodes,
             [
                 GraphEdge.CreateDirect("01".ToGuid(), "02Dir".ToGuid(), (float) Math.Sqrt(2)),
@@ -535,8 +528,7 @@ public class AStarTest
                         new EdgeCoefficient(1.5, 2)
                     ],
                     [.. nodes])
-            ]
-        );
+            ]);
 
         var aStar = new AStar(graph, _slowTurnAgvData);
 
@@ -589,8 +581,7 @@ public class AStarTest
             NodeGenerator.GenerateNode(x: 2, y: 2, nodeName: "04"),
             NodeGenerator.GenerateNode(x: 1, y: 0, nodeName: "05")
         };
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             nodes,
             [
                 GraphEdge.CreateDirect("01".ToGuid(), "05".ToGuid()),
@@ -610,8 +601,7 @@ public class AStarTest
                         new EdgeCoefficient(1.5, 1.5)
                     ],
                     [.. nodes])
-            ]
-        );
+            ]);
 
         var aStar = new AStar(graph, _slowTurnAgvData);
 
@@ -663,8 +653,7 @@ public class AStarTest
             NodeGenerator.GenerateNode(x: 1, y: 2, nodeName: "03"),
             NodeGenerator.GenerateNode(x: 2, y: 2, nodeName: "04")
         };
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             nodes,
             [
                 GraphEdge.CreateDirect("01".ToGuid(), "02Dir".ToGuid(), (float) Math.Sqrt(2), "01-02Dir".ToGuid()),
@@ -673,8 +662,7 @@ public class AStarTest
                 AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.9, [.. nodes]),
                 GraphEdge.CreateDirect("02Slant".ToGuid(), "03".ToGuid(), id: "02Slant-03".ToGuid()),
                 AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.9, [.. nodes])
-            ]
-        );
+            ]);
 
         var aStar = new AStar(graph, _slowTurnAgvData);
 
@@ -729,8 +717,7 @@ public class AStarTest
             NodeGenerator.GenerateNode(x: 2, y: 2, nodeName: "04"),
             NodeGenerator.GenerateNode(x: 1, y: 0, nodeName: "05")
         };
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             nodes,
             [
                 GraphEdge.CreateDirect("01".ToGuid(), "05".ToGuid(), id: "01-05".ToGuid()),
@@ -740,8 +727,7 @@ public class AStarTest
                 GraphEdge.CreateDirect("05".ToGuid(), "02Dir".ToGuid(), id: "05-02Dir".ToGuid()),
                 AgvGraphGenerator.CreateSlantedEdge("01", "02Slant", west, 0.0, [.. nodes]),
                 AgvGraphGenerator.CreateSlantedEdge("02Slant", "04", west, 0.0, [.. nodes])
-            ]
-        );
+            ]);
 
         var id0102Slant = graph.Edges.Single(e => e.Variant == EdgeType.Slanted && e.ToNodeId == "02Slant".ToGuid()).Id;
         var id02Slant04 = graph.Edges.Single(e => e.Variant == EdgeType.Slanted && e.ToNodeId == "04".ToGuid()).Id;
@@ -816,8 +802,7 @@ public class AStarTest
             ],
             [.. nodes]);
 
-        var graph = new AgvGraph(
-            Guid.NewGuid(),
+        var graph = AgvGraphGenerator.Generate(
             nodes,
             [
                 directEdge0102,
@@ -825,8 +810,7 @@ public class AStarTest
                 directEdge0204,
                 polyPathEdge0102,
                 polyPathEdge0204
-            ]
-        );
+            ]);
 
         var aStar = new AStar(graph, _slowTurnAgvData);
 

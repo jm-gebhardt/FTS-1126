@@ -185,9 +185,12 @@ public static class AgvGraphGenerator
     /// <summary>
     /// Generates a default agv graph
     /// </summary>
-    public static AgvGraph CreateDefaultGraph(Guid? correlationId = null, ICollection<GraphNode>? nodes = null)
+    public static AgvGraph CreateDefaultGraph(Guid? correlationId = null,
+        ICollection<GraphNode>? nodes = null,
+        ICollection<GraphEdge>? edges = null,
+        AgvGraph.GraphUsability usability = AgvGraph.GraphUsability.Valid)
     {
-        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, Edges);
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes ?? Nodes, edges ?? Edges, usability);
     }
 
     public static AgvGraph CreateGraphWithAdditionalStationType(Guid? correlationId = null)
@@ -202,9 +205,12 @@ public static class AgvGraphGenerator
         return new AgvGraph(Guid.NewGuid(), nodes, Edges);
     }
 
-    public static AgvGraph Generate(IEnumerable<GraphNode> nodes, IEnumerable<GraphEdge> edges)
+    public static AgvGraph Generate(IEnumerable<GraphNode> nodes,
+        IEnumerable<GraphEdge> edges,
+        Guid? correlationId = null,
+        AgvGraph.GraphUsability usability = AgvGraph.GraphUsability.Valid)
     {
-        return new AgvGraph(Guid.NewGuid(), nodes.ToList(), edges.ToList());
+        return new AgvGraph(correlationId ?? Guid.NewGuid(), nodes.ToList(), edges.ToList(), usability);
     }
 
     public static GraphEdge CreateSlantedEdge(string fromNodeId, string toNodeId, float exitAngle, double exitDistance, GraphNode[] nodes)

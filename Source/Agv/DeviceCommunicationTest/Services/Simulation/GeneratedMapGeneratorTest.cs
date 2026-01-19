@@ -23,19 +23,17 @@ public class GeneratedMapGeneratorTest
          * |          |
          *  ------S2--    */
 
-        var graph = new AgvGraph(Guid.Empty,
-            new GraphNode[]
-            {
-                new("S1".ToGuid(), "S1") { Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-                new("D1".ToGuid(), "D1") { Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-                new("S2".ToGuid(), "S2") { Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-                new("D2".ToGuid(), "D2") { Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
-            },
-            new[]
-            {
+        var graph = AgvGraphGenerator.Generate(
+            [
+                new GraphNode("S1".ToGuid(), "S1") { Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
+                new GraphNode("D1".ToGuid(), "D1") { Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
+                new GraphNode("S2".ToGuid(), "S2") { Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
+                new GraphNode("D2".ToGuid(), "D2") { Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            ],
+            [
                 GraphEdge.CreateDirect("S1".ToGuid(), "D1".ToGuid(), 8.944f), // Just take the distance
                 GraphEdge.CreateDirect("S2".ToGuid(), "D2".ToGuid(), 10.77f) // as metric.
-            });
+            ]);
         var map = new GeneratedMapGenerator().Generate(Guid.NewGuid(), "name", graph);
         map.ImageData.ShouldNotBeNull();
         map.ImageData.Length.ShouldBeGreaterThan(0);
@@ -57,7 +55,7 @@ public class GeneratedMapGeneratorTest
          *            |          |
          *             ----------    */
 
-        var graph = new AgvGraph(Guid.Empty,
+        var graph = AgvGraphGenerator.Generate(
             [
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.Pick, 1000f, 1000f, nodeName: "S1"),
                 NodeGenerator.GenerateNode(AgvGraph.NodeType.Drop, 1010f, 1010f, nodeName: "D1")
@@ -76,7 +74,7 @@ public class GeneratedMapGeneratorTest
     [TestMethod]
     public void GenerateMap_EmptyGraph_Failure()
     {
-        var graph = new AgvGraph(Guid.Empty, Array.Empty<GraphNode>(), Array.Empty<GraphEdge>());
+        var graph = AgvGraphGenerator.Generate([], []);
         Should.Throw<InvalidOperationException>(() => new GeneratedMapGenerator().Generate(Guid.Empty, "", graph));
     }
 }

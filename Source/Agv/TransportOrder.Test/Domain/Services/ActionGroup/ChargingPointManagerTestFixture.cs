@@ -13,7 +13,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.Logging;
 using Moq;
-using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
+using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 
 // ReSharper disable MemberCanBePrivate.Global
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
@@ -79,7 +79,7 @@ public class ChargingPointManagerTestFixture
         GraphEdge[] edges = _edges;
         if (withChargerNode)
         {
-            AgvGraph = new AgvGraph(correlationId, nodes, edges);
+            AgvGraph = AgvGraphGenerator.Generate(nodes, edges, correlationId);
         }
         else
         {
@@ -87,7 +87,7 @@ public class ChargingPointManagerTestFixture
             edges = edges.Where(edge => !(nodes.FirstOrDefault(node => node.Id == edge.FromNodeId)?.IsCharger() ?? false)
                                         || !(nodes.FirstOrDefault(node => node.Id == edge.ToNodeId)?.IsCharger() ?? false)).ToArray();
 
-            AgvGraph = new AgvGraph(correlationId, nodes, edges);
+            AgvGraph = AgvGraphGenerator.Generate(nodes, edges, correlationId);
         }
 
         SetupGraphRepository(AgvGraph);
@@ -105,7 +105,7 @@ public class ChargingPointManagerTestFixture
         if (agv == null)
         {
             var correlationId = AgvSerialNumber.ToGuid();
-            var agvStatus = new AgvStatus(correlationId, "Idle", true, true, 10, false, false);
+            var agvStatus = AgvStatusGenerator.Generate(correlationId, "Idle", true, true, 10);
 
             Agv = AgvGenerator.GenerateRawAgv(correlationId, AgvSerialNumber, agvStatus);
         }

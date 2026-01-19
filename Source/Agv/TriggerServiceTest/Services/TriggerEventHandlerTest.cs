@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Messages.Triggers;
+﻿using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TriggerService.Services;
 using Gebhardt.Acc.TriggerService.Test.Fixtures;
@@ -14,7 +13,7 @@ public class TriggerEventHandlerTest
     {
         var fixture = new TriggerMessageConsumerTestFixture<TriggerEventHandler>();
 
-        var message = new AgvReachedTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), new AgvStatus(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
+        var message = new AgvReachedTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), AgvStatusGenerator.Generate(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
 
         await fixture.TestHarness.Bus.Publish(message);
 
@@ -39,7 +38,7 @@ public class TriggerEventHandlerTest
     {
         var fixture = new TriggerMessageConsumerTestFixture<TriggerEventHandler>();
 
-        var message = new AgvLeftTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), new AgvStatus(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
+        var message = new AgvLeftTrigger(Guid.NewGuid(), new Dictionary<string, ConfigurationParameter>(), AgvDataGenerator.GenerateAgvData(), AgvStatusGenerator.Generate(), AgvActionGenerator.GeneratePickDropActionGroup(), CargoGenerator.GenerateCargos(Guid.NewGuid()), [AgvErrorGenerator.GenerateAgvError()]);
 
         await fixture.TestHarness.Bus.Publish(message);
 
