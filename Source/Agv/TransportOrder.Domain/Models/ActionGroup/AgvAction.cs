@@ -53,10 +53,23 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     /// </summary>
     public GraphNode[] Nodes
     {
-        get => AgvActionNodes
-            .OrderBy(n => n.Index)
-            .Select(n => n.Node)
-            .ToArray();
+        get
+        {
+            if (!AgvActionNodes.Any())
+            {
+                return Array.Empty<GraphNode>();
+            }
+
+            var latestCreatedDate = AgvActionNodes
+                .Where(n => n.Index == 0)
+                .Max(n => n.CreatedDate);
+
+            return AgvActionNodes
+                .Where(n => n.CreatedDate >= latestCreatedDate)
+                .OrderBy(n => n.Index)
+                .Select(n => n.Node)
+                .ToArray();
+        }
 
         set
         {
@@ -64,13 +77,15 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
 
             for (int i = 0; i < value.Length; i++)
             {
+                var createdDate = DateTime.UtcNow;
                 var node = value[i];
                 AgvActionNodes.Add(new AgvActionNode
                 {
                     AgvActionId = CorrelationId,
                     NodeId = node.Id,
                     Node = node,
-                    Index = i
+                    Index = i,
+                    CreatedDate = createdDate
                 });
             }
         }

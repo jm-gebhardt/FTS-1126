@@ -49,6 +49,11 @@ public class AgvActionNode
     }
 
     /// <summary>
+    /// The time the node was created.
+    /// </summary>
+    public DateTime CreatedDate { get; init; }
+
+    /// <summary>
     /// The linked GraphNode.
     /// </summary>
     public GraphNode Node { get; set; } = null!;

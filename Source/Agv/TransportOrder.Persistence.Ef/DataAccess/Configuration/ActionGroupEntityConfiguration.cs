@@ -53,6 +53,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
                 n.HasKey(x => x.Id);
 
                 n.Property(x => x.Index);
+                n.Property(x => x.CreatedDate);
 
                 n.HasOne(x => x.Node)
                     .WithMany()

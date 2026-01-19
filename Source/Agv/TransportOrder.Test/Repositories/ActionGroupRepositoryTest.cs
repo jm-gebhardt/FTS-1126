@@ -136,7 +136,6 @@ public class ActionGroupRepositoryTest
         VerifyActionGroup(actionGroupInRepository, updatedActionGroup);
     }
 
-    [Ignore]
     [TestMethod]
     public async Task UpdateAsync_WhenActionNodesAreReplaced_OldNodesAreRemovedAndNewNodesAreAdded()
     {
@@ -153,11 +152,12 @@ public class ActionGroupRepositoryTest
 
         await fixture.AddNodesAsync([initialNode1, initialNode2, initialNode3]);
 
+        var createdDateBeforeUpdate = DateTime.UtcNow;
         pickAction.AgvActionNodes = new List<AgvActionNode>
         {
-            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode1.Id, Index = 0, Node = initialNode1 },
-            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode2.Id, Index = 1, Node = initialNode2 },
-            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode3.Id, Index = 2, Node = initialNode3 }
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode1.Id, Index = 0, Node = initialNode1, CreatedDate = createdDateBeforeUpdate },
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode2.Id, Index = 1, Node = initialNode2, CreatedDate = createdDateBeforeUpdate },
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = initialNode3.Id, Index = 2, Node = initialNode3, CreatedDate = createdDateBeforeUpdate }
         };
 
         await fixture.ActionGroupRepository.AddAsync(actionGroup);
@@ -166,6 +166,7 @@ public class ActionGroupRepositoryTest
         actionGroupBeforeUpdate.ShouldNotBeNull();
         var pickActionBeforeUpdate = actionGroupBeforeUpdate.Actions.First(a => a.ActionType == ActionType.Pick);
         pickActionBeforeUpdate.AgvActionNodes.Count.ShouldBe(3);
+        pickActionBeforeUpdate.Nodes.Length.ShouldBe(3);
         pickActionBeforeUpdate.AgvActionNodes.Select(n => n.NodeId).ShouldBe(new[] { initialNode1.Id, initialNode2.Id, initialNode3.Id });
 
         var newNode1 = new GraphNode(Guid.NewGuid(), "NewNode1");
@@ -173,10 +174,11 @@ public class ActionGroupRepositoryTest
 
         await fixture.AddNodesAsync([newNode1, newNode2]);
 
+        var createdDateAfterUpdate = DateTime.UtcNow;
         pickAction.AgvActionNodes = new List<AgvActionNode>
         {
-            new() { AgvActionId = pickAction.CorrelationId, NodeId = newNode1.Id, Index = 0, Node = newNode1 },
-            new() { AgvActionId = pickAction.CorrelationId, NodeId = newNode2.Id, Index = 1, Node = newNode2 }
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = newNode1.Id, Index = 0, Node = newNode1, CreatedDate = createdDateAfterUpdate },
+            new() { AgvActionId = pickAction.CorrelationId, NodeId = newNode2.Id, Index = 1, Node = newNode2, CreatedDate = createdDateAfterUpdate }
         };
 
         await fixture.ActionGroupRepository.UpdateAsync(actionGroup);
@@ -185,9 +187,10 @@ public class ActionGroupRepositoryTest
         actionGroupAfterUpdate.ShouldNotBeNull();
         var pickActionAfterUpdate = actionGroupAfterUpdate.Actions.First(a => a.ActionType == ActionType.Pick);
 
-        pickActionAfterUpdate.AgvActionNodes.Count.ShouldBe(2);
+        pickActionAfterUpdate.AgvActionNodes.Count.ShouldBe(5);
+        pickActionAfterUpdate.Nodes.Length.ShouldBe(2);
 
-        List<Guid> nodeIds = pickActionAfterUpdate.AgvActionNodes.Select(n => n.NodeId).ToList();
+        List<Guid> nodeIds = pickActionAfterUpdate.Nodes.Select(n => n.Id).ToList();
         nodeIds.ShouldContain(newNode1.Id);
         nodeIds.ShouldContain(newNode2.Id);
         nodeIds.ShouldNotContain(initialNode1.Id);
