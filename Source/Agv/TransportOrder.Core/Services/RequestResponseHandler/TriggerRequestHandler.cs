@@ -21,12 +21,15 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 [UsedImplicitly]
 public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphRepository graphRepository, IMapRepository mapRepository, IBus bus, ILogger<TriggerRequestHandler> logger) :
     IConsumer<GetTriggers>,
+    IConsumer<GetDeletedTriggers>,
     IConsumer<AssignTriggerToLocation>,
     IConsumer<TryRemoveTriggerLocation>,
     IConsumer<GetTrigger>,
     IConsumer<TryUpdateDefaultConfigurationParameter>,
     IConsumer<TryUpdateLocationConfigurationParameter>,
-    IConsumer<TryResetLocationConfigurationParameter>
+    IConsumer<TryResetLocationConfigurationParameter>,
+    IConsumer<TryMarkTriggerForDeletion>,
+    IConsumer<TryRestoreTrigger>
 {
     /// <summary>
     /// Handles the <see cref="GetTriggers"/> request.
@@ -35,6 +38,15 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     {
         ICollection<Trigger> triggers = await triggerRepository.GetTriggers();
         await context.RespondAsync(new GotTriggers(triggers));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="GetDeletedTriggers"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<GetDeletedTriggers> context)
+    {
+        ICollection<Trigger> triggers = await triggerRepository.GetDeletedTriggers();
+        await context.RespondAsync(new GotDeletedTriggers(triggers));
     }
 
     /// <summary>
@@ -149,6 +161,32 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         var triggerId = context.Message.TriggerId;
         var trigger = await triggerRepository.GetById(triggerId);
         await context.RespondAsync(new GotTrigger(trigger));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryMarkTriggerForDeletion"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryMarkTriggerForDeletion> context)
+    {
+        var triggerId = context.Message.TriggerId;
+        await triggerRepository.GetById(triggerId);
+        await bus.Publish(new MarkTriggerForDeletion(triggerId));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="TryRestoreTrigger"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TryRestoreTrigger> context)
+    {
+        var triggerId = context.Message.TriggerId;
+        var trigger = await triggerRepository.GetById(triggerId, includeDeleted: true);
+        if (!trigger.IsDeleted)
+        {
+            throw new TriggerNotDeletedException(triggerId);
+        }
+        await bus.Publish(new RestoreTrigger(triggerId));
+        await context.RespondAsync(new Success());
     }
 
     /// <summary>

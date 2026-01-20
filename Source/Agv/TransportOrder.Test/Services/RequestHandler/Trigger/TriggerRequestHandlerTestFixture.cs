@@ -58,11 +58,17 @@ public class TriggerRequestHandlerTestFixture<TMessage> : MediatorTestFixture<TM
     public TriggerRequestHandlerTestFixture<TMessage> WithTriggers(ICollection<TransportOrder.Domain.Models.Trigger.Trigger> triggers)
     {
         _triggerRepository.Setup(x => x.GetTriggers()).ReturnsAsync(triggers);
-        _triggerRepository.Setup(x => x.GetById(It.IsAny<Guid>())).ReturnsAsync((Guid id) =>
+        _triggerRepository.Setup(x => x.GetById(It.IsAny<Guid>(), It.IsAny<bool>())).ReturnsAsync((Guid id, bool _) =>
         {
             var trigger = triggers.SingleOrDefault(t => t.Id == id);
             return trigger ?? throw new TriggerNotFoundException(id);
         });
+        return this;
+    }
+
+    public TriggerRequestHandlerTestFixture<TMessage> WithDeletedTriggers(ICollection<TransportOrder.Domain.Models.Trigger.Trigger> deletedTriggers)
+    {
+        _triggerRepository.Setup(x => x.GetDeletedTriggers()).ReturnsAsync(deletedTriggers);
         return this;
     }
 

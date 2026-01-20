@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
@@ -8,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Shouldly;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -19,8 +19,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         await fixture.Repository.AddOrUpdate(trigger, true);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
@@ -39,8 +38,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         await fixture.Repository.AddOrUpdate(trigger, true);
         var addedTrigger = await fixture.Repository.GetById(trigger.Id);
@@ -59,8 +57,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         //Add trigger with location
         await fixture.AddAsync(trigger);
@@ -84,8 +81,7 @@ public class EfTriggerRepositoryTest
 
         var nodeToUse = "WP-0080".ToGraphNode();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         //Add trigger with location
         await fixture.AddAsync(trigger);
@@ -107,8 +103,8 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
+
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -137,8 +133,8 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
+
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -168,8 +164,8 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
+
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -198,17 +194,16 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         await fixture.AddAsync(trigger);
 
         const string updatedValue = "new";
-        trigger.UpdateDefaultConfigurationParameter(parameter.Name, updatedValue);
+        trigger.UpdateDefaultConfigurationParameter("parameter name", updatedValue);
         await fixture.Repository.Update(trigger, true);
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
-        updatedTrigger.ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue);
+        updatedTrigger.ConfigurationParameters.Single(c => c.Name == "parameter name").Value.ShouldBe(updatedValue);
     }
 
     [TestMethod]
@@ -216,8 +211,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -242,7 +236,7 @@ public class EfTriggerRepositoryTest
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
-        updatedTrigger.Locations.First(l => l.Id == addedLocation.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue);
+        updatedTrigger.Locations.First(l => l.Id == addedLocation.Id).ConfigurationParameters.Single(c => c.Name == "parameter name").Value.ShouldBe(updatedValue);
     }
 
     [TestMethod]
@@ -250,8 +244,7 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -287,8 +280,8 @@ public class EfTriggerRepositoryTest
 
         var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
         updatedTrigger.ShouldBeEquivalentTo(trigger);
-        updatedTrigger.Locations.First(l => l.Id == addedLocation1.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue1);
-        updatedTrigger.Locations.First(l => l.Id == addedLocation2.Id).ConfigurationParameters.Single(c => c.Name == parameter.Name).Value.ShouldBe(updatedValue2);
+        updatedTrigger.Locations.First(l => l.Id == addedLocation1.Id).ConfigurationParameters.Single(c => c.Name == "parameter name").Value.ShouldBe(updatedValue1);
+        updatedTrigger.Locations.First(l => l.Id == addedLocation2.Id).ConfigurationParameters.Single(c => c.Name == "parameter name").Value.ShouldBe(updatedValue2);
     }
 
     [TestMethod]
@@ -299,13 +292,12 @@ public class EfTriggerRepositoryTest
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var triggers = new List<Trigger>()
+        var triggers = new List<Trigger>
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(name: "1 trigger"),
+            TriggerGenerator.CreateTrigger(name: "2 trigger"),
+            TriggerGenerator.CreateTrigger(name: "3 trigger"),
+            TriggerGenerator.CreateTrigger(name: "4 trigger")
         };
         triggers[0].AddLocation(nodeToUse, null, null);
         triggers[1].AddLocation(otherNode, null, null);
@@ -329,13 +321,12 @@ public class EfTriggerRepositoryTest
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var triggers = new List<Trigger>()
+        var triggers = new List<Trigger>
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(name: "1 trigger"),
+            TriggerGenerator.CreateTrigger(name: "2 trigger"),
+            TriggerGenerator.CreateTrigger(name: "3 trigger"),
+            TriggerGenerator.CreateTrigger(name: "4 trigger")
         };
         triggers[0].AddLocation(otherNode, null, null);
         triggers[1].AddLocation(otherNode, null, null);
@@ -357,13 +348,12 @@ public class EfTriggerRepositoryTest
         var otherNode = "WP-0009".ToGraphNode();
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(name: "1 trigger"),
+            TriggerGenerator.CreateTrigger(name: "2 trigger"),
+            TriggerGenerator.CreateTrigger(name: "3 trigger"),
+            TriggerGenerator.CreateTrigger(name: "4 trigger")
         };
         triggers[1].AddLocation(otherNode, null, null);
         triggers[2].AddLocation(otherNode, null, null);
@@ -386,13 +376,12 @@ public class EfTriggerRepositoryTest
 
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var triggers = new List<Trigger>()
+        var triggers = new List<Trigger>
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "4 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(name: "1 trigger"),
+            TriggerGenerator.CreateTrigger(name: "2 trigger"),
+            TriggerGenerator.CreateTrigger(name: "3 trigger"),
+            TriggerGenerator.CreateTrigger(name: "4 trigger")
         };
         triggers[0].AddLocation(nodeToUse, null, null);
         triggers[1].AddLocation(otherNode, null, null);
@@ -416,11 +405,10 @@ public class EfTriggerRepositoryTest
         const string updatedValue = "new value";
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger()
         };
         triggers[0].AddLocation(nodeToUse, null, null);
         triggers[1].AddLocation(nodeToUse, null, null);
@@ -443,9 +431,8 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
-        await fixture.AddAsync(trigger);
+        var trigger = TriggerGenerator.CreateTrigger();
+        await fixture.AddTriggerAsync(trigger);
 
         await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.GetById("unknown".ToGuid()));
     }
@@ -455,9 +442,8 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
-
+        var parameter = TriggerGenerator.CreateParameter();
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.Update(trigger, true));
     }
 
@@ -466,14 +452,13 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger()
         };
-
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -502,12 +487,12 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger()
         };
 
         ICollection<PolygonPoint> polygon =
@@ -537,14 +522,13 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger()
         };
-
         ICollection<PolygonPoint> polygon =
         [
             new(1, 1, 0),
@@ -571,12 +555,11 @@ public class EfTriggerRepositoryTest
     {
         await using var fixture = new EfTriggerRepositoryTestFixture();
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
         var triggers = new List<Trigger>()
         {
-            new(Guid.NewGuid(), "urn", "1 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "2 trigger", "version", "description", null, [parameter]),
-            new(Guid.NewGuid(), "urn", "3 trigger", "version", "description", null, [parameter])
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger(),
+            TriggerGenerator.CreateTrigger()
         };
 
         ICollection<PolygonPoint> polygon =
@@ -599,5 +582,43 @@ public class EfTriggerRepositoryTest
         ICollection<Location> locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
         locations.Count.ShouldBe(1);
         locations.First().TriggerId.ShouldBe(triggers[2].Id);
+    }
+
+    [TestMethod]
+    public async Task GetById_SoftDeletedTrigger_ThrowsException()
+    {
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+        var trigger = TriggerGenerator.CreateTrigger(isDeleted: true);
+        await fixture.AddTriggerAsync(trigger);
+
+        await Should.ThrowAsync<TriggerNotFoundException>(fixture.Repository.GetById(trigger.Id));
+    }
+
+    [TestMethod]
+    public async Task Update_RestoreATrigger_UpdatesIsDeleted()
+    {
+        var trigger = TriggerGenerator.CreateTrigger(isDeleted: true);
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+        await fixture.AddTriggerAsync(trigger);
+
+        var updatedTrigger = await fixture.Repository.GetById(trigger.Id, true);
+        updatedTrigger.IsDeleted = false;
+        await fixture.Repository.Update(updatedTrigger, true);
+        var updatedTriggerFromDb = await fixture.Repository.GetById(trigger.Id);
+        updatedTriggerFromDb.IsDeleted.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Update_DeleteATrigger_UpdatesIsDeleted()
+    {
+        var trigger = TriggerGenerator.CreateTrigger(isDeleted: false);
+        await using var fixture = new EfTriggerRepositoryTestFixture();
+        await fixture.AddTriggerAsync(trigger);
+
+        var updatedTrigger = await fixture.Repository.GetById(trigger.Id);
+        updatedTrigger.IsDeleted = true;
+        await fixture.Repository.Update(updatedTrigger, true);
+        var updatedTriggerFromDb = await fixture.Repository.GetById(trigger.Id, true);
+        updatedTriggerFromDb.IsDeleted.ShouldBeTrue();
     }
 }

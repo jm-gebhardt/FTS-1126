@@ -24,12 +24,19 @@ public interface ITriggerRepository
     Task<ICollection<Trigger>> GetTriggers();
 
     /// <summary>
+    /// Get all deleted triggers.
+    /// </summary>
+    /// <returns>A collection of deleted triggers.</returns>
+    Task<ICollection<Trigger>> GetDeletedTriggers();
+
+    /// <summary>
     /// Get a trigger by its id.
     /// </summary>
     /// <param name="triggerId">The trigger id.</param>
+    /// <param name="includeDeleted">Whether to include soft-deleted triggers.</param>
     /// <returns>The trigger.</returns>
     /// <exception cref="TriggerNotFoundException">Thrown when the trigger was not found using this id.</exception>
-    Task<Trigger> GetById(Guid triggerId);
+    Task<Trigger> GetById(Guid triggerId, bool includeDeleted = false);
 
     /// <summary>
     /// Update a trigger.

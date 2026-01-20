@@ -43,6 +43,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             FilterDtoParserException => HttpStatusCode.UnprocessableEntity,
             FilterParserException => HttpStatusCode.BadRequest,
             FilterExecutionException => HttpStatusCode.BadRequest,
+            TriggerNotDeletedException => HttpStatusCode.BadRequest,
             _ => HttpStatusCode.InternalServerError
         };
 

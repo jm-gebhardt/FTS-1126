@@ -48,6 +48,8 @@ public class TriggerControllerTestFixture : MockRequestClientControllerTestFixtu
         AddRequestClient<TryUpdateDefaultConfigurationParameter, Success>(() => new Success());
         AddRequestClient<TryUpdateLocationConfigurationParameter, Success>(() => new Success());
         AddRequestClient<TryResetLocationConfigurationParameter, Success>(() => new Success());
+        AddRequestClient<TryMarkTriggerForDeletion, Success>(() => new Success());
+        AddRequestClient<TryRestoreTrigger, Success>(() => new Success());
     }
 
     public new TriggerControllerTestFixture Build()

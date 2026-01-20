@@ -17,7 +17,7 @@ public class TriggerConfigurator(ITriggerManager triggerManager, IBus bus, Trigg
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (config.TriggerReloadIntervalMs < 0)
-        { 
+        {
             logger.LogInformation("Loading triggers only once");
             await LoadTriggers(stoppingToken);
             return;

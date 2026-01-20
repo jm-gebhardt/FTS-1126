@@ -20,6 +20,8 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper mapper, ILogger<TriggerCommandHandler> logger) :
     IConsumer<CreateTrigger>,
+    IConsumer<MarkTriggerForDeletion>,
+    IConsumer<RestoreTrigger>,
     IConsumer<AddTriggerLocation>,
     IConsumer<RemoveTriggerLocation>,
     IConsumer<UpdateDefaultConfigurationParameter>,
@@ -35,9 +37,18 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
         ICollection<ConfigurationParameter> configurationParameters = context.Message.ConfigurationParameters;
         var properties = context.Message.Properties;
         Trigger? existingTrigger = null;
+
         try
         {
-            existingTrigger = await triggerRepository.GetById(properties.Id);
+            var triggerIncludingDeleted = await triggerRepository.GetById(properties.Id, includeDeleted: true);
+
+            if (triggerIncludingDeleted.IsDeleted)
+            {
+                logger.LogWarning("Skipping creation of trigger {Name} (ID: {TriggerId}), as trigger was previously marked for deletion", properties.DisplayName, properties.Id);
+                return;
+            }
+
+            existingTrigger = triggerIncludingDeleted;
         }
         catch (TriggerNotFoundException)
         {
@@ -55,6 +66,39 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
             trigger = await triggerRepository.GetById(properties.Id);
             await context.Publish(new TriggerChanged(trigger));
         }
+    }
+
+    /// <summary>
+    /// Handles the <see cref="MarkTriggerForDeletion"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<MarkTriggerForDeletion> context)
+    {
+        var triggerId = context.Message.TriggerId;
+        var trigger = await triggerRepository.GetById(triggerId);
+        trigger.IsDeleted = true;
+
+        await triggerRepository.Update(trigger, true);
+        logger.LogInformation("Trigger {Name} soft deleted", trigger.DisplayName);
+        await context.Publish(new TriggerMarkedForDeletion(triggerId));
+    }
+
+    /// <summary>
+    /// Handles the <see cref="RestoreTrigger"/> command.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RestoreTrigger> context)
+    {
+        var triggerId = context.Message.TriggerId;
+        var trigger = await triggerRepository.GetById(triggerId, includeDeleted: true);
+
+        if (!trigger.IsDeleted)
+        {
+            throw new TriggerNotDeletedException(triggerId);
+        }
+        trigger.IsDeleted = false;
+
+        await triggerRepository.Update(trigger, true);
+        logger.LogInformation("Trigger {Name} restored", trigger.DisplayName);
+        await context.Publish(new TriggerRestored(trigger));
     }
 
     /// <summary>

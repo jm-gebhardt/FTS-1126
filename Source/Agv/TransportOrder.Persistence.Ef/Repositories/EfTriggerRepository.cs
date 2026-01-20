@@ -50,6 +50,22 @@ public class EfTriggerRepository : ITriggerRepository
         }
     }
 
+    private async Task<ICollection<Trigger>> GetTriggers(bool whereDeleted)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        List<Trigger> listAsync = await context.Set<Trigger>()
+            .Where(t => t.IsDeleted == whereDeleted)
+            .Include(t => t.ConfigurationParameters)
+            .Include(t => t.Locations)
+            .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
+            .AsNoTracking()
+            .AsSplitQuery()
+            .ToListAsync();
+
+        return listAsync;
+    }
+
     /// <inheritdoc cref="ITriggerRepository"/>>
     public async Task AddOrUpdate(Trigger trigger, bool updateLocations)
     {
@@ -77,26 +93,23 @@ public class EfTriggerRepository : ITriggerRepository
     }
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task<ICollection<Trigger>> GetTriggers()
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-
-        List<Trigger> listAsync = await context.Set<Trigger>()
-            .Include(t => t.ConfigurationParameters)
-            .Include(t => t.Locations)
-            .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
-            .AsNoTracking()
-            .AsSplitQuery()
-            .ToListAsync();
-
-        return listAsync;
-    }
+    public Task<ICollection<Trigger>> GetTriggers() => GetTriggers(false);
 
     /// <inheritdoc cref="ITriggerRepository"/>>
-    public async Task<Trigger> GetById(Guid triggerId)
+    public Task<ICollection<Trigger>> GetDeletedTriggers() => GetTriggers(true);
+
+    /// <inheritdoc cref="ITriggerRepository"/>>
+    public async Task<Trigger> GetById(Guid triggerId, bool includeDeleted = false)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var trigger = await context.Set<Trigger>()
+        IQueryable<Trigger> query = context.Set<Trigger>().AsQueryable();
+
+        if (!includeDeleted)
+        {
+            query = query.Where(t => !t.IsDeleted);
+        }
+
+        var trigger = await query
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
@@ -123,6 +136,30 @@ public class EfTriggerRepository : ITriggerRepository
         if (triggerToUpdate == null)
         {
             throw new TriggerNotFoundException(trigger.Id);
+        }
+
+        if (!triggerToUpdate.IsDeleted && trigger.IsDeleted && updateLocations)
+        {
+            triggerToUpdate.IsDeleted = true;
+            await context.SaveChangesAsync();
+
+            foreach (var location in trigger.Locations)
+            {
+                RemoveTriggerFromLocationDictionary(location);
+            }
+            return;
+        }
+
+        if (triggerToUpdate.IsDeleted && !trigger.IsDeleted && updateLocations)
+        {
+            triggerToUpdate.IsDeleted = false;
+            await context.SaveChangesAsync();
+
+            foreach (var location in trigger.Locations)
+            {
+                AddTriggerLocationToDictionary(trigger, location);
+            }
+            return;
         }
 
         if (updateLocations && !triggerToUpdate.Locations.Equals(trigger.Locations))

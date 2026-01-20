@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using Shouldly;
@@ -17,8 +17,7 @@ public class TriggerProfileTest
     {
         var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         var aNode = "a node".ToGraphNode();
         var location = trigger.AddLocation(aNode, null, Guid.NewGuid());
 
@@ -46,8 +45,7 @@ public class TriggerProfileTest
     {
         var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         var aNode = "a node".ToGraphNode();
         var location = trigger.AddLocation(aNode, null, Guid.NewGuid());
 
@@ -75,8 +73,7 @@ public class TriggerProfileTest
     {
         var mapper = MappingHelper.GetMapper(new TriggerProfile(), new PolygonPointProfile());
 
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
-        var trigger = new Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", 12, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         var location = trigger.AddLocation([new PolygonPoint(42.0, 42.0, 0, Guid.NewGuid())], Guid.NewGuid());
 
         var triggerDto = mapper.Map<TriggerDto>(trigger);

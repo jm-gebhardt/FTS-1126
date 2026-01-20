@@ -13,4 +13,11 @@ public class TriggerPublisher(IHubBroadcaster<TriggerHub, ITriggerClient> hubBro
         hubBroadcaster.Broadcast(c => c.TriggerChanged(dto));
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc cref="ITriggerPublisher"/>>
+    public Task SendTriggerDeletedAsync(Guid triggerId)
+    {
+        hubBroadcaster.Broadcast(c => c.TriggerDeleted(triggerId));
+        return Task.CompletedTask;
+    }
 }

@@ -14,4 +14,16 @@ public interface ITriggerClient
     /// </summary>
     [SignalRMethod("TriggerChanged")]
     Task TriggerChanged(TriggerDto trigger);
+
+    /// <summary>
+    /// Trigger deleted
+    /// </summary>
+    [SignalRMethod("TriggerDeleted")]
+    Task TriggerDeleted(Guid triggerId);
+
+    /// <summary>
+    /// Trigger restored
+    /// </summary>
+    [SignalRMethod("TriggerRestored")]
+    Task TriggerRestored(Guid triggerId);
 }

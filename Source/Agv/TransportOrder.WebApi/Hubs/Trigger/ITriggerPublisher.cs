@@ -9,4 +9,9 @@ public interface ITriggerPublisher
     /// Publishes the change update of a trigger.
     /// </summary>
     public Task SendTriggerChangedAsync(Domain.Models.Trigger.Trigger trigger);
+
+    /// <summary>
+    /// Publishes the deletion of a trigger.
+    /// </summary>
+    public Task SendTriggerDeletedAsync(Guid triggerId);
 }

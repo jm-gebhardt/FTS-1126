@@ -3,8 +3,11 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Common.Testing.Extensions;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Trigger;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
+using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Trigger;
@@ -32,9 +35,8 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_TriggerUnchanged_ValidData_DoesNotPublishTriggerChanged()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var properties = new TriggerProperties("urn", "a trigger", "description", "version", 1);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, [TriggerGenerator.CreateParameter()]);
         var fixture = new TriggerCommandHandlerTestFixture()
             .WithTrigger(trigger);
 
@@ -53,9 +55,8 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_TriggerChanged_ValidData_PublishesTriggerChanged()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
         var properties = new TriggerProperties("urn", "a trigger", "description", "version", 1);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(properties.Id, properties.Urn, properties.DisplayName, properties.Version, properties.Description, properties.InstanceMaximum, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         var fixture = new TriggerCommandHandlerTestFixture()
             .WithTrigger(trigger);
 
@@ -74,8 +75,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_RemoveTriggerLocation_ValidData_TriggerLocationRemoved()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", "validation regex");
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         var location = trigger.AddLocation(Guid.NewGuid().ToGraphNode(), null, Guid.NewGuid());
         trigger.Locations.Count.ShouldBe(1);
@@ -92,8 +92,8 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateDefaultConfigurationParameter_ValidData_PublishesDefaultTriggerConfigurationUpdated()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter();
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
@@ -107,8 +107,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateDefaultConfigurationParameter_UnknownParameter_DoesNotPublishTriggerOrUpdateConfiguration()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
@@ -122,7 +121,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_AddTriggerLocation_EdgeGiven_LocationAdded_TriggerAssignedToNodeNotPublished()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         trigger.Locations.ShouldBeEmpty();
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
@@ -142,7 +141,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_AddTriggerLocation_PolygonGiven_LocationAdded_TriggerAssignedToNodeNotPublished()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         trigger.Locations.ShouldBeEmpty();
 
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
@@ -163,7 +162,7 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_AddTriggerLocation_NodeGiven_LocationAdded_TriggerAssignedToNodePublished()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         trigger.Locations.ShouldBeEmpty();
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
@@ -183,8 +182,8 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateLocationConfigurationParameter_UnknownTriggerLocation_NotUpdated()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter();
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("a node".ToGraphNode(), null, null);
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
@@ -197,8 +196,8 @@ public class TriggerCommandHandlerTest
     [TestMethod]
     public async Task Consume_UpdateLocationConfigurationParameter_ValidData_TriggerUpdated()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "a trigger", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter();
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("a node".ToGraphNode(), null, null);
         var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
 
@@ -209,5 +208,42 @@ public class TriggerCommandHandlerTest
         fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
         fixture.UpdatedTrigger.Locations.Count.ShouldBe(1);
         fixture.UpdatedTrigger.Locations.First().ConfigurationParameters.First(c => c.Name == parameter.Name).Value.ShouldBe(newValue);
+    }
+
+    [TestMethod]
+    public async Task Consume_MarkTriggerForDeletion_ValidData_TriggerMarkedForDeletion()
+    {
+        var trigger = TriggerGenerator.CreateTrigger();
+        var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
+
+        await fixture.PublishMessageAsync(new MarkTriggerForDeletion(trigger.Id));
+
+        fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
+        fixture.UpdatedTrigger.IsDeleted.ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<TriggerMarkedForDeletion>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RestoreTrigger_ValidData_TriggerRestored()
+    {
+        var trigger = TriggerGenerator.CreateTrigger(isDeleted: true);
+        var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
+
+        await fixture.PublishMessageAsync(new RestoreTrigger(trigger.Id));
+
+        fixture.UpdatedTrigger.Id.ShouldBe(trigger.Id);
+        fixture.UpdatedTrigger.IsDeleted.ShouldBeFalse();
+        await fixture.ShouldHavePublishedAsync<TriggerRestored>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RestoreTrigger_NotDeletedTrigger_ThrowsTriggerNotDeletedException()
+    {
+        var trigger = TriggerGenerator.CreateTrigger(isDeleted: false);
+        var fixture = new TriggerCommandHandlerTestFixture().WithTrigger(trigger);
+
+        await fixture.PublishMessageAsync(new RestoreTrigger(trigger.Id));
+
+        (await fixture.TestHarness.Published.Any<Fault<RestoreTrigger>>(x => x.Context.Message.Exceptions.Any(e => e.ExceptionType == typeof(TriggerNotDeletedException).FullName))).ShouldBeTrue();
     }
 }

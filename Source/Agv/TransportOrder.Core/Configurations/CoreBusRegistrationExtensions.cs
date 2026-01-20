@@ -174,6 +174,7 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<CreateTrigger, TriggerCommandHandler>(c);
+            partitioner.PartitionMessageById<MarkTriggerForDeletion, TriggerCommandHandler>(c);
             partitioner.PartitionMessageById<AddTriggerLocation, TriggerCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveTriggerLocation, TriggerCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateDefaultConfigurationParameter, TriggerCommandHandler>(c);
@@ -353,6 +354,9 @@ public static class CoreBusRegistrationExtensions
     {
         configurator.AddConsumer<TriggerRequestHandler>();
         configurator.AddRequestClient<GetTriggers>();
+        configurator.AddRequestClient<GetDeletedTriggers>();
+        configurator.AddRequestClient<TryMarkTriggerForDeletion>();
+        configurator.AddRequestClient<TryRestoreTrigger>();
         configurator.AddRequestClient<AssignTriggerToLocation>();
         configurator.AddRequestClient<TryRemoveTriggerLocation>();
         configurator.AddRequestClient<GetTrigger>();

@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -11,7 +12,7 @@ public class TriggerControllerTest
     [TestMethod]
     public async Task GetTrigger_ValidData_ReturnsTriggerDto()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         var fixture = new TriggerControllerTestFixture()
             .WithTrigger(trigger)
             .Build();
@@ -96,5 +97,23 @@ public class TriggerControllerTest
             .Build();
 
         await fixture.GetControllerResultAsync<ActionResult>(c => c.UpdateDefaultConfigurationParameter(Guid.NewGuid(), "name", "new value"));
+    }
+
+    [TestMethod]
+    public async Task DeleteTrigger_ValidData_Returns()
+    {
+        var fixture = new TriggerControllerTestFixture()
+            .Build();
+
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.DeleteTrigger(Guid.NewGuid()));
+    }
+
+    [TestMethod]
+    public async Task RestoreTrigger_ValidData_Returns()
+    {
+        var fixture = new TriggerControllerTestFixture()
+            .Build();
+
+        await fixture.GetControllerResultAsync<ActionResult>(c => c.RestoreTrigger(Guid.NewGuid()));
     }
 }

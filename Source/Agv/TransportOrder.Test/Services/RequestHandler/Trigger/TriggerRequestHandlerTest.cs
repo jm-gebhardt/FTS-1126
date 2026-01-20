@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -8,6 +7,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Shouldly;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
@@ -20,7 +20,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetTriggers_ValidData_RespondsGotTriggers()
     {
-        List<TransportOrder.Domain.Models.Trigger.Trigger> triggers = [new(Guid.NewGuid(), "urn", "name", "version", "description", null, [])];
+        List<TransportOrder.Domain.Models.Trigger.Trigger> triggers = [TriggerGenerator.CreateTrigger()];
         TriggerRequestHandlerTestFixture<GetTriggers> fixture = new TriggerRequestHandlerTestFixture<GetTriggers>()
             .WithTriggers(triggers)
             .Build();
@@ -32,7 +32,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetTrigger_ValidData_RespondsGotTrigger()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         TriggerRequestHandlerTestFixture<GetTrigger> fixture = new TriggerRequestHandlerTestFixture<GetTrigger>()
             .WithTriggers([trigger])
@@ -45,7 +45,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetTrigger_UnknownTrigger_ThrowsTriggerNotFoundException()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
 
         TriggerRequestHandlerTestFixture<GetTrigger> fixture = new TriggerRequestHandlerTestFixture<GetTrigger>()
             .WithTriggers([trigger])
@@ -57,8 +57,8 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryUpdateDefaultConfigurationParameter_ValidData_PublishesUpdateDefaultConfigurationParameterRespondsSuccess()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "value", string.Empty);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
@@ -70,8 +70,8 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryUpdateDefaultConfigurationParameter_UnknownTrigger_ThrowsTriggerNotFoundException_DoesNotPublishUpdateDefaultConfigurationParameter()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "value", string.Empty);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
@@ -84,8 +84,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryUpdateDefaultConfigurationParameter_ValidationFails_ThrowsTriggerConfigurationUpdateFailedException_DoesNotPublishUpdateDefaultConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "0", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
@@ -97,8 +97,8 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryUpdateLocationConfigurationParameter_UnknownTrigger_ThrowsTriggerNotFoundException_DoesNotPublishUpdateLocationConfigurationParameter()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter();
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -115,8 +115,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryUpdateLocationConfigurationParameter_UnknownConfigurationParameter_ThrowsTriggerConfigurationUpdateFailedException_DoesNotPublishUpdateLocationConfigurationParameter()
     {
-        var parameter = new ConfigurationParameter("parameter name", "description", "value", string.Empty);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var trigger = TriggerGenerator.CreateTrigger();
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -134,8 +133,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryUpdateLocationConfigurationParameter_InvalidConfigurationParameter_ThrowsTriggerConfigurationUpdateFailedException_DoesNotPublishUpdateLocationConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "12", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -153,8 +152,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryUpdateLocationConfigurationParameter_UnknownLocation_ThrowsTriggerLocationNotFoundException_DoesNotPublishUpdateLocationConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "12", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -172,8 +171,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryUpdateLocationConfigurationParameter_ValidData_PublishesUpdateLocationConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "12", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -190,8 +189,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_UnknownConfigurationParameter_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "0", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
@@ -204,7 +203,7 @@ public class TriggerRequestHandlerTest
                 [],
                 Guid.NewGuid(),
                 [
-                    new ConfigurationParameter("unknown",
+                    TriggerGenerator.CreateParameter("unknown",
                         parameter.Description,
                         parameter.Value,
                         parameter.Validation)
@@ -216,8 +215,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_InvalidConfigurationParameter_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "0", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "0", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
@@ -230,7 +229,7 @@ public class TriggerRequestHandlerTest
                 [],
                 Guid.NewGuid(),
                 [
-                    new ConfigurationParameter(parameter.Name,
+                    TriggerGenerator.CreateParameter(parameter.Name,
                         parameter.Description,
                         "not a number",
                         parameter.Validation)
@@ -258,7 +257,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_AssignTriggerToLocation_MultipleLocationsGiven_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
@@ -278,7 +277,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_AssignTriggerToLocation_EdgeUnknown_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(false)
@@ -298,7 +297,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_AssignTriggerToLocation_NodeUnknown_ThrowsNodeNotFoundException_DoesNotRequestAddTriggerLocation()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(false)
@@ -318,7 +317,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_AssignTriggerToLocation_MapGivenButUnknown_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
@@ -339,7 +338,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_ValidNode_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
     {
         var node = "a node".ToGraphNode();
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         var location = new Location(node, null, Guid.NewGuid(), trigger.Id, []);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
@@ -358,7 +357,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_ValidEdge_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
     {
         var edgeId = "an edge".ToGuid();
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         var edgeLocation = new Location(null, edgeId, Guid.NewGuid(), trigger.Id, []);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
@@ -378,7 +377,7 @@ public class TriggerRequestHandlerTest
         ICollection<PolygonPoint> domainPolygon = [new(-8.900d, -10.000d, 0), new(-9.5d, -10.000d, 1), new(-8.900d, -11.000d, 2)];
         ICollection<Common.Domain.Models.PolygonPoint> triggerPolygon = [new(-8.900d, -10.000d), new(-9.5d, -10.000d), new(-8.900d, -11.000d)];
 
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         var polygonLocation = new Location(domainPolygon, Guid.NewGuid(), trigger.Id, []);
 
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
@@ -397,7 +396,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_MapNotGiven_PublishesAddTriggerLocationRespondsTriggerLocationAssigned()
     {
         var node = "a node".ToGraphNode();
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         var location = new Location(node, null, Guid.NewGuid(), trigger.Id, []);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
@@ -416,7 +415,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_TriggerLocationAdditionThrowsException_ThrowsTriggerAssignmentFailedException()
     {
         var node = "a node".ToGraphNode();
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, []);
+        var trigger = TriggerGenerator.CreateTrigger();
         var location = new Location(node, null, Guid.NewGuid(), trigger.Id, []);
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
@@ -433,8 +432,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryResetLocationConfigurationParameter_ValidData_PublishesResetLocationConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "12", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -448,8 +447,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryResetLocationConfigurationParameter_UnknownTrigger_ThrowsTriggerNotFoundException_DoesNotPublishResetLocationConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "12", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("node".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -466,8 +465,8 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryResetLocationConfigurationParameter_UnknownTriggerLocation_ThrowsTriggerLocationNotFoundException_DoesNotPublishResetLocationConfigurationParameter()
     {
         const string isNumber = @"^-?\d+$";
-        var parameter = new ConfigurationParameter("parameter name", "description", "12", isNumber);
-        var trigger = new TransportOrder.Domain.Models.Trigger.Trigger(Guid.NewGuid(), "urn", "name", "version", "description", null, [parameter]);
+        var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
+        var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeName".ToGraphNode(), null, null);
         TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
             .WithTriggers([trigger])
@@ -478,5 +477,79 @@ public class TriggerRequestHandlerTest
                 "unknown".ToGuid(),
                 parameter.Name)));
         await fixture.ShouldNotHavePublishedAsync<ResetLocationConfigurationParameter>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryMarkTriggerForDeletion_ValidData_PublishesMarkTriggerForDeletion()
+    {
+        var trigger = TriggerGenerator.CreateTrigger();
+        TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion> fixture = new TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion>()
+            .WithTriggers([trigger])
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new TryMarkTriggerForDeletion(trigger.Id));
+        await fixture.ShouldHavePublishedAsync<MarkTriggerForDeletion>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryMarkTriggerForDeletion_UnknownTrigger_ThrowsTriggerNotFoundException()
+    {
+        var trigger = TriggerGenerator.CreateTrigger();
+        TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion> fixture = new TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion>()
+            .WithTriggers([trigger])
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TryMarkTriggerForDeletion("unknown".ToGuid())));
+        await fixture.ShouldNotHavePublishedAsync<MarkTriggerForDeletion>();
+    }
+
+    [TestMethod]
+    public async Task Consume_GetDeletedTriggers_ValidData_RespondsGotDeletedTriggers()
+    {
+        List<TransportOrder.Domain.Models.Trigger.Trigger> deletedTriggers = [TriggerGenerator.CreateTrigger(isDeleted: true)];
+        TriggerRequestHandlerTestFixture<GetDeletedTriggers> fixture = new TriggerRequestHandlerTestFixture<GetDeletedTriggers>()
+            .WithDeletedTriggers(deletedTriggers)
+            .Build();
+
+        Response<GotDeletedTriggers> response = await fixture.GetResponseAsync<GotDeletedTriggers>(new GetDeletedTriggers());
+        response.Message.Triggers.ShouldBeEquivalentTo(deletedTriggers);
+    }
+
+    [TestMethod]
+    public async Task Consume_TryRestoreTrigger_ValidData_PublishesRestoreTriggerRespondsSuccess()
+    {
+        var deletedTrigger = TriggerGenerator.CreateTrigger(isDeleted: true);
+        TriggerRequestHandlerTestFixture<TryRestoreTrigger> fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
+            .WithTriggers([deletedTrigger])
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new TryRestoreTrigger(deletedTrigger.Id));
+        await fixture.ShouldHavePublishedAsync<RestoreTrigger>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryRestoreTrigger_UnknownTrigger_ThrowsTriggerNotFoundException()
+    {
+        TriggerRequestHandlerTestFixture<TryRestoreTrigger> fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
+            .WithTriggers([])
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TryRestoreTrigger("unknown".ToGuid())));
+        await fixture.ShouldNotHavePublishedAsync<RestoreTrigger>();
+    }
+
+    [TestMethod]
+    public async Task Consume_TryRestoreTrigger_TriggerNotDeleted_ThrowsTriggerNotDeletedException()
+    {
+        var notDeletedTrigger = TriggerGenerator.CreateTrigger(isDeleted: false);
+        TriggerRequestHandlerTestFixture<TryRestoreTrigger> fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
+            .WithTriggers([notDeletedTrigger])
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotDeletedException>(async () =>
+            await fixture.GetResponseAsync<Success>(new TryRestoreTrigger(notDeletedTrigger.Id)));
+        await fixture.ShouldNotHavePublishedAsync<RestoreTrigger>();
     }
 }

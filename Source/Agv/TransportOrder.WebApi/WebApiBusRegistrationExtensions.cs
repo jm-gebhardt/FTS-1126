@@ -27,7 +27,7 @@ public static class WebApiBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<AgvOperatingDataStatusChangedConsumer>();
 
         busRegistrationConfigurator.AddConsumer<NodeChangedConsumer>();
-        busRegistrationConfigurator.AddConsumer<TriggerChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<TriggerConsumer>();
         busRegistrationConfigurator.AddConsumer<RestrictedAreaChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<MapChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<SystemChangedConsumer>();

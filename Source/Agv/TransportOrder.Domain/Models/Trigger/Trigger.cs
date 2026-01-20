@@ -80,6 +80,11 @@ public class Trigger : IEquatable<Trigger>
     public ICollection<Location> Locations { get; init; }
 
     /// <summary>
+    /// Indicates whether the trigger has been soft-deleted.
+    /// </summary>
+    public bool IsDeleted { get; set; }
+
+    /// <summary>
     /// Add an edge location.
     /// </summary>
     /// <param name="node"></param>

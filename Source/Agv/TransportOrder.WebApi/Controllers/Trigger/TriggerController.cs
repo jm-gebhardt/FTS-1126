@@ -27,32 +27,39 @@ public class TriggerController : Controller
     private readonly IRequestClient<GetTrigger> _getTriggerRequestClient;
     private readonly IRequestClient<AssignTriggerToLocation> _assignTriggerLocationRequestClient;
     private readonly IRequestClient<TryRemoveTriggerLocation> _removeTriggerLocationRequestClient;
-    private readonly IMapper _mapper;
     private readonly IRequestClient<TryUpdateDefaultConfigurationParameter> _updateDefaultParameterRequestClient;
     private readonly IRequestClient<TryUpdateLocationConfigurationParameter> _updateLocationParameterRequestClient;
     private readonly IRequestClient<TryResetLocationConfigurationParameter> _resetLocationParameterRequestClient;
+    private readonly IRequestClient<TryMarkTriggerForDeletion> _markTriggerForDeletionRequestClient;
+    private readonly IRequestClient<TryRestoreTrigger> _tryRestoreTriggerRequestClient;
+    private readonly IMapper _mapper;
     private readonly ILogger<TriggerController> _logger;
     private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="TriggerController"/>>
-    public TriggerController(IMapper mapper,
-        ILogger<TriggerController> logger,
+    public TriggerController(
         IRequestClient<GetTrigger> getTriggerRequestClient,
         IRequestClient<AssignTriggerToLocation> assignTriggerLocationRequestClient,
         IRequestClient<TryRemoveTriggerLocation> removeTriggerLocationRequestClient,
         IRequestClient<TryUpdateDefaultConfigurationParameter> updateDefaultParameterRequestClient,
         IRequestClient<TryUpdateLocationConfigurationParameter> updateLocationParameterRequestClient,
         IRequestClient<TryResetLocationConfigurationParameter> resetLocationParameterRequestClient,
+        IRequestClient<TryMarkTriggerForDeletion> markTriggerForDeletionRequestClient,
+        IRequestClient<TryRestoreTrigger> tryRestoreTriggerRequestClient,
+        IMapper mapper,
+        ILogger<TriggerController> logger,
         ILoggingService loggingService)
     {
-        _logger = logger;
         _getTriggerRequestClient = getTriggerRequestClient;
         _assignTriggerLocationRequestClient = assignTriggerLocationRequestClient;
         _removeTriggerLocationRequestClient = removeTriggerLocationRequestClient;
         _updateDefaultParameterRequestClient = updateDefaultParameterRequestClient;
         _updateLocationParameterRequestClient = updateLocationParameterRequestClient;
         _resetLocationParameterRequestClient = resetLocationParameterRequestClient;
+        _markTriggerForDeletionRequestClient = markTriggerForDeletionRequestClient;
+        _tryRestoreTriggerRequestClient = tryRestoreTriggerRequestClient;
         _mapper = mapper;
+        _logger = logger;
         _loggingService = loggingService;
     }
 
@@ -69,6 +76,38 @@ public class TriggerController : Controller
         Response<GotTrigger> response = await _getTriggerRequestClient.GetResponse<GotTrigger>(new GetTrigger(id));
         var trigger = _mapper.Map<TriggerDto>(response.Message.Trigger);
         return Ok(trigger);
+    }
+
+    /// <summary>
+    /// Delete a trigger.
+    /// </summary>
+    /// <param name="id">The id of the trigger.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Trigger with given id not found.</response>
+    [HttpDelete]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
+    [Route("/trigger/{id:guid}")]
+    public async Task<ActionResult> DeleteTrigger([FromRoute] Guid id)
+    {
+        await _markTriggerForDeletionRequestClient.GetResponse<Success>(new TryMarkTriggerForDeletion(id));
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerMarkedForDeletion } });
+        return Ok();
+    }
+
+    /// <summary>
+    /// Restore a previously deleted trigger.
+    /// </summary>
+    /// <param name="triggerId">The trigger id to restore.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="400">Trigger found but is not deleted at all</response>
+    /// <response code="404">Trigger not found</response>
+    [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
+    [Route("/triggers/{triggerId}/restore")]
+    public async Task<ActionResult> RestoreTrigger(Guid triggerId)
+    {
+        await _tryRestoreTriggerRequestClient.GetResponse<Success>(new TryRestoreTrigger(triggerId));
+        return Ok();
     }
 
     /// <summary>
