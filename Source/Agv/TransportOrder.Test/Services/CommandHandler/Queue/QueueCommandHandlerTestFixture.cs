@@ -8,7 +8,9 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
+using Gebhardt.Acc.TransportOrder.Routing.Models;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using JetBrains.Annotations;
 using MassTransit;
@@ -24,6 +26,7 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
+    private readonly Mock<IRouteService> _routeService = new();
     private readonly SemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
 
     private static Guid? _orderToAssign;
@@ -37,6 +40,7 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
             s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => _queueRepository.Object);
             s.AddTransient(_ => _agvDb.Object);
+            s.AddTransient(_ => _routeService.Object);
             s.AddSingleton<ISemaphoreProvider<IQueueingSemaphore>>(_ => _queueSemaphoreProvider);
         });
         Build();
@@ -97,6 +101,12 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
         return this;
     }
 
+    public QueueCommandHandlerTestFixture WithRouteNodes(GraphNode[] nodes)
+    {
+        _routeService.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Common.Domain.Models.AgvData?>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(1f, nodes, []));
+        return this;
+    }
+
     public QueueCommandHandlerTestFixture WithActionGroups(ICollection<ActionGroup> picks, ICollection<ActionGroup> evacuationMoves, Guid station, Guid evacuationTarget)
     {
         _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>())).ReturnsAsync((Guid s) =>
@@ -133,6 +143,12 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
                 }
             }
         }
+        return this;
+    }
+
+    public QueueCommandHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
+    {
+        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
         return this;
     }
 

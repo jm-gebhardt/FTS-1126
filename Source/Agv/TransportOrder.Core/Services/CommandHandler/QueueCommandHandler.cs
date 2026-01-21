@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -9,11 +8,13 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 
@@ -29,6 +30,7 @@ public class QueueCommandHandler(
     IActionGroupRepository actionGroupRepository,
     ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
     IAgvDb agvDb,
+    IRouteService routeService,
     IBus bus
 ) :
     IConsumer<AddQueue>,
@@ -168,9 +170,8 @@ public class QueueCommandHandler(
                 return;
             }
             var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(triggeringAgv);
-            if (currentAction == null || !currentAction.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+            if (!await CheckAgvPassesQueue(currentAction, queue, triggeringAgv))
             {
-                logger.LogInformation("Current action {ActionCorrelationId} of agv {AgvCorrelationId} does not pass queue, not evacuating queue {Queue}", currentAction?.CorrelationId, triggeringAgv, queue.Name);
                 return;
             }
 
@@ -213,6 +214,34 @@ public class QueueCommandHandler(
         });
     }
 
+    private async Task<bool> CheckAgvPassesQueue(Domain.Models.ActionGroup.AgvAction? currentAction, Queue queue, Guid triggeringAgv)
+    {
+        if (currentAction == null)
+        {
+            logger.LogInformation("No current action for agv {AgvCorrelationId}, not evacuating queue {Queue}", triggeringAgv, queue.Name);
+            return false;
+        }
+        if (currentAction.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+        {
+            return true;
+        }
+        // In case the current route stored in the action is not what the agv
+        // actually drove because of latency, check if a queue is passed by recalculating the route.
+        // This can happen when the agv gets an update of an idle action to a pick-drop order close to the station,
+        // where edges are bidirectional, but processes the update only once it reached the
+        // next one-way edge. This forces the agv to pass the queue instead of going directly
+        // back to the station and leads to a mismatch of the nodes at the action and the actual route.
+        var agv = await agvDb.Agvs.GetAgvAsync(triggeringAgv);
+        var route = await routeService.GetRouteAsync(agv, currentAction.Target.NodeId!.Value, agv.AgvStatus!.LastNodeId!.Value);
+        if (route.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+        {
+            return true;
+        }
+
+        logger.LogInformation("Current action {ActionCorrelationId} of agv {AgvCorrelationId} does not pass queue, not evacuating queue {Queue}", currentAction.CorrelationId, triggeringAgv, queue.Name);
+        return false;
+    }
+
     /// <inheritdoc cref="QueueCommandHandler"/>>
     public async Task Consume(ConsumeContext<EvacuateOrAssignQueueHead> context)
     {
@@ -224,9 +253,8 @@ public class QueueCommandHandler(
             var queue = await queueRepository.GetQueueByName(queueName);
 
             var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(triggeringAgv);
-            if (currentAction == null || !currentAction.Nodes.Select(n => n.Id).Intersect(queue.Nodes.Select(qn => qn.NodeId)).Any())
+            if (!await CheckAgvPassesQueue(currentAction, queue, triggeringAgv))
             {
-                logger.LogInformation("Current action {ActionCorrelationId} of agv {AgvCorrelationId} does not pass queue, not evacuating queue {Queue}", currentAction?.CorrelationId, triggeringAgv, queue.Name);
                 return;
             }
             if (queue.AgvFillQuantity == 0)
