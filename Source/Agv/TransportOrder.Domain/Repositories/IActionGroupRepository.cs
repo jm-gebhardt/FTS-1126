@@ -105,6 +105,19 @@ public interface IActionGroupRepository
     Task<bool> HasCurrentAssignedActionGroupAsync(Guid agvCorrelationId);
 
     /// <summary>
+    /// Gets the next unqueued action group for an agv at a station.
+    /// </summary>
+    /// <param name="station">The station to find the action group for.</param>
+    /// <param name="agvCorrelationId">The id of the agv.</param>
+    Task<ActionGroup?> GetUnqueuedActionGroupOnStationForAgv(Guid station, Guid agvCorrelationId);
+
+    /// <summary>
+    /// Gets the last completed action of an agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv to get the last completed action for.</param>
+    Task<ActionGroup?> GetLastCompletedActionForAgv(Guid agvCorrelationId);
+
+    /// <summary>
     /// Get currently assigned action groups of provided agvs.
     /// </summary>
     /// <param name="agvCorrelationIds">A list of agv correlation ids.</param>

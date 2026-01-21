@@ -221,13 +221,24 @@ public class AgvCommandHandler :
             return;
         }
 
-        if (await _actionGroupRepository.HasCurrentAssignedActionGroupAsync(agvCorrelationId))
+        if (await _actionGroupRepository.GetCurrentAssignedActionGroupAsync(agvCorrelationId) is {} current)
         {
             _logger.LogInformation("No need for an idle action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
-            await context.Publish(new AgvBecameIdle(agvCorrelationId));
+            if (current.State == ActionGroupState.Created)
+            {
+                await context.Publish(new AgvBecameIdle(agvCorrelationId));
+            }
             return;
         }
 
+        if (await _actionGroupRepository.GetLastCompletedActionForAgv(agvCorrelationId) is {} lastCompleted && lastCompleted.Actions[-1].Target.NodeId is {} nodeId)
+        {
+            if (await _actionGroupRepository.GetUnqueuedActionGroupOnStationForAgv(nodeId, agvCorrelationId) is {} unqueuedActionGroup)
+            {
+                _logger.LogInformation("No need for an idle action because the agv {AgvCorrelationId} is already assigned to doppelspiel action group {ActionGroup} that will be queued shortly", agvCorrelationId, unqueuedActionGroup.CorrelationId);
+                return;
+            }
+        }
         // Idle hierarchy : queue, charge, park
         if (await TryQueueing(context, agv))
         {

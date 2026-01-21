@@ -298,6 +298,20 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
+    public async Task<ActionGroup?> GetUnqueuedActionGroupOnStationForAgv(Guid station, Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+        var actionGroup = await context.Set<ActionGroup>().AsSplitQuery()
+            .Include(g => g.Actions)
+            .ThenInclude(a => a.AgvActionNodes)
+            .ThenInclude(a => a.Node)
+            .OrderBy(a => a.CreatedDate).FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId && !a.IsQueued && a.Actions[0].Nodes[0].Id == station);
+
+        return actionGroup;
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds)
     {
         // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup  
