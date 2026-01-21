@@ -698,24 +698,30 @@ public class AgvCommandHandler :
     {
         IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
         List<AgvError> updatedErrors = activeErrors.ToList();
-        var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
-
-        if (handleZoneErrors)
+        try
         {
-            await UpdateZoneErrors(agv, updatedErrors);
-        }
+            var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
+            if (handleZoneErrors)
+            {
+                await UpdateZoneErrors(agv, updatedErrors);
+            }
 
-        if (handleResourceErrors)
+            if (handleResourceErrors)
+            {
+                await UpdateResourceBlockingErrors(agv, updatedErrors);
+            }
+
+            if (handleQueueBlockingErrors)
+            {
+                await UpdateQueueBlockingError(agv, updatedErrors);
+            }
+
+            await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
+        }
+        catch (AgvLocationUnknownException)
         {
-            await UpdateResourceBlockingErrors(agv, updatedErrors);
+            _logger.LogWarning("No updating offline errors of agv {AgvCorrelationId}, position is unknown", agv.CorrelationId);
         }
-
-        if (handleQueueBlockingErrors)
-        {
-            await UpdateQueueBlockingError(agv, updatedErrors);
-        }
-
-        await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }
 
     private async Task UpdateQueueBlockingError(Agv agv, List<AgvError> errors)
