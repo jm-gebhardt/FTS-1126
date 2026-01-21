@@ -166,7 +166,7 @@ public class DoppelspielCommandHandler(
         var source = pickAction.Target.Node != null ? pickAction.Target.Node!.Id : actionGroup.Actions.Single(a => a.Sequence == pickAction.Sequence - 1).Target.Node!.Id;
         var target = dropAction.Target.Node != null ? dropAction.Target.Node!.Id : actionGroup.Actions.Single(a => a.Sequence == dropAction.Sequence - 1).Target.Node!.Id;
         var route = await routeService.GetRouteAsync(agv, target, source);
-        ICollection<Queue> queues= await queueManager.GetQueuesOnRoute(route.Nodes.Select(n => n.Id).ToList());
+        ICollection<Queue> queues = await queueManager.GetQueuesOnRoute(route.Nodes.Select(n => n.Id).ToList());
 
         return queues.All(q => q.AgvFillQuantity == 0);
     }
@@ -406,7 +406,7 @@ public class DoppelspielCommandHandler(
     }
 
     /// <inheritdoc/>
-    public async  Task Consume(ConsumeContext<ActionGroupReassignedOrReset> context)
+    public async Task Consume(ConsumeContext<ActionGroupReassignedOrReset> context)
     {
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByIdAsync(context.Message.CorrelationId);
         if (!actionGroup.IsMovingCargo)
@@ -457,7 +457,7 @@ public class DoppelspielCommandHandler(
         }
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
-            pickActionGroup.SetTargetAndAssign(context.Message.AssignableAgv, ActionType.Pick,  currentAction.Target.Node!);
+            pickActionGroup.SetTargetAndAssign(context.Message.AssignableAgv, ActionType.Pick, currentAction.Target.Node!);
             await actionGroupRepository.UpdateAsync(pickActionGroup);
             await actionGroupRepository.UpdateAsync(actionGroup);
             await context.Publish(new QueueActionGroup(mapper.Map<ActionGroup>(pickActionGroup), false));
@@ -483,12 +483,13 @@ public class DoppelspielCommandHandler(
         {
             return;
         }
-        var dropAction = actionGroup.Actions.First(a => a is { ActionType: ActionType.Drop, ShouldSkip: false });
+        var dropAction = actionGroup.Actions.FirstOrDefault(a => a is { ActionType: ActionType.Drop, ShouldSkip: false });
         if (dropAction is { CompletedDate: null, IsRegisteredForDoppelspiel: true })
         {
             await QueueUnmatchedDoppelspielPicks(context, dropAction.Target.Node!, actionGroup.CorrelationId);
         }
-        var pickAction = actionGroup.Actions.First(a => a is { ActionType: ActionType.Pick, ShouldSkip: false, DoppelspielPartner: null });
+        var pickAction = actionGroup.Actions.FirstOrDefault(a => a is { ActionType: ActionType.Pick, ShouldSkip: false, DoppelspielPartner: null, IsRegisteredForDoppelspiel: true, State: (ActionState.Aborted or ActionState.Canceled)});
+        if (pickAction != null)
         {
             await doppelspielSemaphore.ExecuteLockedAsync(async () =>
             {

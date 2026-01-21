@@ -63,6 +63,12 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
         return this;
     }
 
+    public DoppelspielCommandHandlerTestFixture WithUnmatchedDrop(ActionGroup? actionGroup)
+    {
+        ActionGroupRepository.Setup(x => x.GetNextUnmatchedDoppelspielDrop(It.IsAny<GraphNode>(), It.IsAny<Guid?>())).ReturnsAsync(actionGroup);
+        return this;
+    }
+
     public DoppelspielCommandHandlerTestFixture WithAgvMustCharge(bool mustCharge = true)
     {
         SettingsReadModel = new AgvSettingsReadModel() { BatteryLevelCritical = mustCharge ? 1000 : -1000 };

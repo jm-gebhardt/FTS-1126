@@ -1189,6 +1189,136 @@ public class DoppelspielCommandHandlerTest
         unmatchedPick.Actions.First(a => a.ActionType == ActionType.Pick).IsRegisteredForDoppelspiel.ShouldBeFalse();
     }
 
+    [DataRow(ActionState.Aborted)]
+    [DataRow(ActionState.Canceled)]
+    [TestMethod]
+    public async Task Consume_ActionGroupCanceled_PickRegisteredAbortedOrCanceledNoPartner_UnregistersUnmatchedDrop(ActionState state)
+    {
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            pickActionState: state,
+            source: "PS01");
+        actionGroup.RegisterDoppelspiel(ActionType.Pick);
+
+        var unmatchedDrop = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            destination: "PS01");
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithUnmatchedDrop(unmatchedDrop)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionGroupCanceled(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, DateTime.Now));
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Once);
+        unmatchedDrop.IsRegisteredForDoppelspielDrop.ShouldBeFalse();
+    }
+
+    [DataRow(ActionState.Aborted)]
+    [DataRow(ActionState.Canceled)]
+    [TestMethod]
+    public async Task Consume_ActionGroupCanceled_PickNotRegisteredForDoppelspiel_DoesNotUnregisterUnmatchedDrop(ActionState state)
+    {
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            pickActionState: state,
+            source: "PS01");
+
+        var unmatchedDrop = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            destination: "PS01");
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithUnmatchedDrop(unmatchedDrop)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionGroupCanceled(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, DateTime.Now));
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Never);
+        unmatchedDrop.IsRegisteredForDoppelspielDrop.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionGroupCanceled_PickRegisteredButNotAbortedOrCanceled_DoesNotUnregisterUnmatchedDrop()
+    {
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            pickActionState: ActionState.Started,
+            source: "PS01");
+        actionGroup.RegisterDoppelspiel(ActionType.Pick);
+
+        var unmatchedDrop = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            destination: "PS01");
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithUnmatchedDrop(unmatchedDrop)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionGroupCanceled(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, DateTime.Now));
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Never);
+        unmatchedDrop.IsRegisteredForDoppelspielDrop.ShouldBeTrue();
+    }
+
+    [DataRow(ActionState.Aborted)]
+    [DataRow(ActionState.Canceled)]
+    [TestMethod]
+    public async Task Consume_ActionGroupCanceled_PickRegisteredAbortedOrCanceledButHasPartner_DoesNotUnregisterUnmatchedDrop(ActionState state)
+    {
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            pickActionState: state,
+            source: "PS01");
+        actionGroup.RegisterDoppelspiel(ActionType.Pick);
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pickAction.SetDoppelspielPartner(Guid.NewGuid()); // Has a partner already
+
+        var unmatchedDrop = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            destination: "PS01");
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithUnmatchedDrop(unmatchedDrop)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new ActionGroupCanceled(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, DateTime.Now));
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Never);
+        unmatchedDrop.IsRegisteredForDoppelspielDrop.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionAborted_PickRegisteredAbortedNoPartner_UnregistersUnmatchedDrop()
+    {
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            pickActionState: ActionState.Aborted,
+            source: "PS01");
+        actionGroup.RegisterDoppelspiel(ActionType.Pick);
+
+        var unmatchedDrop = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(),
+            destination: "PS01");
+        unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
+
+        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithUnmatchedDrop(unmatchedDrop)
+            .AddActionGroup(actionGroup);
+
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var pickActionMessage = fixture.Mapper.Map<AgvAction>(pickAction);
+
+        await fixture.PublishMessageAsync(new ActionAborted(actionGroup.CorrelationId, pickActionMessage));
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()), Times.Once);
+        unmatchedDrop.IsRegisteredForDoppelspielDrop.ShouldBeFalse();
+    }
+
     [TestMethod]
     public async Task Consume_StartActionCommand_PickAction_DoesNotPublishReserveStation()
     {
