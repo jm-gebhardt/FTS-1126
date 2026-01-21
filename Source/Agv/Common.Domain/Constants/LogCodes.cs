@@ -112,4 +112,5 @@ public static class LogCodes
     public const int SystemTriggerLocationConfigurationReset = 514;
     public const int SystemTriggerDefaultConfigurationUpdated = 515;
     public const int SystemTriggerMarkedForDeletion = 516;
+    public const int SystemQueueFillQuantityUpdated = 517;
 }

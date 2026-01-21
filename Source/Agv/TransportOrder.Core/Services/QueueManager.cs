@@ -440,4 +440,27 @@ public class QueueManager(
         return currentActionGroups.Where(ag => ag.Actions.Count == 1 && !ag.IsManual)
             .Any(a => a.Actions.Single().ActionType == ActionType.Move && a.Actions.Single().Target.Node != null && queueNodes.Contains(a.Actions.Single().Target.NodeId!.Value));
     }
+    
+    /// <inheritdoc />
+    public async Task AdjustAgvFillQuantity(Guid queueId)
+    {
+        await semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            var queue = await queueRepository.GetQueueByIdIfExisting(queueId);
+            if (queue == null)
+            {
+                logger.LogWarning("Could not adjust AGV fill quantity, no queue found for queue id {QueueId}", queueId);
+                return;
+            }
+            int oldFillQuantity = queue.AgvFillQuantity;
+            if (queue.EntryNode != null)
+            {
+                int agvsMovingToQueue = (await actionGroupRepository.GetCurrentActionGroupsToTarget(queue.EntryNode.Value)).Count;
+                queue.AdjustAgvFillQuantity(agvsMovingToQueue);
+            }
+
+            await UpdateQueueAsync(queue);
+            logger.LogInformation("Adjusted AGV fill quantity for queue {QueueName} from {OldFillQuantity} to {NewFillQuantity}", queue.Name, oldFillQuantity, queue.AgvFillQuantity);
+        });
+    }
 }

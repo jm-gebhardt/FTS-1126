@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -24,6 +25,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Queue;
 public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<QueueCommandHandler>
 {
     private readonly Mock<IQueueRepository> _queueRepository = new();
+    private readonly Mock<IQueueManager> _queueManager = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IRouteService> _routeService = new();
@@ -39,6 +41,7 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
         {
             s.AddTransient(_ => _actionGroupRepository.Object);
             s.AddTransient(_ => _queueRepository.Object);
+            s.AddTransient(_ => _queueManager.Object);
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _routeService.Object);
             s.AddSingleton<ISemaphoreProvider<IQueueingSemaphore>>(_ => _queueSemaphoreProvider);

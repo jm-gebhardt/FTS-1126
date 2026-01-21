@@ -144,7 +144,7 @@ public class Queue
     /// <summary>
     /// Try to enter a queue.
     /// </summary>
-    /// <returns>Id of entry node.</returns>
+    /// <returns>The id of the entry node.</returns>
     public Guid? TryEnterQueue()
     {
         if (IsFull)
@@ -293,7 +293,7 @@ public class Queue
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv that escapes.</param>
     /// <param name="agvsToMove">The Output: agvs to move one position down</param>
-    /// <param name="queueNodeId">The node Id of the queue from which you want to remove the agv from.</param>
+    /// <param name="queueNodeId">The node id of the queue from which you want to remove the agv from.</param>
     /// <returns>Node at which the queue was escaped.</returns>
     public Guid? TryEscapeQueue(Guid agvCorrelationId, out Dictionary<Guid, Guid> agvsToMove, Guid? queueNodeId = null)
     {
@@ -381,6 +381,16 @@ public class Queue
         DecreaseAgvFillQuantity();
     }
 
+    /// <summary>
+    /// Adjust the agv fill quantity when out of sync.
+    /// </summary>
+    /// <param name="agvsMovingToQueueEntry">Amount of agvs moving to queue entry node.</param>
+    public void AdjustAgvFillQuantity(int agvsMovingToQueueEntry)
+    {
+        int agvsInQueue = Nodes.Count(n => n.OccupiedAgv != null || n.ReservedAgv != null);
+        AgvFillQuantity = agvsInQueue + agvsMovingToQueueEntry;
+    }
+    
     /// <inheritdoc />
     public override string ToString()
     {

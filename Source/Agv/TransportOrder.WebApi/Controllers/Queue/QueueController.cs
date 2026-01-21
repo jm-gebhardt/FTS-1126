@@ -30,6 +30,7 @@ public class QueueController : Controller
     private readonly IRequestClient<TryAddQueue> _addQueueClient;
     private readonly IRequestClient<DeleteQueue> _deleteQueueClient;
     private readonly IRequestClient<RemoveAgvFromQueue> _removeAgvFromQueueClient;
+    private readonly IRequestClient<AdjustAgvFillQuantity> _adjustAgvFillQuantityClient;
     private readonly ILogger<QueueController> _logger;
     private readonly ILoggingService _loggingService;
 
@@ -40,6 +41,7 @@ public class QueueController : Controller
         IRequestClient<DeleteQueue> deleteQueueClient,
         IRequestClient<TryAddQueue> addQueueClient,
         IRequestClient<RemoveAgvFromQueue> removeAgvFromQueueClient,
+        IRequestClient<AdjustAgvFillQuantity> adjustAgvFillQuantityClientClient,
         ILoggingService loggingService)
     {
         _mapper = mapper;
@@ -48,6 +50,7 @@ public class QueueController : Controller
         _getQueueClient = getQueueClient;
         _addQueueClient = addQueueClient;
         _removeAgvFromQueueClient = removeAgvFromQueueClient;
+        _adjustAgvFillQuantityClient = adjustAgvFillQuantityClientClient;
         _loggingService = loggingService;
     }
 
@@ -104,8 +107,8 @@ public class QueueController : Controller
     /// <summary>
     /// Clear ReservedAgv and OccupiedAgv for a specific queue node. This will also make the other Agv move up in the queue.
     /// </summary>
-    /// <param name="queueId">The Id of the queue.</param>
-    /// <param name="nodeId">The Id of the node of the queue you want to clear.</param>
+    /// <param name="queueId">The id of the queue.</param>
+    /// <param name="nodeId">The id of the node of the queue you want to clear.</param>
     /// <param name="body">Body.</param>
     /// <response code="200">Ok</response>
     /// <response code="400">Bad Request. E.g. AGV is not in any queue.</response>
@@ -118,6 +121,24 @@ public class QueueController : Controller
         string? email = User.GetEmail();
         await _removeAgvFromQueueClient.GetResponse<Success>(new RemoveAgvFromQueue(body.AgvCorrelationId, true, queueId, nodeId.ToGuid()));
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, email }, { LogLabels.Operation, LogCodes.AgvRemoveFromQueue }, { "NodeId", nodeId }, { "AgvCorrelationId", body } });
+        return Ok();
+    }
+    
+    /// <summary>
+    /// Adjust queue agv fill quantity. 
+    /// </summary>
+    /// <param name="queueId">The ID of the queue.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="400">Bad Request.</response>
+    /// <response code="404">Queue with given id not found.</response>
+    [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
+    [HttpPost]
+    [Route("/queue/{queueId:guid}/adjustAgvFillQuantity")]
+    public async Task<ActionResult> AdjustAgvFillQuantity ([FromRoute] Guid queueId)
+    {
+        string? email = User.GetEmail();
+        await _adjustAgvFillQuantityClient.GetResponse<Success>(new AdjustAgvFillQuantity(queueId));
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, email }, { LogLabels.Operation, LogCodes.SystemQueueFillQuantityUpdated } });
         return Ok();
     }
 }

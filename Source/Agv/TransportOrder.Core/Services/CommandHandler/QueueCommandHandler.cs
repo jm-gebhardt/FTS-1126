@@ -15,6 +15,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
+using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 using QueueNode = Gebhardt.Acc.Common.Messages.Queue.QueueNode;
 
@@ -26,6 +27,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class QueueCommandHandler(
     IQueueRepository queueRepository,
+    IQueueManager queueManager,
     ILogger<QueueCommandHandler> logger,
     IActionGroupRepository actionGroupRepository,
     ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
@@ -39,7 +41,8 @@ public class QueueCommandHandler(
     IConsumer<EvacuateQueueHead>,
     IConsumer<EvacuateOrAssignQueueHead>,
     IConsumer<RemoveAgvFromQueueConsideration>,
-    IConsumer<AddAgvToQueueConsideration>
+    IConsumer<AddAgvToQueueConsideration>,
+    IConsumer<AdjustAgvFillQuantity>
 {
     /// <summary>
     /// Handles the <see cref="AddQueue"/> command.
@@ -372,4 +375,10 @@ public class QueueCommandHandler(
             await queueRepository.UpdateQueueAsync(queue);
         });
     }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AdjustAgvFillQuantity> context)
+    { 
+        await queueManager.AdjustAgvFillQuantity(context.Message.QueueId);
+     }
 }

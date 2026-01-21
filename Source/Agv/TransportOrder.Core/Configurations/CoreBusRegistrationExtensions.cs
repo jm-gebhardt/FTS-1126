@@ -237,7 +237,13 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<DeleteRestrictedArea, RestrictedAreaCommandHandler>(c);
         });
 
-        busRegistrationConfigurator.AddConsumer<QueueCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<QueueCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<AdjustAgvFillQuantity>(x =>
+                x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
+        });
+
         busRegistrationConfigurator.AddConsumer<SimulationCommandHandler>();
     }
 
@@ -528,6 +534,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryAddQueue>();
         configurator.AddRequestClient<DeleteQueue>();
         configurator.AddRequestClient<RemoveAgvFromQueue>();
+        configurator.AddRequestClient<AdjustAgvFillQuantity>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

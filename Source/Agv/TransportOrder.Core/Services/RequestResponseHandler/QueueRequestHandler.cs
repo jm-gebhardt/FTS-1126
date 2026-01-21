@@ -22,7 +22,8 @@ public class QueueRequestHandler(IQueueRepository queueRepository, IQueueManager
     IConsumer<GetQueue>,
     IConsumer<TryAddQueue>,
     IConsumer<DeleteQueue>,
-    IConsumer<RemoveAgvFromQueue>
+    IConsumer<RemoveAgvFromQueue>,
+    IConsumer<AdjustAgvFillQuantity>
 {
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetQueues> context)
@@ -79,6 +80,20 @@ public class QueueRequestHandler(IQueueRepository queueRepository, IQueueManager
 
         await bus.Publish(message);
 
+        await context.RespondAsync(new Success());
+    }
+    
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AdjustAgvFillQuantity> context)
+    {
+        var message = context.Message;
+        logger.LogInformation("Adjust AgvFillQuantity of queue {QueueId}", message.QueueId);
+        
+        // Check whether the queue exists
+        var queue = await queueRepository.GetQueueById(message.QueueId);
+        
+        await bus.Publish(new AdjustAgvFillQuantity(queue.Id, queue.Name));
+    
         await context.RespondAsync(new Success());
     }
 }

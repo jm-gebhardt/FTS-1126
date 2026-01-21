@@ -64,6 +64,7 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
         AddRequestClient<GetQueue, GotQueue>(() => new GotQueue(_queue));
         AddRequestClient<TryAddQueue, GotQueue>(() => new GotQueue(_queue));
         AddRequestClient<RemoveAgvFromQueue, Success>(() => new Success());
+        AddRequestClient<AdjustAgvFillQuantity, Success>(() => new Success());
     }
 
     public new QueueControllerTestFixture Build()

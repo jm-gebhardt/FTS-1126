@@ -492,4 +492,47 @@ public class QueueTest
         testQueue.ShouldNotBeNull();
         testQueue.ShouldNotContain("\"");
     }
+    
+    [TestMethod]
+    public void AdjustAgvFillQuantity_ValidData_AgvFillQuantityUnchanged()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        const int agvsMovingToQueue = 0;
+        int queueSize = queue.AgvFillQuantity;
+
+        queue.AdjustAgvFillQuantity(agvsMovingToQueue);
+        queue.AgvFillQuantity.ShouldBe(queueSize);
+    }
+    
+    [TestMethod]
+    public void AdjustAgvFillQuantity_FillQuantityTooHigh_AgvFillQuantityAdjusted()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        const int agvsMovingToQueue = 0;
+        int queueSize = queue.AgvFillQuantity;
+        queue.AgvFillQuantity++;
+        queue.AdjustAgvFillQuantity(agvsMovingToQueue);
+        queue.AgvFillQuantity.ShouldBe(queueSize);
+    }
+    
+    [TestMethod]
+    public void AdjustAgvFillQuantity_FillQuantityTooLow_AgvFillQuantityAdjusted()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        const int agvsMovingToQueue = 0;
+        int queueSize = queue.AgvFillQuantity;
+        queue.AgvFillQuantity--;
+        queue.AdjustAgvFillQuantity(agvsMovingToQueue);
+        queue.AgvFillQuantity.ShouldBe(queueSize);
+    }
+        
+    [TestMethod]
+    public void AdjustAgvFillQuantity_AgvMovingToQueue_AgvFillQuantityAdjusted()
+    {
+        var queue = QueueGenerator.GenerateFullQueue();
+        const int agvsMovingToQueue = 1;
+        int queueSize = queue.AgvFillQuantity + agvsMovingToQueue;
+        queue.AdjustAgvFillQuantity(agvsMovingToQueue);
+        queue.AgvFillQuantity.ShouldBe(queueSize);
+    }
 }

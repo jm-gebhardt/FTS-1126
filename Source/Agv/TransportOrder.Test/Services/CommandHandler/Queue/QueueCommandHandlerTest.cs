@@ -668,4 +668,18 @@ public class QueueCommandHandlerTest
             fixture.ShouldHaveUpdatedQueue(queue.Id);
         }
     }
+
+    [TestMethod]
+    public async Task Consume_AdjustAgvFillQuantity_ValidData_()
+    {
+        var queue1 = QueueGenerator.GenerateQueueWithCapacity();
+    
+        var fixture = new QueueCommandHandlerTestFixture()
+            .WithQueue(queue1);
+
+        var command = new AdjustAgvFillQuantity(queue1.Id, queue1.Name);
+        await fixture.PublishMessageAsync<AdjustAgvFillQuantity, string>(command);
+
+        await fixture.ShouldHaveConsumedAsync<AdjustAgvFillQuantity>();
+    }
 }

@@ -114,4 +114,11 @@ public interface IQueueManager
     /// <param name="agvCorrelationId">The correlation id of the queue.</param>
     /// <returns></returns>
     Task<bool> IsAgvInQueue(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Adjust the agv fill quantity of the queue.
+    /// </summary>
+    /// <param name="queueId">The id of the queue to adjust.</param>
+    /// <returns></returns>
+    Task AdjustAgvFillQuantity(Guid queueId);
 }
