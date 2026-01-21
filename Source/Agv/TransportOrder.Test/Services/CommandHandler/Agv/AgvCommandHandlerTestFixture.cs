@@ -33,6 +33,7 @@ using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -201,6 +202,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithCurrentAssignedActionGroup(bool hasAssignedActionGroup)
     {
         _actionGroupRepository.Setup(x => x.HasCurrentAssignedActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(hasAssignedActionGroup);
+        return this;
+    }
+
+    [PublicAPI]
+    public AgvCommandHandlerTestFixture WithLatestActionGroupsByState(AgvActionGroupsByState actionGroupsByState)
+    {
+        _actionGroupRepository.Setup(x => x.GetLatestActionGroupsByStateForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroupsByState);
         return this;
     }
 

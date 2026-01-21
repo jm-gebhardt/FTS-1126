@@ -221,9 +221,27 @@ public class AgvCommandHandler :
             return;
         }
 
-        if (await _actionGroupRepository.HasCurrentAssignedActionGroupAsync(agvCorrelationId))
+        var actionGroupsByState = await _actionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agvCorrelationId);
+
+        if (actionGroupsByState.Started != null)
         {
-            _logger.LogInformation("No need for an idle action because the agv {AgvCorrelationId} is already assigned to an action group", agvCorrelationId);
+            _logger.LogInformation("No need for an idle action because the agv {AgvCorrelationId} has a started action group", agvCorrelationId);
+            return;
+        }
+
+        if (actionGroupsByState.Created != null)
+        {
+            var createdPickAction = actionGroupsByState.Created.Actions.FirstOrDefault(a => a.ActionType == ActionType.Pick);
+            var completedLastAction = actionGroupsByState.Completed?.Actions.Where(a => a.State == ActionState.Completed).MaxBy(a => a.Sequence);
+
+            if (createdPickAction != null && completedLastAction != null &&
+                createdPickAction.Target.NodeId == completedLastAction.Target.NodeId)
+            {
+                _logger.LogInformation("No need for an idle action because the agv {AgvCorrelationId} has a created action group with Pick target matching last completed action target (Doppelspiel)", agvCorrelationId);
+                return;
+            }
+
+            _logger.LogInformation("Agv {AgvCorrelationId} has a created action group, publishing AgvBecameIdle", agvCorrelationId);
             await context.Publish(new AgvBecameIdle(agvCorrelationId));
             return;
         }

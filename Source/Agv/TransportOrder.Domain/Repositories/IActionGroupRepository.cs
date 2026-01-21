@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using JetBrains.Annotations;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -403,4 +404,12 @@ public interface IActionGroupRepository
     /// </summary>
     /// <param name="correlationId">The correlation id of the action group</param>
     Task<bool> IsActionGroupQueued(Guid correlationId);
+
+    /// <summary>
+    /// Gets the latest action groups for an AGV in Created, Started, and Completed states.
+    /// Returns at most one action group per state.
+    /// </summary>
+    /// <param name="agvCorrelationId">The AGV correlation id.</param>
+    /// <returns>A record containing the latest action group for each state (if available).</returns>
+    Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId);
 }

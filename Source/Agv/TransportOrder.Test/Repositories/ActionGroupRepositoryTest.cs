@@ -1775,4 +1775,126 @@ public class ActionGroupRepositoryTest
 
         (await fixture.ActionGroupRepository.HasActionGroupsForStationGroup(stationGroup.Select(s => s.ToGuid()).ToList(), pick.AssignedAgv)).ShouldBeFalse();
     }
+
+    [TestMethod]
+    public async Task GetLatestActionGroupsByStateForAgvAsync_NoActionGroups_ReturnsAllNull()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .BuildAsync();
+
+        var result = await fixture.ActionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agv.CorrelationId);
+
+        result.Created.ShouldBeNull();
+        result.Started.ShouldBeNull();
+        result.Completed.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetLatestActionGroupsByStateForAgvAsync_WithCreatedActionGroup_ReturnsCreated()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId, isQueued: true);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(createdActionGroup)
+            .BuildAsync();
+
+        var result = await fixture.ActionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agv.CorrelationId);
+
+        result.Created.ShouldNotBeNull();
+        result.Created.CorrelationId.ShouldBe(createdActionGroup.CorrelationId);
+        result.Started.ShouldBeNull();
+        result.Completed.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetLatestActionGroupsByStateForAgvAsync_WithStartedActionGroup_ReturnsStarted()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Started,
+            isQueued: true);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(startedActionGroup)
+            .BuildAsync();
+
+        var result = await fixture.ActionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agv.CorrelationId);
+
+        result.Created.ShouldBeNull();
+        result.Started.ShouldNotBeNull();
+        result.Started.CorrelationId.ShouldBe(startedActionGroup.CorrelationId);
+        result.Completed.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task GetLatestActionGroupsByStateForAgvAsync_WithCompletedActionGroup_ReturnsCompleted()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed,
+            isQueued: true);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(completedActionGroup)
+            .BuildAsync();
+
+        var result = await fixture.ActionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agv.CorrelationId);
+
+        result.Created.ShouldBeNull();
+        result.Started.ShouldBeNull();
+        result.Completed.ShouldNotBeNull();
+        result.Completed.CorrelationId.ShouldBe(completedActionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetLatestActionGroupsByStateForAgvAsync_WithAllStates_ReturnsAllActionGroups()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            isQueued: true,
+            createdDate: DateTime.UtcNow);
+        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Started,
+            isQueued: true,
+            createdDate: DateTime.UtcNow.AddMinutes(-1));
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed,
+            isQueued: true,
+            createdDate: DateTime.UtcNow.AddMinutes(-2));
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([createdActionGroup, startedActionGroup, completedActionGroup])
+            .BuildAsync();
+
+        var result = await fixture.ActionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agv.CorrelationId);
+
+        result.Created.ShouldNotBeNull();
+        result.Created.CorrelationId.ShouldBe(createdActionGroup.CorrelationId);
+        result.Started.ShouldNotBeNull();
+        result.Started.CorrelationId.ShouldBe(startedActionGroup.CorrelationId);
+        result.Completed.ShouldNotBeNull();
+        result.Completed.CorrelationId.ShouldBe(completedActionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetLatestActionGroupsByStateForAgvAsync_WithDifferentAgv_ReturnsNull()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var otherAgvId = Guid.NewGuid();
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: otherAgvId, isQueued: true);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(createdActionGroup)
+            .BuildAsync();
+
+        var result = await fixture.ActionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agv.CorrelationId);
+
+        result.Created.ShouldBeNull();
+        result.Started.ShouldBeNull();
+        result.Completed.ShouldBeNull();
+    }
 }

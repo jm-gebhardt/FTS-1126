@@ -7,6 +7,7 @@ using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
@@ -1115,5 +1116,18 @@ public class EfActionGroupRepository : IActionGroupRepository
                 ag.Actions.Any(a => a.ActionType == ActionType.Pick && a.Target.NodeId!.Value == nodeId && a.StartedDate == null))
             .OrderBy(ac => ac.CreatedDate)
             .FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId)
+    {
+        var states = new List<ActionGroupState> { ActionGroupState.Created, ActionGroupState.Started, ActionGroupState.Completed };
+        IReadOnlyList<ActionGroup> actionGroups = await GetActionGroupsAsync(states, assignedAgvCorrelationId: agvCorrelationId, maxItems: 3);
+
+        var created = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Created);
+        var started = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Started);
+        var completed = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Completed);
+
+        return new AgvActionGroupsByState(created, started, completed);
     }
 }

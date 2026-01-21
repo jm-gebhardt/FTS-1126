@@ -10,6 +10,7 @@ using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
@@ -1267,7 +1268,7 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv])
             .WithAgvsGraph()
             .HasAlreadyReservedNode(false)
-            .WithCurrentAssignedActionGroup(false)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, null, null))
             .WithEnqueueingTarget(null)
             .WithIsOnAQueueNode(false)
             .AddChargingNode(false, NodeGenerator.GenerateChargingNode("charge"))
@@ -1291,7 +1292,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsGraph()
-            .WithCurrentAssignedActionGroup(false)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, null, null))
             .WithEnqueueingTarget(null)
             .WithIsOnAQueueNode(false)
             .AddChargingNode(true, NodeGenerator.GenerateChargingNode("charge"))
@@ -1315,7 +1316,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsGraph()
-            .WithCurrentAssignedActionGroup(false)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, null, null))
             .WithEnqueueingTarget(null)
             .WithIsOnAQueueNode(false)
             .AddChargingNode(false, NodeGenerator.GenerateChargingNode("charge"))
@@ -1339,7 +1340,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsGraph()
-            .WithCurrentAssignedActionGroup(false)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, null, null))
             .WithEnqueueingTarget(null)
             .WithIsOnAQueueNode(false)
             .AddChargingNode(false, NodeGenerator.GenerateChargingNode("charge"))
@@ -1364,7 +1365,7 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv])
             .WithAgvsGraph()
             .HasAlreadyReservedNode(false)
-            .WithCurrentAssignedActionGroup(false)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, null, null))
             .WithEnqueueingTarget(null)
             .WithIsOnAQueueNode(false)
             .AddChargingNode(false, null)
@@ -1391,7 +1392,7 @@ public class AgvCommandHandlerTest
             .AddAgvs([agv])
             .WithAgvsGraph()
             .AddActionGroupRetrieval(headingTo: false)
-            .WithCurrentAssignedActionGroup(false)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, null, null))
             .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName))
             .WithInfiniteCharging(infiniteCharging);
 
@@ -1406,16 +1407,19 @@ public class AgvCommandHandlerTest
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]
-    public async Task Consume_PrepareIdleActionOfAgv_HasAssignedActionGroup_DoesNotPublishParkingNodeSelectedForAgv(bool infiniteCharging)
+    public async Task Consume_PrepareIdleActionOfAgv_HasStartedActionGroup_DoesNotPublishAnything(bool infiniteCharging)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         const string parkNodeName = "Park-1";
+        var startedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Started);
 
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs([agv])
             .WithAgvsGraph()
             .HasAlreadyReservedNode(true)
-            .WithCurrentAssignedActionGroup(true)
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(null, startedActionGroup, null))
             .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName))
             .WithInfiniteCharging(infiniteCharging);
 
@@ -1423,6 +1427,94 @@ public class AgvCommandHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
         await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareIdleActionOfAgv_HasCreatedActionGroup_PublishesAgvBecameIdle()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string parkNodeName = "Park-1";
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            source: "PickStation",
+            destination: "DropStation");
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsGraph()
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(createdActionGroup, null, null))
+            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName))
+            .WithInfiniteCharging(true);
+
+        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareIdleActionOfAgv_HasCreatedActionGroupWithPickTargetMatchingLastCompleted_DoesNotPublishAnything()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string parkNodeName = "Park-1";
+        const string pickStation = "PickStation";
+
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            source: pickStation,
+            destination: "DropStation");
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            source: "OtherStation",
+            destination: pickStation,
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsGraph()
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(createdActionGroup, null, completedActionGroup))
+            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName))
+            .WithInfiniteCharging(true);
+
+        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<AgvBecameIdle>();
+    }
+
+    [TestMethod]
+    public async Task Consume_PrepareIdleActionOfAgv_HasCreatedActionGroupWithPickTargetNotMatchingLastCompleted_PublishesAgvBecameIdle()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        const string parkNodeName = "Park-1";
+
+        var createdActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            source: "PickStation",
+            destination: "DropStation");
+        var completedActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            source: "OtherStation",
+            destination: "DifferentStation",
+            pickActionState: ActionState.Completed,
+            dropActionState: ActionState.Completed);
+
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv])
+            .WithAgvsGraph()
+            .WithLatestActionGroupsByState(new AgvActionGroupsByState(createdActionGroup, null, completedActionGroup))
+            .AddParkingPointManager(parkGraphNode: NodeGenerator.GenerateParkingNode(parkNodeName))
+            .WithInfiniteCharging(true);
+
+        await fixture.PublishMessageAsync(new PrepareIdleActionOfAgv(agv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+        await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
 
     [TestMethod]
