@@ -168,6 +168,7 @@ public static class WebHostBuilderExtensions
                 opt.AddOperationFilter(new SecurityRequirementsOperationFilter(true, JwtBearerDefaults.AuthenticationScheme));
             });
             options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
+            options.SchemaFilter<RequireNonNullableEnumPropertiesSchemaFilter>();
             options.SchemaFilter<EnumDictionaryOptionalSchemaFilter>();
             options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
             options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable

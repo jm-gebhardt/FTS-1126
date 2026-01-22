@@ -67,6 +67,7 @@ public static class WebHostBuilderExtension
         {
             options.SwaggerDoc(new RestApiGroup());
             options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
+            options.SchemaFilter<RequireNonNullableEnumPropertiesSchemaFilter>();
             options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
             options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
             options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
