@@ -20,7 +20,7 @@ public class AgvZoneProfileTest
         var zone = mapper.Map<Zone>(agvZone);
 
         zone.CorrelationId.ShouldBe(agvZone.ZoneId.ToGuid());
-        zone.ZoneId.ShouldBe(agvZone.ZoneId);
+        zone.ZoneName.ShouldBe(agvZone.ZoneId);
         zone.Capacity.ShouldBe(agvZone.Capacity);
         zone.Polygon.Count.ShouldBe(agvZone.Polygon.Count);
         var zonePolygonPoint = zone.Polygon.First();
@@ -43,7 +43,7 @@ public class AgvZoneProfileTest
         zones.Count.ShouldBe(agvZones.Count);
         var zone = zones.First();
         zone.CorrelationId.ShouldBe(agvZone.ZoneId.ToGuid());
-        zone.ZoneId.ShouldBe(agvZone.ZoneId);
+        zone.ZoneName.ShouldBe(agvZone.ZoneId);
         zone.Capacity.ShouldBe(agvZone.Capacity);
         zone.Polygon.Count.ShouldBe(agvZone.Polygon.Count);
         var zonePolygonPoint = zone.Polygon.First();

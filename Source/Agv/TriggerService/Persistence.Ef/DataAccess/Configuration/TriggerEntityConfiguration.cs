@@ -17,6 +17,9 @@ public class TriggerEntityConfiguration : IEntityTypeConfiguration<Trigger>
         {
             o.ToTable("TriggerServiceConfigurationParameters");
             o.Property(c => c.Name).HasMaxLength(DbStringLimits.Description);
+            o.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
+            o.Property(e => e.Value).HasMaxLength(DbStringLimits.Description);
+            o.Property(e => e.Validation).HasMaxLength(DbStringLimits.Description);
         });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
     }

@@ -12,12 +12,22 @@ public class TriggerEntityConfiguration : IEntityTypeConfiguration<Domain.Models
     {
         builder.HasKey(e => e.Id);
         builder.Property(e => e.DisplayName).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.Version).HasMaxLength(DbStringLimits.Name);
+        builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.Urn).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.Version).HasMaxLength(DbStringLimits.Name);
+
         builder.OwnsMany(e => e.ConfigurationParameters, o =>
         {
             o.ToTable("DefaultTriggerConfigurationParameters");
             o.Property(e => e.Name).HasMaxLength(DbStringLimits.Description);
+            builder.Property(e => e.Urn).HasMaxLength(DbStringLimits.Description);
+            builder.Property(e => e.DisplayName).HasMaxLength(DbStringLimits.Name);
+            builder.Property(e => e.Version).HasMaxLength(DbStringLimits.Name);
+            builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
         });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
+
         builder.HasMany(e => e.Locations)
             .WithOne()
             .HasForeignKey(e => e.TriggerId);

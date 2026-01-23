@@ -57,7 +57,7 @@ public class StationsRequestHandler :
     public async Task Consume(ConsumeContext<GetMapStations> context)
     {
         var map = await _mapRepository.GetMapAsync(context.Message.CorrelationId);
-        ICollection<Station> stations = await _stationRepository.GetStations(map.MapId);
+        ICollection<Station> stations = await _stationRepository.GetStations(map.CorrelationId);
         await context.RespondAsync(new GotMapStations(stations));
     }
 

@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 /// <summary>
 /// The settings for an agv (group).
 /// </summary>
-public record AgvSettingsReadModel :  SettingsBase<AgvSettingsReadModel>
+public record AgvSettingsReadModel : SettingsBase<AgvSettingsReadModel>
 {
     /// <summary>Timeout value [ms] to set AGV offline while it is in idle mode</summary>
     public int AgvOfflineTimeoutMsWhileIdle { get; set; } = -1;
@@ -28,8 +28,15 @@ public record AgvSettingsReadModel :  SettingsBase<AgvSettingsReadModel>
     /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
     public bool InfiniteCharging { get; set; }
 
+    /// <summary>
+    /// The time span an agv can be offline without assigned nodes or action groups being cleared.
+    /// </summary>
+    public TimeSpan OfflineTolerance { get; set; } = TimeSpan.FromMinutes(5);
+
     /// <inheritdoc cref="AgvSettingsReadModel" />
-    public AgvSettingsReadModel() { }
+    public AgvSettingsReadModel()
+    {
+    }
 
     /// <inheritdoc cref="AgvSettingsReadModel" />
     public AgvSettingsReadModel(
@@ -39,7 +46,8 @@ public record AgvSettingsReadModel :  SettingsBase<AgvSettingsReadModel>
         int batteryLevelLow = -1,
         int minChargeUp = -1,
         int maxChargeUp = -1,
-        bool infiniteCharging = false)
+        bool infiniteCharging = false,
+        TimeSpan? offlineTolerance = null)
     {
         AgvOfflineTimeoutMsWhileIdle = agvOfflineTimeoutMsWhileIdle;
         AgvOfflineTimeoutMsWhileBusy = agvOfflineTimeoutMsWhileBusy;
@@ -48,6 +56,7 @@ public record AgvSettingsReadModel :  SettingsBase<AgvSettingsReadModel>
         MinChargeUp = minChargeUp;
         MaxChargeUp = maxChargeUp;
         InfiniteCharging = infiniteCharging;
+        OfflineTolerance = offlineTolerance ?? TimeSpan.FromMinutes(5);
     }
 
     /// <summary>
@@ -87,6 +96,7 @@ public record AgvSettingsReadModel :  SettingsBase<AgvSettingsReadModel>
         }
 
         InfiniteCharging = newSettings.InfiniteCharging;
+        OfflineTolerance = newSettings.OfflineTolerance;
     }
 
     /// <summary>
@@ -98,8 +108,11 @@ public record AgvSettingsReadModel :  SettingsBase<AgvSettingsReadModel>
         return GetType()
             .GetProperties()
             .Where(p => (p.PropertyType == typeof(int) &&
-                        p.GetValue(this) is IComparable comparable &&
-                        comparable.CompareTo(0) >= 0) || p.PropertyType == typeof(bool))
+                         p.GetValue(this) is IComparable comparable &&
+                         comparable.CompareTo(0) >= 0)
+                        || p.PropertyType == typeof(bool)
+                        || p.PropertyType == typeof(TimeSpan)
+            )
             .Select(p => (p.Name, p.GetValue(this))).ToList();
     }
 }

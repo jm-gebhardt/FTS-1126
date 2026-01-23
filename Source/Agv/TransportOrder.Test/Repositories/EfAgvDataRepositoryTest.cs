@@ -16,13 +16,13 @@ public class EfAgvDataRepositoryTest
         List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         await fixture.AddRangeAsync(specifications);
 
-        List<Guid> correlationIds = specifications.Take(2).Select(s => s.CorrelationId).ToList();
+        List<Guid> correlationIds = specifications.Take(2).Select(s => s.AgvCorrelationId).ToList();
         ICollection<AgvData> selectedAgvData = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
         selectedAgvData.ShouldNotBeNull();
         selectedAgvData.Count.ShouldBe(correlationIds.Count);
         foreach (var actualData in selectedAgvData)
         {
-            actualData.ShouldBeEquivalentTo(specifications.Single(s => s.CorrelationId == actualData.CorrelationId));
+            actualData.ShouldBeEquivalentTo(specifications.Single(s => s.AgvCorrelationId == actualData.AgvCorrelationId));
         }
     }
 
@@ -34,14 +34,14 @@ public class EfAgvDataRepositoryTest
         List<AgvData> knownData = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         await fixture.AddRangeAsync(knownData);
 
-        List<Guid> correlationIds = knownData.Select(s => s.CorrelationId).ToList();
+        List<Guid> correlationIds = knownData.Select(s => s.AgvCorrelationId).ToList();
         correlationIds.Add("Unknown".ToGuid());
         ICollection<AgvData> actualDataOfAgvs = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
         actualDataOfAgvs.ShouldNotBeNull();
         actualDataOfAgvs.Count.ShouldBe(knownData.Count);
         foreach (var actualAgvData in actualDataOfAgvs)
         {
-            actualAgvData.ShouldBeEquivalentTo(knownData.Single(s => s.CorrelationId == actualAgvData.CorrelationId));
+            actualAgvData.ShouldBeEquivalentTo(knownData.Single(s => s.AgvCorrelationId == actualAgvData.AgvCorrelationId));
         }
     }
 }

@@ -8,7 +8,7 @@ public class DecisionPointAction
     /// <summary>
     /// The correlation id of the action.
     /// </summary>
-    public Guid CorrelationId { get; init; }
+    public Guid AgvActionCorrelationId { get; init; }
 
     /// <summary>
     /// The correlation id of the agv.
@@ -18,7 +18,7 @@ public class DecisionPointAction
     /// <summary>
     /// The target station.
     /// </summary>
-    public Guid? Target { get; private set; }
+    public Guid? TargetNodeId { get; private set; }
 
     /// <summary>
     /// The time the agv entered the decision point.
@@ -31,19 +31,19 @@ public class DecisionPointAction
     public ICollection<Guid> ConsideredStations { get; init; }
 
     /// <inheritdoc cref="DecisionPointAction"/>>
-    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, Guid? targetStationId, DateTime entryTime, ICollection<Guid> consideredStations)
+    public DecisionPointAction(Guid agvActionCorrelationId, Guid agvCorrelationId, Guid? targetStationId, DateTime entryTime, ICollection<Guid> consideredStations)
     {
-        CorrelationId = correlationId;
+        AgvActionCorrelationId = agvActionCorrelationId;
         AgvCorrelationId = agvCorrelationId;
-        Target = targetStationId;
+        TargetNodeId = targetStationId;
         EntryTime = entryTime;
         ConsideredStations = consideredStations;
     }
 
     /// <inheritdoc cref="DecisionPointAction"/>>
-    public DecisionPointAction(Guid correlationId, Guid agvCorrelationId, DateTime entryTime, ICollection<Guid> consideredStations)
+    public DecisionPointAction(Guid agvActionCorrelationId, Guid agvCorrelationId, DateTime entryTime, ICollection<Guid> consideredStations)
     {
-        CorrelationId = correlationId;
+        AgvActionCorrelationId = agvActionCorrelationId;
         AgvCorrelationId = agvCorrelationId;
         EntryTime = entryTime;
         ConsideredStations = consideredStations;
@@ -55,6 +55,6 @@ public class DecisionPointAction
     /// <param name="targetStationId"></param>
     public void SetTarget(Guid targetStationId)
     {
-        Target = targetStationId;
+        TargetNodeId = targetStationId;
     }
 }

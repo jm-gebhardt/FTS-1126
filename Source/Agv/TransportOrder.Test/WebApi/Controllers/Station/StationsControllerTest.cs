@@ -14,7 +14,7 @@ public class StationsControllerTests
     public async Task GetStation_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
     {
         var map = MapGenerator.Generate();
-        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = map.MapId };
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
 
         StationsControllerTestFixture<GetStations, StationsRequestHandler> fixture = new StationsControllerTestFixture<GetStations, StationsRequestHandler>()
             .WithMap(map)

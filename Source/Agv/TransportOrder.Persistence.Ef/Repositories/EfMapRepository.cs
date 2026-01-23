@@ -170,7 +170,7 @@ public class EfMapRepository : IMapRepository
 
                 var agvGraph = await context.Set<AgvGraph>()
                     .Include(ag => ag.Nodes)
-                    .SingleOrDefaultAsync(ag => ag.CorrelationId == agvId);
+                    .SingleOrDefaultAsync(ag => ag.AgvCorrelationId == agvId);
 
                 if (agvGraph == null)
                 {

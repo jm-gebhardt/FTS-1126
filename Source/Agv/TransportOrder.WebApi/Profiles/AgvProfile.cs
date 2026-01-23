@@ -18,7 +18,9 @@ public class AgvProfile : WebApiProfile
     public AgvProfile()
     {
         CreateMap<Messages.MessageContent.Agv, AgvDto>().ReverseMap();
-        CreateMap<AgvData, AgvDataDto>().ReverseMap();
+        CreateMap<AgvData, AgvDataDto>()
+            .ForMember(c => c.CorrelationId, o => o.MapFrom(s => s.AgvCorrelationId))
+            .ReverseMap();
         CreateMap<Messages.MessageContent.Agv, AgvStateDto>();
         CreateMap<Messages.MessageContent.Maintenance, MaintenanceDto>();
         CreateMap<MaintenanceLog, AgvMaintenanceLogDto>();
@@ -37,7 +39,8 @@ public class AgvProfile : WebApiProfile
         CreateMap<AgvSettingsReadModel, AgvBatteryStatusDto>(MemberList.Source)
             .ForSourceMember(d => d.SectionName, o => o.DoNotValidate())
             .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileIdle, o => o.DoNotValidate())
-            .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileBusy, o => o.DoNotValidate());
+            .ForSourceMember(d => d.AgvOfflineTimeoutMsWhileBusy, o => o.DoNotValidate())
+            .ForSourceMember(d => d.OfflineTolerance, o => o.DoNotValidate());
         CreateMap<(AgvBatteryStatus, AgvSettingsReadModel), AgvBatteryStatusDto>()
             .IncludeMembers(s => s.Item1, s => s.Item2);
         CreateMap<AgvMode, AgvModeDto>().ReverseMap();

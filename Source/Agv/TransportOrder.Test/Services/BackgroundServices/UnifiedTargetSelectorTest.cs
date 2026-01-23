@@ -77,8 +77,8 @@ public class UnifiedTargetSelectorTest
         fixture.DecisionPointRepository.Verify(x => x.UpdateAsync(It.IsAny<DecisionPointAction>()), Times.Once);
         var decisionPointAction = fixture.DecisionPointRepository.Invocations.First().Arguments[0] as DecisionPointAction;
         decisionPointAction.ShouldNotBeNull();
-        decisionPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
-        decisionPointAction.Target.ShouldBe(fixture.Stations[0].Id);
+        decisionPointAction.AgvActionCorrelationId.ShouldBe(moveAction.CorrelationId);
+        decisionPointAction.TargetNodeId.ShouldBe(fixture.Stations[0].Id);
     }
 
     [TestMethod]
@@ -96,8 +96,8 @@ public class UnifiedTargetSelectorTest
         fixture.DecisionPointRepository.Verify(x => x.UpdateAsync(It.IsAny<DecisionPointAction>()), Times.Once);
         var decisionPointAction = fixture.DecisionPointRepository.Invocations.First().Arguments[0] as DecisionPointAction;
         decisionPointAction.ShouldNotBeNull();
-        decisionPointAction.CorrelationId.ShouldBe(moveAction.CorrelationId);
-        decisionPointAction.Target.ShouldBe(fixture.Stations[1].Id);
+        decisionPointAction.AgvActionCorrelationId.ShouldBe(moveAction.CorrelationId);
+        decisionPointAction.TargetNodeId.ShouldBe(fixture.Stations[1].Id);
     }
 
     [TestMethod]

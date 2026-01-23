@@ -25,13 +25,13 @@ public class EfAgvDataRepository : IAgvDataRepository
     /// <inheritdoc/>
     public Task<bool> ExistsAsync(Guid correlationId)
     {
-        return AgvData.AnyAsync(q => q.CorrelationId == correlationId);
+        return AgvData.AnyAsync(q => q.AgvCorrelationId == correlationId);
     }
 
     /// <inheritdoc/>
     public Task<AgvData?> GetAgvDataAsync(Guid correlationId)
     {
-        return AgvData.SingleOrDefaultAsync(q => q.CorrelationId == correlationId);
+        return AgvData.SingleOrDefaultAsync(q => q.AgvCorrelationId == correlationId);
     }
 
     /// <inheritdoc/>
@@ -40,7 +40,7 @@ public class EfAgvDataRepository : IAgvDataRepository
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         DbSet<AgvData> dbSet = dbContext.Set<AgvData>();
 
-        if (dbSet.Any(a => a.CorrelationId == agvData.CorrelationId))
+        if (dbSet.Any(a => a.AgvCorrelationId == agvData.AgvCorrelationId))
         {
             dbSet.Update(agvData);
         }
@@ -55,6 +55,6 @@ public class EfAgvDataRepository : IAgvDataRepository
     /// <inheritdoc/>
     public async Task<ICollection<AgvData>> GetSelectedAgvDataAsync(ICollection<Guid> correlationIds)
     {
-        return await AgvData.Where(a => correlationIds.Contains(a.CorrelationId)).ToListAsync();
+        return await AgvData.Where(a => correlationIds.Contains(a.AgvCorrelationId)).ToListAsync();
     }
 }

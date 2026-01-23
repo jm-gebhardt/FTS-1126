@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 
 /// <inheritdoc />  
-public class AgvSettingEntityConfiguration: IEntityTypeConfiguration<Domain.Models.Settings.AgvSettings>
+public class AgvSettingEntityConfiguration : IEntityTypeConfiguration<Domain.Models.Settings.AgvSettings>
 {
     /// <inheritdoc />  
     public void Configure(EntityTypeBuilder<Domain.Models.Settings.AgvSettings> builder)
     {
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.AgvGroupId);
+        builder.Property(e => e.AgvSettingsGroupId);
         builder.HasOne(e => e.AgvOfflineTimeoutMsWhileIdle)
             .WithMany()
             .HasForeignKey(e => e.AgvOfflineTimeoutMsWhileIdleId)
@@ -19,7 +19,7 @@ public class AgvSettingEntityConfiguration: IEntityTypeConfiguration<Domain.Mode
         builder.HasOne(e => e.AgvOfflineTimeoutMsWhileBusy)
             .WithMany()
             .HasForeignKey(e => e.AgvOfflineTimeoutMsWhileBusyId)
-            .OnDelete(DeleteBehavior.NoAction); 
+            .OnDelete(DeleteBehavior.NoAction);
         builder.Navigation(e => e.AgvOfflineTimeoutMsWhileBusy).AutoInclude();
         builder.HasOne(e => e.BatteryLevelCritical)
             .WithMany()
@@ -46,5 +46,10 @@ public class AgvSettingEntityConfiguration: IEntityTypeConfiguration<Domain.Mode
             .HasForeignKey(e => e.InfiniteChargingId)
             .OnDelete(DeleteBehavior.NoAction);
         builder.Navigation(e => e.InfiniteCharging).AutoInclude();
+        builder.HasOne(e => e.OfflineTolerance)
+            .WithMany()
+            .HasForeignKey(e => e.OfflineToleranceId)
+            .OnDelete(DeleteBehavior.NoAction);
+        builder.Navigation(e => e.OfflineTolerance).AutoInclude();
     }
 }

@@ -1,7 +1,9 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Trigger;
 
@@ -22,14 +24,25 @@ public class TriggerLocationEntityConfiguration : IEntityTypeConfiguration<Locat
             o =>
             {
                 o.ToTable("TriggerLocationConfigurationParameters");
+                o.Property(p => p.Name).HasMaxLength(DbStringLimits.Name);
+                o.Property(p => p.Description).HasMaxLength(DbStringLimits.Description);
+                o.Property(p => p.Value).HasMaxLength(DbStringLimits.Enum);
+                o.Property(p => p.Validation).HasMaxLength(DbStringLimits.Description);
             });
         builder.Navigation(e => e.ConfigurationParameters).AutoInclude();
-        builder.Property(e => e.MapId);
-        builder.Property(e => e.EdgeId);
-
-        builder.HasOne(t => t.Node)
+        builder.HasOne<Map>()
             .WithMany()
-            .HasForeignKey(t => t.NodeId)
+            .HasForeignKey(e => e.MapId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<GraphEdge>()
+            .WithMany()
+            .HasForeignKey(e => e.EdgeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<GraphNode>(t => t.Node)
+            .WithMany()
+            .HasForeignKey(e => e.NodeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(e => e.Agvs).HasJsonConversion();

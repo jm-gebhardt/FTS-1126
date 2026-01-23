@@ -128,7 +128,7 @@ public class AgvGraphBuilderStateMachineTest
         var publishedData = fixture.TestHarness.Published.Select<InternalAgvGraphReceived>().First().Context.Message;
 
         publishedData.CorrelationId.ShouldBe(correlationId);
-        publishedData.Graph.CorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
+        publishedData.Graph.AgvCorrelationId.ShouldBe(AgvSerialNumber.ToGuid());
         // 2 stations + 2 nodes
         publishedData.Graph.Nodes.Count.ShouldBe(2 + 2);
         // 4 edges (2 (bidirectional) per station + 2 edges (bidirectional) from graph

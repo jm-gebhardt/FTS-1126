@@ -20,7 +20,7 @@ public class AgvProfileTest
 
         agvDataMessageContent.ShouldNotBeNull();
         agvDataMessageContent.Acceleration.ShouldBe(agvData.Acceleration);
-        agvDataMessageContent.CorrelationId.ShouldBe(agvData.CorrelationId);
+        agvDataMessageContent.AgvCorrelationId.ShouldBe(agvData.AgvCorrelationId);
         agvDataMessageContent.BatteryCapacity.ShouldBe(agvData.BatteryCapacity);
         agvDataMessageContent.IpV4Address.ShouldBe(agvData.IpV4Address);
         agvDataMessageContent.Length.ShouldBe(agvData.Length);

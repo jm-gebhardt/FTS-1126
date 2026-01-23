@@ -4,9 +4,9 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
@@ -27,9 +27,9 @@ public class NodeCommandHandler(
     INodeStateRepository nodeStateRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository,
-    IGraphRepository graphRepository,
     IMapRepository mapRepository,
     TimeProvider timeProvider,
+    IAgvDb agvDb,
     ILogger<NodeCommandHandler> logger
 ) :
     IConsumer<FreeNode>,
@@ -77,9 +77,12 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<ClearNodesFromAgv> context)
     {
-        await Task.Delay(Agv.OfflineTolerance);
-        ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(context.Message.AgvCorrelationId);
-        ICollection<GraphNode> nodes = await graphRepository.GetNodesByIdsAsync(nodeLocksForAgv.Select(n => n.NodeId).ToList());
+        var agvCorrelationId = context.Message.AgvCorrelationId;
+        var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var settings = agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
+        await Task.Delay(settings.OfflineTolerance);
+        ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
+        ICollection<GraphNode> nodes = await agvDb.Graphs.GetNodesByIdsAsync(nodeLocksForAgv.Select(n => n.NodeId).ToList());
         ICollection<Task> tasks = [];
         foreach (var node in nodes.Where(n => !n.IsCharger() && !n.IsParker()))
         {
@@ -196,7 +199,7 @@ public class NodeCommandHandler(
             return;
         }
         var dateModified = DateTime.UtcNow;
-        var node = await graphRepository.GetNodeAsync(nodeId);
+        var node = await agvDb.Graphs.GetNodeAsync(nodeId);
         await context.Publish(new NodeStateChanged(new NodeLock(node, NodeLockState.Free, false, null, dateModified), stationId, user, lockReason, lockDescription));
     }
 
@@ -207,7 +210,7 @@ public class NodeCommandHandler(
     {
         (var mapId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
 
-        var node = await graphRepository.GetNodeAsync(nodeId);
+        var node = await agvDb.Graphs.GetNodeAsync(nodeId);
         dockingDirection ??= DockingDirection.Both;
 
         logger.LogInformation("Setting approaching properties for node {NodeId} on map {MapId}: docking direction {DockingDirection}, drop lift height {DropLiftHeight}, pick lift height {PickLiftHeight}", node, mapId, dockingDirection, dropLiftHeight, pickLiftHeight);
@@ -216,7 +219,7 @@ public class NodeCommandHandler(
         node.DropLiftHeight = dropLiftHeight;
         node.PickLiftHeight = pickLiftHeight;
 
-        await graphRepository.UpdateNode(node);
+        await agvDb.Graphs.UpdateNode(node);
 
         await context.Publish(new NodeApproachingPropertiesUpdated(mapId, node, pickLiftHeight, dropLiftHeight, dockingDirection));
     }
@@ -228,13 +231,13 @@ public class NodeCommandHandler(
     {
         (var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
 
-        var node = await graphRepository.GetNodeAsync(nodeId);
+        var node = await agvDb.Graphs.GetNodeAsync(nodeId);
 
         node.DockingDirection = dockingDirection;
         node.DropLiftHeight = dropLiftHeight;
         node.PickLiftHeight = pickLiftHeight;
 
-        await graphRepository.UpdateNode(node);
+        await agvDb.Graphs.UpdateNode(node);
 
         var mapId = await mapRepository.GetMapIdForNodeAsync(nodeId);
 

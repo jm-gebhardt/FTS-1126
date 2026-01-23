@@ -14,7 +14,7 @@ public class StationControllerTests
     public async Task GetStation_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
     {
         var map = MapGenerator.Generate();
-        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = map.MapId };
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapId = map.CorrelationId };
 
         StationControllerTestFixture<GetStation, StationsRequestHandler> fixture = new StationControllerTestFixture<GetStation, StationsRequestHandler>()
             .WithMap(map)
@@ -37,7 +37,7 @@ public class StationControllerTests
     [TestMethod]
     public async Task LockStation_ValidData_TryLockStation()
     {
-        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
 
         StationControllerTestFixture<TryLockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<TryLockStation, StationsRequestHandler>()
             .WithStation(station)
@@ -55,7 +55,7 @@ public class StationControllerTests
     [TestMethod]
     public async Task UnlockStation_ValidData_TryUnlockStation()
     {
-        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
         station.Lock("user", "reason", "description", LockedOrderHandlingType.AllowFinish);
         StationControllerTestFixture<TryUnlockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<TryUnlockStation, StationsRequestHandler>()
             .WithStation(station)
@@ -74,8 +74,8 @@ public class StationControllerTests
     [TestMethod]
     public async Task UnblockStation_ValidData_UnblockStation()
     {
-        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []) { MapName = "" };
-        
+        var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
+
         StationControllerTestFixture<UnblockStation, StationsRequestHandler> fixture = new StationControllerTestFixture<UnblockStation, StationsRequestHandler>()
             .WithStation(station)
             .Build();

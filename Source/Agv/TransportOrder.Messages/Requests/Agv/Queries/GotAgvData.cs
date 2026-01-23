@@ -13,7 +13,7 @@ public record GotAgvData(AgvData AgvData);
 public record AgvData
 {
     /// <summary>The CorrelationId of the agv</summary>
-    public Guid CorrelationId { get; init; }
+    public Guid AgvCorrelationId { get; init; }
 
     /// <summary>The model name of the AGV</summary>
     public string Model { get; init; }
@@ -59,7 +59,7 @@ public record AgvData
     /// <summary>The list of sensors in the agv</summary>
     public Common.Domain.Models.AgvData.Sensor[] Sensors { get; init; }
 
-    /// <param name="correlationId">The CorrelationId of the agv</param>
+    /// <param name="agvCorrelationId">The CorrelationId of the agv</param>
     /// <param name="model">The model name of the AGV</param>
     /// <param name="type">The type of the AGV</param>
     /// <param name="ipV4Address">The IP Address of the AGV</param>
@@ -76,7 +76,7 @@ public record AgvData
     /// <param name="sensors">The list of sensors in the agv</param>
     /// <returns></returns>
     [PublicAPI]
-    public AgvData(Guid correlationId,
+    public AgvData(Guid agvCorrelationId,
         string model,
         string type,
         string? ipV4Address,
@@ -92,7 +92,7 @@ public record AgvData
         long? payload,
         Common.Domain.Models.AgvData.Sensor[] sensors)
     {
-        CorrelationId = correlationId;
+        AgvCorrelationId = agvCorrelationId;
         Model = model;
         Type = type;
         IpV4Address = ipV4Address;

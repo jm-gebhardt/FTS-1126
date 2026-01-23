@@ -22,9 +22,9 @@ public class Station
     public string Name { get; set; }
 
     /// <summary>
-    /// The name of the map station is on.
+    /// The Id of the map station is on.
     /// </summary>
-    public string? MapName { get; set; }
+    public Guid? MapId { get; set; }
 
     /// <summary>
     /// Length of the station [m].
@@ -115,7 +115,7 @@ public class Station
     public Station()
     {
         Name = string.Empty;
-        MapName = string.Empty;
+        MapId = null;
         Id = Guid.Empty;
     }
 
@@ -133,10 +133,10 @@ public class Station
     /// <summary>
     /// Set the map name.
     /// </summary>
-    /// <param name="mapName"></param>
-    public void SetMap(string? mapName)
+    /// <param name="mapId"></param>
+    public void SetMap(Guid? mapId)
     {
-        MapName = mapName;
+        MapId = mapId;
     }
 
     /// <summary>

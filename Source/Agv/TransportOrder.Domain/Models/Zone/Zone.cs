@@ -10,19 +10,19 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 public class Zone : IEquatable<Zone>
 {
     /// <summary>
-    /// The polygon that defines the zone boundaries.
-    /// </summary>
-    public ICollection<ZonePolygonPoint> Polygon { get; init; }
-
-    /// <summary>
-    /// The id of the zone.
-    /// </summary>
-    public string ZoneId { get; init; }
-
-    /// <summary>
     /// The correlation id of the zone.
     /// </summary>
     public Guid CorrelationId { get; init; }
+
+    /// <summary>
+    /// The name of the zone.
+    /// </summary>
+    public string ZoneName { get; init; }
+
+    /// <summary>
+    /// The polygon that defines the zone boundaries.
+    /// </summary>
+    public ICollection<ZonePolygonPoint> Polygon { get; init; }
 
     /// <summary>
     /// The capacity of the zone.
@@ -30,10 +30,10 @@ public class Zone : IEquatable<Zone>
     public int Capacity { get; init; }
 
     /// <inheritdoc cref="Zone"/>>
-    public Zone(ICollection<ZonePolygonPoint> polygon, string zoneId, Guid correlationId, int capacity)
+    public Zone(ICollection<ZonePolygonPoint> polygon, string zoneName, Guid correlationId, int capacity)
     {
         Polygon = polygon;
-        ZoneId = zoneId;
+        ZoneName = zoneName;
         Capacity = capacity;
         CorrelationId = correlationId;
     }
@@ -43,7 +43,7 @@ public class Zone : IEquatable<Zone>
     {
         CorrelationId = Guid.NewGuid();
         Polygon = [];
-        ZoneId = string.Empty;
+        ZoneName = string.Empty;
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public class Zone : IEquatable<Zone>
     /// <inheritdoc cref="IEquatable{T}"/>>
     public bool Equals(Zone? other)
     {
-        if (ZoneId != other?.ZoneId)
+        if (ZoneName != other?.ZoneName)
         {
             return false;
         }

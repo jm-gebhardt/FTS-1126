@@ -52,7 +52,7 @@ public class EfGraphRepository : IGraphRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var agvGraph = await QueryAgvGraphWithChildren(context)
-            .SingleOrDefaultAsync(g => g.CorrelationId == agvCorrelationId);
+            .SingleOrDefaultAsync(g => g.AgvCorrelationId == agvCorrelationId);
 
         return agvGraph ?? throw new AgvGraphNotDefinedException(agvCorrelationId);
     }
@@ -62,7 +62,7 @@ public class EfGraphRepository : IGraphRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await QueryAgvGraphWithChildren(context)
-            .Select(g => g.CorrelationId)
+            .Select(g => g.AgvCorrelationId)
             .Distinct()
             .ToListAsync();
     }
@@ -72,7 +72,7 @@ public class EfGraphRepository : IGraphRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<AgvGraph> agvGraphs = await QueryAgvGraphWithChildren(context)
-            .Where(g => correlationIds.Contains(g.CorrelationId))
+            .Where(g => correlationIds.Contains(g.AgvCorrelationId))
             .ToListAsync();
 
         return agvGraphs;
@@ -85,7 +85,7 @@ public class EfGraphRepository : IGraphRepository
         bool exists = await context.Set<AgvGraph>()
             .Include(g => g.Nodes)
             .AsNoTracking()
-            .AnyAsync(g => g.CorrelationId == agvCorrelationId && g.Nodes.Any(n => ((string)n.Type).Contains(nodeType.ToString())));
+            .AnyAsync(g => g.AgvCorrelationId == agvCorrelationId && g.Nodes.Any(n => ((string)n.Type).Contains(nodeType.ToString())));
 
         return exists;
     }
@@ -214,7 +214,7 @@ public class EfGraphRepository : IGraphRepository
             var existingGraph = await context.Set<AgvGraph>()
                 .Include(g => g.Nodes)
                 .Include(g => g.Edges)
-                .SingleOrDefaultAsync(g => g.CorrelationId == agvGraph.CorrelationId);
+                .SingleOrDefaultAsync(g => g.AgvCorrelationId == agvGraph.AgvCorrelationId);
 
             if (existingGraph == null)
             {
@@ -249,7 +249,7 @@ public class EfGraphRepository : IGraphRepository
 
         var graph = await context.Set<AgvGraph>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(g => g.CorrelationId == agvCorrelationId);
+            .SingleOrDefaultAsync(g => g.AgvCorrelationId == agvCorrelationId);
 
         if (graph == null)
         {
@@ -266,7 +266,7 @@ public class EfGraphRepository : IGraphRepository
 
         bool exists = await context.Set<AgvGraph>()
             .AsNoTracking()
-            .AnyAsync(g => g.CorrelationId == agvCorrelationId);
+            .AnyAsync(g => g.AgvCorrelationId == agvCorrelationId);
 
         return exists;
     }
@@ -425,7 +425,7 @@ public class EfGraphRepository : IGraphRepository
         // get EfAgvGraph which have at least one node in the given list
         List<Guid> agvIds = await context.Set<AgvGraph>()
             .Where(agvGraph => agvGraph.Nodes.Any(efNode => efNodes.Select(n => n.Id).Contains(efNode.Id)))
-            .Select(agvGraph => agvGraph.CorrelationId)
+            .Select(agvGraph => agvGraph.AgvCorrelationId)
             .Distinct()
             .ToListAsync();
 

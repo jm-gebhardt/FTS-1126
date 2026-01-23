@@ -571,7 +571,7 @@ public class AgvCommandHandlerTest
             .WithGraphExists(true);
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
-        var newAgvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus.LastNodeId, estimatedFullyChargedTime: agv.AgvStatus.EstimatedFullyChargedTime, lastBatteryReplacement: agv.AgvStatus.LastBatteryReplacement, zoneIds: [zone.ZoneId]);
+        var newAgvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, agv.AgvStatus!.OrderId, agv.AgvStatus!.Busy, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus.LastNodeId, estimatedFullyChargedTime: agv.AgvStatus.EstimatedFullyChargedTime, lastBatteryReplacement: agv.AgvStatus.LastBatteryReplacement, zoneIds: [zone.ZoneName]);
         var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus);
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
@@ -813,7 +813,7 @@ public class AgvCommandHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         agv.SetOnline();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
@@ -1901,14 +1901,14 @@ public class AgvCommandHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         agv.AgvStatus!.ZoneIds!.Count.ShouldBe(1);
         agv.GoOffline();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithPostion(position)
             .WithZones([zone])
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneName)]);
 
         await fixture.PublishMessageAsync(new RemoveAgvFromAllZones(agv.CorrelationId, "user"));
 
@@ -1922,16 +1922,16 @@ public class AgvCommandHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         agv.AgvStatus!.ZoneIds!.Count.ShouldBe(1);
         agv.GoOffline();
         var fixture = new AgvCommandHandlerTestFixture()
             .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithPostion(position)
             .WithZones([zone])
-            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId)]);
+            .WithActiveErrors([new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneName)]);
 
-        await fixture.PublishMessageAsync(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId, "user"));
+        await fixture.PublishMessageAsync(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneName, "user"));
         await fixture.ShouldHavePublishedAsync<UpdateSystemAgvErrors>();
         agv.AgvStatus!.ZoneIds.ShouldBeEmpty();
         fixture.VerifyAgvUpdated(Times.Once());

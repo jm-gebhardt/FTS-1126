@@ -53,9 +53,9 @@ public class EfStationRepository(
             foreach (var station in existingStations)
             {
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
-                if (station.MapName == null)
+                if (station.MapId == null)
                 {
-                    station.SetMap(map?.MapId);
+                    station.SetMap(map?.CorrelationId);
                 }
                 context.Update(station).CurrentValues.SetValues(station);
             }
@@ -64,7 +64,7 @@ public class EfStationRepository(
             {
                 var station = new Station(n.Name, n.GetPrimaryType(), n.GetAdditionalTypes());
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
-                station.SetMap(map?.MapId);
+                station.SetMap(map?.CorrelationId);
                 return station;
             });
 
@@ -98,43 +98,43 @@ public class EfStationRepository(
     public async Task<Station> GetStation(Guid id)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        var stationWithNode = await context.Set<Station>()
-            .Where(s => s.Id == id)
-            .GroupJoin(
-                context.Set<NodeLock>().AsNoTracking(),
-                s => s.Id,
-                nl => nl.NodeId,
-                (s, nodeLocks) => new { s, nodeLocks }
-            )
-            .SelectMany(
-                x => x.nodeLocks.DefaultIfEmpty(),
-                (x, nl) => new { x.s, nl }
-            )
-            .GroupJoin(
-                context.Set<GraphNode>().AsNoTracking(),
-                x => x.nl != null ? x.nl.NodeId : (Guid?)null,
-                g => g.Id,
-                (x, graphNodes) => new { x.s, x.nl, graphNodes }
-            )
-            .SelectMany(
-                x => x.graphNodes.DefaultIfEmpty(),
-                (x, g) => new { Station = x.s, NodeLock = x.nl, GraphNode = g }
-            )
-            .SingleOrDefaultAsync();
 
-        if (stationWithNode == null)
+        var station = await context.Set<Station>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(s => s.Id == id);
+
+        if (station == null)
         {
             throw new NodeNotFoundException(id, "Station not found");
         }
 
-        var station = stationWithNode.Station;
-        station.NodeLock = stationWithNode.NodeLock == null ?
-            null :
-            new NodeLock(mapper.Map<GraphNode>(stationWithNode.GraphNode), stationWithNode.NodeLock.NodeState, stationWithNode.NodeLock.IsLocked,
-                stationWithNode.NodeLock.AgvCorrelationId, stationWithNode.NodeLock.ModifiedDate);
+        var nodeLock = await context.Set<NodeLock>()
+            .AsNoTracking()
+            .Where(nl => nl.NodeId == id)
+            .Join(context.Set<GraphNode>().AsNoTracking(),
+                nl => nl.NodeId,
+                g => g.Id,
+                (nl, g) => new
+                {
+                    NodeLock = nl,
+                    GraphNode = g
+                })
+            .FirstOrDefaultAsync();
+
+        if (nodeLock != null)
+        {
+            station.NodeLock = new NodeLock(
+                mapper.Map<GraphNode>(nodeLock.GraphNode),
+                nodeLock.NodeLock.NodeState,
+                nodeLock.NodeLock.IsLocked,
+                nodeLock.NodeLock.AgvCorrelationId,
+                nodeLock.NodeLock.ModifiedDate);
+        }
 
         station.Agvs = await context.Set<ActionGroup>()
-            .Where(a => a.Actions.Any(ac => ac.Target.NodeId!.Value == station.Id && ac.State == ActionState.Started))
+            .Where(a => a.Actions.Any(ac =>
+                ac.Target.NodeId!.Value == station.Id &&
+                ac.State == ActionState.Started))
             .Select(a => a.AssignedAgv.GetValueOrDefault())
             .ToListAsync();
 
@@ -151,7 +151,7 @@ public class EfStationRepository(
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<ICollection<Station>> GetStations(string? mapName = null)
+    public async Task<ICollection<Station>> GetStations(Guid? mapId = null)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var query = context.Set<Station>()
@@ -168,7 +168,7 @@ public class EfStationRepository(
             )
             .GroupJoin(
                 context.Set<GraphNode>().AsNoTracking(),
-                x => x.nl != null ? x.nl.NodeId : (Guid?)null,
+                x => x.nl != null ? x.nl.NodeId : (Guid?) null,
                 g => g.Id,
                 (x, graphNodes) => new { x.s, x.nl, graphNodes }
             )
@@ -188,9 +188,9 @@ public class EfStationRepository(
                 }
             );
 
-        if (mapName != null)
+        if (mapId != null)
         {
-            query = query.Where(x => x.Station.MapName == mapName);
+            query = query.Where(x => x.Station.MapId == mapId);
         }
 
         var rows = await query.ToListAsync();

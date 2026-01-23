@@ -60,20 +60,20 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         Build();
 
         // Setup DecisionPointRepository
-        DecisionPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _dp1Actions.RemoveAll(a => a.CorrelationId == id); });
+        DecisionPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _dp1Actions.RemoveAll(a => a.AgvActionCorrelationId == id); });
         DecisionPointRepository.Setup(x => x.Add(It.IsAny<DecisionPointAction>())).Callback((DecisionPointAction action) => { _dp1Actions.Add(action); });
         DecisionPointRepository.Setup(x => x.AddAsync(It.IsAny<DecisionPointAction>())).Callback((DecisionPointAction action) => _dp1Actions.Add(action));
         DecisionPointRepository.Setup(x => x.UpdateAsync(It.IsAny<DecisionPointAction>())).Verifiable();
         DecisionPointRepository.Setup(x => x.GetAll()).ReturnsAsync(() => _dp1Actions);
-        DecisionPointRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _dp1Actions.Single(a => a.CorrelationId == c));
+        DecisionPointRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _dp1Actions.Single(a => a.AgvActionCorrelationId == c));
 
         // Setup WaitingPointRepository
-        WaitingPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _slwActions.RemoveAll(a => a.CorrelationId == id); });
+        WaitingPointRepository.Setup(x => x.RemoveById(It.IsAny<Guid>())).Callback((Guid id) => { _slwActions.RemoveAll(a => a.AgvActionCorrelationId == id); });
         WaitingPointRepository.Setup(x => x.Add(It.IsAny<WaitingPointAction>())).Callback((WaitingPointAction action) => { _slwActions.Add(action); });
         WaitingPointRepository.Setup(x => x.AddAsync(It.IsAny<WaitingPointAction>())).Callback((WaitingPointAction action) => _slwActions.Add(action));
         WaitingPointRepository.Setup(x => x.UpdateAsync(It.IsAny<WaitingPointAction>())).Verifiable();
         WaitingPointRepository.Setup(x => x.GetAll()).ReturnsAsync(() => _slwActions);
-        WaitingPointRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _slwActions.Single(a => a.CorrelationId == c));
+        WaitingPointRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _slwActions.Single(a => a.AgvActionCorrelationId == c));
 
         Selector = Provider.GetRequiredService<UnifiedTargetSelector>();
     }
@@ -112,7 +112,6 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
                 var node = new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode(nodeId, "test");
                 return new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
             });
-
         return this;
     }
 
@@ -202,7 +201,7 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         return this;
     }
 
-    public async Task ExecuteAsync(float waitingFactor=0.9f)
+    public async Task ExecuteAsync(float waitingFactor = 0.9f)
     {
         var cancellationToken = new CancellationTokenSource();
         _ = Selector.StartAsync(cancellationToken.Token);

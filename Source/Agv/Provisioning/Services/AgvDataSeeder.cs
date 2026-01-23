@@ -18,13 +18,13 @@ public class AgvDataSeeder : JsonSeeder<AgvData>
     /// <inheritdoc />
     protected override void Validate(AgvData data)
     {
-        EnsureNotNull(data.CorrelationId, nameof(data.CorrelationId));
+        EnsureNotNull(data.AgvCorrelationId, nameof(data.AgvCorrelationId));
     }
 
     /// <inheritdoc />
     protected override Task<object> GetMessageAsync(AgvData data)
     {
-        var agvDataReceived = new AgvDataReceived(data.CorrelationId, data.CorrelationId.ToString(), data);
+        var agvDataReceived = new AgvDataReceived(data.AgvCorrelationId, data.AgvCorrelationId.ToString(), data);
         return Task.FromResult<object>(agvDataReceived);
     }
 }

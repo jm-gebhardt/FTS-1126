@@ -35,7 +35,6 @@ public class Agv : IAgv
     /// <summary>
     /// The mode of the agv.
     /// </summary>
-
     public AgvMode Mode { get; init; }
 
     /// <summary>

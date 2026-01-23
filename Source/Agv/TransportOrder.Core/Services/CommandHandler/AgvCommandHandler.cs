@@ -795,7 +795,7 @@ public class AgvCommandHandler :
             ICollection<Zone> zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
             foreach (var zone in zones)
             {
-                errors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneId));
+                errors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneName));
             }
             return;
         }
@@ -1602,6 +1602,7 @@ public class AgvCommandHandler :
         {
             return;
         }
+        var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         List<Guid> lockedNodes = (await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId)).Select(n => n.NodeId).ToList();
 
         List<Guid> currentNodeIds = actionGroups.SelectMany(a => a.Actions).Select(a => a.Target.Node?.Id).Where(t => t != null).Select(t => t!.Value).ToList();
@@ -1616,7 +1617,8 @@ public class AgvCommandHandler :
         foreach (var node in currentNodes.Where(n => n.NeedsReservation() && !lockedNodes.Contains(n.Id)))
         {
             var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.Target.Node?.Id == node.Id));
-            if (actionGroup != null && actionGroup.IsOutdated(Agv.OfflineTolerance, now))
+
+            if (actionGroup != null && actionGroup.IsOutdated(agvSettings.OfflineTolerance, now))
             {
                 _logger.LogWarning("Action group {ActionGroupCorrelationId} outdated after agv {AgvCorrelationId} went back online", actionGroup.CorrelationId, agv.CorrelationId);
                 await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
@@ -1646,7 +1648,7 @@ public class AgvCommandHandler :
 
         foreach (var moveToQueue in actionGroups.Where(a => parkers.All(p => p != a.Actions.First().Target.Node?.Id) && a is { IsMovingCargo: false, IsChargingOrder: false, IsManual: false }))
         {
-            if (!moveToQueue.IsOutdated(Agv.OfflineTolerance, now))
+            if (!moveToQueue.IsOutdated(agvSettings.OfflineTolerance, now))
             {
                 continue;
             }

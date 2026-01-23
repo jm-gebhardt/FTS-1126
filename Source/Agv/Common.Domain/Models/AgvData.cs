@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.Acc.Common.Domain.Models;
@@ -8,10 +7,12 @@ namespace Gebhardt.Acc.Common.Domain.Models;
 /// AGV Data
 /// </summary>
 [PublicAPI]
-public record AgvData : CorrelatedBy<Guid>
+public record AgvData
 {
-    /// <inheritdoc/>
-    public Guid CorrelationId { get; init; }
+    /// <summary>
+    /// The CorrelationId of the Agv.
+    /// </summary>
+    public Guid AgvCorrelationId { get; init; }
 
     /// <summary>
     /// The model name of the AGV
@@ -84,7 +85,7 @@ public record AgvData : CorrelatedBy<Guid>
     public Sensor[] Sensors { get; init; }
 
     /// <inheritdoc cref="AgvData"/>
-    public AgvData(Guid correlationId,
+    public AgvData(Guid agvCorrelationId,
         string model,
         string type,
         string ipV4Address,
@@ -101,7 +102,7 @@ public record AgvData : CorrelatedBy<Guid>
         Sensor[] sensors
     )
     {
-        CorrelationId = correlationId;
+        AgvCorrelationId = agvCorrelationId;
         Model = model;
         Type = type;
         IpV4Address = ipV4Address;

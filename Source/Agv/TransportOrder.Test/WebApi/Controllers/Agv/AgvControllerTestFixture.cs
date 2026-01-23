@@ -177,7 +177,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
 
         AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
-            .Callback((AgvData agvData) => { data[agvData.CorrelationId] = agvData; });
+            .Callback((AgvData agvData) => { data[agvData.AgvCorrelationId] = agvData; });
 
         if (allAgvsOffline)
         {

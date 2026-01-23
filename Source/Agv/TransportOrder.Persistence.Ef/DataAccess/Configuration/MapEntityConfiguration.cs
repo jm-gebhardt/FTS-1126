@@ -12,7 +12,7 @@ public class MapEntityConfiguration : IEntityTypeConfiguration<Map>
     public void Configure(EntityTypeBuilder<Map> builder)
     {
         builder.HasKey(e => e.CorrelationId);
-        builder.Property(e => e.MapId).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.MapName).HasMaxLength(DbStringLimits.Description);
 
         builder.OwnsOne(m => m.BaseBackground);
         builder.OwnsOne(m => m.CustomBackground);

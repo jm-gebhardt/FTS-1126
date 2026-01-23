@@ -19,7 +19,7 @@ public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
             o.HasKey(e => e.CorrelationId);
             o.Property(e => e.ActionGroupId);
             o.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
-            o.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeId);
+            o.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeName);
             o.ToTable(HostOrderActions);
         });
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);

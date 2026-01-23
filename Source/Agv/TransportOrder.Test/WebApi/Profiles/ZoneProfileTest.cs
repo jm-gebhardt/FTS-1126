@@ -20,7 +20,7 @@ public class ZoneProfileTest
 
         zoneDto.CorrelationId.ShouldBe(zone.CorrelationId);
         zoneDto.Capacity.ShouldBe(zone.Capacity);
-        zoneDto.ZoneId.ShouldBe(zone.ZoneId);
+        zoneDto.ZoneId.ShouldBe(zone.ZoneName);
         zoneDto.Polygon.ShouldBeEmpty();
     }
 

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
@@ -17,7 +18,7 @@ public class StationProfileTest
         var station = new Station("testNodeId", AgvGraph.NodeType.Park, [])
         {
             Agvs = [Guid.NewGuid()],
-            MapName = "map"
+            MapId = "map".ToGuid()
         };
         station.SetSize(3.0, 2.0);
         var mapper = MappingHelper.GetMapper(new StationProfile());
@@ -31,7 +32,7 @@ public class StationProfileTest
             x => x.Length.ShouldBe(station.Length),
             x => x.Width.ShouldBe(station.Width),
             x => x.Agvs.ShouldBeEquivalentTo(station.Agvs),
-            x => x.MapName.ShouldBe(station.MapName),
+            x => x.MapId.ShouldBe(station.MapId),
             x => x.PrimaryType.ShouldBe(station.PrimaryType),
             x => x.AdditionalTypes.ShouldBeEquivalentTo(station.AdditionalTypes),
             x => x.State.ShouldBe(NodeLockState.Free));

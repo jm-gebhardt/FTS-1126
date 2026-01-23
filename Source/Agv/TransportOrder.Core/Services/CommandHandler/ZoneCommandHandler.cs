@@ -24,6 +24,6 @@ public class ZoneCommandHandler(ILogger<ZoneCommandHandler> logger, IAgvDb agvDb
         var agvZone = context.Message.Zone;
         var zone = mapper.Map<Zone>(agvZone);
         await agvDb.Zones.AddOrUpdateZone(zone);
-        logger.LogInformation("Zone {ZoneId} stored", zone.ZoneId);
+        logger.LogInformation("Zone {ZoneId} stored", zone.ZoneName);
     }
 }

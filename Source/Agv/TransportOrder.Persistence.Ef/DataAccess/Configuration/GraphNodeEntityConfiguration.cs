@@ -16,7 +16,7 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<GraphNode>
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.NodeName);
         
         var jsonOptions = new JsonSerializerOptions();
         jsonOptions.Converters.Add(new JsonNodeTypeConverter());

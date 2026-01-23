@@ -12,10 +12,10 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 public class AgvSettings
 {
     /// <inheritdoc cref="AgvSettings" />
-    public AgvSettings(Guid groupId)
+    public AgvSettings(Guid settingsGroupId)
     {
         Id = Guid.NewGuid();
-        AgvGroupId = groupId;
+        AgvSettingsGroupId = settingsGroupId;
     }
 
     /// <summary>
@@ -27,16 +27,16 @@ public class AgvSettings
     }
 
     /// <summary>
-    /// The uid of the agv settings
+    /// The Id of the agv settings.
     /// </summary>
     public Guid Id { get; init; }
 
     /// <summary>
-    /// Agv group the setting applies to
+    /// Agv group the setting applies to.
     /// </summary>
-    public Guid AgvGroupId { get; init; }
+    public Guid AgvSettingsGroupId { get; init; }
 
-    // Foreign keys to default settings
+    // Foreign keys to default settings.
     /// <summary>Timeout value [ms] to set AGV offline while it is in busy mode</summary>
     public Guid AgvOfflineTimeoutMsWhileIdleId { get; set; }
 
@@ -68,6 +68,11 @@ public class AgvSettings
     /// </summary>
     public Guid InfiniteChargingId { get; set; }
 
+    /// <summary>
+    /// Reference to <see cref="OfflineTolerance"/>.
+    /// </summary>
+    public Guid OfflineToleranceId { get; set; }
+
     /// Group specific settings
     /// <summary>Timeout value [ms] to set AGV offline while it is in busy mode</summary>
     public Setting AgvOfflineTimeoutMsWhileIdle { get; set; } = null!;
@@ -87,8 +92,11 @@ public class AgvSettings
     /// <summary>We stop charging at this level actively.</summary>
     public Setting MaxChargeUp { get; set; } = null!;
 
-    /// <summary>Charge infinitely, if no order comes in or charging is aborted by the user.</summary>
+    /// <summary>Charge infinitely if no order comes in or charging is aborted by the user.</summary>
     public Setting InfiniteCharging { get; set; } = null!;
+
+    /// <summary>The time span an agv can be offline without assigned nodes or action groups being cleared.</summary>
+    public Setting OfflineTolerance { get; set; } = null!;
 
     /// <summary>
     /// Update all valid settings.
@@ -102,8 +110,8 @@ public class AgvSettings
             var settingsProperty = GetType()
                 .GetProperties()
                 .SingleOrDefault(p => p.PropertyType == typeof(Setting) && p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
-           
-            var setting = (Setting?)settingsProperty!.GetValue(this);
+
+            var setting = (Setting?) settingsProperty!.GetValue(this);
             bool isNewAgvSpecificValue = setting == null || (!isDefault && setting.IsDefault && !string.Equals(setting.Value, value!.ToString(), StringComparison.InvariantCultureIgnoreCase))!;
             if (isNewAgvSpecificValue)
             {
@@ -126,7 +134,7 @@ public class AgvSettings
         var setting = GetType()
             .GetProperties()
             .Where(p => p.PropertyType == typeof(Setting))
-            .Select(p => (Setting?)p.GetValue(this))
+            .Select(p => (Setting?) p.GetValue(this))
             .SingleOrDefault(s => s?.Name.ToUpper() == name.ToUpper());
         return setting ?? throw new InvalidAgvSettingsPropertyException(name);
     }
@@ -140,7 +148,7 @@ public class AgvSettings
         return GetType()
             .GetProperties()
             .Where(p => p.PropertyType == typeof(Setting))
-            .Select(p => (Setting?)p.GetValue(this)).ToList();
+            .Select(p => (Setting?) p.GetValue(this)).ToList();
     }
 
     /// <summary>
@@ -193,7 +201,7 @@ public class AgvSettings
     {
         var id = GetType()
             .GetProperties()
-            .SingleOrDefault(p => p.PropertyType ==  typeof(Guid)  && p.Name.ToUpper() == $"{name}Id".ToUpper());
+            .SingleOrDefault(p => p.PropertyType == typeof(Guid) && p.Name.ToUpper() == $"{name}Id".ToUpper());
 
         if (id == null)
         {
@@ -218,6 +226,7 @@ public class AgvSettings
         readModel.AgvOfflineTimeoutMsWhileBusy = ConvertToType(AgvOfflineTimeoutMsWhileBusy.ValueType, AgvOfflineTimeoutMsWhileBusy.Value, readModel.AgvOfflineTimeoutMsWhileBusy);
         readModel.AgvOfflineTimeoutMsWhileIdle = ConvertToType(AgvOfflineTimeoutMsWhileIdle.ValueType, AgvOfflineTimeoutMsWhileIdle.Value, readModel.AgvOfflineTimeoutMsWhileIdle);
         readModel.InfiniteCharging = ConvertToType(InfiniteCharging.ValueType, InfiniteCharging.Value, readModel.InfiniteCharging);
+        readModel.OfflineTolerance = ConvertToType(OfflineTolerance.ValueType, OfflineTolerance.Value, readModel.OfflineTolerance);
         return readModel;
     }
 
@@ -229,6 +238,16 @@ public class AgvSettings
         {
             return defaultValue;
         }
-        return (T)Convert.ChangeType(value, type);
+        
+        if (type == typeof(TimeSpan))
+        {
+            if (TimeSpan.TryParse(value, out var timeSpanResult))
+            {
+                return (T)(object)timeSpanResult;
+            }
+            return defaultValue;
+        }
+        
+        return (T) Convert.ChangeType(value, type);
     }
 }

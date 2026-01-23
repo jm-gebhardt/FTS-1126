@@ -18,7 +18,7 @@ public class AgvZonesRequestHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
             .WithAgv(agv)
             .WithOnlineAgv(null)
@@ -32,7 +32,7 @@ public class AgvZonesRequestHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         offlineAgv.GoOffline();
         var onlineAgv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
@@ -47,7 +47,7 @@ public class AgvZonesRequestHandlerTest
         var commandToDevice = fixture.TestHarness.Published.Select<CommonRemoveAgvFromZone>().First().Context.Message;
         commandToDevice.AgvToRemove.ShouldBe(offlineAgv.SerialNumber);
         commandToDevice.CorrelationId.ShouldBe(onlineAgv.CorrelationId);
-        commandToDevice.ZoneId.ShouldBe(zone.ZoneId);
+        commandToDevice.ZoneId.ShouldBe(zone.ZoneName);
         commandToDevice.SerialNumber.ShouldBe(onlineAgv.SerialNumber);
     }
 
@@ -56,13 +56,13 @@ public class AgvZonesRequestHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
             .WithAgv(agv)
             .WithOnlineAgv(null)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(() => fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneId, "user")));
+        await MediatorShould.ThrowRequestExceptionAsync<AllAgvsOfflineException>(() => fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(agv.CorrelationId, zone.ZoneName, "user")));
     }
 
     [TestMethod]
@@ -70,7 +70,7 @@ public class AgvZonesRequestHandlerTest
     {
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
-        var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneId]);
+        var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         offlineAgv.GoOffline();
         var onlineAgv = AgvGenerator.GenerateIdleAgv();
         AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
@@ -78,13 +78,13 @@ public class AgvZonesRequestHandlerTest
             .WithOnlineAgv(onlineAgv)
             .Build();
 
-        await fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(offlineAgv.CorrelationId, zone.ZoneId, "user"));
+        await fixture.GetResponseAsync<Success>(new RemoveAgvFromZone(offlineAgv.CorrelationId, zone.ZoneName, "user"));
 
         await fixture.ShouldHavePublishedAsync<CommonRemoveAgvFromZone>();
         var commandToDevice = fixture.TestHarness.Published.Select<CommonRemoveAgvFromZone>().First().Context.Message;
         commandToDevice.AgvToRemove.ShouldBe(offlineAgv.SerialNumber);
         commandToDevice.CorrelationId.ShouldBe(onlineAgv.CorrelationId);
-        commandToDevice.ZoneId.ShouldBe(zone.ZoneId);
+        commandToDevice.ZoneId.ShouldBe(zone.ZoneName);
         commandToDevice.SerialNumber.ShouldBe(onlineAgv.SerialNumber);
     }
 

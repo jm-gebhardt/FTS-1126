@@ -86,7 +86,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         (GraphNode[] nodes, Guid[] edges) route = GetArbitraryRoute("PD-QA", graph);
         var startNode = graph.Nodes.First(n => n.Name == route.nodes.First().Name);
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -112,7 +112,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016", "WP-0015", "WP-0014", "WP-0029", "Park-1" };
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), graph.Edges.ToList());
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
@@ -139,7 +139,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016" };
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -159,7 +159,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016" };
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -188,7 +188,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016" };
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -244,7 +244,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA" };
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), graph.Edges.ToList());
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
@@ -271,7 +271,7 @@ public class AgvTravelSimulatorTest
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
-        var agvGraph = generator.Generate(agvData.CorrelationId);
+        var agvGraph = generator.Generate(agvData.AgvCorrelationId);
 
         var position = new AgvPosition(true, 1, 1, 1, 0);
         var simulator = new AgvTravelSimulator(agvGraph, position, new FakeTimeProvider());
@@ -343,7 +343,7 @@ public class AgvTravelSimulatorTest
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
-        var agvGraph = generator.Generate(agvData.CorrelationId);
+        var agvGraph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016", "WP-0015" };
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), agvGraph.Edges.ToList());
         var startNode = agvGraph.Nodes.First(n => n.Name == nodes.First());
@@ -372,7 +372,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         (GraphNode[] nodes, Guid[] edges) route = GetArbitraryRoute("PD-QA", graph);
         var startNode = graph.Nodes.First(n => n.Name == route.nodes.First().Name);
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -411,7 +411,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         (GraphNode[] nodes, Guid[] edges) route = GetArbitraryRoute("PD-QA", graph);
         var startNode = graph.Nodes.First(n => n.Name == route.nodes.First().Name);
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -442,7 +442,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016" };
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
@@ -468,7 +468,7 @@ public class AgvTravelSimulatorTest
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
         var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
-        var graph = generator.Generate(agvData.CorrelationId);
+        var graph = generator.Generate(agvData.AgvCorrelationId);
         string[] nodes = { "D-Paint", "WP-0016" };
         var startNode = graph.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);

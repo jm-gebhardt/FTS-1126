@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -27,15 +28,16 @@ public class EfStationRepositoryTest
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
         List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
-        const string expectedMapName = "map";
-        await fixture.AddMap(expectedMapName, [agvId], nodes);
+        const string mapName = "map";
+        var mapId = mapName.ToGuid();
+        await fixture.AddMap(mapId, mapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
-            station.MapName.ShouldBe(expectedMapName);
+            station.MapId.ShouldBe(mapId);
             station.Length.ShouldBe(expectedMaxLength);
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
@@ -59,15 +61,16 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateGraphWithAdditionalStationType(agvId);
         var mapper = MappingHelper.GetMapper(new GraphProfile());
         List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
-        const string expectedMapName = "map";
-        await fixture.AddMap(expectedMapName, [agvId], nodes);
+        const string mapName = "map";
+        var mapId = mapName.ToGuid();
+        await fixture.AddMap(mapId, mapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
-            station.MapName.ShouldBe(expectedMapName);
+            station.MapId.ShouldBe(mapId);
             station.Length.ShouldBe(expectedMaxLength);
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
@@ -92,15 +95,16 @@ public class EfStationRepositoryTest
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
         List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).OrderBy(n => n.Name).Skip(1).ToList();
-        const string expectedMapName = "map";
-        await fixture.AddMap(expectedMapName, [agvId], nodes);
+        const string mapName = "map";
+        var mapId = mapName.ToGuid();
+        await fixture.AddMap(mapId, mapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
-            station.MapName.ShouldBeNull();
+            station.MapId.ShouldBeNull();
             station.Length.ShouldBe(expectedMaxLength);
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
@@ -126,8 +130,9 @@ public class EfStationRepositoryTest
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
         List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
-        const string expectedMapName = "map";
-        await fixture.AddMap(expectedMapName, [agvId], nodes);
+        const string mapName = "map";
+        var mapId = mapName.ToGuid();
+        await fixture.AddMap(mapId, mapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
@@ -135,7 +140,7 @@ public class EfStationRepositoryTest
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = stations.Single(s => s.Name == stationNode.Name);
-            station.MapName.ShouldBe(expectedMapName);
+            station.MapId.ShouldBe(mapId);
             station.Length.ShouldBe(expectedMaxLength);
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
@@ -166,7 +171,7 @@ public class EfStationRepositoryTest
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = await fixture.Repository.GetStation(stationNode.Id);
-            station.MapName.ShouldBe(null);
+            station.MapId.ShouldBeNull();
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
             station.AdditionalTypes.ShouldBeEmpty();
@@ -211,7 +216,7 @@ public class EfStationRepositoryTest
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = stations.Single(s => s.Name == stationNode.Name);
-            station.MapName.ShouldBe(null);
+            station.MapId.ShouldBeNull();
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
             station.AdditionalTypes.ShouldBeEmpty();

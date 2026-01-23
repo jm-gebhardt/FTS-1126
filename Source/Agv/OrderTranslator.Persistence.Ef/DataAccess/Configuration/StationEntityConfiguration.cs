@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.Acc.OrderTranslator.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc />
-public class StationEntityConfiguration: IEntityTypeConfiguration<Station>
+public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
 {
     private const string TableName = "OrderTranslatorStations";
 
@@ -19,7 +19,7 @@ public class StationEntityConfiguration: IEntityTypeConfiguration<Station>
 
         builder.Property(s => s.Name)
             .IsRequired()
-            .HasMaxLength(DbStringLimits.NodeId);
+            .HasMaxLength(DbStringLimits.NodeName);
 
         builder.Property(s => s.NeedsCargoReporting);
 

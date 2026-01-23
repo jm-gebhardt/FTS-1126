@@ -190,7 +190,7 @@ public class StationListParserTest
 
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
         parser.SerialNumber.ShouldBe(AgvSerialNumber1);
-        graph.CorrelationId.ShouldBe(AgvSerialNumber1.ToGuid());
+        graph.AgvCorrelationId.ShouldBe(AgvSerialNumber1.ToGuid());
     }
 
     /// <summary>

@@ -14,7 +14,7 @@ namespace Gebhardt.Acc.PrismatCommunication.Migrations
 {
     [DbContext(typeof(PrismatCommunicationDbContext))]
     [Migration("20251027094320_StationNodeId")]
-    partial class StationNodeId
+    partial class StationId
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

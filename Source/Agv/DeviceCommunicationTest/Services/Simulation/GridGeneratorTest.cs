@@ -39,7 +39,7 @@ public class GridGeneratorTest
 
         int gridWidth = Math.Max(sources.Length, destinations.Length);
 
-        graph.CorrelationId.ShouldBe(correlationId);
+        graph.AgvCorrelationId.ShouldBe(correlationId);
         graph.Nodes.Count.ShouldBe(sources.Length +
                                    destinations.Length +
                                    gridWidth * gridRows);

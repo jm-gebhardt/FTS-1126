@@ -137,7 +137,7 @@ public class GraphParserTest
 
         parser.SerialNumber.ShouldBe(AgvSerialNumber1);
         graph.Usability.ShouldBe(AgvGraph.GraphUsability.Valid);
-        graph.CorrelationId.ShouldBe(AgvSerialNumber1.ToGuid());
+        graph.AgvCorrelationId.ShouldBe(AgvSerialNumber1.ToGuid());
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ public class EfWaitingPointActionRepository(IDbContextFactory<TransportOrderDbCo
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
 
-        var action = await context.Set<WaitingPointAction>().SingleOrDefaultAsync(a => a.CorrelationId == actionCorrelationId);
+        var action = await context.Set<WaitingPointAction>().SingleOrDefaultAsync(a => a.AgvActionCorrelationId == actionCorrelationId);
         if (action != null)
         {
             context.Remove(action);

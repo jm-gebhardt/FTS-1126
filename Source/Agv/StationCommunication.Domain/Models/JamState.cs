@@ -6,7 +6,7 @@
 public class JamState
 {
     /// <summary>
-    /// The station Id.
+    /// The Id of the station.
     /// </summary>
     public Guid StationId { get; init; }
 

@@ -5,16 +5,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Zone;
 
 /// <inheritdoc />
-public class ZoneEntityConfiguration:IEntityTypeConfiguration<Domain.Models.Zone.Zone>
+public class ZoneEntityConfiguration : IEntityTypeConfiguration<Domain.Models.Zone.Zone>
 {
-    private const string TableName = "AgvZone";
+    private const string TableName = "Zone";
 
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Domain.Models.Zone.Zone> builder)
     {
         builder.HasKey(e => e.CorrelationId);
         builder.ToTable(TableName);
-        builder.Property(e => e.ZoneId).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.ZoneName).HasMaxLength(DbStringLimits.Description);
         builder.HasMany(e => e.Polygon)
             .WithOne()
             .HasForeignKey(p => p.LocationId)

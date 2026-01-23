@@ -8,7 +8,9 @@ public static class DbStringLimits
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public const int OrderId = 200;
     public const int Hu = 200;
-    public const int NodeId = 450;
+
+    public const int Name = 450;
+    public const int NodeName = 450;
     public const int Description = 400; // descriptive fields (names, types, reasons, specifications..)
     public const int Enum = 100;
     public const int User = 200;

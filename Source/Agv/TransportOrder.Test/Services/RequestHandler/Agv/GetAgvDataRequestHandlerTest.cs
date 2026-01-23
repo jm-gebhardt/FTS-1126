@@ -34,7 +34,7 @@ public class GetAgvDataRequestHandlerTest
         Response<GotAgvsData> response = await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> { agv.CorrelationId }));
 
         var actualData = response.Message.AgvData.Single();
-        actualData.CorrelationId.ShouldBe(agv.CorrelationId);
+        actualData.AgvCorrelationId.ShouldBe(agv.CorrelationId);
     }
 
     [TestMethod]
@@ -47,6 +47,6 @@ public class GetAgvDataRequestHandlerTest
         var unknown = "Unknown".ToGuid();
         Response<GotAgvsData> response = await fixture.GetResponseAsync<GotAgvsData>(new GetAgvsData(new List<Guid> { agv.CorrelationId,  unknown}));
 
-        response.Message.AgvData.FirstOrDefault(d => d.CorrelationId == unknown ).ShouldBeNull();
+        response.Message.AgvData.FirstOrDefault(d => d.AgvCorrelationId == unknown ).ShouldBeNull();
     }
 }

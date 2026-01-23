@@ -18,7 +18,10 @@ public class AgvGraphProfile : Profile
             .ForMember(n => n.Type, opt => opt.MapFrom(gn => gn.GetPrimaryType()));
         CreateMap<AgvGraph, Graph>()
             .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<AgvGraphGraphEdgeResolver>())
+            .ForMember(nameof(Graph.CorrelationId), opt => opt.MapFrom(src => src.AgvCorrelationId))
             // Graph is a record type, therefore we must initialize all properties in the ctor
-            .ForCtorParam(nameof(Graph.Edges), opt => opt.MapFrom((src, ctx) => new AgvGraphGraphEdgeResolver().Resolve(src, null!, null!, ctx)));
+            .ForCtorParam("edges", opt => opt.MapFrom((src, ctx) => new AgvGraphGraphEdgeResolver().Resolve(src, null!, null!, ctx)))
+            .ForCtorParam("nodes", opt => opt.MapFrom((src, _) => src.Nodes))
+            .ForCtorParam("correlationId", opt => opt.MapFrom(src => src.AgvCorrelationId));
     }
 }

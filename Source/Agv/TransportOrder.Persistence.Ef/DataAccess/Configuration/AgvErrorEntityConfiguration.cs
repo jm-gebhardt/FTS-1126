@@ -1,6 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Persistence.Ef;
-using MassTransit.EntityFrameworkCoreIntegration;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,9 +13,18 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
     public void Configure(EntityTypeBuilder<AgvError> builder)
     {
         builder.HasKey(o => o.CorrelationId);
-        ValueConversionExtensions.HasJsonConversion(builder.Property(o => o.ErrorReferences));
+        builder.Property(o => o.ErrorReferences)
+            .HasConversion(EfValueConverters.CreateJsonConverter<List<ErrorReference>?>())
+            .Metadata.SetValueComparer(EfValueConverters.CreateListComparer<ErrorReference>());
+
+        builder.HasOne<Agv>()
+            .WithMany()
+            .HasForeignKey(e => e.AgvCorrelationId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Property(o => o.ErrorCode).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.ErrorType).HasMaxLength(DbStringLimits.Description);
+        builder.Property(o => o.ErrorDescription).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.Source).HasConversion<string>().HasMaxLength(DbStringLimits.Enum);
+        builder.Property(o => o.ErrorTitle).HasMaxLength(DbStringLimits.Name);
     }
 }

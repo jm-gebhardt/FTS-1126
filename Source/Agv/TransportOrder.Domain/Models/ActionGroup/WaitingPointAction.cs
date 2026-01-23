@@ -8,7 +8,7 @@ public class WaitingPointAction
     /// <summary>
     /// The correlation id of the action.
     /// </summary>
-    public Guid CorrelationId { get; init; }
+    public Guid AgvActionCorrelationId { get; init; }
 
     /// <summary>
     /// The correlation id of the agv.
@@ -18,7 +18,7 @@ public class WaitingPointAction
     /// <summary>
     /// The target station.
     /// </summary>
-    public Guid? Target { get; private set; }
+    public Guid? TargetNodeId { get; private set; }
 
     /// <summary>
     /// The time the order was created.
@@ -26,18 +26,18 @@ public class WaitingPointAction
     public DateTime CreatedTime { get; init; }
 
     /// <inheritdoc cref="WaitingPointAction"/>>
-    public WaitingPointAction(Guid correlationId, Guid agvCorrelationId, Guid? target, DateTime createdTime)
+    public WaitingPointAction(Guid agvActionCorrelationId, Guid agvCorrelationId, Guid? targetNodeId, DateTime createdTime)
     {
-        CorrelationId = correlationId;
+        AgvActionCorrelationId = agvActionCorrelationId;
         AgvCorrelationId = agvCorrelationId;
-        Target = target;
+        TargetNodeId = targetNodeId;
         CreatedTime = createdTime;
     }
 
     /// <inheritdoc cref="WaitingPointAction"/>>
-    public WaitingPointAction(Guid correlationId, Guid agvCorrelationId, DateTime createdTime)
+    public WaitingPointAction(Guid agvActionCorrelationId, Guid agvCorrelationId, DateTime createdTime)
     {
-        CorrelationId = correlationId;
+        AgvActionCorrelationId = agvActionCorrelationId;
         AgvCorrelationId = agvCorrelationId;
         CreatedTime = createdTime;
     }
@@ -48,6 +48,6 @@ public class WaitingPointAction
     /// <param name="target"></param>
     public void SetTarget(Guid target)
     {
-        Target = target;
+        TargetNodeId = target;
     }
 }

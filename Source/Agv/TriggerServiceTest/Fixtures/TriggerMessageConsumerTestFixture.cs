@@ -34,7 +34,7 @@ public class TriggerMessageConsumerTestFixture<TConsumer> : MassTransitConsumerT
     {
        _triggerManagerMock.Verify(x => x.InvokeTrigger(triggerId,
            It.IsAny<Dictionary<string, ConfigurationParameter>>(),
-                It.Is<AgvData>(a => a.CorrelationId == agvData.CorrelationId), 
+                It.Is<AgvData>(a => a.AgvCorrelationId == agvData.AgvCorrelationId), 
             It.Is<AgvStatus>(a => a.CorrelationId == agvStatus.CorrelationId),
             It.Is<ActionGroup?>( a => (a == null && actionGroup == null)|| a!.CorrelationId == actionGroup!.CorrelationId), 
             It.Is<ICollection<Cargo>>(c => !cargo.Select( ca => ca.CorrelationId).Except( c.Select( ca => ca.CorrelationId)).Any()), 
@@ -46,7 +46,7 @@ public class TriggerMessageConsumerTestFixture<TConsumer> : MassTransitConsumerT
     {
         _triggerManagerMock.Verify(x => x.LeaveTrigger(triggerId,
                 It.IsAny<Dictionary<string, ConfigurationParameter>>(),
-                It.Is<AgvData>(a => a.CorrelationId == agvData.CorrelationId),
+                It.Is<AgvData>(a => a.AgvCorrelationId == agvData.AgvCorrelationId),
                 It.Is<AgvStatus>(a => a.CorrelationId == agvStatus.CorrelationId),
                 It.Is<ActionGroup?>(a => (a == null && actionGroup == null)|| a!.CorrelationId == actionGroup!.CorrelationId),
                 It.Is<ICollection<Cargo>>(c => !cargo.Select(ca => ca.CorrelationId).Except(c.Select(ca => ca.CorrelationId)).Any()),

@@ -50,7 +50,7 @@
         </AssemblyAttribute>
     </ItemGroup>
     <ItemGroup>
-      <Folder Include="Migrations\" />
+        <Folder Include="Migrations\" />
     </ItemGroup>
     <Target Name="DisableWarnings" BeforeTargets="CoreCompile">
         <ItemGroup>

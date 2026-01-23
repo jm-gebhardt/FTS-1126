@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,11 @@ public class NodeLockEntityConfiguration : IEntityTypeConfiguration<NodeLock>
     public void Configure(EntityTypeBuilder<NodeLock> builder)
     {
         builder.HasKey(x => x.NodeId);
+        builder.HasOne<GraphNode>()
+            .WithMany()
+            .HasForeignKey(e => e.NodeId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Ignore(x => x.Node);
         builder.ConfigureAllProperties(except: [nameof(NodeLock.Node)]);
     }

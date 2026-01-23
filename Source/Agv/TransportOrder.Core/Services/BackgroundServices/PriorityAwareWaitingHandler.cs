@@ -26,8 +26,8 @@ public class PriorityAwareWaitingHandler(
 {
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
     private readonly HashSet<Guid> _lastEvaluatedActions = new();
-    private Guid _primaryStation = "PS03".ToGuid(); 
-    private ICollection<Guid> _secondaryStations = ["PS02".ToGuid(), "PS01".ToGuid()]; 
+    private Guid _primaryStation = "PS03".ToGuid();
+    private ICollection<Guid> _secondaryStations = ["PS02".ToGuid(), "PS01".ToGuid()];
 
     /// <summary>
     /// Pending actions.
@@ -59,47 +59,47 @@ public class PriorityAwareWaitingHandler(
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             Guid? action = _actionsToSelectTarget
-            .Where(kvp => !_lastEvaluatedActions.Contains(kvp.Key))
-            .OrderBy(kvp => kvp.Value)
-            .Select(kvp => (Guid?)kvp.Key)
-            .FirstOrDefault();
+                .Where(kvp => !_lastEvaluatedActions.Contains(kvp.Key))
+                .OrderBy(kvp => kvp.Value)
+                .Select(kvp => (Guid?) kvp.Key)
+                .FirstOrDefault();
 
-        if (action == null)
-        {
-            logger.LogDebug("No short loop waiting action found");
-            return;
-        }
+            if (action == null)
+            {
+                logger.LogDebug("No short loop waiting action found");
+                return;
+            }
 
-        var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.Value);
-        var agvCorrelationId = actionGroup.AssignedAgv!.Value;
-        logger.LogInformation("Handle waiting for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
+            var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.Value);
+            var agvCorrelationId = actionGroup.AssignedAgv!.Value;
+            logger.LogInformation("Handle waiting for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
 
-        var target = await GetCurrentTargetStation();
-        if (target == null)
-        {
-            logger.LogWarning("No target for waiting found");
-            return;
-        }
+            var target = await GetCurrentTargetStation();
+            if (target == null)
+            {
+                logger.LogWarning("No target for waiting found");
+                return;
+            }
 
-        if (!target.IsEmpty)
-        {
-            logger.LogWarning("Target for waiting is not empty {Target}", target.Name);
-            return;
-        }
+            if (!target.IsEmpty)
+            {
+                logger.LogWarning("Target for waiting is not empty {Target}", target.Name);
+                return;
+            }
 
-        if (target.HasPalletJam)
-        {
-            logger.LogInformation("Station {Target} not available due to pallet jam", target.Name);
-            return;
-        }
+            if (target.HasPalletJam)
+            {
+                logger.LogInformation("Station {Target} not available due to pallet jam", target.Name);
+                return;
+            }
 
-        if (await skipForLongLoopOrder(action.Value))
-        {
-            logger.LogInformation("Skipping SLW action {Action} as there is a long loop order that has priority", action.Value);
-            return;
-        }
+            if (await skipForLongLoopOrder(action.Value))
+            {
+                logger.LogInformation("Skipping SLW action {Action} as there is a long loop order that has priority", action.Value);
+                return;
+            }
 
-        await AssignTarget(action.Value, actionGroup, agvCorrelationId, target.Id, stoppingToken);
+            await AssignTarget(action.Value, actionGroup, agvCorrelationId, target.Id, stoppingToken);
         }, stoppingToken);
     }
 
@@ -121,18 +121,18 @@ public class PriorityAwareWaitingHandler(
         return target;
     }
 
-    private async Task AssignTarget(Guid actionId, ActionGroup actionGroup, Guid agvCorrelationId, Guid target, CancellationToken stoppingToken)
+    private async Task AssignTarget(Guid actionId, ActionGroup actionGroup, Guid agvCorrelationId, Guid targetNodeId, CancellationToken stoppingToken)
     {
-        if (await nodeStateRepository.ReserveNodeAsync(target, agvCorrelationId))
+        if (await nodeStateRepository.ReserveNodeAsync(targetNodeId, agvCorrelationId))
         {
             _lastEvaluatedActions.Add(actionId);
-            logger.LogInformation("Adding agv {Agv} to station {Station} for short loop waiting", agvCorrelationId, target);
-            var nodeState = await nodeStateRepository.GetNodeStateAsync(target);
-            await bus.Publish(new NodeStateChanged(nodeState!, target, null, null, null), stoppingToken);
-            await bus.Publish(new SetTargetForAction(actionId, actionGroup.CorrelationId, agvCorrelationId, target), stoppingToken);
+            logger.LogInformation("Adding agv {Agv} to station {Station} for short loop waiting", agvCorrelationId, targetNodeId);
+            var nodeState = await nodeStateRepository.GetNodeStateAsync(targetNodeId);
+            await bus.Publish(new NodeStateChanged(nodeState!, targetNodeId, null, null, null), stoppingToken);
+            await bus.Publish(new SetTargetForAction(actionId, actionGroup.CorrelationId, agvCorrelationId, targetNodeId), stoppingToken);
 
             var waitingPointAction = await waitingPointActionRepository.GetByIdAsync(actionId);
-            waitingPointAction.SetTarget(target);
+            waitingPointAction.SetTarget(targetNodeId);
             await waitingPointActionRepository.UpdateAsync(waitingPointAction);
         }
     }
@@ -140,7 +140,7 @@ public class PriorityAwareWaitingHandler(
     /// <summary>
     /// Get the short loop target station.
     /// </summary>
-    /// <returns>The id of the target.</returns>
+    /// <returns>The node id of the target.</returns>
     public async Task<Guid> GetTargetStation()
     {
         return (await GetCurrentTargetStation())?.Id ?? Guid.Empty;
@@ -215,16 +215,16 @@ public class PriorityAwareWaitingHandler(
 
         foreach (var action in waitingPointActions)
         {
-            if (action.Target == null)
+            if (action.TargetNodeId == null)
             {
-                _actionsToSelectTarget.TryAdd(action.CorrelationId, action.CreatedTime);
+                _actionsToSelectTarget.TryAdd(action.AgvActionCorrelationId, action.CreatedTime);
             }
             else
             {
-                var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
-                if (actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).CompletedDate != null)
+                var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.AgvActionCorrelationId);
+                if (actionGroup.Actions.Single(a => a.CorrelationId == action.AgvActionCorrelationId).CompletedDate != null)
                 {
-                    _lastEvaluatedActions.Add(action.CorrelationId);
+                    _lastEvaluatedActions.Add(action.AgvActionCorrelationId);
                 }
             }
         }

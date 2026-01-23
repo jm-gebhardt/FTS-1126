@@ -176,7 +176,7 @@ public class StationListParser
                 }
             }
 
-            _agvGraph = new AgvGraph(_agvGraph.CorrelationId,
+            _agvGraph = new AgvGraph(_agvGraph.AgvCorrelationId,
                 additionalNodes.ToArray(),
                 additionalEdges.ToArray(),
                 _usability);

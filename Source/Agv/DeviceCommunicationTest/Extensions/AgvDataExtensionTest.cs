@@ -22,7 +22,7 @@ public class AgvDataExtensionTest
         updatedAgv.Payload.ShouldBe(agv.Payload);
         updatedAgv.Sensors.ShouldBe(agv.Sensors);
         updatedAgv.BatteryCapacity.ShouldBe(agv.BatteryCapacity);
-        updatedAgv.CorrelationId.ShouldBe(agv.CorrelationId);
+        updatedAgv.AgvCorrelationId.ShouldBe(agv.AgvCorrelationId);
         updatedAgv.IpV4Address.ShouldBe(agv.IpV4Address);
         updatedAgv.Type.ShouldBe(agv.Type);
     }

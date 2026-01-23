@@ -179,7 +179,7 @@ public class AgvRepositoryTest
         else
         {
             actualAgvInformation.AgvGraph.ShouldSatisfyAllConditions(
-                p => p?.CorrelationId.ShouldBe(expectedAgvInformation.AgvGraph.CorrelationId),
+                p => p?.AgvCorrelationId.ShouldBe(expectedAgvInformation.AgvGraph.AgvCorrelationId),
                 p => p?.Usability.ShouldBe(expectedAgvInformation.AgvGraph.Usability)
             );
 

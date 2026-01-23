@@ -20,7 +20,7 @@ public class SimulatedAgvSagaTest
     {
         const int simulationSpeed = 2;
         var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        var agv = new SimulatedAgv(agvData.CorrelationId, "id", "",
+        var agv = new SimulatedAgv(agvData.AgvCorrelationId, "id", "",
             true,
             false,
             false,
@@ -249,7 +249,7 @@ public class SimulatedAgvSagaTest
         var agvGraph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
 
         var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        var agv = new SimulatedAgv(agvData.CorrelationId, "id", "",
+        var agv = new SimulatedAgv(agvData.AgvCorrelationId, "id", "",
             true,
             false,
             false,
@@ -276,7 +276,7 @@ public class SimulatedAgvSagaTest
         var agvGraph = AgvGraphGenerator.Generate(new List<GraphNode> { node1, node2 }, new List<GraphEdge> { edge });
 
         var agvData = new KarisType1(Guid.NewGuid(), "ip address");
-        var agv = new SimulatedAgv(agvData.CorrelationId, "id", "",
+        var agv = new SimulatedAgv(agvData.AgvCorrelationId, "id", "",
             true,
             false,
             false,

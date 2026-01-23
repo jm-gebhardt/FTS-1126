@@ -15,9 +15,9 @@ public class EfZoneRepositoryTest
         var zone = new Zone([new ZonePolygonPoint(1, 1, 0, id), new ZonePolygonPoint(2, 1, 1, id), new ZonePolygonPoint(2, 2, 2, id)], "zone", id, 1);
 
         await fixture.Repository.AddOrUpdateZone(zone);
-        (await fixture.Repository.GetZones([zone.ZoneId])).Single().ShouldBeEquivalentTo(zone);
+        (await fixture.Repository.GetZones([zone.ZoneName])).Single().ShouldBeEquivalentTo(zone);
 
         await fixture.Repository.AddOrUpdateZone(zone);
-        (await fixture.Repository.GetZones([zone.ZoneId])).Single().ShouldBeEquivalentTo(zone);
+        (await fixture.Repository.GetZones([zone.ZoneName])).Single().ShouldBeEquivalentTo(zone);
     }
 }

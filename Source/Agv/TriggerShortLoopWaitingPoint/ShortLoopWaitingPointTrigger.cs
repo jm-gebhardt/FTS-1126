@@ -67,7 +67,7 @@ public class ShortLoopWaitingPointTrigger(IBus bus, ILogger<ShortLoopWaitingPoin
         }
         var primaryTarget = GetPrimaryTarget(parameters);
         ICollection<Guid> secondaryTargets = GetSecondaryTargets(parameters);
-        logger.LogInformation("Agv {AgvCorrelationId} passed short loop waiting trigger", agvData.CorrelationId);
+        logger.LogInformation("Agv {AgvCorrelationId} passed short loop waiting trigger", agvData.AgvCorrelationId);
         await bus.Publish(new AgvPassedShortLoopWaitingHandler(agvData, agvStatus, actionGroup, cargo, errors, primaryTarget, secondaryTargets));
     }
 
@@ -106,7 +106,7 @@ public class ShortLoopWaitingPointTrigger(IBus bus, ILogger<ShortLoopWaitingPoin
             logger.LogWarning("Skip triggering removal of waiting order : Agv {AgvCorrelationId} passed short loop waiting handler without  pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
             return;
         }
-        logger.LogInformation("Agv {AgvCorrelationId} left short loop waiting trigger", agvData.CorrelationId);
+        logger.LogInformation("Agv {AgvCorrelationId} left short loop waiting trigger", agvData.AgvCorrelationId);
         await bus.Publish(new AgvLeftShortLoopWaitingHandler(agvData, agvStatus, actionGroup, cargo, errors));
     }
 }

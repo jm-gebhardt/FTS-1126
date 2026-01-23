@@ -56,7 +56,7 @@ public class MapProfileTest
 
         dtoMap.ShouldNotBeNull();
         dtoMap.CorrelationId.ShouldBe(mapMessageContent.CorrelationId);
-        dtoMap.MapId.ShouldBe(mapMessageContent.MapId);
+        dtoMap.MapName.ShouldBe(mapMessageContent.MapName);
         dtoMap.Resolution.ShouldBe(mapMessageContent.BackgroundInfo.Resolution);
         dtoMap.Resolution.ShouldBe(mapMessageContent.BackgroundInfo.Resolution);
         dtoMap.XOffset.ShouldBe(mapMessageContent.BackgroundInfo.XOffset);

@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
@@ -30,12 +29,12 @@ public class EfStationRepositoryTestFixture : ActionGroupRepositoryTestFixture
         yield return new GraphProfile();
     }
 
-    public async Task AddMap(string mapName, List<Guid> agvs, List<GraphNode> nodes)
+    public async Task AddMap(Guid mapId, string mapName, List<Guid> agvs, List<GraphNode> nodes)
     {
-        var map = MapGenerator.Generate(mapId: mapName,
+        var map = MapGenerator.Generate(mapName: mapName,
             nodes: nodes,
-            correlationId: mapName.ToGuid(),
-            mapAgvs: agvs.Select(a => new MapAgv(mapName.ToGuid(), null, a, null)).ToList()
+            correlationId: mapId,
+            mapAgvs: agvs.Select(a => new MapAgv(mapId, null, a, null)).ToList()
         );
 
         await AddAsync(map);

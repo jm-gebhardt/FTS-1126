@@ -18,7 +18,7 @@ public class AgvGraphReceivedEventHandlerTest
         var agvGraphChanged = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, AgvGraphChanged>(
             fixture.AgvGraphReceived);
 
-        agvGraphChanged.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.CorrelationId);
+        agvGraphChanged.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.AgvCorrelationId);
         fixture.VerifyStationsAdded(Times.Once());
     }
 
@@ -31,7 +31,7 @@ public class AgvGraphReceivedEventHandlerTest
         var graphMissing = await fixture.PublishAndGetFirstMessageAsync<AgvGraphReceived, GraphMissing>(
             fixture.AgvGraphReceived);
 
-        graphMissing.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.CorrelationId);
+        graphMissing.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.AgvCorrelationId);
         fixture.VerifyStationsAdded(Times.Never());
     }
 }

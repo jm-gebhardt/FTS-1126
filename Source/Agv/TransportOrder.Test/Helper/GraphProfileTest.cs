@@ -18,7 +18,7 @@ public class GraphProfileTest
     {
         agvGraph1.ShouldNotBeNull();
         agvGraph1.ShouldSatisfyAllConditions(
-            e => e.CorrelationId.ShouldBe(agvGraph2.CorrelationId),
+            e => e.AgvCorrelationId.ShouldBe(agvGraph2.AgvCorrelationId),
             e => e.Usability.ToString().ShouldBe(agvGraph2.Usability.ToString()));
         agvGraph1.Nodes.Count.ShouldBe(agvGraph2.Nodes.Count);
         agvGraph1.Edges.Count.ShouldBe(agvGraph2.Edges.Count);
@@ -72,7 +72,7 @@ public class GraphProfileTest
         var efGraph = mapper.Map<AgvGraph>(agvGraph);
 
         VerifyAgvGraph(efGraph, agvGraph);
-        efGraph.CorrelationId.ShouldBe(agvCorrelationId);
+        efGraph.AgvCorrelationId.ShouldBe(agvCorrelationId);
         VerifyGraphNodes(efGraph, agvGraph);
         VerifyGraphEdges(efGraph, agvGraph);
     }

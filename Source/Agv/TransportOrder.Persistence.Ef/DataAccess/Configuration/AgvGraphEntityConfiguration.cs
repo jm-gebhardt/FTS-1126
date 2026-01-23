@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,7 +15,11 @@ public class AgvGraphEntityConfiguration : IEntityTypeConfiguration<AgvGraph>
     public void Configure(EntityTypeBuilder<AgvGraph> builder)
     {
         builder.ToTable(TableName);
-        builder.HasKey(g => g.CorrelationId);
+        builder.HasKey(g => g.AgvCorrelationId);
+        builder.HasOne<Agv>()
+            .WithMany()
+            .HasForeignKey(e => e.AgvCorrelationId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(m => m.Edges)
             .WithMany()

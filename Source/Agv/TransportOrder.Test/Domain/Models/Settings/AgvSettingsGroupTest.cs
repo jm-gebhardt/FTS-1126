@@ -18,7 +18,7 @@ public class AgvSettingsGroupTest
         settingsGroup.Identifier.ShouldBe(identifier);
         settingsGroup.Id.ShouldNotBe(Guid.Empty);
         settingsGroup.AgvSetting.ShouldNotBe(null!);
-        settingsGroup.AgvSetting.AgvGroupId.ShouldBe(settingsGroup.Id);
+        settingsGroup.AgvSetting.AgvSettingsGroupId.ShouldBe(settingsGroup.Id);
         settingsGroup.AgvSetting.BatteryLevelCritical.ShouldBe(null!);
         settingsGroup.AgvSetting.BatteryLevelLow.ShouldBe(null!);
         settingsGroup.AgvSetting.MaxChargeUp.ShouldBe(null!);

@@ -32,9 +32,9 @@ public interface IStationRepository
     /// <summary>
     /// Get all stations.
     /// </summary>
-    /// <param name="mapName">Optional map name.</param>
+    /// <param name="mapId">Optional map name.</param>
     /// <returns>All stations (optionally on the given map).</returns>
-    Task<ICollection<Station>> GetStations(string? mapName=null);
+    Task<ICollection<Station>> GetStations(Guid? mapId = null);
 
     /// <summary>
     /// Get a stations ordered in the order of the given ids.

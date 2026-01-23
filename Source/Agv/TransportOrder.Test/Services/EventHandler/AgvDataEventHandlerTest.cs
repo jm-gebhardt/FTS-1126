@@ -13,7 +13,7 @@ public class AgvDataEventHandlerTest
         var fixture = new AgvDataEventHandlerTestFixture();
         var agvData = AgvDataGenerator.GenerateAgvData();
 
-        await fixture.TestHarness.Bus.Publish(new AgvDataReceived(agvData.CorrelationId, "agvId", agvData));
+        await fixture.TestHarness.Bus.Publish(new AgvDataReceived(agvData.AgvCorrelationId, "agvId", agvData));
         await fixture.ShouldHaveConsumedAsync<AgvDataReceived>();
         await fixture.ShouldHavePublishedAsync<UpdateAgvData>();
     }

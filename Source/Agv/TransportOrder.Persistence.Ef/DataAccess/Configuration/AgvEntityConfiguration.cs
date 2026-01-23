@@ -67,6 +67,9 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
             }
         });
         builder.Navigation(e => e.AgvStatus).AutoInclude();
-        builder.Property(e => e.AgvSettingsGroup);
+        builder.HasOne<Domain.Models.Settings.AgvSettingsGroup>()
+            .WithMany()
+            .HasForeignKey(e => e.AgvSettingsGroup)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -32,7 +32,7 @@ public class MapsController : Controller
     public async Task<ActionResult<IEnumerable<MapMetaDataDto>>> GetMaps()
     {
         Response<GotMapList> response = await _getMapListClient.GetResponse<GotMapList>(new GetMapList());
-        IEnumerable<MapMetaDataDto> maps = response.Message.Maps.Select(m => new MapMetaDataDto(m.CorrelationId, m.MapId));
+        IEnumerable<MapMetaDataDto> maps = response.Message.Maps.Select(m => new MapMetaDataDto(m.CorrelationId, m.MapName));
         return Ok(maps);
     }
 }

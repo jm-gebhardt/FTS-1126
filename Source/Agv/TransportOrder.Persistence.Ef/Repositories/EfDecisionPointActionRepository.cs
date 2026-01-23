@@ -17,7 +17,7 @@ public class EfDecisionPointActionRepository(IDbContextFactory<TransportOrderDbC
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
 
-        var action = await context.Set<DecisionPointAction>().SingleOrDefaultAsync(a => a.CorrelationId == actionCorrelationId);
+        var action = await context.Set<DecisionPointAction>().SingleOrDefaultAsync(a => a.AgvActionCorrelationId == actionCorrelationId);
         if (action != null)
         {
             context.Remove(action);

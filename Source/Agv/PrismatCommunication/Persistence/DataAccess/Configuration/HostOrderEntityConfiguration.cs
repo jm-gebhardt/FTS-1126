@@ -20,6 +20,7 @@ public class HostOrderEntityConfiguration : IEntityTypeConfiguration<HostOrder>
         {
             o.HasKey(e => e.CorrelationId);
             o.ToTable(HostOrderActionsTable);
+            o.Property(e => e.Node).HasMaxLength(DbStringLimits.NodeName);
             o.Property(e => e.ActionGroupId);
             o.Property(e => e.ActionType).HasMaxLength(DbStringLimits.ActionType);
             o.Property(p => p.InfoToAgv).HasJsonConversion();

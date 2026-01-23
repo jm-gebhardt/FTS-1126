@@ -1,17 +1,21 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 
 /// <summary>
 /// A zone polygon point.
 /// </summary>
-public class ZonePolygonPoint: PolygonPoint, IEquatable<ZonePolygonPoint>
+public class ZonePolygonPoint : PolygonPoint, IEquatable<ZonePolygonPoint>
 {
     /// <inheritdoc cref="TriggerPolygonPoint"/>>
-    public ZonePolygonPoint(double x, double y, int index, Guid locationId) : base(x, y, index, locationId) { }
+    public ZonePolygonPoint(double x, double y, int index, Guid locationId) : base(x, y, index, locationId)
+    {
+    }
 
     /// <inheritdoc cref="TriggerPolygonPoint"/>>
+    [UsedImplicitly]
     public ZonePolygonPoint()
     {
     }

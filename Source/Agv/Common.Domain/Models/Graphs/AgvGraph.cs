@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using MassTransit;
 
 // ReSharper disable ConvertToPrimaryConstructor
 namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
@@ -8,10 +7,12 @@ namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 /// AGV Graph
 /// </summary>
 [PublicAPI]
-public record AgvGraph : CorrelatedBy<Guid>, IGraph
+public record AgvGraph : IGraph
 {
-    /// <inheritdoc/>
-    public Guid CorrelationId { get; init; }
+    /// <summary>
+    /// The CorrelationId of the Agv.
+    /// </summary>
+    public Guid AgvCorrelationId { get; init; }
 
     /// <summary>
     /// The list of nodes in the graph.
@@ -32,16 +33,16 @@ public record AgvGraph : CorrelatedBy<Guid>, IGraph
     /// <summary>
     /// Agv Graph
     /// </summary>
-    /// <param name="correlationId"></param>
+    /// <param name="agvCorrelationId"></param>
     /// <param name="nodes"></param>
     /// <param name="edges"></param>
     /// <param name="usability">Default is <see cref="GraphUsability.Valid"/>.</param>
-    public AgvGraph(Guid correlationId, ICollection<GraphNode> nodes, ICollection<GraphEdge> edges, GraphUsability usability = GraphUsability.Valid)
+    public AgvGraph(Guid agvCorrelationId, ICollection<GraphNode> nodes, ICollection<GraphEdge> edges, GraphUsability usability = GraphUsability.Valid)
     {
         Nodes = nodes;
         Edges = edges;
         Usability = usability;
-        CorrelationId = correlationId;
+        AgvCorrelationId = agvCorrelationId;
     }
 
     /// <summary>

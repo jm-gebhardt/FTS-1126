@@ -30,7 +30,7 @@ public class MapTest
             now);
 
         map.CorrelationId.ShouldBe(correlationId);
-        map.MapId.ShouldBe(mapId);
+        map.MapName.ShouldBe(mapId);
         map.ModificationDate.ShouldBe(now);
         map.BaseBackground.ShouldNotBeNull();
         map.BaseBackground.Image.ShouldBe(Convert.FromBase64String(Base64String));

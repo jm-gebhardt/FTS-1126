@@ -14,9 +14,9 @@ public record Map
     public Guid CorrelationId { get; init; }
 
     /// <summary>
-    /// MapId
+    /// The name of the map.
     /// </summary>
-    public string MapId { get; init; }
+    public string MapName { get; init; }
 
     /// <summary>
     /// Timestamp of last modification
@@ -88,14 +88,14 @@ public record Map
     /// </summary>
     private Map()
     {
-        MapId = null!;
+        MapName = null!;
     }
 
     /// <inheritdoc cref="Map"/>
-    public Map(Guid correlationId, string mapId, MapBackground? baseBackground, DateTime modificationDate)
+    public Map(Guid correlationId, string mapName, MapBackground? baseBackground, DateTime modificationDate)
     {
         CorrelationId = correlationId;
-        MapId = mapId;
+        MapName = mapName;
         BaseBackground = baseBackground;
         ModificationDate = modificationDate;
         Nodes = new List<GraphNode>();

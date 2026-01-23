@@ -20,7 +20,7 @@ public class StationsRequestHandlerTest
     public async Task Consume_GetMapStations_ValidData_ReturnsStations()
     {
         var map = MapGenerator.Generate();
-        var station = new Station("name", AgvGraph.NodeType.Park, []) { MapName = map.MapId };
+        var station = new Station("name", AgvGraph.NodeType.Park, []) { MapId = map.CorrelationId };
         StationsRequestHandlerTestFixture<GetMapStations, StationsRequestHandler> fixture = new StationsRequestHandlerTestFixture<GetMapStations, StationsRequestHandler>()
             .WithMap(map)
             .WithStation(station)

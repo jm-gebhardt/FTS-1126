@@ -9,7 +9,7 @@ public static class MapGenerator
     public static Map Generate(
         Guid correlationId = default,
         byte[]? image = null,
-        string mapId = "map",
+        string mapName = "map",
         int width = 10,
         int height = 20,
         double resolution = 2,
@@ -26,7 +26,7 @@ public static class MapGenerator
             correlationId = Guid.NewGuid();
         }
         return new Map(correlationId,
-            mapId,
+            mapName,
             MapBackgroundGenerator.Generate(image, correlationId, width, height, resolution, xOffset, yOffset),
             modificationDate)
         {
@@ -39,11 +39,11 @@ public static class MapGenerator
     public static Map Generate(
         Guid correlationId,
         MapBackground? background = null,
-        string mapId = "map",
+        string mapName = "map",
         DateTime modificationDate = default
     )
     {
-        return new Map(correlationId, mapId, background, modificationDate)
+        return new Map(correlationId, mapName, background, modificationDate)
         {
             Nodes = new List<GraphNode>(),
             Edges = new List<GraphEdge>(),

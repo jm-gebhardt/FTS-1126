@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Gebhardt.Acc.PrismatCommunication.Migrations
 {
     /// <inheritdoc />
-    public partial class StationNodeId : Migration
+    public partial class StationId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

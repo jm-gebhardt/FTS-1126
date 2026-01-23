@@ -15,7 +15,7 @@ public static class AgvDataExtension
     /// <returns></returns>
     public static AgvData SetSimulationSpeed(this AgvData agvData, int simulationSpeed)
     {
-        return new AgvData(agvData.CorrelationId,
+        return new AgvData(agvData.AgvCorrelationId,
             agvData.Model,
             agvData.Type,
             agvData.IpV4Address,

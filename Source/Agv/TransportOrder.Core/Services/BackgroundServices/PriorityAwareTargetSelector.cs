@@ -235,16 +235,16 @@ public class PriorityAwareTargetSelector(
         }
         foreach (var action in decisionPointActions)
         {
-            if (action.Target == null)
+            if (action.TargetNodeId == null)
             {
-                _actionsToSelectTarget.TryAdd(action.CorrelationId, action.EntryTime);
+                _actionsToSelectTarget.TryAdd(action.AgvActionCorrelationId, action.EntryTime);
             }
             else
             {
-                var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
-                if (actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).CompletedDate != null)
+                var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.AgvActionCorrelationId);
+                if (actionGroup.Actions.Single(a => a.CorrelationId == action.AgvActionCorrelationId).CompletedDate != null)
                 {
-                    _lastEvaluatedActions.Add(action.CorrelationId);
+                    _lastEvaluatedActions.Add(action.AgvActionCorrelationId);
                 }
             }
         }

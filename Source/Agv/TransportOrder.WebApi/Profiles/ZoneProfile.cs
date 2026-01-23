@@ -11,7 +11,11 @@ public class ZoneProfile : WebApiProfile
     /// <inheritdoc cref="ZoneProfile"/>
     public ZoneProfile()
     {
-        CreateMap<Zone, ZoneDto>().ReverseMap();
+        CreateMap<Zone, ZoneDto>()
+            .ForCtorParam(nameof(ZoneDto.ZoneId), opt => opt.MapFrom(src => src.ZoneName));
+        CreateMap<ZoneDto, Zone>()
+            .ForMember(z => z.ZoneName, opt => opt.MapFrom(src => src.ZoneId));
+
         CreateMap<ZonePolygonPoint, ZonePolygonPointDto>().ReverseMap();
     }
 }

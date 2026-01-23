@@ -15,7 +15,7 @@ public class AgvSettingsTest
         var agvSettings = new AgvSettings(groupId);
 
         agvSettings.Id.ShouldNotBe(Guid.Empty);
-        agvSettings.AgvGroupId.ShouldBe(groupId);
+        agvSettings.AgvSettingsGroupId.ShouldBe(groupId);
         agvSettings.AgvOfflineTimeoutMsWhileIdle.ShouldBe(null!);
         agvSettings.AgvOfflineTimeoutMsWhileBusy.ShouldBe(null!);
         agvSettings.MinChargeUp.ShouldBe(null!);

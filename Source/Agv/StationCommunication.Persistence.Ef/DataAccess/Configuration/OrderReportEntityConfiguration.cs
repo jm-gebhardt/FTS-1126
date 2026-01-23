@@ -16,6 +16,6 @@ public class OrderReportEntityConfiguration: IEntityTypeConfiguration<OrderRepor
         builder.ToTable(TableName);
         builder.HasKey(e => e.HostOrderId);
         builder.Property(e => e.HostOrderId);
-        builder.Property(e => e.Station).HasMaxLength(DbStringLimits.NodeId);
+        builder.Property(e => e.Station).HasMaxLength(DbStringLimits.Name);
     }
 }

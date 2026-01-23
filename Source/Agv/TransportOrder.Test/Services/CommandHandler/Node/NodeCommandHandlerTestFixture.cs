@@ -2,9 +2,11 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -16,8 +18,8 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
-    private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
 
     public NodeCommandHandlerTestFixture()
     {
@@ -31,10 +33,10 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _queueRepository.Object);
-        collection.AddTransient(_ => _graphRepository.Object);
         collection.AddTransient(_ => _mapRepository.Object);
+        collection.AddTransient(_ => _agvDb.Object);
         NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<Guid>())).Verifiable();
-        _graphRepository.Setup(x => x.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
+        _agvDb.Setup(x => x.Graphs.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
         return this;
     }
 
@@ -109,15 +111,13 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
 
     public NodeCommandHandlerTestFixture WithNode(GraphNode node)
     {
-        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
-        _graphRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
-        _graphRepository.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+        _agvDb.AddNode(node);
         _mapRepository.Setup(x => x.GetMapIdForNodeAsync(node.Id)).ReturnsAsync(Guid.NewGuid);
         return this;
     }
 
     public void VerifyNodeUpdated()
     {
-        _graphRepository.Verify(x => x.UpdateNode(It.IsAny<GraphNode>()), Times.Once);
+        _agvDb.Verify(x => x.Graphs.UpdateNode(It.IsAny<GraphNode>()), Times.Once);
     }
 }

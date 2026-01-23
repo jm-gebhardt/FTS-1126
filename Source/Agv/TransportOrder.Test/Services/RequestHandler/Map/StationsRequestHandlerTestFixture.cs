@@ -26,7 +26,7 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
 
     public StationsRequestHandlerTestFixture<TRequestClient, TConsumer> WithStation(Station station)
     {
-        _stationRepository.Setup(x => x.GetStations(It.IsAny<string?>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
         return this;
     }

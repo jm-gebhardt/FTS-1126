@@ -78,7 +78,7 @@ public class Location : IEquatable<Location>
         NodeId = node?.Id;
         Node = node;
         EdgeId = edgeId;
-        MapId = mapId ?? null;
+        MapId = mapId;
         TriggerId = triggerId;
         ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
     }
@@ -89,7 +89,7 @@ public class Location : IEquatable<Location>
         Id = Guid.NewGuid();
         Polygon = polygon.Select(p => new TriggerPolygonPoint(p.X, p.Y, p.Index, Id)).ToList();
         Agvs = agvs ?? [];
-        MapId = mapId ?? null;
+        MapId = mapId;
         TriggerId = triggerId;
         ConfigurationParameters = configurationParameters.Select(p => new ConfigurationParameter(p.Name, p.Description, p.Value, p.Validation)).ToList();
     }

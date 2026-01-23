@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 
 /// <inheritdoc cref="IEntityTypeConfiguration{MaintenanceLog}"/>>
-public class MaintenanceLogEntityConfiguration: IEntityTypeConfiguration<MaintenanceLog>
+public class MaintenanceLogEntityConfiguration : IEntityTypeConfiguration<MaintenanceLog>
 {
     private const string TableName = nameof(MaintenanceLog);
 
@@ -16,6 +17,11 @@ public class MaintenanceLogEntityConfiguration: IEntityTypeConfiguration<Mainten
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
         builder.Property(e => e.AgvCorrelationId);
+        builder.HasOne<Agv>()
+            .WithMany()
+            .HasForeignKey(e => e.AgvCorrelationId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Property(e => e.Comment).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.CreationDate);
         builder.Property(e => e.ExecutionDate);
