@@ -33,6 +33,8 @@ public class TriggerController : Controller
     private readonly IRequestClient<TryMarkTriggerForDeletion> _markTriggerForDeletionRequestClient;
     private readonly IRequestClient<TryRestoreTrigger> _tryRestoreTriggerRequestClient;
     private readonly IMapper _mapper;
+    private readonly IRequestClient<DuplicateTriggerLocations> _duplicateLocationsRequestClient;
+    private readonly IRequestClient<DuplicateTriggerLocation> _duplicateLocationRequestClient;
     private readonly ILogger<TriggerController> _logger;
     private readonly ILoggingService _loggingService;
 
@@ -48,6 +50,8 @@ public class TriggerController : Controller
         IRequestClient<TryRestoreTrigger> tryRestoreTriggerRequestClient,
         IMapper mapper,
         ILogger<TriggerController> logger,
+        IRequestClient<DuplicateTriggerLocations> duplicateLocationsRequestClient,
+        IRequestClient<DuplicateTriggerLocation> duplicateLocationRequestClient,
         ILoggingService loggingService)
     {
         _getTriggerRequestClient = getTriggerRequestClient;
@@ -58,6 +62,8 @@ public class TriggerController : Controller
         _resetLocationParameterRequestClient = resetLocationParameterRequestClient;
         _markTriggerForDeletionRequestClient = markTriggerForDeletionRequestClient;
         _tryRestoreTriggerRequestClient = tryRestoreTriggerRequestClient;
+        _duplicateLocationRequestClient = duplicateLocationRequestClient;
+        _duplicateLocationsRequestClient = duplicateLocationsRequestClient;
         _mapper = mapper;
         _logger = logger;
         _loggingService = loggingService;
@@ -147,6 +153,41 @@ public class TriggerController : Controller
     {
         await _removeTriggerLocationRequestClient.GetResponse<Success>(new TryRemoveTriggerLocation(id, locationId));
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerLocationRemoved } });
+        return Ok();
+    }
+
+    /// <summary>
+    /// Duplicate a trigger location from a source trigger to the current trigger.
+    /// </summary>
+    /// <param name="id">The id of the trigger the location is to be copied to.</param>
+    /// <param name="locationId">The id of the location.</param>
+    /// <param name="sourceTriggerId">The id of the trigger the location is copied from.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Trigger or location with given id not found.</response>
+    [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
+    [Route("/trigger/{id:guid}/location/{locationId:guid}/duplicateFrom/{sourceTriggerId:guid}")]
+    public async Task<ActionResult> DuplicateTriggerLocation([FromRoute] Guid id, [FromRoute] Guid locationId, [FromRoute] Guid sourceTriggerId)
+    {
+        await _duplicateLocationRequestClient.GetResponse<Success>(new DuplicateTriggerLocation(sourceTriggerId, id, locationId));
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
+        return Ok();
+    }
+
+    /// <summary>
+    /// Duplicate all trigger location from a source trigger to the current trigger.
+    /// </summary>
+    /// <param name="id">The id of the trigger the location is to be copied to.</param>
+    /// <param name="sourceTriggerId">The id of the trigger the location is copied from.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="404">Trigger or location with given id not found.</response>
+    [HttpPatch]
+    [Authorize(Policy = AuthorizationPolicies.TriggersFullAccess)]
+    [Route("/trigger/{id:guid}/location/duplicateFrom/{sourceTriggerId:guid}")]
+    public async Task<ActionResult> DuplicateTriggerLocations([FromRoute] Guid id, [FromRoute] Guid sourceTriggerId)
+    {
+        await _duplicateLocationsRequestClient.GetResponse<Success>(new DuplicateTriggerLocations(sourceTriggerId, id));
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
         return Ok();
     }
 

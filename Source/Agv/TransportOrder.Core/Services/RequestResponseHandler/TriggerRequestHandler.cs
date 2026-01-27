@@ -12,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Trigger = Gebhardt.Acc.TransportOrder.Domain.Models.Trigger.Trigger;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -29,29 +30,25 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     IConsumer<TryUpdateLocationConfigurationParameter>,
     IConsumer<TryResetLocationConfigurationParameter>,
     IConsumer<TryMarkTriggerForDeletion>,
-    IConsumer<TryRestoreTrigger>
+    IConsumer<TryRestoreTrigger>,
+    IConsumer<DuplicateTriggerLocation>,
+    IConsumer<DuplicateTriggerLocations>
 {
-    /// <summary>
-    /// Handles the <see cref="GetTriggers"/> request.
-    /// </summary>
+    /// <inheritdoc/>>
     public async Task Consume(ConsumeContext<GetTriggers> context)
     {
         ICollection<Trigger> triggers = await triggerRepository.GetTriggers();
         await context.RespondAsync(new GotTriggers(triggers));
     }
 
-    /// <summary>
-    /// Handles the <see cref="GetDeletedTriggers"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetDeletedTriggers> context)
     {
         ICollection<Trigger> triggers = await triggerRepository.GetDeletedTriggers();
         await context.RespondAsync(new GotDeletedTriggers(triggers));
     }
 
-    /// <summary>
-    /// Handles the <see cref="AssignTriggerToLocation"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AssignTriggerToLocation> context)
     {
         (var triggerId, var node, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters) = context.Message;
@@ -134,9 +131,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         return count == 1;
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryRemoveTriggerLocation"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<TryRemoveTriggerLocation> context)
     {
         var triggerId = context.Message.TriggerId;
@@ -153,9 +148,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new Success());
     }
 
-    /// <summary>
-    /// Handles the <see cref="GetTrigger"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetTrigger> context)
     {
         var triggerId = context.Message.TriggerId;
@@ -163,9 +156,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new GotTrigger(trigger));
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryMarkTriggerForDeletion"/> request.
-    /// </summary>
+   /// <inheritdoc/>
     public async Task Consume(ConsumeContext<TryMarkTriggerForDeletion> context)
     {
         var triggerId = context.Message.TriggerId;
@@ -174,9 +165,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new Success());
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryRestoreTrigger"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<TryRestoreTrigger> context)
     {
         var triggerId = context.Message.TriggerId;
@@ -189,9 +178,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new Success());
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryUpdateDefaultConfigurationParameter"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<TryUpdateDefaultConfigurationParameter> context)
     {
         (var triggerId, string parameterName, string newValue) = context.Message;
@@ -206,9 +193,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new Success());
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryUpdateLocationConfigurationParameter"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<TryUpdateLocationConfigurationParameter> context)
     {
         (var triggerId, var locationId, string parameterName, string newValue) = context.Message;
@@ -225,9 +210,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         await context.RespondAsync(new Success());
     }
 
-    /// <summary>
-    /// Handles the <see cref="TryResetLocationConfigurationParameter"/> request.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<TryResetLocationConfigurationParameter> context)
     {
         (var triggerId, var locationId, string parameterName) = context.Message;
@@ -237,6 +220,43 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
             throw new TriggerLocationNotFoundException(locationId);
         }
         await bus.Publish(new ResetLocationConfigurationParameter(triggerId, locationId, parameterName));
+        await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<DuplicateTriggerLocation> context)
+    {
+        var (triggerId, targetTriggerId, locationId) = context.Message;
+
+        var trigger = await triggerRepository.GetById(triggerId);
+        var location = trigger.Locations.Single(l => l.Id == locationId);
+        await RequestAddingLocation(context, targetTriggerId, location);
+        await context.RespondAsync(new Success());
+    }
+
+    private async Task RequestAddingLocation<T>(ConsumeContext<T> context, Guid targetTriggerId, Location location)
+    where T: class
+    {
+        IRequestClient<AddTriggerLocation>? requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
+
+        Response<TriggerLocationAdded> response = await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(targetTriggerId, location.Node, location.EdgeId, location.Polygon.OrderBy(p => p.Index).Select(p => new PolygonPoint(p.X, p.Y)).ToList(), location.MapId, null));
+        string? exceptionMessage = response.Message.Exception;
+
+        if (exceptionMessage != null)
+        {
+            logger.LogError(exceptionMessage);
+            throw new TriggerAssignmentFailedException(exceptionMessage);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<DuplicateTriggerLocations> context)
+    {
+        var (triggerId, targetTriggerId) = context.Message;
+
+        var trigger = await triggerRepository.GetById(triggerId);
+        IEnumerable<Task> addingTasks = trigger.Locations.Select(l => RequestAddingLocation(context, targetTriggerId, l));
+        await Task.WhenAll(addingTasks);
         await context.RespondAsync(new Success());
     }
 }

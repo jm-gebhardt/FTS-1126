@@ -369,6 +369,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TryUpdateDefaultConfigurationParameter>();
         configurator.AddRequestClient<TryUpdateLocationConfigurationParameter>();
         configurator.AddRequestClient<TryResetLocationConfigurationParameter>();
+        configurator.AddRequestClient<DuplicateTriggerLocations>();
+        configurator.AddRequestClient<DuplicateTriggerLocation>();
     }
 
     private static void RegisterMediatorZoneHandlers(IMediatorRegistrationConfigurator configurator)

@@ -552,4 +552,132 @@ public class TriggerRequestHandlerTest
             await fixture.GetResponseAsync<Success>(new TryRestoreTrigger(notDeletedTrigger.Id)));
         await fixture.ShouldNotHavePublishedAsync<RestoreTrigger>();
     }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocation_ValidData_PublishesAddTriggerLocationRespondsSuccess()
+    {
+        var sourceTrigger = TriggerGenerator.CreateTrigger();
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+        var node = "a node".ToGraphNode();
+        sourceTrigger.AddLocation(node, null, null);
+        var sourceLocation = sourceTrigger.Locations.First();
+        var duplicatedLocation = new Location(node, null, Guid.NewGuid(), targetTrigger.Id, []);
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+            .WithTriggers([sourceTrigger, targetTrigger])
+            .WithLocationResponse(duplicatedLocation)
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocation(sourceTrigger.Id, targetTrigger.Id, sourceLocation.Id));
+        await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocation_UnknownSourceTrigger_ThrowsTriggerNotFoundException()
+    {
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+            .WithTriggers([targetTrigger])
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocation("unknown".ToGuid(), targetTrigger.Id, Guid.NewGuid())));
+        await fixture.ShouldNotHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocation_UnknownLocation_ThrowsException()
+    {
+        var sourceTrigger = TriggerGenerator.CreateTrigger();
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+        sourceTrigger.AddLocation("a node".ToGraphNode(), null, null);
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+            .WithTriggers([sourceTrigger, targetTrigger])
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<InvalidOperationException>(async () =>
+            await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocation(sourceTrigger.Id, targetTrigger.Id, "unknown".ToGuid())));
+        await fixture.ShouldNotHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocation_TriggerLocationAdditionThrowsException_ThrowsTriggerAssignmentFailedException()
+    {
+        var sourceTrigger = TriggerGenerator.CreateTrigger();
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+        sourceTrigger.AddLocation("a node".ToGraphNode(), null, null);
+        var sourceLocation = sourceTrigger.Locations.First();
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+            .WithTriggers([sourceTrigger, targetTrigger])
+            .WithLocationResponse(null, "an exception")
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () =>
+            await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocation(sourceTrigger.Id, targetTrigger.Id, sourceLocation.Id)));
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocations_ValidData_PublishesAddTriggerLocationRespondsSuccess()
+    {
+        var sourceTrigger = TriggerGenerator.CreateTrigger();
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+        sourceTrigger.AddLocation("node1".ToGraphNode(), null, null);
+        sourceTrigger.AddLocation("node2".ToGraphNode(), null, null);
+        var duplicatedLocation = new Location("node1".ToGraphNode(), null, Guid.NewGuid(), targetTrigger.Id, []);
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+            .WithTriggers([sourceTrigger, targetTrigger])
+            .WithLocationResponse(duplicatedLocation)
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocations(sourceTrigger.Id, targetTrigger.Id));
+        await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocations_UnknownSourceTrigger_ThrowsTriggerNotFoundException()
+    {
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+            .WithTriggers([targetTrigger])
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerNotFoundException>(async () =>
+            await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocations("unknown".ToGuid(), targetTrigger.Id)));
+        await fixture.ShouldNotHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocations_NoLocations_RespondsSuccess()
+    {
+        var sourceTrigger = TriggerGenerator.CreateTrigger();
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+            .WithTriggers([sourceTrigger, targetTrigger])
+            .Build();
+
+        await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocations(sourceTrigger.Id, targetTrigger.Id));
+        await fixture.ShouldNotHavePublishedAsync<AddTriggerLocation>();
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateTriggerLocations_TriggerLocationAdditionThrowsException_ThrowsTriggerAssignmentFailedException()
+    {
+        var sourceTrigger = TriggerGenerator.CreateTrigger();
+        var targetTrigger = TriggerGenerator.CreateTrigger();
+        sourceTrigger.AddLocation("a node".ToGraphNode(), null, null);
+
+        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+            .WithTriggers([sourceTrigger, targetTrigger])
+            .WithLocationResponse(null, "an exception")
+            .Build();
+
+        await MediatorShould.ThrowRequestExceptionAsync<TriggerAssignmentFailedException>(async () =>
+            await fixture.GetResponseAsync<Success>(new DuplicateTriggerLocations(sourceTrigger.Id, targetTrigger.Id)));
+    }
 }

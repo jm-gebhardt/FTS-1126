@@ -20,10 +20,4 @@ public interface ITriggerClient
     /// </summary>
     [SignalRMethod("TriggerDeleted")]
     Task TriggerDeleted(Guid triggerId);
-
-    /// <summary>
-    /// Trigger restored
-    /// </summary>
-    [SignalRMethod("TriggerRestored")]
-    Task TriggerRestored(Guid triggerId);
 }
