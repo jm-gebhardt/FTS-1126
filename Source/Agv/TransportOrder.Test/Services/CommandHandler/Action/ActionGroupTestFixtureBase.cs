@@ -177,6 +177,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     public ActionGroupTestFixtureBase<T> WithRunningIdleActionGroups(ICollection<ActionGroup> actionGroups)
     {
         ActionGroupRepository.Setup(x => x.GetRunningIdleActionGroups()).ReturnsAsync(actionGroups);
+        ActionGroupRepository.Setup(x => x.GetAgvsMovingCargo(It.IsAny<ICollection<Guid>>())).ReturnsAsync(new List<Guid>());
 
         WithNode(actionGroups.SelectMany(ag => ag.Actions.Select(a => a.Target.Node)).ToArray());
 

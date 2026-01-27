@@ -1130,4 +1130,26 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         return new AgvActionGroupsByState(created, started, completed);
     }
+    
+    /// <inheritdoc />
+    public async Task<ICollection<Guid>> GetAgvsMovingCargo(ICollection<Guid> assignedAgvs)
+    {
+        if (assignedAgvs.Count == 0)
+        {
+            return new List<Guid>();
+        }
+        
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        List<Guid> filteredAgvIds = await context.Set<ActionGroup>()
+            .AsSplitQuery()
+            .Include(g => g.Actions)
+            .ThenInclude(a => a.AgvActionNodes)
+            .ThenInclude(a => a.Node)
+            .Where(ag => (ag.State == ActionGroupState.Created || ag.State == ActionGroupState.Started)
+                         && assignedAgvs.Contains(ag.AssignedAgv!.Value)
+                         && ag.Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop))
+            .Select(ag => ag.AssignedAgv!.Value).Distinct().ToListAsync();
+        
+        return filteredAgvIds;
+    }
 }

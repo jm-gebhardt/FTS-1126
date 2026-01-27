@@ -1897,4 +1897,73 @@ public class ActionGroupRepositoryTest
         result.Started.ShouldBeNull();
         result.Completed.ShouldBeNull();
     }
+
+    [TestMethod]
+    public async Task GetAgvWithMovingCargo_ValidData_ReturnsAgvIdsWithPickActionGroups()
+    {
+        var agvId1 = Guid.NewGuid();
+        var agvId2 = Guid.NewGuid();
+        var agvId3 = Guid.NewGuid();
+        
+        var createdPickActionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvId1, pickActionState: ActionState.Created);
+        var createdPickActionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvId1, pickActionState: ActionState.Created);
+        var runningParkingActionGroup1 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId1, actionState: ActionState.Started);
+        var runningParkingActionGroup2 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId2, actionState: ActionState.Started);
+        var completedParkingActionGroup1 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId3, actionState: ActionState.Completed);
+        
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                createdPickActionGroup1, createdPickActionGroup2, runningParkingActionGroup1, runningParkingActionGroup2, completedParkingActionGroup1
+            ]).BuildAsync();
+
+        List<Guid> pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
+        pickDropActionAgvIds.Count.ShouldBe(1);
+        pickDropActionAgvIds.First().ShouldBe(agvId1);
+    }
+
+    [TestMethod]
+    public async Task GetAgvWithMovingCargo_ValidDataTwoAgvIds_ReturnsAgvIdsWithPickActionGroups()
+    {
+        var agvId1 = Guid.NewGuid();
+        var agvId2 = Guid.NewGuid();
+        var agvId3 = Guid.NewGuid();
+        
+        var createdPickActionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvId1, pickActionState: ActionState.Created);
+        var createdPickActionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvId1, pickActionState: ActionState.Created);
+        var runningPickActionGroup1 = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvId2, pickActionState: ActionState.Created);
+        var runningParkingActionGroup1 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId1, actionState: ActionState.Started);
+        var runningParkingActionGroup2 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId2, actionState: ActionState.Started);
+        var completedParkingActionGroup1 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId3, actionState: ActionState.Completed);
+        
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                createdPickActionGroup1, createdPickActionGroup2, runningPickActionGroup1, 
+                runningParkingActionGroup1, runningParkingActionGroup2, completedParkingActionGroup1
+            ]).BuildAsync();
+
+        List<Guid> pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
+        pickDropActionAgvIds.Count.ShouldBe(2);
+        pickDropActionAgvIds.ShouldContain(agvId1);
+        pickDropActionAgvIds.ShouldContain(agvId2);
+    }
+    
+    [TestMethod]
+    public async Task GetAgvWithMovingCargo_ValidDataNoPickAction_ReturnsEmptyList()
+    {
+        var agvId1 = Guid.NewGuid();
+        var agvId2 = Guid.NewGuid();
+        var agvId3 = Guid.NewGuid();
+        
+        var runningParkingActionGroup1 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId1, actionState: ActionState.Started);
+        var runningParkingActionGroup2 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId2, actionState: ActionState.Started);
+        var completedParkingActionGroup1 = AgvActionGenerator.GenerateParkActionGroup(assignedAgv: agvId3, actionState: ActionState.Completed);
+        
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroups([
+                runningParkingActionGroup1, runningParkingActionGroup2, completedParkingActionGroup1
+            ]).BuildAsync();
+
+        List<Guid> pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
+        pickDropActionAgvIds.Count.ShouldBe(0);
+    }
 }

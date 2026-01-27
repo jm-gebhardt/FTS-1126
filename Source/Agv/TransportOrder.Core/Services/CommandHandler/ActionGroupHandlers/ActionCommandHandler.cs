@@ -1249,9 +1249,22 @@ public class ActionCommandHandler :
             // Get and select agv
             //Get a list of all action groups that are started but idling
             List<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = (await _actionGroupRepository.GetRunningIdleActionGroups()).ToList();
-            //Get AGV that handles these already started action groups
+            _logger.LogDebug("Idling action groups [{ActionGroupId}]", string.Join(',', idleActionGroups.Select(ag => ag.CorrelationId)));
+            
+            //Filter action groups which have assigned AGV which have other created or started pick action
             List<Guid> idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
-            _logger.LogInformation("There are AGVs {ListOfAgvs} with started action groups", string.Join(',', idleAgvCorrelationIds));
+            _logger.LogDebug("AGVs to check for Pick actions [{ListOfAgvs}]", string.Join(',', idleAgvCorrelationIds));
+            
+            List<Guid> idleAgvsMovingCargo = (await _actionGroupRepository.GetAgvsMovingCargo(idleAgvCorrelationIds)).ToList();
+            if (idleAgvsMovingCargo.Count > 0)
+            {
+                _logger.LogInformation("AGVs with Pick or Drop actions [{ListOfAgvs}]", string.Join(',', idleAgvsMovingCargo));
+                idleActionGroups = idleActionGroups.Where(ag => !idleAgvsMovingCargo.Contains(ag.AssignedAgv!.Value)).ToList();
+                _logger.LogDebug("Idling action groups to consider [{ActionGroupId}]", string.Join(',', idleActionGroups.Select(ag => ag.CorrelationId)));
+                // remove from idleAgvCorrelationIds as well
+                idleAgvCorrelationIds = idleAgvCorrelationIds.Except(idleAgvsMovingCargo).ToList();
+            }
+            _logger.LogInformation("There are AGVs [{ListOfAgvs}] with started idling action groups", string.Join(',', idleAgvCorrelationIds));
 
             //Get all AGVs in queue heads
             ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
@@ -1366,7 +1379,12 @@ public class ActionCommandHandler :
             actionGroup.SetDockFrontOfAction(actionToStart.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
 
             // Get route costs
-            var assignedAgv = agvs.Single(a => a.CorrelationId == actionGroup.AssignedAgv!.Value);
+            var assignedAgv = agvs.SingleOrDefault(a => a.CorrelationId == actionGroup.AssignedAgv!.Value);
+            if (assignedAgv == null)
+            {
+                _logger.LogWarning("Assigned AGV with CorrelationId {AgvCorrelationId} not found for action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, actionGroup.CorrelationId);
+                return;
+            }
             double duration = closestAgvRoute.route.Costs;
             duration += await _durationEstimationService.AddNonRouteCosts(false, actionGroup, actionToStart, assignedAgv);
             actionGroup.EstimatedDuration = TimeSpan.FromSeconds(duration);
@@ -1382,6 +1400,19 @@ public class ActionCommandHandler :
             await context.Publish(new SaveActionGroupAbortion(abortedActionGroup.CorrelationId, abortedAction.CorrelationId, abortedActionGroup.IsChargingOrder ? AbortReason.ReactivatedFromCharging : AbortReason.ReactivatedFromParking));
 
             // Log for ui
+            await _loggingService.LogOrder(
+                _logger,
+                LogLevel.Information, 
+                LogCodes.OrderAgvAssigned, 
+                assignedAgv.CorrelationId,  
+                actionGroup.CorrelationId,
+                "AGV Assigned",
+                $"Order {actionGroup.OrderId} was assigned to {assignedAgv.SerialNumber}",
+                new Dictionary<string, object?>
+                {
+                    { LogLabels.OrderId, actionGroup.OrderId }, { LogLabels.AgvSerialNumber, assignedAgv.SerialNumber }
+                });
+
             await _loggingService.LogOrder(
                 _logger,
                 LogLevel.Information,

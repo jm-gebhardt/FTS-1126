@@ -412,4 +412,11 @@ public interface IActionGroupRepository
     /// <param name="agvCorrelationId">The AGV correlation id.</param>
     /// <returns>A record containing the latest action group for each state (if available).</returns>
     Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId);
+    
+    /// <summary>
+    /// Filter assigned agvs that have a created or started pick action group.
+    /// </summary>
+    /// <param name="assignedAgvs">List of agv ids which have assigned running idle action groups.</param>
+    /// <returns>Filtered list of agv ids which have additionally created or started pick action.</returns>
+    Task<ICollection<Guid>> GetAgvsMovingCargo(ICollection<Guid> assignedAgvs);
 }
