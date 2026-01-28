@@ -100,10 +100,13 @@ steps:
           Dockerfile: $(SourceDirectory)/Dockerfile
           buildContext: 'Source'
           repository: 'gebhardt/fleet-management/${{projectName}}'
-          arguments: --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
+          arguments: --secret id=nuget_pat,env=NUGET_PAT --build-arg PROJECT=${{ projectName }} --build-arg DOTNET_VERSION=${{ parameters.dotnetversion }}
           tags: |
             $(GitVersion.SemVer)
             latest
+        env:
+          DOCKER_BUILDKIT: 1
+          NUGET_PAT: $(System.AccessToken)
         condition: and(succeeded(), containsValue(split(variables['componentsToBuild'], ','), '${{projectName}}' ))
 
 
