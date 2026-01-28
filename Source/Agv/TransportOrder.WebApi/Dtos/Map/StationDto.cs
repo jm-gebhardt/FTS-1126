@@ -96,6 +96,11 @@ public record StationDto
     public LockedOrderHandlingType? LockedOrderHandling { get; set; }
 
     /// <summary>
+    /// Additional information for this station.
+    /// </summary>
+    public Dictionary<string, object?>? AdditionalInfo { get; set; }
+
+    /// <summary>
     /// ctor called by AutoMapper.
     /// </summary>
     private StationDto()

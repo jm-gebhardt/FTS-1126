@@ -42,4 +42,14 @@ public class StationEventHandlerTest
 
         await fixture.ShouldHavePublishedAsync<UpdateStationJamState>();
     }
+
+    [TestMethod]
+    public async Task Consume_StationConfigured_ValidData_PublishesUpdateStationAdditionalInfo()
+    {
+        var fixture = new StationEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync(new StationConfigured("station".ToGuid(), new Dictionary<string, object?>()));
+
+        await fixture.ShouldHavePublishedAsync<UpdateStationAdditionalInfo>();
+    }
 }

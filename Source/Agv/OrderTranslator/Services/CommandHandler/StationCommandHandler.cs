@@ -1,4 +1,7 @@
-﻿using Gebhardt.Acc.OrderTranslator.Domain.Repositories;
+﻿using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
+using Gebhardt.Acc.OrderTranslator.Domain.Models.Station;
+using Gebhardt.Acc.OrderTranslator.Domain.Repositories;
 using Gebhardt.Acc.OrderTranslator.Messages;
 using JetBrains.Annotations;
 using MassTransit;
@@ -22,5 +25,6 @@ public class StationCommandHandler(IStationRepository stationRepository, ILogger
 
         await stationRepository.AddOrUpdateAsync(station);
         logger.LogInformation("Station {Name} created or updated", station.Name);
+        await context.Publish(new StationConfigured(station.Id, station.AsDict([nameof(Station.Name), nameof(Station.Id)])));
     }
 }

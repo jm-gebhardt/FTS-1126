@@ -102,6 +102,11 @@ public class Station
     /// </summary>
     public ICollection<Guid> StationGroup { get; set; } = [];
 
+    /// <summary>
+    /// Additional information for this station.
+    /// </summary>
+    public Dictionary<string,object?>? AdditionalInfo { get; set; }
+
     /// <inheritdoc cref="Station"/>>
     public Station(string name, AgvGraph.NodeType primaryType, ICollection<AgvGraph.NodeType> additionalTypes)
     {
@@ -172,6 +177,28 @@ public class Station
     public void Configure(Common.Messages.Graphs.Events.StationConfiguration configuration)
     {
         StationGroup = configuration.StationGroup.Select(s => s.ToGuid()).ToList();
+    }
+
+    /// <summary>
+    /// Update additional information.
+    /// </summary>
+    /// <param name="infos">The new additional information.</param>
+    public void UpdateAdditionalInfo(Dictionary<string, object?> infos)
+    {
+        if (AdditionalInfo == null)
+        {
+            AdditionalInfo = infos;
+            return;
+        }
+        foreach (var (key, value) in infos)
+        {
+            if(AdditionalInfo.ContainsKey(key))
+            {
+                AdditionalInfo[key] = value;
+                continue;
+            }
+            AdditionalInfo.TryAdd(key, value);
+        }
     }
 }
 

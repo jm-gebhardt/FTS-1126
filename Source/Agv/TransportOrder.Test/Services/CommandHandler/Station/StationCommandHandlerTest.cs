@@ -114,4 +114,16 @@ public class StationCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<JamStateChanged>();
         fixture.VerifyStationUpdated(Times.Once());
     }
+
+    [TestMethod]
+    public async Task Consume_UpdateStationAdditionalInformation_StationUpdated()
+    {
+        const string station = "station";
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithStation(station);
+
+        await fixture.PublishMessageAsync(new UpdateStationAdditionalInfo(station.ToGuid(), new Dictionary<string, object?>{{"NeedsCargoReporting", true}}));
+
+        fixture.VerifyStationUpdated(Times.Once());
+    }
 }

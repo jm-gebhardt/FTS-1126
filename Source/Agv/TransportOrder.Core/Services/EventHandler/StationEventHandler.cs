@@ -15,11 +15,10 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 [UsedImplicitly]
 public class StationEventHandler(IAgvDb agvDb) :
     IConsumer<StationUnlocked>,
-    IConsumer<JamStateUpdated>
+    IConsumer<JamStateUpdated>,
+    IConsumer<StationConfigured>
 {
-    /// <summary>
-    /// Handles the <see cref="StationUnlocked"/> evnet.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<StationUnlocked> context)
     {
         await context.Publish(new TryReactivateParkingAgvs());
@@ -35,11 +34,15 @@ public class StationEventHandler(IAgvDb agvDb) :
         await context.Publish(new TryReactivateChargingAgv(agvsOrderedByBatteryCharge.First().CorrelationId));
     }
 
-    /// <summary>
-    /// Handles the <see cref="JamStateUpdated"/> evnet.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<JamStateUpdated> context)
     {
         await context.Publish(new UpdateStationJamState(context.Message.StationId, context.Message.HasPalletJam));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<StationConfigured> context)
+    {
+        await context.Publish(new UpdateStationAdditionalInfo(context.Message.Id, context.Message.StationProperties));
     }
 }

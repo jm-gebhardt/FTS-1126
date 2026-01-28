@@ -31,7 +31,8 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
     IConsumer<Common.Messages.Maps.MapSaved>,
     IConsumer<UpdateStationJamState>,
     IConsumer<GetLockedStations>,
-    IConsumer<StationConfigurationReceived>
+    IConsumer<StationConfigurationReceived>,
+    IConsumer<UpdateStationAdditionalInfo>
 {
     /// <summary>
     /// Handles the <see cref="LockStation"/> command.
@@ -152,5 +153,16 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
         await stationRepository.Update(station);
 
         logger.LogInformation("Configured station {Station}", station.Name);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UpdateStationAdditionalInfo> context)
+    {
+        (var stationId, Dictionary<string, object?> additionalInformation) = context.Message;
+        var station = await stationRepository.GetStation(stationId);
+        station.UpdateAdditionalInfo(additionalInformation);
+        await stationRepository.Update(station);
+
+        logger.LogInformation("Updated additional information of station {Station}", station.Name);
     }
 }

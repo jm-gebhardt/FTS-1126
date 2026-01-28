@@ -1,4 +1,7 @@
-﻿using Gebhardt.Acc.StationCommunication.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
+using Gebhardt.Acc.StationCommunication.Domain.Models;
 using Gebhardt.Acc.StationCommunication.Messages.JamState;
 using JetBrains.Annotations;
 using MassTransit;
@@ -29,7 +32,12 @@ public class InitializationProvider(ILogger<InitializationProvider> logger, Stat
         }
         List<string> stationNames = configuration.Stations.Where(s => s.HasJamState).Select(s => s.Name).ToList();
         logger.LogInformation("Requesting jam state for stations {Stations}", string.Join(", ", stationNames));
-        IEnumerable<Task> postStateRequests = stationNames.Select(s => bus.Publish(new RequestJamState(s)));
-        await Task.WhenAll(postStateRequests);
+        IEnumerable<Task> tasks = stationNames.Select(s => bus.Publish(new RequestJamState(s)));
+        foreach (var station in configuration.Stations)
+        {
+            tasks = tasks.Append(bus.Publish(new StationConfigured(station.Name.ToGuid(), station.AsDict([nameof(Station.Name)]))));
+        }
+           
+        await Task.WhenAll(tasks);
     }
 }

@@ -200,6 +200,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateStationJamState, StationCommandHandler>(c);
             partitioner.PartitionMessageById<StationConfigurationReceived, StationCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateStationAdditionalInfo, StationCommandHandler>(c);
         });
 
         busRegistrationConfigurator.AddConsumer<NodeCommandHandler>(c =>
