@@ -11,7 +11,7 @@ public class TransportOrderHostBuilderTests
     [TestMethod]
     public void CreateHostBuilder_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder([], new SimulationOptions(), InitialLogger.Create<TransportOrderHostBuilderTests>(), true);
+        var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], new SimulationOptions(), InitialLogger.Create<TransportOrderHostBuilderTests>(), true);
 
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }

@@ -13,6 +13,12 @@
     <PackageVersion Include="Azure.Identity" Version="1.17.1" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+
+    <!-- Only update together, check which opentelemetry version corresponds to the Gebhart.Core.Observability packages -->
+    <PackageVersion Include="Gebhardt.Core.Observability" Version="0.20.31" />
+    <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="0.20.31" />
+    <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.0.0-beta.9" />
+
     <!-- VERSION LOCKED at v8.5.7: Do not update to v9+ (commercial license required). Stay on v8.x (open source) -->
     <PackageVersion Include="MassTransit" Version="[8.5.7]" />
     <PackageVersion Include="MassTransit.Abstractions" Version="[8.5.7]" />

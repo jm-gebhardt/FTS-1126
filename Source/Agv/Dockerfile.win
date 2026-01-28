@@ -5,6 +5,10 @@
 #        Build context must be 'Source/' directory (contains Directory.Packages.props)
 #        project      Project name (e.g. DeviceCommunication)
 
+#
+# Authentication for private NuGet feed:
+#   Local:    Set NUGET_PAT environment variable (or in .env file for docker-compose)
+#   Pipeline: Uses System.AccessToken automatically via NuGetAuthenticate task
 
 ARG PROJECT
 ARG DOTNET_VERSION=10.0
@@ -22,7 +26,17 @@ COPY Directory.Build.props ./
 COPY Agv/ ./Agv/
 
 # Restore
-RUN dotnet restore Agv\\%PROJECT%\\%PROJECT%.csproj
+RUN --mount=type=secret,id=nuget_pat `
+    if (Test-Path "C:\run\secrets\nuget_pat") { `
+        $pat = Get-Content "C:\run\secrets\nuget_pat"; `
+        dotnet nuget update source AgvDev `
+            --username "az" `
+            --password "$pat" `
+            --store-password-in-clear-text `
+            --configfile ".\Agv\NuGet.Config"; `
+    } ; `
+    dotnet restore "Agv\\%PROJECT%\\%PROJECT%.csproj"
+
 
 # Build/publish
 RUN dotnet publish -c Release -o out --no-restore Agv\\%PROJECT%\\%PROJECT%.csproj

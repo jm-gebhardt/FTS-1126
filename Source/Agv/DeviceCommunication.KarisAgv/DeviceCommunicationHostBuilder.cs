@@ -93,6 +93,7 @@ public static class DeviceCommunicationHostBuilder
                 services.AddHostedService<ZoneRefreshBackgroundService>();
 
                 services.AddTransient<IActionRepository, EfActionRepository>();
+                services.ConfigureTracing(context.Configuration);
                 services.ConfigureServicesMassTransit(context.Configuration,
                     busRegistrationConfiguration: configurator =>
                     {

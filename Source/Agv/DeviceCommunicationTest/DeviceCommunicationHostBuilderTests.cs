@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Testing.Configurations;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv;
 using Gebhardt.Acc.DeviceCommunication.SimAgv;
+using Gebhardt.Acc.DeviceCommunication.SimAgv.CmdOptions;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest;
@@ -12,7 +13,7 @@ public class DeviceCommunicationHostBuilderTests
     [DoNotParallelize]
     public void CreateHostBuilder_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = DeviceCommunicationHostBuilder.CreateHostBuilder([]);
+        var hostBuilder = DeviceCommunicationHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"]);
 
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }
@@ -21,7 +22,7 @@ public class DeviceCommunicationHostBuilderTests
     [DoNotParallelize]
     public void CreateHostBuilderSim_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = DeviceCommunicationSimAgvHostBuilder.CreateHostBuilder(["-f"], "KARISEXPORT", "e", "s", "i", "n");
+        var hostBuilder = DeviceCommunicationSimAgvHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], new Options {FixedGraph = true}, "KARISEXPORT", "e", "s", "i", "n");
         hostBuilder.ShouldNotBeNull();
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }

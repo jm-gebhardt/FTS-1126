@@ -13,7 +13,7 @@ public class PrismatCommunicationHostBuilderTests
     [TestMethod]
     public void CreateHostBuilder_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = PrismatCommunicationHostBuilder.CreateHostBuilder([], new SimulateOptions(), InitialLogger.Create<PrismatCommunicationHostBuilderTests>());
+        var hostBuilder = PrismatCommunicationHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], new SimulateOptions(), InitialLogger.Create<PrismatCommunicationHostBuilderTests>());
 
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }

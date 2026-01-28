@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Common.Messages.HostOrder.Events;
 public record HostOrderCreated : CorrelatedBy<Guid>
 {
     /// <summary>
-    /// Correlated by OrderId
+    /// Correlation id of the order.
     /// </summary>
     public Guid CorrelationId { get; }
 

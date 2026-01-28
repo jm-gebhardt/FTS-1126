@@ -47,6 +47,7 @@ public static class HostBuilderExtension
                             options.WaitUntilStarted = true;
                             options.StartTimeout = _busStartTimeout;
                         });
+                    services.ConfigureTracing(context.Configuration);
                 }
                 catch (InvalidOperationException e)
                 {

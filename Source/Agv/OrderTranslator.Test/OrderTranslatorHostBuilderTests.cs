@@ -13,7 +13,7 @@ public class OrderTranslatorHostBuilderTests
     [TestMethod]
     public void CreateHostBuilder_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = OrderTranslatorHostBuilder.CreateHostBuilder([], new SimulateOptions(), InitialLogger.Create<OrderTranslatorHostBuilderTests>());
+        var hostBuilder = OrderTranslatorHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], new SimulateOptions(), InitialLogger.Create<OrderTranslatorHostBuilderTests>());
 
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }

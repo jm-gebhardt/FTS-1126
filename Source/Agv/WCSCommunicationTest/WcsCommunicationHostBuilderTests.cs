@@ -12,7 +12,7 @@ public class WcsCommunicationHostBuilderTests
     [TestMethod]
     public void CreateHostBuilder_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = WcsCommunicationHostBuilder.CreateHostBuilder([], true, new SimulateOptions());
+        var hostBuilder = WcsCommunicationHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], true, new SimulateOptions());
 
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }

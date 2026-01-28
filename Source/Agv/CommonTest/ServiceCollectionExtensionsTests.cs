@@ -33,10 +33,11 @@ public class ServiceCollectionExtensionsTests
     {
         string sectionName = new ConfigurationTypeManager().GetSectionName<MassTransitConfiguration>();
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-            new Dictionary<string, string?> { { $"{sectionName}:Url", "127.0.0.1" } }
+            new Dictionary<string, string?> { { $"{sectionName}:Url", "127.0.0.1" }, {"Observability:ServiceName","service"} }
         ).Build();
         ServiceCollection services = new();
 
         services.ConfigureServicesMassTransit(configuration);
+        services.ConfigureTracing(configuration);
     }
 }

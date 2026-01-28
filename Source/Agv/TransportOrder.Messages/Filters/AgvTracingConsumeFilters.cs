@@ -1,6 +1,8 @@
-﻿using Gebhardt.Acc.Common.Messages.Filters;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Core.Observability.Abstractions;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -11,8 +13,9 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Filters;
 /// Provides consume filters for messages relevant for
 /// agv tracing.
 /// </summary>
+/// <inheritdoc cref="AgvTracingConsumeFilters"/>>
 [UsedImplicitly]
-public class AgvTracingConsumeFilters : BaseTracingFilter,
+public class AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger, ITracing tracing) : BaseTracingFilter(logger),
     IFilter<ConsumeContext<PrepareAgvForStartingAction>>,
     IFilter<ConsumeContext<HandleActionCompletion>>,
     IFilter<ConsumeContext<HandleActionAbortion>>,
@@ -22,11 +25,6 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
     IFilter<ConsumeContext<AgvLastNodeIdChanged>>,
     IFilter<ConsumeContext<AgvPositionChanged>>
 {
-    /// <inheritdoc cref="AgvTracingConsumeFilters"/>>
-    public AgvTracingConsumeFilters(ILogger<AgvTracingConsumeFilters> logger) : base(logger)
-    {
-    }
-
     /// <inheritdoc cref="IFilter{TContext}"/>>
     public async Task Send(ConsumeContext<PrepareAgvForStartingAction> context, IPipe<ConsumeContext<PrepareAgvForStartingAction>> next)
     {
@@ -65,6 +63,11 @@ public class AgvTracingConsumeFilters : BaseTracingFilter,
     /// <inheritdoc />
     public async Task Send(ConsumeContext<AgvBecameIdle> context, IPipe<ConsumeContext<AgvBecameIdle>> next)
     {
+        using var activity = tracing.StartSpan(
+            nameof(AgvBecameIdle), attributes: new[]
+            {
+                new KeyValuePair<string, object?>(TracingConstants.TagAgvCorrelationId, context.Message.CorrelationId)
+            });
         LogDebug(context);
         await next.Send(context);
     }

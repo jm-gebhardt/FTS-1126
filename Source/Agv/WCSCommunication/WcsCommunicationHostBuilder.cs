@@ -41,6 +41,7 @@ public static class WcsCommunicationHostBuilder
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
             .ConfigureServices((context, services) =>
             {
+                services.ConfigureTracing(context.Configuration);
                 if (isSimulation)
                 {
                     services.AddHostedService<PollingBackgroundService<SimulationHostOrderService>>();

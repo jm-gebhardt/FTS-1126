@@ -1,5 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Messages.Filters;
+using Gebhardt.Acc.Common.Services;
+using Gebhardt.Core.Observability;
+using Gebhardt.Core.Observability.Options;
 using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Serialization;
@@ -13,60 +16,76 @@ namespace Gebhardt.Acc.Common.Configurations.Extensions;
 /// </summary>
 public static class ServiceCollectionExtensions
 {
-    /// <summary>
-    /// ConfigureServices
-    /// </summary>
     /// <param name="services">Service collection</param>
-    /// <param name="config">Configuration</param>
-    /// <param name="busRegistrationConfiguration">xxx</param>
-    /// <param name="rabbitMqConfiguration"></param>
-    [PublicAPI]
-    public static void ConfigureServicesMassTransit(this IServiceCollection services,
-        IConfiguration config,
-        Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null,
-        Action<IBusRegistrationContext, IRabbitMqBusFactoryConfigurator>? rabbitMqConfiguration = null
-    )
+    extension(IServiceCollection services)
     {
-        // Enable serialization/deserialization of enum values as string.
-        if (!SystemTextJsonMessageSerializer.Options.Converters.IsReadOnly)
+        /// <summary>
+        /// ConfigureServices
+        /// </summary>
+        /// <param name="config">Configuration</param>
+        /// <param name="busRegistrationConfiguration">xxx</param>
+        /// <param name="rabbitMqConfiguration"></param>
+        [PublicAPI]
+        public void ConfigureServicesMassTransit(IConfiguration config,
+            Action<IBusRegistrationConfigurator>? busRegistrationConfiguration = null,
+            Action<IBusRegistrationContext, IRabbitMqBusFactoryConfigurator>? rabbitMqConfiguration = null
+        )
         {
-            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
-        }
-        else
-        {
-            Console.WriteLine($"Warning: Could not add {nameof(JsonStringEnumConverter)} during MassTransit service configuration.");
-        }
-
-        string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();
-        var massTransitConfig = config.GetRequiredSection(sectionName).Get<MassTransitConfiguration>();
-
-        if (massTransitConfig == null)
-        {
-            throw new NullReferenceException("MassTransit config was not found");
-        }
-
-        services.AddSingleton(_ => massTransitConfig);
-
-        services.AddMassTransit(x =>
-        {
-            x.DisableUsageTelemetry();
-            x.UsingRabbitMq((context, cfg) =>
+            // Enable serialization/deserialization of enum values as string.
+            if (!SystemTextJsonMessageSerializer.Options.Converters.IsReadOnly)
             {
-                rabbitMqConfiguration?.Invoke(context, cfg);
-                cfg.UseConsumeFilter<AgvTracingConsumeFilters>(context);
-                cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(context);
+                SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Could not add {nameof(JsonStringEnumConverter)} during MassTransit service configuration.");
+            }
 
-                cfg.UseMessageRetry(r =>
+            string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();
+            var massTransitConfig = config.GetRequiredSection(sectionName).Get<MassTransitConfiguration>();
+
+            if (massTransitConfig == null)
+            {
+                throw new NullReferenceException("MassTransit config was not found");
+            }
+
+            services.AddSingleton(_ => massTransitConfig);
+
+            services.AddMassTransit(x =>
+            {
+                x.DisableUsageTelemetry();
+                x.UsingRabbitMq((context, cfg) =>
                 {
-                    r.Intervals(100, 200, 500);
-                    r.Handle<Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException>();
-                });
+                    rabbitMqConfiguration?.Invoke(context, cfg);
+                    cfg.UseConsumeFilter<AgvTracingConsumeFilters>(context);
+                    cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(context);
 
-                cfg.ConfigureEndpoints(context, new DefaultEndpointNameFormatter(includeNamespace: true));
-                cfg.Host(massTransitConfig.Url);
-                cfg.UsePrometheusMetrics();
+                    cfg.UseMessageRetry(r =>
+                    {
+                        r.Intervals(100, 200, 500);
+                        r.Handle<Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException>();
+                    });
+
+                    cfg.ConfigureEndpoints(context, new DefaultEndpointNameFormatter(includeNamespace: true));
+                    cfg.Host(massTransitConfig.Url);
+                    cfg.UsePrometheusMetrics();
+                });
+                busRegistrationConfiguration?.Invoke(x);
             });
-            busRegistrationConfiguration?.Invoke(x);
-        });
+        }
+
+        /// <summary>
+        /// Configure tracing.
+        /// </summary>
+        /// <param name="config">Configuration</param>
+        public void ConfigureTracing(IConfiguration config)
+        {
+            var observabilityOptions = config.GetObservabilityOptions();
+
+            services.AddObservability<TracingService>(
+                observabilityOptions,
+                opts => new TracingService(opts.ServiceName, opts.ServiceName)
+            );
+        }
     }
 }

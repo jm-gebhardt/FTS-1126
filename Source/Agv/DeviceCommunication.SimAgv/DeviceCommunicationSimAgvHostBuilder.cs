@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using CommandLine;
 using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
@@ -29,102 +28,102 @@ public static class DeviceCommunicationSimAgvHostBuilder
     /// <summary>
     /// Creates the host builder.
     /// </summary>
-    public static IHostBuilder? CreateHostBuilder(string[] args, string karisExportSection, string exportDir, string quartzSchedulerName, string quartzSchedulerId, string quartzQueueName)
+    public static IHostBuilder CreateHostBuilder(string[] args, Options? simulationOptions, string? karisExportSection, string exportDir, string quartzSchedulerName, string quartzSchedulerId, string quartzQueueName)
     {
-        IHostBuilder? hostBuilder1 = null;
-        var parser = new Parser(cfg => cfg.CaseInsensitiveEnumValues = true);
-        parser.ParseArguments<Options>(args)
-            .WithParsed(simulationOptions =>
+        if (simulationOptions is null)
+        {
+            throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions?.GridGraph}/ FixedGraph {simulationOptions?.FixedGraph} / KaeserGraph {simulationOptions?.KaeserGraph} / BezierGraph {simulationOptions?.BezierGridGraph})");
+        }
+        if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph: false, ExportedGraph: false })
+        {
+            throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph} / KaeserGraph {simulationOptions.KaeserGraph} / BezierGraph {simulationOptions.BezierGridGraph})");
+        }
+
+        if (!SystemTextJsonMessageSerializer.Options.Converters.IsReadOnly)
+        {
+            // Enable serialization/deserialization of enum values as string.
+            SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+        }
+
+        var hostBuilder1 = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureServices((context, services) =>
             {
-                if (simulationOptions is { FixedGraph: false, KaeserGraph: false, GridGraph: false, BezierGridGraph: false, ExportedGraph: false })
+                services.AddSingleton(_ => simulationOptions);
+                if (simulationOptions.FixedGraph)
                 {
-                    throw new GraphGeneratorConfigurationException($"No graph generator selected (GridGraph: {simulationOptions.GridGraph}/ FixedGraph {simulationOptions.FixedGraph} / KaeserGraph {simulationOptions.KaeserGraph} / BezierGraph {simulationOptions.BezierGridGraph})");
+                    services.AddTransient<IGraphGenerator, FixedGraphGenerator>();
+                    services.AddTransient<IMapGenerator, FixedGraphMapGenerator>();
                 }
-
-                if (!SystemTextJsonMessageSerializer.Options.Converters.IsReadOnly)
+                else if (simulationOptions.GridGraph)
                 {
-                    // Enable serialization/deserialization of enum values as string.
-                    SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+                    services.AddTransient<IGraphGenerator, GridGraphGenerator>();
+                    services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
                 }
+                else if (simulationOptions.BezierGridGraph)
+                {
+                    services.AddSingleton<IGraphGenerator, BezierGraphGenerator>();
+                    services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
+                }
+                else if (simulationOptions.KaeserGraph)
+                {
+                    services.AddTransient<IGraphGenerator, KaeserGraphGenerator>();
+                    services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
+                }
+                else if (simulationOptions.ExportedGraph)
+                {
+                    string? exportDirectory = context.Configuration.GetSection(karisExportSection!)[exportDir];
+                    var config = new KarisExportConfiguration(exportDirectory);
+                    config.LoadFromYaml();
+                    services.AddSingleton(config);
+                    services.AddTransient<IGraphReader, JsonGraphReader>();
+                    services.AddTransient<IGraphGenerator, ExportedGraphGenerator>();
+                    services.AddTransient<IMapGenerator, ExportedGraphMapGenerator>();
+                }
+                services.AddHostedService<SimulatedAgvProvider>();
 
-                hostBuilder1 = GebhardtStartup.CreateHostBuilder(args)
-                    .ConfigureServices((context, services) =>
+                services.AddQuartz(q =>
+                {
+                    q.SchedulerName = quartzSchedulerName;
+                    q.SchedulerId = quartzSchedulerId;
+
+                    // convert time zones using converter that can handle Windows/Linux differences
+                    q.UseTimeZoneConverter();
+                });
+
+                services.ConfigureTracing(context.Configuration);
+                services.ConfigureServicesMassTransit(context.Configuration,
+                    configurator =>
                     {
-                        services.AddSingleton(_ => simulationOptions);
-                        if (simulationOptions.FixedGraph)
-                        {
-                            services.AddTransient<IGraphGenerator, FixedGraphGenerator>();
-                            services.AddTransient<IMapGenerator, FixedGraphMapGenerator>();
-                        }
-                        else if (simulationOptions.GridGraph)
-                        {
-                            services.AddTransient<IGraphGenerator, GridGraphGenerator>();
-                            services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
-                        }
-                        else if (simulationOptions.BezierGridGraph)
-                        {
-                            services.AddSingleton<IGraphGenerator, BezierGraphGenerator>();
-                            services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
-                        }
-                        else if (simulationOptions.KaeserGraph)
-                        {
-                            services.AddTransient<IGraphGenerator, KaeserGraphGenerator>();
-                            services.AddTransient<IMapGenerator, GeneratedMapGenerator>();
-                        }
-                        else if (simulationOptions.ExportedGraph)
-                        {
-                            string? exportDirectory = context.Configuration.GetSection(karisExportSection)[exportDir];
-                            var config = new KarisExportConfiguration(exportDirectory);
-                            config.LoadFromYaml();
-                            services.AddSingleton(config);
-                            services.AddTransient<IGraphReader, JsonGraphReader>();
-                            services.AddTransient<IGraphGenerator, ExportedGraphGenerator>();
-                            services.AddTransient<IMapGenerator, ExportedGraphMapGenerator>();
-                        }
-                        services.AddHostedService<SimulatedAgvProvider>();
+                        configurator.AddPublishMessageScheduler();
 
-                        services.AddQuartz(q =>
-                        {
-                            q.SchedulerName = quartzSchedulerName;
-                            q.SchedulerId = quartzSchedulerId;
+                        configurator.AddQuartzConsumers(options => options.QueueName = quartzQueueName);
 
-                            // convert time zones using converter that can handle Windows/Linux differences
-                            q.UseTimeZoneConverter();
-                        });
+                        configurator.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
+                            .InMemoryRepository();
+                        configurator.AddMqttConsumer<MqttSimulateAgvErrorConsumer>();
+                        configurator.AddConsumer<SimulatedAgvProvider>();
+                        configurator.AddConsumer<SetSimulationSpeedConsumer>();
+                    }, rabbitMqConfiguration: (_, cfg) => { cfg.UsePublishMessageScheduler(); });
+                services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
 
-                        services.ConfigureServicesMassTransit(context.Configuration,
-                            configurator =>
-                            {
-                                configurator.AddPublishMessageScheduler();
-
-                                configurator.AddQuartzConsumers(options => options.QueueName = quartzQueueName);
-
-                                configurator.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgvSaga>()
-                                    .InMemoryRepository();
-                                configurator.AddMqttConsumer<MqttSimulateAgvErrorConsumer>();
-                                configurator.AddConsumer<SimulatedAgvProvider>();
-                                configurator.AddConsumer<SetSimulationSpeedConsumer>();
-                            }, rabbitMqConfiguration: (_, cfg) => { cfg.UsePublishMessageScheduler(); });
-                        services.AddOptions<MassTransitHostOptions>().Configure(options => { options.WaitUntilStarted = true; });
-
-                        services.AddHealthChecks();
-                    }).ConfigureWebHost(host =>
+                services.AddHealthChecks();
+            }).ConfigureWebHost(host =>
+            {
+                host.UseKestrel()
+                    .ConfigureAppConfiguration((_, config) =>
                     {
-                        host.UseKestrel()
-                            .ConfigureAppConfiguration((_, config) =>
-                            {
-                                ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-                                config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
-                            })
-                            .AddDeviceCommunicationWebApi()
-                            .Configure(app =>
-                            {
-                                app.UseMetricServer();
-                                app.UseDeviceCommunicationWebApi();
-                                app.UseDeveloperExceptionPage();
-                            });
+                        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+                        config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
+                    })
+                    .AddDeviceCommunicationWebApi()
+                    .Configure(app =>
+                    {
+                        app.UseMetricServer();
+                        app.UseDeviceCommunicationWebApi();
+                        app.UseDeveloperExceptionPage();
                     });
             });
+
         return hostBuilder1;
     }
 }

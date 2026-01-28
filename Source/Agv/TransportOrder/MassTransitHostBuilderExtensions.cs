@@ -37,6 +37,7 @@ public static class MassTransitHostBuilderExtensions
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
                     cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
                 });
+                services.ConfigureTracing(context.Configuration);
             }
             catch (InvalidOperationException e)
             {

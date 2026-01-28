@@ -12,7 +12,7 @@ public class StatisticsHostBuilderTests
     [TestMethod]
     public void CreateHostBuilder_ValidData_NoCaptiveDependencies()
     {
-        var hostBuilder = StatisticsHostBuilder.CreateHostBuilder([], InitialLogger.Create<StatisticsHostBuilderTests>(), "ID", "Name");
+        var hostBuilder = StatisticsHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], InitialLogger.Create<StatisticsHostBuilderTests>(), "ID", "Name");
 
         hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
     }
