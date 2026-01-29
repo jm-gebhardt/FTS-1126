@@ -19,6 +19,8 @@ jobs:
   - task: dependabot@2
     inputs:
       experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=false'
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   - bash: |
       # Make script executable and run it
