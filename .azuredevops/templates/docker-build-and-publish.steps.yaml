@@ -33,6 +33,9 @@ steps:
     displayName: Rebase with Master
     condition: not(eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
+  - task: NuGetAuthenticate@1
+    displayName: 'Authenticate to Azure Artifacts'
+
   - bash: |
       dotnet tool install --global dotnet-affected --version 6.1.0
     displayName: Install dotnet-affected tool
