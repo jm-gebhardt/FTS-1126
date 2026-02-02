@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -46,9 +45,7 @@ public static class HostBuilderExtension
     private static void RegisterFilters(IServiceCollection services)
     {
         // Agv position
-        services.AddSingleton(new AgvPositionConfiguration(PositionThreshold: 0.5,
-                ThetaThreshold: Mathematics.ConvertToRadians(5),
-                DeviationRangeThreshold: 1000)
+        services.AddSingleton(new AgvPositionConfiguration
             { MinInterval = TimeSpan.FromSeconds(5) });
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
         services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedKeyedFilter>();

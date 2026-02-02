@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.Testing.Fixtures;
@@ -70,7 +69,7 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
 
         collection.AddTransient(_ => new Mock<IAgvPublisher>().Object);
         collection.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
-        collection.AddSingleton(new AgvPositionConfiguration(0.5, Mathematics.ConvertToRadians(5), 1000));
+        collection.AddSingleton(new AgvPositionConfiguration());
 
         return this;
     }

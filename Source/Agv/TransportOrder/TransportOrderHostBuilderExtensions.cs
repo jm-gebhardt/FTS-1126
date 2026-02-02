@@ -195,7 +195,7 @@ public static class TransportOrderHostBuilderExtensions
 
     private static void RegisterSignificanceCheckers(IServiceCollection services)
     {
-        services.AddSingleton(new AgvPositionConfiguration(0.005, Mathematics.ConvertToRadians(0.1), 0.001));
+        services.AddSingleton(new AgvPositionConfiguration(PositionThreshold: 0.005, ThetaThreshold: Mathematics.ConvertToRadians(0.1), DeviationRangeThreshold: 0.001));
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
     }
 

@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Gebhardt.Acc.Common.Dictionaries;
-using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Services;
@@ -92,7 +91,7 @@ public static class WebHostBuilderExtensions
 
         services.AddTransient<IMessageFilter<AgvPositionStatusDto>, AgvPositionStatusKeyedFilter>();
         services.AddSingleton<ISignificanceChecker<AgvPositionDto>, AgvPositionSignificanceChecker>();
-        services.AddSingleton(new AgvPositionConfiguration(0.05, Mathematics.ConvertToRadians(5), 1000) { MinInterval = TimeSpan.FromMilliseconds(250), MaxInterval = TimeSpan.FromSeconds(10) });
+        services.AddSingleton(new AgvPositionConfiguration { MinInterval = TimeSpan.FromMilliseconds(250), MaxInterval = TimeSpan.FromSeconds(10) });
 
         services.AddSingleton(typeof(IHubBroadcaster<,>), typeof(HubBroadcaster<,>));
 
