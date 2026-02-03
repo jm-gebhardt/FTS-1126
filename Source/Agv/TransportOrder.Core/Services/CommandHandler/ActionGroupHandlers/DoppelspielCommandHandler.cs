@@ -207,6 +207,17 @@ public class DoppelspielCommandHandler(
         }
         if (!await agvLimitGuard.IsWithinLimitAsync(delayedOrder))
         {
+            var preAssignedOrder = (await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Created], assignedAgvCorrelationId: agvCorrelationId)).FirstOrDefault(a => !a.IsQueued);
+            if (preAssignedOrder == null)
+            {
+                logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not started because of station limitation", actionGroup.CorrelationId, delayedOrder.CorrelationId);
+                await context.RespondAsync(new DoppelspielPartnerQueued(null));
+                return;
+            }
+            delayedOrder = preAssignedOrder;
+        }
+        if (!await agvLimitGuard.IsWithinLimitAsync(delayedOrder))
+        {
             logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not started because of station limitation", actionGroup.CorrelationId, delayedOrder.CorrelationId);
             await context.RespondAsync(new DoppelspielPartnerQueued(null));
             return;
@@ -341,6 +352,19 @@ public class DoppelspielCommandHandler(
             await QueueUnmatchedDoppelspielPicks(context, action.Target.Node, actionGroup.CorrelationId);
             return;
         }
+
+        if (!await agvLimitGuard.IsWithinLimitAsync(delayedOrder))
+        {
+            var preAssignedOrder = (await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Created], assignedAgvCorrelationId: agv.CorrelationId)).FirstOrDefault(a => !a.IsQueued);
+            if (preAssignedOrder == null)
+            {
+                logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not started because of station limitation", actionGroup.CorrelationId, delayedOrder.CorrelationId);
+                await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, actionGroup.CorrelationId, null));
+                return;
+            }
+            delayedOrder = preAssignedOrder;
+        }
+
         if (!await agvLimitGuard.IsWithinLimitAsync(delayedOrder))
         {
             logger.LogInformation("Order {OrderCorrelationId} Doppelspiel pick {PickOrderCorrelationId} is not started because of station limitation", actionGroup.CorrelationId, delayedOrder.CorrelationId);

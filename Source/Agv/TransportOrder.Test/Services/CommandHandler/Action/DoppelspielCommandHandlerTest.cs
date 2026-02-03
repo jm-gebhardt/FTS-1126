@@ -325,6 +325,90 @@ public class DoppelspielCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task TriggerDoppelspielPartnerQueueing_AgvStationLimitViolated_NoPreAssignedOrder_RespondsDoppelspielPartnerQueuedWithNull()
+    {
+        const string station = "AP01";
+        var agvCorrelationId = Guid.NewGuid();
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, destination: station);
+        actionGroup.RegisterDoppelspiel(ActionType.Drop);
+        var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: station);
+        var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pick.Target.DoppelspielMode = DoppelspielMode.Order;
+        var fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithCreatedAndStartedActionGroups([])
+            .WithStationGroupLimitForActionGroup(nextPickActionGroup, false)
+            .WithPreAssignedOrder(null);
+        fixture.AddActionGroup(actionGroup);
+
+        var doppelspielPartnerQueued = await fixture.PublishAndGetFirstMessageAsync<TriggerDoppelspielPartnerQueueing, DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, agvCorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.Node!));
+
+        doppelspielPartnerQueued.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task TriggerDoppelspielPartnerQueueing_AgvStationLimitViolated_PreAssignedOrderWithinLimit_UsesPreAssignedOrder()
+    {
+        const string station = "AP01";
+        var agvCorrelationId = Guid.NewGuid();
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, destination: station);
+        actionGroup.RegisterDoppelspiel(ActionType.Drop);
+        var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: station);
+        var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pick.Target.DoppelspielMode = DoppelspielMode.Order;
+        var preAssignedOrder = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            isQueued: false,
+            assignedAgv: agvCorrelationId,
+            source: station);
+        var preAssignedPick = preAssignedOrder.Actions.First(a => a.ActionType == ActionType.Pick);
+        preAssignedPick.Target.DoppelspielMode = DoppelspielMode.Order;
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        var fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithCreatedAndStartedActionGroups([])
+            .WithStationGroupLimitForActionGroup(nextPickActionGroup, false)
+            .WithStationGroupLimitForActionGroup(preAssignedOrder, true);
+        fixture.AddActionGroup(actionGroup);
+        fixture.WithPreAssignedOrder(preAssignedOrder);
+
+        var doppelspielPartnerQueued = await fixture.PublishAndGetFirstMessageAsync<TriggerDoppelspielPartnerQueueing, DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, agvCorrelationId, dropAction.Target.Node!));
+
+        doppelspielPartnerQueued.CorrelationId.ShouldBe(preAssignedOrder.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        dropAction.DoppelspielPartner.ShouldBe(preAssignedOrder.CorrelationId);
+        preAssignedPick.DoppelspielPartner.ShouldBe(actionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task TriggerDoppelspielPartnerQueueing_AgvStationLimitViolated_PreAssignedOrderAlsoExceedsLimit_RespondsDoppelspielPartnerQueuedWithNull()
+    {
+        const string station = "AP01";
+        var agvCorrelationId = Guid.NewGuid();
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId, destination: station);
+        actionGroup.RegisterDoppelspiel(ActionType.Drop);
+        var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: station);
+        var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        pick.Target.DoppelspielMode = DoppelspielMode.Order;
+        var preAssignedOrder = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            isQueued: false,
+            assignedAgv: agvCorrelationId,
+            source: station);
+        var fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithCreatedAndStartedActionGroups([])
+            .WithStationGroupLimitForActionGroup(nextPickActionGroup, false)
+            .WithStationGroupLimitForActionGroup(preAssignedOrder, false);
+        fixture.AddActionGroup(actionGroup);
+        fixture.WithPreAssignedOrder(preAssignedOrder);
+
+        var doppelspielPartnerQueued = await fixture.PublishAndGetFirstMessageAsync<TriggerDoppelspielPartnerQueueing, DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, agvCorrelationId, actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.Node!));
+
+        doppelspielPartnerQueued.CorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
     public async Task TriggerDoppelspielPartnerQueueing_ValidData_RespondsDoppelspielPartnerQueuedWithCorrelationId()
     {
         const string station = "AP01";
@@ -622,6 +706,142 @@ public class DoppelspielCommandHandlerTest
         droppingAgvPassedDoppelspielTriggerPoint.DropActionTarget.Id.ShouldBe(dropAction.Target.Node!.Id);
         droppingAgvPassedDoppelspielTriggerPoint.AgvCorrelationId.ShouldBe(actionGroup.AssignedAgv.GetValueOrDefault());
         droppingAgvPassedDoppelspielTriggerPoint.DroppingHostOrderCorrelationId.ShouldBe(actionGroup.CorrelationId);
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DropStationLimitExceeded_NoPreAssignedOrder_PublishesDroppingAgvPassedDoppelspielTriggerPointWithNull()
+    {
+        var station = StationGenerator.GetPickDropStation("PS01");
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.AgvCorrelationId);
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Completed, source: "APL1",
+            dropActionState: ActionState.Completed, destination: station.Name,
+            canRunDoppelspiel: true);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
+        var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: null,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Created, source: station.Name,
+            dropActionState: ActionState.Created, destination: "AP01");
+        var fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithStation(station)
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithStationGroupLimitForActionGroup(nextPickActionGroup, false);
+        fixture.AddActionGroup(actionGroup);
+        fixture.WithPreAssignedOrder(null);
+        fixture.AddAgv(agv);
+
+        var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station.Name);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
+        await fixture.ShouldHaveConsumedAsync<AgvPassedDoppelspielTriggerPoint>();
+
+        await fixture.ShouldHavePublishedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        var droppingAgvPassedDoppelspielTriggerPoint = await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        droppingAgvPassedDoppelspielTriggerPoint.NextPickHostOrderCorrelationId.ShouldBeNull();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DropStationLimitExceeded_PreAssignedOrderWithinLimit_UsePreAssignedOrderForDoppelspiel()
+    {
+        var station = StationGenerator.GetPickDropStation("PS01");
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.AgvCorrelationId);
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Completed, source: "APL1",
+            dropActionState: ActionState.Completed, destination: station.Name,
+            canRunDoppelspiel: true);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
+        var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: null,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Created, source: station.Name,
+            dropActionState: ActionState.Created, destination: "AP01");
+        var preAssignedOrder = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            isQueued: false,
+            assignedAgv: agv.CorrelationId,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Created, source: station.Name,
+            dropActionState: ActionState.Created, destination: "AP02");
+        var preAssignedPick = preAssignedOrder.Actions.First(a => a.ActionType == ActionType.Pick);
+        var fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithStation(station)
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithAgvMustCharge(false)
+            .WithStationGroupLimitForActionGroup(nextPickActionGroup, false)
+            .WithStationGroupLimitForActionGroup(preAssignedOrder, true);
+        fixture.AddActionGroup(actionGroup);
+        fixture.WithPreAssignedOrder(preAssignedOrder);
+        fixture.AddAgv(agv);
+
+        var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station.Name);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
+        await fixture.ShouldHaveConsumedAsync<AgvPassedDoppelspielTriggerPoint>();
+
+        await fixture.ShouldHavePublishedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        var droppingAgvPassedDoppelspielTriggerPoint = await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        droppingAgvPassedDoppelspielTriggerPoint.NextPickHostOrderCorrelationId.ShouldBe(preAssignedOrder.CorrelationId);
+        droppingAgvPassedDoppelspielTriggerPoint.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        dropAction.DoppelspielPartner.ShouldBe(preAssignedOrder.CorrelationId);
+        preAssignedPick.DoppelspielPartner.ShouldBe(actionGroup.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvPassedDoppelspielTriggerPoint_DropStationLimitExceeded_PreAssignedOrderAlsoExceedsLimit_PublishesDroppingAgvPassedDoppelspielTriggerPointWithNull()
+    {
+        var station = StationGenerator.GetPickDropStation("PS01");
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var agvData = AgvDataGenerator.GenerateAgvData(agv.CorrelationId);
+        var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.AgvCorrelationId);
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: agv.CorrelationId,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Completed, source: "APL1",
+            dropActionState: ActionState.Completed, destination: station.Name,
+            canRunDoppelspiel: true);
+        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
+        var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: null,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Created, source: station.Name,
+            dropActionState: ActionState.Created, destination: "AP01");
+        var preAssignedOrder = Helper.AgvActionGenerator.GeneratePickDropActionGroup(
+            isQueued: false,
+            assignedAgv: agv.CorrelationId,
+            handlingUnit: "HU",
+            pickActionState: ActionState.Created, source: station.Name,
+            dropActionState: ActionState.Created, destination: "AP02");
+        var fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithStation(station)
+            .WithNextPickForStation(nextPickActionGroup)
+            .WithStationGroupLimitForActionGroup(nextPickActionGroup, false)
+            .WithStationGroupLimitForActionGroup(preAssignedOrder, false);
+        fixture.AddActionGroup(actionGroup);
+        fixture.WithPreAssignedOrder(preAssignedOrder);
+        fixture.AddAgv(agv);
+
+        var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station.Name);
+
+        await fixture.TestHarness.Bus.Publish(agvPassedDoppelspielTriggerPoint);
+        await fixture.ShouldHaveConsumedAsync<AgvPassedDoppelspielTriggerPoint>();
+
+        await fixture.ShouldHavePublishedAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        var droppingAgvPassedDoppelspielTriggerPoint = await fixture.GetFirstPublishedMessageAsync<DroppingAgvPassedDoppelspielTriggerPoint>();
+        droppingAgvPassedDoppelspielTriggerPoint.NextPickHostOrderCorrelationId.ShouldBeNull();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
     }
 

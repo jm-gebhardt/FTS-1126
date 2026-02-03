@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
@@ -84,6 +85,27 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
     public DoppelspielCommandHandlerTestFixture WithCurrentAgvAction(TransportOrder.Domain.Models.ActionGroup.AgvAction? agvAction)
     {
         ActionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(agvAction);
+        return this;
+    }
+
+    public DoppelspielCommandHandlerTestFixture WithPreAssignedOrder(ActionGroup? actionGroup)
+    {
+        List<ActionGroup> actionGroups = actionGroup != null ? new List<ActionGroup> { actionGroup } : new List<ActionGroup>();
+        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(
+            It.IsAny<IList<ActionGroupState>?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<DateTime?>(),
+            It.IsAny<int>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<bool?>(),
+            It.IsAny<TransportOrder.Domain.Models.ActionGroup.SortBy>(),
+            It.IsAny<bool>())).ReturnsAsync(actionGroups);
+        return this;
+    }
+
+    public DoppelspielCommandHandlerTestFixture WithStationGroupLimitForActionGroup(ActionGroup actionGroup, bool isWithinLimit)
+    {
+        _stationLimitGuard.Setup(x => x.IsWithinLimitAsync(It.Is<ActionGroup>(ag => ag.CorrelationId == actionGroup.CorrelationId))).ReturnsAsync(isWithinLimit);
         return this;
     }
 }
