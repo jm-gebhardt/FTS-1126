@@ -77,42 +77,57 @@ public class SemaphoreProvider : ISemaphoreProvider
     /// <inheritdoc />
     public async Task<TReturn> ExecuteLockedAsync<TReturn>(Func<Task<TReturn>> action, CancellationToken cancellationToken = default)
     {
+        bool entered = false;
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            entered = true;
             return await action();
         }
         finally
         {
-            _semaphore.Release();
+            if (entered)
+            {
+                _semaphore.Release();
+            }
         }
     }
 
     /// <inheritdoc />
     public async Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken = default)
     {
+        bool entered = false;
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            entered = true;
             await action();
         }
         finally
         {
-            _semaphore.Release();
+            if (entered)
+            {
+                _semaphore.Release();
+            }
         }
     }
 
     /// <inheritdoc />
     public async Task<TReturn> ExecuteLockedAsync<TReturn>(Func<TReturn> action, CancellationToken cancellationToken = default)
     {
+        bool entered = false;
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            entered = true;
             return action();
         }
         finally
         {
-            _semaphore.Release();
+            if (entered)
+            {
+                _semaphore.Release();
+            }
         }
     }
 }
@@ -133,49 +148,63 @@ public class SemaphoreProvider<T>(ILogger<SemaphoreProvider<T>> logger) : ISemap
     /// <inheritdoc />
     public async Task<TReturn> ExecuteLockedAsync<TReturn>(Func<Task<TReturn>> action, CancellationToken cancellationToken = default)
     {
+        bool entered = false;
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            entered = true;
             logger.LogDebug("Invoke action {Action} by semaphore {Semaphore}", action.GetMethodInfo().Name, _semaphore.GetType().FullName);
             return await action();
         }
         finally
         {
-            logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
-
-            _semaphore.Release();
+            if (entered)
+            {
+                logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
+                _semaphore.Release();
+            }
         }
     }
 
     /// <inheritdoc />
     public async Task ExecuteLockedAsync(Func<Task> action, CancellationToken cancellationToken = default)
     {
+        bool entered = false;
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            entered = true;
             logger.LogDebug("Invoke action {Action} by semaphore {Semaphore}", action.GetMethodInfo().Name, _semaphore.GetType().FullName);
             await action();
         }
         finally
         {
-            logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
-            _semaphore.Release();
+            if (entered)
+            {
+                logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
+                _semaphore.Release();
+            }
         }
     }
 
     /// <inheritdoc />
     public async Task<TReturn> ExecuteLockedAsync<TReturn>(Func<TReturn> action, CancellationToken cancellationToken = default)
     {
+        bool entered = false;
         try
         {
             await _semaphore.WaitAsync(GetCancellationToken(cancellationToken));
+            entered = true;
             logger.LogDebug("Invoke action {Action} by semaphore {Semaphore}", action.GetMethodInfo().Name, _semaphore.GetType().FullName);
             return action();
         }
         finally
         {
-            logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
-            _semaphore.Release();
+            if (entered)
+            {
+                logger.LogDebug("Releasing semaphore {Semaphore}", _semaphore.GetType().FullName);
+                _semaphore.Release();
+            }
         }
     }
 }

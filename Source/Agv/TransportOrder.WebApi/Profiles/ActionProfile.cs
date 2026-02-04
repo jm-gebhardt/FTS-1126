@@ -72,7 +72,7 @@ public class ActionProfile : WebApiProfile
             {
                 return null;
             }
-            var sourceTime = (DateTime) source;
+            var sourceTime = (DateTime)source;
             switch (sourceTime.Kind)
             {
                 case DateTimeKind.Unspecified:

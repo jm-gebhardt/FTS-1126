@@ -1,0 +1,26 @@
+﻿{
+  "agvSerialNumbers": [ "SimAgv-0"],
+//  "agvSerialNumbers": [ "SimAgv-1"],
+  
+  "iterations": 3,
+  "steps": [
+    {
+      "targetNode": "PS01",
+      "actionType": "Pick"
+    },
+    {
+      "targetNode": "AP03",
+      "actionType": "Drop"
+    },
+    {
+      "targetNode": "map/NODE-10",
+      "actionType": "Move",
+      "waitTimeSeconds": 1
+    }
+//  ,
+//    {
+//      "targetNode": "charger5",
+//      "actionType": "Charge"
+//    }
+  ]
+}

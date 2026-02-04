@@ -257,8 +257,8 @@ public class DoppelspielCommandHandler(
         // Queue orders that have pick Doppelspiel mode 'always'
         var (actionGroupCorrelationId, _, _) = context.Message;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupCorrelationId);
-        var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
-        if (dropAction.Target.Node == null)
+        var dropAction = actionGroup.Actions.FirstOrDefault(a => a.ActionType == ActionType.Drop);
+        if (dropAction?.Target.Node == null)
         {
             return;
         }

@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.TestPlanRunner</AssemblyName>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="MassTransit.Prometheus" />
+        <PackageReference Include="MassTransit" />
+        <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="YamlDotNet" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
+        <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />
+        <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+        <ProjectReference Include="..\TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Config\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+</Project>

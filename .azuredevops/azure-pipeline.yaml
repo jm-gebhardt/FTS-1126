@@ -37,6 +37,7 @@ parameters:
   - TriggerQueueEvacuation
   - TriggerQueueHeadEvacuation
   - TriggerShortLoopWaitingPoint
+  - TestPlanRunner
 
 stages:
 - stage: codeAnalysis

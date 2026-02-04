@@ -54,6 +54,10 @@ public static class GebhardtStartup
                 {
                     conf.AddJsonConsole();
                 }
+                else
+                {
+                    conf.AddConsole(options => { options.FormatterName = "simple"; }).AddSimpleConsole(options => { options.TimestampFormat = "[HH:mm:ss.fff] "; });
+                }
                 // Disable info log for WebServer
                 conf.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
             });

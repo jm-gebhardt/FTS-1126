@@ -31,7 +31,12 @@ public enum AbortReason : byte
     /// <summary>
     /// The Agv was reactivated from parking.
     /// </summary>
-    ReactivatedFromParking = 4
+    ReactivatedFromParking = 4,
+
+    /// <summary>
+    /// A test plan has changed (added/updated/deleted).
+    /// </summary>
+    TestPlanChange = 5
 }
 
 /// <summary>
@@ -52,6 +57,7 @@ public static class AbortReasonExtensions
             AbortReason.WebApi => Reasons.ActionGroupAbortedByWebApi,
             AbortReason.External => Reasons.ActionGroupAbortedByExternal,
             AbortReason.LockedStation => Reasons.LockedStation,
+            AbortReason.TestPlanChange => Reasons.ActionGroupAbortedByTestPlanChange,
             _ => null
         };
         return template != null ? new Reason(template) : null;

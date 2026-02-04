@@ -486,9 +486,28 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.ActionType == ActionType.Drop)
             )
             .AsNoTracking()
+            .AsSplitQuery()
             .AnyWithNoLockAsync();
 
         return hasUnfinishedDropActions;
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<ActionGroup>> GetNotStartedActionsAsync(Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        List<ActionGroup> getNotStartedActions = await queryable.Where(actionGroup =>
+                actionGroup.AssignedAgv == agvCorrelationId &&
+                actionGroup.IsQueued &&
+                (actionGroup.State == ActionGroupState.Created || (actionGroup.State == ActionGroupState.Started && actionGroup.Actions.Any(aa => aa.State == ActionState.Created))) &&
+                actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
+            )
+            .AsNoTracking()
+            .AsSplitQuery()
+            .ToListWithNoLockAsync();
+
+        return getNotStartedActions;
     }
 
     /// <inheritdoc/>

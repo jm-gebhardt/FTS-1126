@@ -202,7 +202,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
     private static bool CheckPickDropSequence(IReadOnlyCollection<AgvAction> actions, ActionGroupCreator creator)
     {
-        if (actions.Count == 1 && creator == ActionGroupCreator.TransportOrderWebApi)
+        if (actions.Count == 1 && creator is ActionGroupCreator.TransportOrderWebApi or ActionGroupCreator.TestPlanRunner)
         {
             return true;
         }

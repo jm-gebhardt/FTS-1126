@@ -1,0 +1,11 @@
+﻿AgvSerialNumbers:
+    - SimAgv-0
+Iterations: 10
+Steps:
+    - TargetNode: PS01
+      ActionType: Pick
+    - TargetNode: AP03
+      ActionType: Drop
+    - TargetNode: map/NODE-10
+      ActionType: Move
+      WaitTimeSeconds: 1

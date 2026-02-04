@@ -37,7 +37,7 @@ public class PollingBackgroundService<T> : BackgroundService where T : IPollable
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Polling {Service}", Pollable.GetType().Name);
+            _logger.LogDebug("Polling {Service}", Pollable.GetType().Name);
             try
             {
                 try

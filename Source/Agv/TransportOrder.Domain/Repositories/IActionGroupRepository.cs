@@ -194,6 +194,13 @@ public interface IActionGroupRepository
     Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId);
 
     /// <summary>
+    /// Get list of ActionGroup with not yet started actions.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv .</param>
+    /// <returns></returns>
+    Task<List<ActionGroup>> GetNotStartedActionsAsync(Guid agvCorrelationId);
+
+    /// <summary>
     /// Determine if there is any subsequent action which has not started.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv .</param>
@@ -412,7 +419,7 @@ public interface IActionGroupRepository
     /// <param name="agvCorrelationId">The AGV correlation id.</param>
     /// <returns>A record containing the latest action group for each state (if available).</returns>
     Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId);
-    
+
     /// <summary>
     /// Filter assigned agvs that have a created or started pick action group.
     /// </summary>

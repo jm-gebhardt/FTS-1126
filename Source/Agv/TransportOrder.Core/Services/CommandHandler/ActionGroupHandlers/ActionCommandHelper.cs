@@ -405,8 +405,8 @@ public class ActionCommandHelper
     /// <returns></returns>
     public async Task TryRetractActionGroup(ConsumeContext<CompleteActionOfActionGroup> context, Domain.Models.ActionGroup.ActionGroup actionGroup, Agv agv, CancellationToken cancellationToken)
     {
-        var drop = actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop);
-        if (drop.IsIncomplete)
+        var drop = actionGroup.Actions.SingleOrDefault(a => a.ActionType == ActionType.Drop);
+        if (drop == null || drop.IsIncomplete)
         {
             return;
         }

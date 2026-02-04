@@ -26,7 +26,12 @@ public enum ActionGroupCreator
     /// <summary>
     /// The WebApi of the TransportOrder service.
     /// </summary>
-    TransportOrderWebApi
+    TransportOrderWebApi,
+
+    /// <summary>
+    /// The TestPlanRunner service for automated test plan execution.
+    /// </summary>
+    TestPlanRunner
 }
 
 /// <summary>
