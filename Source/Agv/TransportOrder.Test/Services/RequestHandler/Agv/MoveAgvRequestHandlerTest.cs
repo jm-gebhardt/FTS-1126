@@ -126,7 +126,7 @@ public class MoveAgvRequestHandlerTest
             .AddAgvs([agv])
             .WithNode(charger)
             .BuildAsync();
-        fixture.ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<Guid>(), agv.CorrelationId)).ThrowsAsync(new ParkNodeNotAvailableException(charger.Id));
+        fixture.ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<Guid>(), agv.CorrelationId, It.IsAny<bool>())).ThrowsAsync(new ParkNodeNotAvailableException(charger.Id));
 
         await MediatorShould.ThrowRequestExceptionAsync<ParkNodeNotAvailableException>(async () => await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
@@ -177,7 +177,7 @@ public class MoveAgvRequestHandlerTest
             .AddAgvs([agv])
             .WithNode(charger)
             .BuildAsync();
-        fixture.ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<GraphNode>(), It.IsAny<Guid>())).ThrowsAsync(new ChargeStationNotAvailableException(""));
+        fixture.ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<GraphNode>(), It.IsAny<Guid>(), It.IsAny<bool>())).ThrowsAsync(new ChargeStationNotAvailableException(""));
 
         await MediatorShould.ThrowRequestExceptionAsync<ChargeStationNotAvailableException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
             new ChargeAgv(agv.CorrelationId, charger.Id, "user")));

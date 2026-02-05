@@ -6,7 +6,6 @@ using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
-using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
@@ -223,8 +222,8 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
             c.Message<OccupyStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
-            c.Message<StationReserved>(x =>
-                x.UsePartitioner(nodePartitioner, p => p.Message.StationId));
+            c.Message<ReserveStation>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
             c.Message<Common.Messages.Stations.UnblockStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.StationId));
         });

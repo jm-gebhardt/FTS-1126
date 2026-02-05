@@ -69,11 +69,11 @@ public class GraphNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public Task<bool> ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId)
+    public Task<bool> ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreStateLocked = false) 
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            if (!IsLocked(nodeId) && IsFree(nodeId))
+            if ((!IsLocked(nodeId) || ignoreStateLocked) && IsFree(nodeId))
             {
                 _logger.LogDebug("Reserving node {NodeId}, for Agv {AgvCorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId);
@@ -84,11 +84,11 @@ public class GraphNodeStateRepository : INodeStateRepository
     }
 
     /// <inheritdoc />
-    public Task<bool> ForceReserveNodeAsync(Guid nodeId, Guid agvCorrelationId)
+    public Task<bool> ForceReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreStateLocked = false)
     {
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            if (!IsLocked(nodeId))
+            if (!IsLocked(nodeId) || ignoreStateLocked)
             {
                 _logger.LogDebug("Force reserving node {NodeId}, for Agv {AgvCorrelationId}", nodeId, agvCorrelationId);
                 return await UpdateNodeAsync(nodeId, NodeLockState.Reserved, agvCorrelationId, true);
@@ -119,7 +119,7 @@ public class GraphNodeStateRepository : INodeStateRepository
     public async Task<bool> OccupyNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
         var currentState = await GetNodeStateAsync(nodeId);
-        if (currentState is { IsLocked: true } or { NodeState: NodeLockState.Occupied })
+        if (currentState is { NodeState: NodeLockState.Occupied }) 
         {
             _logger.LogDebug("Could not not occupy node {NodeId} because it is locked or already occupied", nodeId);
             return false;
@@ -132,13 +132,6 @@ public class GraphNodeStateRepository : INodeStateRepository
     /// <inheritdoc />
     public async Task<bool> ForceOccupyNodeAsync(Guid nodeId, Guid agvCorrelationId)
     {
-        var currentState = await GetNodeStateAsync(nodeId);
-        if (currentState is { IsLocked: true })
-        {
-            _logger.LogDebug("Could not not occupy node {NodeId} with agv {AgvCorrelationId} because it is locked", nodeId, agvCorrelationId);
-            return false;
-        }
-
         _logger.LogDebug("Occupy node {NodeId} with AGV {AgvCorrelationId}", nodeId, agvCorrelationId);
         return await UpdateNodeAsync(nodeId, NodeLockState.Occupied, agvCorrelationId, force: true);
     }

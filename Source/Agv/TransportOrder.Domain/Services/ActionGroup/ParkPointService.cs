@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Node;
@@ -35,9 +36,9 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsParker();
 
     /// <inheritdoc />
-    public Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv)
+    public Task<GraphNode> ReserveParkAsync(Agv agv, bool ignoreStateLocked = false)
     {
-        return PickAndReserveNodeAsync(agv);
+        return PickAndReserveNodeAsync(agv, ignoreStateLocked: ignoreStateLocked);
     }
 
     /// <inheritdoc />
@@ -47,11 +48,11 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     }
 
     /// <inheritdoc />
-    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId)
+    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreStateLocked = false)
     {
         try
         {
-            await ReserveNodeAsync(parkNodeId, agvCorrelationId);
+            await ReserveNodeAsync(parkNodeId, agvCorrelationId, ignoreStateLocked);
         }
         catch (ReserveNodeFailedException)
         {
@@ -60,7 +61,7 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     }
 
     /// <inheritdoc />
-    public Task<bool> IsOnAParkNodeAsync(Models.Agv.Agv agv)
+    public Task<bool> IsOnAParkNodeAsync(Agv agv)
     {
         return IsAgvOnSuchANode(agv);
     }

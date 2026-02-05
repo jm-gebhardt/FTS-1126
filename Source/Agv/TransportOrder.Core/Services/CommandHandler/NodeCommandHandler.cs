@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Stations;
-using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -40,7 +39,7 @@ public class NodeCommandHandler(
     IConsumer<FreeStationOccupancy>,
     IConsumer<OccupyStation>,
     IConsumer<UnblockStation>,
-    IConsumer<StationReserved>
+    IConsumer<ReserveStation>
 {
     /// <summary>
     /// Handles the <see cref="FreeNode"/> command.
@@ -184,6 +183,8 @@ public class NodeCommandHandler(
             user = station.LockedBy;
             lockReason = station.LockReason;
             lockDescription = station.LockDescription;
+            station.NodeLock = nodeState;
+            await stationRepository.Update(station);
         }
         catch (NodeNotFoundException)
         {
@@ -300,13 +301,13 @@ public class NodeCommandHandler(
     }
 
     /// <summary>
-    /// Handles the <see cref="StationReserved"/> command.
+    /// Handles the <see cref="ReserveStation"/> command.
     /// </summary>
-    public async Task Consume(ConsumeContext<StationReserved> context)
+    public async Task Consume(ConsumeContext<ReserveStation> context)
     {
-        var stationId = context.Message.StationId;
-        var agv = context.Message.AgvCorrelationId;
-        await nodeStateRepository.ForceReserveNodeAsync(stationId, agv);
-        await PublishNodeStateChange(context, stationId);
+        (var station, var agv, bool ignoreStateLocked) = context.Message;
+        
+        await nodeStateRepository.ForceReserveNodeAsync(station.Id, agv, ignoreStateLocked);
+        await PublishNodeStateChange(context, station.Id);
     }
 }

@@ -57,7 +57,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         });
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>())).Verifiable();
         _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.Is<Guid>(y => y == "target".ToGuid()))).ReturnsAsync(new TransportOrder.Domain.Models.Node.NodeLock("target".ToGraphNode(), TransportOrder.Domain.Models.Node.NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow));
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
@@ -91,11 +91,11 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         switch (nodeType)
         {
             case AgvGraph.NodeType.Charge:
-                ChargingPointManager.Verify(x => x.ReserveChargerAsync(It.Is<GraphNode>(n => n == targetNode), It.Is<Guid>(a => a == agvId)), Times.Once());
+                ChargingPointManager.Verify(x => x.ReserveChargerAsync(It.Is<GraphNode>(n => n == targetNode), It.Is<Guid>(a => a == agvId), true), Times.Once());
                 break;
 
             case AgvGraph.NodeType.Park:
-                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<Guid>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId)), Times.Once());
+                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<Guid>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId), true), Times.Once());
                 break;
 
             default:

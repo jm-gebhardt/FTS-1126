@@ -82,6 +82,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             }
 
             if (nextActionGroup.IsManual || lockedNodeIds is { Count: 0 } ||
+                nextActionGroup.IsChargingOrder ||
                 (lockedNodeIds is { Count: > 0 } && !nextActionGroup.Actions.Any(a => lockedNodeIds.Any(ln => ln == a.Target.Node?.Id))))
             {
                 _logger.LogInformation("Selected next assigned action group {ActionGroupCorrelationId} for agv {AgvCorrelationId} starting from node {LastNodeId}", nextActionGroup.CorrelationId, agv.CorrelationId, agv.AgvStatus?.LastNodeId);

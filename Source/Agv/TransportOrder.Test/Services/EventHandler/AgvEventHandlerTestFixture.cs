@@ -136,8 +136,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithReservedCharger(string? charger)
     {
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>()))
-            .ReturnsAsync((Agv _, Guid? _) =>
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>()))
+            .ReturnsAsync((Agv _, Guid? _,  bool _) =>
             {
                 if (charger == null)
                 {

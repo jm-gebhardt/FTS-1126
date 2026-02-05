@@ -38,9 +38,10 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <param name="reserveNode"></param>
+    /// <param name="ignoreStateLocked">Flag to reserve node even if it is locked.</param>
     /// <param name="ignoredNodes">Nodes to ignore.</param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true, params Guid[] ignoredNodes)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true,  bool ignoreStateLocked = false, params Guid[] ignoredNodes)
     {
         return await SemaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -49,7 +50,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
 
             if (reserveNode)
             {
-                await ReserveNodeAsync(node.Id, agv.CorrelationId);
+                await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreStateLocked);
             }
             return node;
         });
@@ -63,9 +64,9 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     }
 
     ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
-    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId)
+    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreStateLocked = false)
     {
-        if (!await NodeStateRepository.ReserveNodeAsync(nodeId, agvCorrelationId))
+        if (!await NodeStateRepository.ReserveNodeAsync(nodeId, agvCorrelationId, ignoreStateLocked))
         {
             throw new ReserveNodeFailedException(nodeId);
         }

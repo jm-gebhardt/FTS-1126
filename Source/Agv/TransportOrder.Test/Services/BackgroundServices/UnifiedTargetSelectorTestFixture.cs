@@ -96,8 +96,8 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         _stationRepository.Setup(x => x.GetStationsById(It.IsAny<List<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => stations.Where(s => ids.Contains(s.Id)).ToList());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync((Guid id) => stations.Single(s => s.Id == id));
 
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
-            .ReturnsAsync((Guid nodeId, Guid agvId) =>
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>()))
+            .ReturnsAsync((Guid nodeId, Guid agvId, bool _) =>
             {
                 if (!_nodeReservations.TryAdd(nodeId, agvId))
                 {
@@ -137,8 +137,8 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
             }
         }
         // Setup node reservation to track which AGV has reserved which node
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
-            .ReturnsAsync((Guid nodeId, Guid agvId) =>
+        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>()))
+            .ReturnsAsync((Guid nodeId, Guid agvId, bool _) =>
             {
                 if (!_nodeReservations.TryAdd(nodeId, agvId))
                 {

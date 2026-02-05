@@ -289,7 +289,7 @@ public class ShortestRouteChooserTest
     }
 
     [TestMethod]
-    public async Task GetNotStartedActionGroupAsync_ChargingActionGroupWithLockedCharger_ReturnNull()
+    public async Task GetNotStartedActionGroupAsync_ChargingActionGroupWithLockedCharger_ReturnChargingActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(
@@ -306,7 +306,8 @@ public class ShortestRouteChooserTest
             .Build();
 
         var chosenActionGroup = await fixture.Service.GetNotStartedActionGroupAsync(agv, null);
-        chosenActionGroup.ShouldBeNull();
+        chosenActionGroup.ShouldNotBeNull();
+        chosenActionGroup.IsChargingOrder.ShouldBeTrue();
     }
 
     [TestMethod]

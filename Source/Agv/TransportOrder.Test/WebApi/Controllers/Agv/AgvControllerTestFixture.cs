@@ -136,7 +136,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
         ChargingPointManager = new Mock<IChargingPointManager>();
         ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
-        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
+        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<bool>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
         _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(false);
     }
 

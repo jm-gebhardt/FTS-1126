@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Stations;
-using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -395,7 +394,7 @@ public class NodeCommandHandlerTest
             .WithAnyStation()
             .WithNode(node);
 
-        await fixture.PublishMessageAsync(new StationReserved(node.Id, agv));
+        await fixture.PublishMessageAsync(new ReserveStation(node, agv));
 
         fixture.NodeStateRepository.Verify(x => x.ForceReserveNodeAsync(node.Id, agv), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();

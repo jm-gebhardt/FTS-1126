@@ -308,7 +308,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture AddChargingPointManager(GraphNode? chargeGraphNode)
     {
         _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(),
-                null))
+                null, It.IsAny<bool>()))
             .ReturnsAsync(() =>
             {
                 if (chargeGraphNode == null)

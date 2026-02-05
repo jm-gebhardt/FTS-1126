@@ -194,11 +194,11 @@ public class MoveAgvRequestHandler :
         switch (type)
         {
             case AgvGraph.NodeType.Charge:
-                await _chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId);
+                await _chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId, true);
                 break;
 
             case AgvGraph.NodeType.Park:
-                await _parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId);
+                await _parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId, true);
                 break;
 
             default:

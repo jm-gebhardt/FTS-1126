@@ -52,7 +52,7 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
         }
 
         var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Id);
-
+        station.NodeLock = nodeState;
         station.Lock(user, reason, lockDescription, lockOrderHandling);
 
         await stationRepository.Update(station);
@@ -86,7 +86,8 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
         }
 
         var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Id);
-
+         
+        station.NodeLock = nodeState;
         station.Unlock();
         await stationRepository.Update(station);
 

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
-using Gebhardt.Acc.Common.Messages.Stations.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
@@ -23,7 +23,7 @@ public class UnifiedTargetSelectorTest
         await fixture.ExecuteAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
-        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
+        await fixture.ShouldNotHavePublishedAsync<ReserveStation>();
     }
 
     [TestMethod]
@@ -275,7 +275,7 @@ public class UnifiedTargetSelectorTest
         await fixture.ExecuteAsync();
 
         await fixture.ShouldNotHavePublishedAsync<SetTargetForAction>();
-        await fixture.ShouldNotHavePublishedAsync<StationReserved>();
+        await fixture.ShouldNotHavePublishedAsync<ReserveStation>();
     }
 
     [TestMethod]

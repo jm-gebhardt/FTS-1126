@@ -61,7 +61,8 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
 
     public SendAgvToChargerRequestHandlerTestFixture ReserveChargerReturns(GraphNode chargingNode)
     {
-        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid?>())).ReturnsAsync(chargingNode);
+        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(),
+            It.IsAny<Guid?>(), It.IsAny<bool>())).ReturnsAsync(chargingNode);
         return this;
     }
 

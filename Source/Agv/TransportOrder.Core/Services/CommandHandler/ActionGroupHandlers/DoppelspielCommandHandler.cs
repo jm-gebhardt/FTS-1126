@@ -12,6 +12,7 @@ using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -544,19 +545,28 @@ public class DoppelspielCommandHandler(
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<StartActionCommand> context)
     {
-        // Station Limitation: Reserve station with station group on start of drop, if drop is at station group
+        // Station Limitation: Reserve station with station group
         var action = context.Message.Action;
         var agvCorrelationId = context.Message.CorrelationId;
-        if (action.ActionType != ActionType.Drop || action.Target.Node == null)
+        if (action.Target.Node == null)
         {
             return;
         }
-        var dropStation = await stationRepository.GetStation(action.Target.Node!.Id);
-        if (dropStation.StationGroup.Count > 0)
+        try
         {
-            logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, reserve target station {TargetStation}",
-                nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, action.Nodes.FirstOrDefault()?.Name, action.Target.Node.Name);
-            await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId));
+            var station = await stationRepository.GetStation(action.Target.Node!.Id);
+            if (station.StationGroup.Count > 0)
+            {
+                // If it is a manual action force reservation for locked station
+                bool ignoreStateLocked = (await actionGroupRepository.GetActionGroupAsync(action.ParentId))!.IsManual;
+                logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, reserve target station {TargetStation}",
+                    nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, action.Nodes.FirstOrDefault()?.Name, action.Target.Node.Name);
+                await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId, ignoreStateLocked));
+            }
+        }
+        catch (NodeNotFoundException)
+        {
+            logger.LogDebug("{Message}: Target node {NodeId} is not a station", nameof(StartActionCommand), action.Target.Node!.Id);
         }
     }
 }
