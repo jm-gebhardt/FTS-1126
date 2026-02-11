@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,7 +17,6 @@ public class NodeLockEntityConfiguration : IEntityTypeConfiguration<NodeLock>
             .HasForeignKey(e => e.NodeId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
-        builder.Ignore(x => x.Node);
-        builder.ConfigureAllProperties(except: [nameof(NodeLock.Node)]);
+        builder.ConfigureAllProperties();
     }
 }

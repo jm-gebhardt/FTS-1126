@@ -24,7 +24,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
     where TConsumer : class, IConsumer
 {
     private readonly Mock<IAgvDb> _agvDb = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRestrictedAreaRepository> _restrictedAreaRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
@@ -46,7 +46,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         AddServices(s =>
         {
             s.AddTransient(_ => _agvDb.Object);
-            s.AddTransient(_ => _nodeStateRepository.Object);
+            s.AddTransient(_ => _nodeRepository.Object);
             s.AddTransient(_ => _stationRepository.Object);
             s.AddTransient(_ => ParkPointService.Object);
             s.AddTransient(_ => ChargingPointManager.Object);
@@ -57,8 +57,13 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         });
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>())).Verifiable();
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.Is<Guid>(y => y == "target".ToGuid()))).ReturnsAsync(new TransportOrder.Domain.Models.Node.NodeLock("target".ToGraphNode(), TransportOrder.Domain.Models.Node.NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow));
+        _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>())).Verifiable();
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.Is<Guid>(y => y == "target".ToGuid()))).ReturnsAsync((Guid _) =>
+        {
+            var node = "target".ToGraphNode();
+            node.Lock = new NodeLock(node, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
+            return node;
+        });
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));

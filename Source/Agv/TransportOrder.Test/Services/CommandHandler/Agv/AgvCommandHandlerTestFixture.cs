@@ -1,19 +1,28 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -25,16 +34,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Language;
 using System.Linq.Expressions;
-using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Exceptions;
-using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Messages.LogEntry;
-using Gebhardt.Acc.Common.Testing.Extensions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
-using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
-using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
@@ -53,7 +52,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IQueueManager> _queueManager = new();
     public readonly Mock<IAgvDb> AgvDb = new();
     private readonly Mock<IParkPointService> _parkPointService = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
+    private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IRouteService> _routeService = new();
@@ -67,7 +66,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture()
     {
         AgvDb.SetupNodeFallbacks();
-        _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync([]);
+        _nodeRepositoryMock.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>())).ReturnsAsync([]);
 
         Build();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
@@ -88,7 +87,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _parkPointService.Object);
         collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient(_ => _queueRepository.Object);
-        collection.AddTransient(_ => _nodeStateRepositoryMock.Object);
+        collection.AddTransient(_ => _nodeRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _routeService.Object);
@@ -215,6 +214,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithCurrentStartedOrCreatedActionGroups(IReadOnlyList<ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<List<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(actionGroups);
         return this;
     }
 
@@ -280,18 +280,22 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture AddParkingPointManager(GraphNode? parkGraphNode)
     {
         _parkPointService.Setup(x => x.HasParkersAsync(It.IsAny<Guid>())).ReturnsAsync(true);
-        _parkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()))
+        _parkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<bool>()))
             .ReturnsAsync(() =>
             {
                 if (parkGraphNode == null)
                 {
                     throw new ParkNodeNotAvailableException(Guid.Empty);
                 }
+                parkGraphNode.Lock = new NodeLock(parkGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
                 return parkGraphNode;
             });
         if (parkGraphNode != null)
         {
-            _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(new NodeLock(parkGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
+            _nodeRepositoryMock.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() => {
+                parkGraphNode.Lock = new NodeLock(parkGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
+                return parkGraphNode;
+            });
         }
         return this;
     }
@@ -315,11 +319,15 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
                 {
                     throw new NoChargeStationAvailableException();
                 }
+                chargeGraphNode.Lock = new NodeLock(chargeGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
                 return chargeGraphNode;
             });
         if (chargeGraphNode != null)
         {
-            _nodeStateRepositoryMock.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(new NodeLock(chargeGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
+            _nodeRepositoryMock.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() => {
+                chargeGraphNode.Lock = new NodeLock(chargeGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
+                return chargeGraphNode;
+            });
         }
         return this;
     }
@@ -327,7 +335,15 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture AddChargingNode(bool isOnCharger, GraphNode? chargeGraphNode)
     {
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isOnCharger);
-        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(chargeGraphNode != null ? new NodeLock(chargeGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow) : null);
+        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync( (Guid _) =>
+        {
+            if (chargeGraphNode == null)
+            {
+                return null;
+            }
+            chargeGraphNode.Lock = new NodeLock(chargeGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
+            return chargeGraphNode;
+        });
         _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), null)).ReturnsAsync(() => chargeGraphNode ?? throw new NoChargeStationAvailableException());
         return this;
     }
@@ -380,24 +396,17 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithNodesStates(ICollection<NodeLock> nodeLocks, ICollection<GraphNode> nodes, bool nodeReservationFails = false, string? lastNodeId = null)
     {
-        _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
+        foreach (var graphNode in nodes)
+        {
+            graphNode.Lock = nodeLocks.FirstOrDefault(nl => nl.NodeId == graphNode.Id);
+        }
+        _nodeRepositoryMock.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>())).ReturnsAsync(nodes.Where(n => n.Lock != null).ToList());
         AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync(nodes);
-        _nodeStateRepositoryMock.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(nodeReservationFails);
-        _nodeStateRepositoryMock.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepositoryMock.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepositoryMock.Setup(x => x.ForceReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepositoryMock.Setup(x => x.ForceReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        _nodeRepositoryMock.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(!nodeReservationFails);
         AgvDb.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).ReturnsAsync(lastNodeId == null ? null : nodes.FirstOrDefault(n => n.Id == lastNodeId.ToGuid()));
 
-        AgvDb.AddNode(nodeLocks.Select(n => n.Node).Concat(nodes).ToArray());
+        AgvDb.AddNode(nodes.Select(n => n).Concat(nodes).ToArray());
         return this;
-    }
-
-    public void VerifyNodeStateChange(Times forceReserve, Times forceOccupy, Times reserve)
-    {
-        _nodeStateRepositoryMock.Verify(x => x.ForceReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), forceReserve);
-        _nodeStateRepositoryMock.Verify(x => x.ForceOccupyNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), forceOccupy);
-        _nodeStateRepositoryMock.Verify(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), reserve);
     }
 
     public static IMapper GetMapper()

@@ -8,9 +8,9 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -43,7 +43,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IQueueManager> _queueManager = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
 
     protected Mock<IRouteService> RouteService { get; } = new();
 
@@ -73,7 +73,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => _actionGroupValidationService.Object);
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _stationRepository.Object);
-        collection.AddTransient(_ => _nodeStateRepository.Object);
+        collection.AddTransient(_ => _nodeRepository.Object);
         collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
@@ -331,7 +331,14 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithNodeState(NodeLock? nodeLock)
     {
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeLock);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() =>
+        {
+            if (nodeLock == null)
+            {
+                throw new NodeNotFoundException("not found");
+            }
+            return new GraphNode() { Id = nodeLock.NodeId, Lock = nodeLock };
+        });
         return this;
     }
 

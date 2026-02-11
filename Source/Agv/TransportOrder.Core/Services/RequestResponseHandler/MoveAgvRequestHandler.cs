@@ -33,7 +33,7 @@ public class MoveAgvRequestHandler :
     private readonly ILogger<MoveAgvRequestHandler> _logger;
     private readonly IAgvDb _agvDb;
     private readonly IBus _bus;
-    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly INodeRepository _nodeRepository;
     private readonly IParkPointService _parkPointService;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IRestrictedAreaRepository _restrictedAreaRepository;
@@ -47,7 +47,7 @@ public class MoveAgvRequestHandler :
     public MoveAgvRequestHandler(ILogger<MoveAgvRequestHandler> logger,
         IAgvDb agvDb,
         IBus bus,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IParkPointService parkPointService,
         IChargingPointManager chargingPointManager,
         IRestrictedAreaRepository restrictedAreaRepository,
@@ -57,7 +57,7 @@ public class MoveAgvRequestHandler :
         _logger = logger;
         _agvDb = agvDb;
         _bus = bus;
-        _nodeStateRepository = nodeStateRepository;
+        _nodeRepository = nodeRepository;
         _parkPointService = parkPointService;
         _chargingPointManager = chargingPointManager;
         _restrictedAreaRepository = restrictedAreaRepository;
@@ -226,8 +226,12 @@ public class MoveAgvRequestHandler :
 
     private async Task PublishNodeStateChange(Guid nodeId)
     {
-        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        var node = await _nodeRepository.GetNodeAsync(nodeId);
         var station = await _stationRepository.GetStation(nodeId);
-        await _bus.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        if (node.Lock == null)
+        {
+            return;
+        }
+        await _bus.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 }

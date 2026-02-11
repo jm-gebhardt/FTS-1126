@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -18,8 +17,8 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 public class ChargingPointManager : BaseNodeReservationManager, IChargingPointManager
 {
     /// <inheritdoc cref="ChargingPointManager"/>>
-    public ChargingPointManager(IAgvDb agvDb, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, ISemaphoreProvider<IChargingSemaphore> semaphoreProvider)
-        : base(agvDb, nodeStateRepository, routeService, logger, semaphoreProvider)
+    public ChargingPointManager(IAgvDb agvDb, INodeRepository nodeRepository, IRouteService routeService, ILogger<ChargingPointManager> logger, ISemaphoreProvider<IChargingSemaphore> semaphoreProvider)
+        : base(agvDb, nodeRepository, routeService, logger, semaphoreProvider)
     {
     }
 
@@ -27,11 +26,11 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override string Description => "Charging";
 
     /// <inheritdoc />
-    public async Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreStateLocked = false)
+    public async Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreLocked = false)
     {
         try
         {
-            return await PickAndReserveNodeAsync(agv, startNodeId, ignoreStateLocked: ignoreStateLocked);
+            return await PickAndReserveNodeAsync(agv, startNodeId, ignoreLocked: ignoreLocked);
         }
         catch (Exception e) when (e is ReserveNodeFailedException or NoNodesAvailableException)
         {
@@ -57,11 +56,11 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     }
 
     /// <inheritdoc />
-    public async Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreStateLocked = false)
+    public async Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreLocked=false)
     {
         try
         {
-            await ReserveNodeAsync(node.Id, agvCorrelationId, ignoreStateLocked);
+            await ReserveNodeAsync(node.Id, agvCorrelationId, ignoreLocked);
         }
         catch (ReserveNodeFailedException)
         {
@@ -78,14 +77,12 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     /// <inheritdoc />
     public async Task<bool> AgvHasReservedChargerAsync(Guid agvCorrelationId)
     {
-        List<Guid> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
-        return await NodeStateRepository.IsAnyNodeReservedForAgv(agvCorrelationId, nodes);
+       return (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Any(n => n.Lock != null && n.Lock.IsReservedForAgv(agvCorrelationId));
     }
 
     /// <inheritdoc />
-    public async Task<NodeLock?> GetReservedChargerForAgvAsync(Guid agvCorrelationId)
+    public async Task<GraphNode?> GetReservedChargerForAgvAsync(Guid agvCorrelationId)
     {
-        List<Guid> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
-        return await NodeStateRepository.GetReservedNodeLockForAgv(agvCorrelationId, nodes);
+       return  (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).SingleOrDefault(n => n.Lock != null && n.Lock.IsReservedForAgv(agvCorrelationId));
     }
 }

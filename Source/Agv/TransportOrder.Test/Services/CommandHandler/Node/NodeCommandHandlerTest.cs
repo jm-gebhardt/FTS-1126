@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Stations;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
@@ -20,13 +19,14 @@ public class NodeCommandHandlerTest
     public async Task Consume_FreeNode_ValidData_FreeNodeCalled()
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(new NodeLock(_node, NodeLockState.Free, false, null, DateTime.UtcNow))
+            .WithNodeLock(new NodeLock(_node, NodeLockState.Free, false, null, DateTime.UtcNow))
             .WithAnyStation();
 
         await fixture.TestHarness.Bus.Publish(new FreeNode(_node.Id));
 
         await fixture.ShouldHaveConsumedAsync<FreeNode>();
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
+        fixture.StationRepository.Verify(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -36,13 +36,14 @@ public class NodeCommandHandlerTest
     public async Task Consume_FreeNodeReservedOnly_NotReserved_FreeNodeNotCalled(NodeLockState state)
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(new NodeLock(_node, state, false, null, DateTime.UtcNow))
+            .WithNodeLock(new NodeLock(_node, state, false, null, DateTime.UtcNow))
             .WithAnyStation();
 
         await fixture.TestHarness.Bus.Publish(new FreeNode(_node.Id, true));
 
         await fixture.ShouldHaveConsumedAsync<FreeNode>();
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+        fixture.StationRepository.Verify(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -50,13 +51,14 @@ public class NodeCommandHandlerTest
     public async Task Consume_FreeNodeReservedOnly_ValidData_FreeNodeCalled()
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(new NodeLock(_node, NodeLockState.Reserved, false, null, DateTime.UtcNow))
+            .WithNodeLock(new NodeLock(_node, NodeLockState.Reserved, false, null, DateTime.UtcNow))
             .WithAnyStation();
 
         await fixture.TestHarness.Bus.Publish(new FreeNode(_node.Id, true));
 
         await fixture.ShouldHaveConsumedAsync<FreeNode>();
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
+        fixture.StationRepository.Verify(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -68,9 +70,9 @@ public class NodeCommandHandlerTest
         var oldLastNodeState = new NodeLock("old".ToGraphNode(), NodeLockState.Occupied, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
         var newLastNode = "new".ToGraphNode();
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([oldLastNodeState])
-            .WithNodeOccupied(AgvSerialNumber.ToGuid())
-            .WithStation(oldLastNodeState.Node.Name)
+            .WithNodeLocks([oldLastNodeState])
+            .WithNodeOccupied()
+            .WithStation("old")
             .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Charge })
             .WithNode(newLastNode)
             .WithQueue(null);
@@ -82,7 +84,7 @@ public class NodeCommandHandlerTest
                 newLastNode.Id));
 
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
     }
 
     /// <summary>
@@ -93,8 +95,8 @@ public class NodeCommandHandlerTest
     {
         var oldLastNodeState = new NodeLock("old".ToGraphNode(), NodeLockState.Occupied, false, "different".ToGuid(), DateTime.UtcNow);
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([oldLastNodeState])
-            .WithNodeOccupied("different".ToGuid())
+            .WithNodeLocks([oldLastNodeState])
+            .WithNodeOccupied()
             .WithQueue(null);
 
         await fixture.PublishMessageAsync(
@@ -104,15 +106,14 @@ public class NodeCommandHandlerTest
                 "new".ToGuid()));
 
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync("different".ToGuid()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [TestMethod]
     public async Task Consume_UpdateNodeOccupancy_OldLastNodeWasNotOccupied_UnOccupyNodeNotCalled()
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([])
+            .WithNodeLocks([])
             .WithQueue(null);
 
         await fixture.PublishMessageAsync(
@@ -122,7 +123,7 @@ public class NodeCommandHandlerTest
                 "new".ToGuid()));
 
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [TestMethod]
@@ -131,9 +132,9 @@ public class NodeCommandHandlerTest
         var newLastNode = "new".ToGraphNode();
         var newLastNodeState = new NodeLock(newLastNode, NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([newLastNodeState])
-            .WithNodeReserved(newLastNodeState.Node.Name)
-            .WithStation(newLastNodeState.Node.Name)
+            .WithNodeLocks([newLastNodeState])
+            .WithNodeReserved()
+            .WithStation("new")
             .WithQueue(null)
             .WithNode(newLastNode);
 
@@ -145,7 +146,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, AgvSerialNumber.ToGuid()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
     }
 
     /// <summary>
@@ -156,8 +157,8 @@ public class NodeCommandHandlerTest
     {
         var newLastNodeState = new NodeLock("new".ToGraphNode(), NodeLockState.Reserved, false, "different".ToGuid(), DateTime.UtcNow);
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([newLastNodeState])
-            .WithNodeReserved(newLastNodeState.Node.Name)
+            .WithNodeLocks([newLastNodeState])
+            .WithNodeReserved()
             .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
@@ -168,15 +169,14 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, "different".ToGuid()), Times.Never);
-        fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync(newLastNodeState.NodeId, AgvSerialNumber.ToGuid()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [TestMethod]
     public async Task Consume_UpdateNodeOccupancy_NewLastNodeNotReserved_NewLastNodeNotOccupied()
     {
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([])
+            .WithNodeLocks([])
             .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(
@@ -187,7 +187,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync("new".ToGuid(), AgvSerialNumber.ToGuid()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
     }
 
     [TestMethod]
@@ -197,9 +197,9 @@ public class NodeCommandHandlerTest
         var newLastNodeState = new NodeLock("new".ToGraphNode(), NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), DateTime.UtcNow);
 
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([oldLastNodeState, newLastNodeState])
+            .WithNodeLocks([oldLastNodeState, newLastNodeState])
             .WithAnyStation()
-            .WithNodeOccupied(AgvSerialNumber.ToGuid())
+            .WithNodeOccupied()
             .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Charge })
             .WithQueue(null);
 
@@ -211,8 +211,7 @@ public class NodeCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<UpdateNodeOccupancy>();
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Once);
-        fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync("new".ToGuid(), AgvSerialNumber.ToGuid()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Exactly(2));
     }
 
     [TestMethod]
@@ -224,10 +223,10 @@ public class NodeCommandHandlerTest
         var modifiedDate = now.AddSeconds(-ageInSeconds);
         var unusedNodeState = new NodeLock("unused".ToGraphNode(), NodeLockState.Occupied, false, AgvSerialNumber.ToGuid(), modifiedDate);
         var usedNodeState = new NodeLock("usedNode".ToGraphNode(), NodeLockState.Reserved, false, AgvSerialNumber.ToGuid(), modifiedDate);
-        var actionGroupToUsedNode = Helper.AgvActionGenerator.GenerateChargeActionGroup(targetNodeName: usedNodeState.Node.Name, assignedAgv: AgvSerialNumber.ToGuid());
+        var actionGroupToUsedNode = Helper.AgvActionGenerator.GenerateChargeActionGroup(targetNodeName: "usedNode", assignedAgv: AgvSerialNumber.ToGuid());
         var fixture = new NodeCommandHandlerTestFixture()
             .WithActionGroups([actionGroupToUsedNode])
-            .WithNodeStates([unusedNodeState, usedNodeState])
+            .WithNodeLocks([unusedNodeState, usedNodeState])
             .WithAnyStation()
             .WithQueue(null);
 
@@ -248,11 +247,7 @@ public class NodeCommandHandlerTest
             await fixture.ShouldNotHavePublishedAsync<FreeStationOccupancy>();
         }
 
-        fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(unusedNodeState.NodeId), shouldHaveBeenFreed ? Times.Once : Times.Never);
-        fixture.NodeStateRepository.Verify(r => r.FreeNodeAsync(usedNodeState.NodeId), Times.Never);
-
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(AgvSerialNumber.ToGuid()), Times.Never);
-        fixture.NodeStateRepository.Verify(r => r.OccupyNodeAsync("new".ToGuid(), AgvSerialNumber.ToGuid()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), shouldHaveBeenFreed ? Times.Once : Times.Never);
     }
 
     [TestMethod]
@@ -265,12 +260,12 @@ public class NodeCommandHandlerTest
 
         var oldLastNodeState = new NodeLock(oldNodeId.ToGraphNode(), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeStates([oldLastNodeState])
+            .WithNodeLocks([oldLastNodeState])
             .WithActionGroups([actionGroup])
             .WithCurrentAgvAction(actionGroup.Actions[0]);
 
         await fixture.PublishMessageAsync(new UpdateNodeOccupancy(agvId, oldNodeId.ToGuid(), newNodeId.ToGuid()));
-        fixture.NodeStateRepository.Verify(r => r.UnOccupyNodeAsync(agvId), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -311,12 +306,12 @@ public class NodeCommandHandlerTest
         var node = "PS01".ToGraphNode();
 
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(new NodeLock(node, NodeLockState.Occupied, false, agv, DateTime.UtcNow))
+            .WithNodeLock(new NodeLock(node, NodeLockState.Occupied, false, agv, DateTime.UtcNow))
             .WithAnyStation();
 
         await fixture.PublishMessageAsync(new FreeStationOccupancy(node.Id, agv));
 
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -326,12 +321,12 @@ public class NodeCommandHandlerTest
         var agv = Guid.NewGuid();
         const string nodeName = "APL1";
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(null)
+            .WithNodeLock(null)
             .WithAnyStation();
 
         await fixture.PublishMessageAsync(new FreeStationOccupancy(nodeName.ToGuid(), agv));
 
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -340,12 +335,12 @@ public class NodeCommandHandlerTest
     {
         var stationId = "APL1".ToGuid();
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(null)
+            .WithNodeLock(null)
             .WithAnyStation();
 
         await fixture.PublishMessageAsync(new UnblockStation(stationId));
 
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Never);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -360,27 +355,28 @@ public class NodeCommandHandlerTest
             NodeLock = new NodeLock(node, NodeLockState.Occupied, false, agv, DateTime.UtcNow)
         };
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithStation(station);
+            .WithStation(station)
+            .WithAnyStation();
 
         await fixture.PublishMessageAsync(new UnblockStation(station.Id));
 
-        fixture.NodeStateRepository.Verify(x => x.FreeNodeAsync(It.IsAny<Guid>()), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
     [TestMethod]
-    public async Task Consume_OccupyStation_ValidData_ForceReserveNodeCalled()
+    public async Task Consume_OccupyStation_ValidData_ForceOccupyNodeCalled()
     {
         var agv = Guid.NewGuid();
         var node = "AP01".ToGraphNode();
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(null)
+            .WithNodeLock(null)
             .WithAnyStation()
             .WithNode(node);
 
         await fixture.PublishMessageAsync(new OccupyStation(node, agv));
 
-        fixture.NodeStateRepository.Verify(x => x.ForceReserveNodeAsync(node.Id, agv), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -390,13 +386,13 @@ public class NodeCommandHandlerTest
         var agv = Guid.NewGuid();
         var node = "PS01".ToGraphNode();
         var fixture = new NodeCommandHandlerTestFixture()
-            .WithNodeState(null)
+            .WithNodeLock(null)
             .WithAnyStation()
             .WithNode(node);
 
         await fixture.PublishMessageAsync(new ReserveStation(node, agv));
 
-        fixture.NodeStateRepository.Verify(x => x.ForceReserveNodeAsync(node.Id, agv), Times.Once);
+        fixture.NodeRepository.Verify(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once);
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 }

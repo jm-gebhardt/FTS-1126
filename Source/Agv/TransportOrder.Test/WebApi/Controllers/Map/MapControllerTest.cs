@@ -1,8 +1,8 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -50,9 +50,9 @@ public class MapControllerTest
     [TestMethod]
     public async Task GetNodeStatesForMap_ValidData_RespondsNodeStates()
     {
-        var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)>
+        var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)>
         {
-            (new NodeLock("nodeId".ToGraphNode(), NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null)
+            (new NodeLock("nodeId".ToGraphNode(), NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null, "nodeId")
         };
 
         MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler>(nodeStates)
@@ -66,7 +66,8 @@ public class MapControllerTest
                     StationId = x.StationId,
                     User = x.LockedByUser,
                     LockReason = x.LockReason,
-                    LockDescription = x.LockDescription
+                    LockDescription = x.LockDescription,
+                    NodeId = x.NodeName
                 };
 
                 return dto;

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -28,7 +27,6 @@ public class AgvPositionChangedConsumer :
     public AgvPositionChangedConsumer(
         ILogger<AgvPositionChangedConsumer> logger,
         IAgvPublisher agvPublisher,
-        INodeStateRepository nodeStateRepository,
         IAgvRouteRetrievalService agvRouteRetrievalService,
         IMapper mapper)
     {

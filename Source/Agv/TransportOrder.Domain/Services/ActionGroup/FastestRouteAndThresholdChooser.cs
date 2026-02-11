@@ -18,12 +18,12 @@ public class FastestRouteAndThresholdChooser : BaseChooseAgvActionGroupService
     public FastestRouteAndThresholdChooser(
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
         ILogger<FastestRouteAndThresholdChooser> logger,
         ILoggingService loggingService
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger, loggingService)
+    ) : base(actionGroupRepository, nodeRepository, queueRepository, queueManager, routeService, logger, loggingService)
     {
         _orderWaitingTimeThreshold = 2;
     }

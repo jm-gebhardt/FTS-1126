@@ -27,7 +27,7 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     private readonly Mock<IStationRepository> _stationRepository = new();
 
     [UsedImplicitly]
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
 
@@ -61,7 +61,7 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
         {
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
-            sc.AddTransient(_ => _nodeStateRepository.Object);
+            sc.AddTransient(_ => _nodeRepository.Object);
             sc.AddTransient(_ => _actionGroupRepository.Object);
             sc.AddTransient(_ => _agvDb.Object);
             sc.AddTransient(_ => _logEntryRepository.Object);

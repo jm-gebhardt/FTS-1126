@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
+using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
@@ -14,7 +17,7 @@ public class GraphNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposab
 
     public GraphNodeRepositoryTestFixture()
     {
-        Repository = new GraphNodeRepository(ContextFactory, Mapper);
+        Repository = new GraphNodeRepository(new SemaphoreProvider<INodeStateDbSemaphore>(new Mock<ILogger<SemaphoreProvider<INodeStateDbSemaphore>>>().Object), new Mock<ILogger<GraphNodeRepository>>().Object, ContextFactory);
     }
 
     protected override IEnumerable<Profile> GetProfiles()
@@ -51,5 +54,32 @@ public class GraphNodeRepositoryTestFixture : TransportOrderDbFixture, IDisposab
         using var context = ContextFactory.CreateDbContext();
         context.Set<Station>().AddRange(stations);
         context.SaveChanges();
+    }
+
+    public void AddNode(GraphNode node)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Set<GraphNode>().Add(node);
+        context.SaveChanges();
+    }
+
+    public void AddNodes(IEnumerable<GraphNode> nodes)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Set<GraphNode>().AddRange(nodes);
+        context.SaveChanges();
+    }
+
+    public void AddNodeLock(NodeLock nodeLock)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        context.Set<NodeLock>().Add(nodeLock);
+        context.SaveChanges();
+    }
+
+    public NodeLock? GetNodeLock(Guid nodeId)
+    {
+        using var context = ContextFactory.CreateDbContext();
+        return context.Set<NodeLock>().SingleOrDefault(nl => nl.NodeId == nodeId);
     }
 }

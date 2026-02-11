@@ -11,18 +11,18 @@ public interface IParkPointService
     /// Reserve parking node async
     /// </summary>
     /// <param name="agv">The agv.</param>
-    /// <param name="ignoreLockedStated">Flag to reserve a park node even if it is locked.</param>
+    /// <param name="ignoreLocked">Flag to reserve park node even if it is locked.</param>
     /// <returns></returns>
-    Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv, bool ignoreLockedStated = false);
+    Task<GraphNode> ReserveParkAsync(Models.Agv.Agv agv, bool ignoreLocked = false);
 
     /// <summary>
     /// Reserve specific parking node. 
     /// </summary>
-    /// <param name="parkNodeId">The id of the park node.</param>
-    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
-    /// <param name="ignoreStateLocked">Flag to reserve park node even if it is locked.</param>
+    /// <param name="parkNodeId"></param>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="ignoreLocked">Flag to reserve park node even if it is locked.</param>
     /// <returns>Throws if reservations fails.</returns>
-    Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreStateLocked = false);
+    Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreLocked = false);
 
     /// <summary>
     /// Checks if the agv is on a park node

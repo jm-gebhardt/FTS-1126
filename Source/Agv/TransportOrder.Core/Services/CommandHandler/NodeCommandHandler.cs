@@ -23,7 +23,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// </summary>
 [UsedImplicitly]
 public class NodeCommandHandler(
-    INodeStateRepository nodeStateRepository,
+    INodeRepository nodeRepository,
     IStationRepository stationRepository,
     IActionGroupRepository actionGroupRepository,
     IMapRepository mapRepository,
@@ -49,26 +49,28 @@ public class NodeCommandHandler(
         var nodeId = context.Message.NodeId;
         bool reservedOnly = context.Message.ReservedOnly;
         var station = await stationRepository.GetStation(nodeId);
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        if (nodeState == null)
+        var node = await nodeRepository.GetNodeAsync(nodeId);
+        if (node.Lock == null)
         {
             logger.LogWarning("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
 
-        if (reservedOnly && nodeState.NodeState != NodeLockState.Reserved)
+        if (reservedOnly && node.Lock.NodeState != NodeLockState.Reserved)
         {
             logger.LogWarning("Node {NodeId} not reserved, but free is restricted to reserved nodes", nodeId);
             return;
         }
 
-        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
+        node.Free();
+        station.NodeLock = node.Lock;
+        await nodeRepository.UpdateLock(node);
+        await stationRepository.Update(station);
+        if (node.Lock == null)
         {
-            logger.LogWarning("Could not free node {NodeId}, node is locked", nodeId);
+            return;
         }
-
-        nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        await context.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        await context.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 
     /// <summary>
@@ -80,15 +82,15 @@ public class NodeCommandHandler(
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         var settings = agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         await Task.Delay(settings.OfflineTolerance);
-        ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
-        ICollection<GraphNode> nodes = await agvDb.Graphs.GetNodesByIdsAsync(nodeLocksForAgv.Select(n => n.NodeId).ToList());
+        ICollection<GraphNode> nodesForAgv = await nodeRepository.GetNodesForAgv(agvCorrelationId);
         ICollection<Task> tasks = [];
-        foreach (var node in nodes.Where(n => !n.IsCharger() && !n.IsParker()))
+        foreach (var node in nodesForAgv.Where(n => !n.IsCharger() && !n.IsParker()))
         {
             tasks.Add(Task.Run(async () =>
             {
-                await nodeStateRepository.FreeNodeAsync(node.Id);
-                await PublishNodeStateChange(context, node.Id);
+                node.Free();
+                await nodeRepository.UpdateLock(node);
+                await PublishNodeStateChange(context, node);
             }));
         }
         await Task.WhenAll(tasks);
@@ -102,11 +104,11 @@ public class NodeCommandHandler(
         (var agvCorrelationId, Guid? oldLastNodeId, Guid? newLastNodeId) = context.Message;
         logger.LogTrace("{MessageType} for AGV {CorrelationId} received", nameof(UpdateNodeOccupancy), agvCorrelationId);
 
-        ICollection<NodeLock> nodeLocksForAgv = await nodeStateRepository.GetNodeLocksForAgv(agvCorrelationId);
-        var oldLastNode = nodeLocksForAgv.SingleOrDefault(n => n.NodeId == oldLastNodeId);
-        var newLastNode = nodeLocksForAgv.SingleOrDefault(n => n.NodeId == newLastNodeId);
+        ICollection<GraphNode> nodes = await nodeRepository.GetNodesForAgv(agvCorrelationId);
+        var oldLastNode = nodes.SingleOrDefault(n => n.Id == oldLastNodeId);
+        var newLastNode = nodes.SingleOrDefault(n => n.Id == newLastNodeId);
 
-        if (oldLastNode != null && oldLastNode.IsOccupiedByAgv(agvCorrelationId))
+        if (oldLastNode?.Lock != null && oldLastNode.Lock.IsOccupiedByAgv(agvCorrelationId))
         {
             var currentAction = await actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId);
             if (currentAction?.Target.Node?.Id == oldLastNodeId)
@@ -116,61 +118,64 @@ public class NodeCommandHandler(
             else
             {
                 logger.LogInformation("UnOccupy node {NodeId}, occupied by agv {AgvCorrelationId}, new last node id is {NewLastNodeId}", oldLastNode, agvCorrelationId, newLastNode);
-                await nodeStateRepository.UnOccupyNodeAsync(agvCorrelationId);
-                await PublishNodeStateChange(context, oldLastNodeId.GetValueOrDefault());
+
+                oldLastNode.Free();
+                await nodeRepository.UpdateLock(oldLastNode);
+                await PublishNodeStateChange(context, oldLastNode);
                 await context.Publish(new AgvLeftStation(oldLastNodeId.GetValueOrDefault(), agvCorrelationId));
-                nodeLocksForAgv.Remove(oldLastNode);
+                nodes.Remove(oldLastNode);
             }
         }
 
         if (newLastNode != null)
         {
-            if (newLastNode.IsReservedForAgv(agvCorrelationId))
+            if (newLastNode.Lock != null && newLastNode.Lock.IsReservedForAgv(agvCorrelationId))
             {
                 logger.LogWarning("Setting {NodeToLock} occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
-                await nodeStateRepository.OccupyNodeAsync(newLastNodeId!.Value, agvCorrelationId);
-                await PublishNodeStateChange(context, newLastNodeId.Value);
-                nodeLocksForAgv.Remove(newLastNode);
+                newLastNode.Occupy(agvCorrelationId, ignoreLocked: true);
+                await nodeRepository.UpdateLock(newLastNode, ignoreLocked: true);
+                await PublishNodeStateChange(context, newLastNode);
+                nodes.Remove(newLastNode);
             }
-            if (newLastNode.IsOccupiedByAgv(agvCorrelationId))
+            if (newLastNode.Lock != null && newLastNode.Lock.IsOccupiedByAgv(agvCorrelationId))
             {
                 logger.LogWarning("{NodeToLock} already occupied by AGV {AgvCorrelationId}", newLastNode, agvCorrelationId);
-                nodeLocksForAgv.Remove(newLastNode);
+                nodes.Remove(newLastNode);
             }
         }
 
-        if (nodeLocksForAgv.IsNullOrEmpty())
+        if (nodes.IsNullOrEmpty())
         {
             return;
         }
 
-        await FreeUnusedNodes(context, nodeLocksForAgv, agvCorrelationId);
+        await FreeUnusedNodes(context, nodes, agvCorrelationId);
     }
 
-    private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<NodeLock> nodeLocks, Guid agvCorrelationId)
+    private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<GraphNode> nodes, Guid agvCorrelationId)
     {
         ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Task> tasks = [];
-        foreach (var node in nodeLocks.Where(l => l.ModifiedDate < timeProvider.GetUtcNow().AddMinutes(-1)))
+        foreach (var node in nodes.Where(l => l.Lock != null && l.Lock.ModifiedDate < timeProvider.GetUtcNow().AddMinutes(-1)))
         {
-            if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.Node?.Id == node.NodeId)))
+            if (!agvActionGroups.Any(a => a.Actions.Any(action => action.Target.Node?.Id == node.Id)))
             {
-                logger.LogWarning("For agv {AgvCorrelationId} free residual node {NodeId}", agvCorrelationId, node.NodeId);
+                logger.LogWarning("For agv {AgvCorrelationId} free residual node {NodeId}", agvCorrelationId, node.Id);
 
                 tasks.Add(Task.Run(async () =>
                 {
-                    await nodeStateRepository.FreeNodeAsync(node.NodeId);
-                    await PublishNodeStateChange(context, node.NodeId);
-                    await context.Publish(new FreeStationOccupancy(node.NodeId, agvCorrelationId));
+                    node.Free();
+                    await nodeRepository.UpdateLock(node);
+                    await PublishNodeStateChange(context, node);
+                    await context.Publish(new FreeStationOccupancy(node.Id, agvCorrelationId));
                 }));
             }
         }
         await Task.WhenAll(tasks);
     }
 
-    private async Task PublishNodeStateChange(IPublishEndpoint context, Guid nodeId)
+    private async Task PublishNodeStateChange(IPublishEndpoint context, GraphNode node)
     {
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
         Guid? stationId;
         string? user;
         string? lockReason;
@@ -178,12 +183,12 @@ public class NodeCommandHandler(
 
         try
         {
-            var station = await stationRepository.GetStation(nodeId);
+            var station = await stationRepository.GetStation(node.Id);
             stationId = station.Id;
             user = station.LockedBy;
             lockReason = station.LockReason;
             lockDescription = station.LockDescription;
-            station.NodeLock = nodeState;
+            station.NodeLock = node.Lock;
             await stationRepository.Update(station);
         }
         catch (NodeNotFoundException)
@@ -194,14 +199,13 @@ public class NodeCommandHandler(
             lockDescription = null;
         }
 
-        if (nodeState != null)
+        if (node.Lock != null)
         {
-            await context.Publish(new NodeStateChanged(nodeState, stationId, user, lockReason, lockDescription));
+            await context.Publish(new NodeStateChanged(node.Lock, node.Name, stationId, user, lockReason, lockDescription));
             return;
         }
         var dateModified = DateTime.UtcNow;
-        var node = await agvDb.Graphs.GetNodeAsync(nodeId);
-        await context.Publish(new NodeStateChanged(new NodeLock(node, NodeLockState.Free, false, null, dateModified), stationId, user, lockReason, lockDescription));
+        await context.Publish(new NodeStateChanged(new NodeLock(node, NodeLockState.Free, false, null, dateModified), node.Name, stationId, user, lockReason, lockDescription));
     }
 
     /// <summary>
@@ -251,19 +255,19 @@ public class NodeCommandHandler(
     public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
         var nodeId = context.Message.NodeId;
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(nodeId);
-        if (nodeState == null)
+        var node = await nodeRepository.GetNodeAsync(nodeId);
+        if (node.Lock == null)
         {
             logger.LogWarning("Could not retrieve node state for station with Node {NodeId}", nodeId);
             return;
         }
 
-        if (!await nodeStateRepository.FreeNodeAsync(nodeId))
+        if (!node.Free())
         {
             logger.LogWarning("Could not free node {NodeId}, node is locked", nodeId);
         }
-
-        await PublishNodeStateChange(context, nodeId);
+        await nodeRepository.UpdateLock(node);
+        await PublishNodeStateChange(context, node);
     }
 
     /// <summary>
@@ -273,19 +277,21 @@ public class NodeCommandHandler(
     {
         var stationId = context.Message.StationId;
         var station = await stationRepository.GetStation(stationId);
-        var nodeState = station.NodeLock;
-        if (nodeState == null)
+        var node = await nodeRepository.GetNodeAsync(stationId);
+        if (node.Lock == null)
         {
             logger.LogWarning("Could not retrieve node state for station {StationName}", stationId);
             return;
         }
-        Guid? agvCorrelationId = nodeState.AgvCorrelationId;
-        if (!await nodeStateRepository.FreeNodeAsync(stationId))
+        Guid? agvCorrelationId = node.Lock.AgvCorrelationId;
+
+        if (!node.Free())
         {
             logger.LogWarning("Could not unblock node {NodeId}, node is locked", stationId);
         }
+        await nodeRepository.UpdateLock(node);
         await context.Publish(new AgvLeftStation(station.Id, agvCorrelationId.GetValueOrDefault()));
-        await PublishNodeStateChange(context, stationId);
+        await PublishNodeStateChange(context, node);
     }
 
     /// <summary>
@@ -293,11 +299,12 @@ public class NodeCommandHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<OccupyStation> context)
     {
-        var station = context.Message.Station;
         var agv = context.Message.AgvCorrelationId;
-
-        await nodeStateRepository.ForceReserveNodeAsync(station.Id, agv);
-        await PublishNodeStateChange(context, station.Id);
+        var station = await stationRepository.GetStation(context.Message.Station.Id);
+        var node = await nodeRepository.GetNodeAsync(station.Id);
+        node.Occupy(agv, true, ignoreLocked: true);
+        await nodeRepository.UpdateLock(node, ignoreLocked: true);
+        await PublishNodeStateChange(context, node);
     }
 
     /// <summary>
@@ -306,8 +313,10 @@ public class NodeCommandHandler(
     public async Task Consume(ConsumeContext<ReserveStation> context)
     {
         (var station, var agv, bool ignoreStateLocked) = context.Message;
-        
-        await nodeStateRepository.ForceReserveNodeAsync(station.Id, agv, ignoreStateLocked);
-        await PublishNodeStateChange(context, station.Id);
+
+        var node = await nodeRepository.GetNodeAsync(station.Id);
+        node.Reserve(agv, true, ignoreLocked: ignoreStateLocked);
+        await nodeRepository.UpdateLock(node, ignoreLocked: ignoreStateLocked);
+        await PublishNodeStateChange(context, node);
     }
 }

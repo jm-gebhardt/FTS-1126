@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +20,7 @@ public class NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> : Med
         return this;
     }
 
-    public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithNodeStates(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> nodeStates)
+    public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithNodeStates(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates)
     {
         _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
         return this;

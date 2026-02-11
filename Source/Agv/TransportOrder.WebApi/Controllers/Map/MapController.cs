@@ -202,7 +202,8 @@ public class MapController : Controller
                     StationId = x.StationId,
                     User = x.LockedByUser,
                     LockReason = x.LockReason,
-                    LockDescription = x.LockDescription
+                    LockDescription = x.LockDescription,
+                    NodeId = x.NodeName
                 };
 
                 return dto;

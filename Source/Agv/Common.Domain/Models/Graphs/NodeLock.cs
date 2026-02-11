@@ -1,7 +1,6 @@
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 /// <summary>
 /// Node State
@@ -30,11 +29,6 @@ public record NodeLock
     public Guid NodeId { get; set; }
 
     /// <summary>
-    /// The node.
-    /// </summary>
-    public GraphNode Node { get; set; }
-
-    /// <summary>
     /// The state the node is in.
     /// </summary>
     public NodeLockState NodeState { get; set; }
@@ -59,13 +53,11 @@ public record NodeLock
     /// </summary>
     public NodeLock()
     {
-        Node = null!;
     }
 
     /// <inheritdoc cref="NodeLock"/>>
     public NodeLock(GraphNode node, NodeLockState nodeState, bool isLocked, Guid? agvCorrelationId, DateTime modifiedDate)
     {
-        Node = node;
         NodeId = node.Id;
         NodeState = nodeState;
         IsLocked = isLocked;

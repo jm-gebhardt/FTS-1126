@@ -18,11 +18,11 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
 {
     /// <inheritdoc cref="ParkPointService"/>>
     public ParkPointService(IAgvDb agvDb,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IRouteService routeService,
         ILogger<ParkPointService> logger,
         ISemaphoreProvider<IParkingSemaphore> semaphoreProvider) : base(agvDb,
-        nodeStateRepository,
+        nodeRepository,
         routeService,
         logger,
         semaphoreProvider)
@@ -36,9 +36,9 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     protected override Expression<Func<GraphNode, bool>> NodeFilter => node => node.IsParker();
 
     /// <inheritdoc />
-    public Task<GraphNode> ReserveParkAsync(Agv agv, bool ignoreStateLocked = false)
+    public Task<GraphNode> ReserveParkAsync(Agv agv, bool ignoreLocked = false)
     {
-        return PickAndReserveNodeAsync(agv, ignoreStateLocked: ignoreStateLocked);
+        return PickAndReserveNodeAsync(agv, ignoreLocked:ignoreLocked);
     }
 
     /// <inheritdoc />
@@ -48,11 +48,11 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     }
 
     /// <inheritdoc />
-    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreStateLocked = false)
+    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreLocked = false)
     {
         try
         {
-            await ReserveNodeAsync(parkNodeId, agvCorrelationId, ignoreStateLocked);
+            await ReserveNodeAsync(parkNodeId, agvCorrelationId, ignoreLocked);
         }
         catch (ReserveNodeFailedException)
         {
@@ -69,7 +69,6 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     /// <inheritdoc />
     public async Task<bool> AgvHasReservedParkingNodeAsync(Guid agvCorrelationId)
     {
-        List<Guid> nodes = (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Select(n => n.Id).ToList();
-        return await NodeStateRepository.IsAnyNodeReservedForAgv(agvCorrelationId, nodes);
+        return (await AgvDb.Graphs.GetNodesAsync(agvCorrelationId, NodeFilter)).Any(n => n.Lock != null && n.Lock.IsReservedForAgv(agvCorrelationId));
     }
 }

@@ -1,9 +1,9 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -22,7 +22,7 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
 
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     private readonly SemaphoreProvider<ITargetSelectionSemaphore> _semaphore = new(new Mock<ILogger<SemaphoreProvider<ITargetSelectionSemaphore>>>().Object);
     private readonly SemaphoreProvider<IWaitingHandlerSemaphore> _waitingHandlerSemaphore = new(new Mock<ILogger<SemaphoreProvider<IWaitingHandlerSemaphore>>>().Object);
     private List<DecisionPointAction> _dp1Actions = [];
@@ -45,7 +45,7 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         {
             collection.AddTransient(_ => _stationRepository.Object);
             collection.AddTransient(_ => _actionGroupRepository.Object);
-            collection.AddTransient(_ => _nodeStateRepository.Object);
+            collection.AddTransient(_ => _nodeRepository.Object);
             collection.AddSingleton<PriorityAwareTargetSelector>();
             collection.AddSingleton<PriorityAwareWaitingHandler>();
             collection.AddSingleton<UnifiedTargetSelector>();
@@ -96,21 +96,22 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
         _stationRepository.Setup(x => x.GetStationsById(It.IsAny<List<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => stations.Where(s => ids.Contains(s.Id)).ToList());
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync((Guid id) => stations.Single(s => s.Id == id));
 
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>()))
-            .ReturnsAsync((Guid nodeId, Guid agvId, bool _) =>
+        _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            .ReturnsAsync((GraphNode node, bool _, bool _) =>
             {
-                if (!_nodeReservations.TryAdd(nodeId, agvId))
+                if (!_nodeReservations.TryAdd(node.Id, node.Lock!.AgvCorrelationId!.Value))
                 {
                     // Node already reserved by another AGV
                     return false;
                 }
                 return true;
             });
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>()))
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid nodeId) =>
             {
-                var node = new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode(nodeId, "test");
-                return new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
+                var node = new GraphNode(nodeId, "test");
+                node.Lock = new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
+                return node;
             });
         return this;
     }
@@ -137,22 +138,22 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
             }
         }
         // Setup node reservation to track which AGV has reserved which node
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>()))
-            .ReturnsAsync((Guid nodeId, Guid agvId, bool _) =>
+        _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            .ReturnsAsync((GraphNode node, bool _, bool _) =>
             {
-                if (!_nodeReservations.TryAdd(nodeId, agvId))
+                if (!_nodeReservations.TryAdd(node.Id, node.Lock!.AgvCorrelationId!.Value))
                 {
                     // Node already reserved by another AGV
                     return false;
                 }
                 return true;
             });
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>()))
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid nodeId) =>
             {
-                // Return a simple NodeLock - the actual content doesn't matter for the test
-                var node = new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode(nodeId, "test");
-                return new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
+                var node = new GraphNode(nodeId, "test");
+                node.Lock = new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
+                return node;
             });
         Selector.SetUseJamState(useJam);
         return WithStations(stationList);

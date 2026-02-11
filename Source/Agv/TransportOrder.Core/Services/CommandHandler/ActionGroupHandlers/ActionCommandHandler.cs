@@ -15,6 +15,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -81,7 +82,7 @@ public class ActionCommandHandler :
     private readonly TimeProvider _timeProvider;
     private readonly IQueueManager _queueManager;
     private readonly ILoggingService _loggingService;
-    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly INodeRepository _nodeRepository;
 
     private const string QueuingOrderId = "Queuing";
 
@@ -104,7 +105,7 @@ public class ActionCommandHandler :
         TimeProvider timeProvider,
         ILoggingService loggingService,
         IRequestClient<RetractHostOrder> retractHostOrderClient,
-        INodeStateRepository nodeStateRepository)
+        INodeRepository nodeRepository)
     {
         _actionCommandHelper = actionCommandHelper;
         _publishEndpoint = publishEndpoint;
@@ -122,7 +123,7 @@ public class ActionCommandHandler :
         _queueManager = queueManager;
         _mapper = mapper;
         _bus = bus;
-        _nodeStateRepository = nodeStateRepository;
+        _nodeRepository = nodeRepository;
     }
 
     /// <summary>
@@ -1581,7 +1582,8 @@ public class ActionCommandHandler :
         bool targetIsLocked = false;
         if (failedAction.Target.Node != null)
         {
-            targetIsLocked = (await _nodeStateRepository.GetNodeStateAsync(failedAction.Target.Node.Id))?.IsLocked ?? false;
+            var node = await _nodeRepository.GetNodeAsync(failedAction.Target.Node.Id);
+            targetIsLocked = node.IsLocked;
         }
 
         string reason = actionGroup.Fail(failedAction.CorrelationId, targetIsLocked);

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 
@@ -13,11 +12,12 @@ public interface IMapPublisher
     /// Publishes a node state change.
     /// </summary>
     /// <param name="nodeLock">NodeLock containing new node state</param>
+    /// <param name="nodeName">The name of the node.</param>
     /// <param name="stationId">Station associated with node lock if applicable.</param>
     /// <param name="modifyingUser">User that modified station if applicable.</param>
     /// <param name="lockReason">Reason station was locked if applicable.</param>
     /// <param name="lockDescription">Description of lock reason of station if applicable.</param>
-    Task SendNodeStateChangedAsync(NodeLock nodeLock, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription);
+    Task SendNodeStateChangedAsync(NodeLock nodeLock, string nodeName, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription);
 
     /// <summary>
     /// Publishes node approaching property changes.

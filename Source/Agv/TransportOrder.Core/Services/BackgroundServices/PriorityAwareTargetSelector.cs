@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
@@ -20,7 +22,7 @@ public class PriorityAwareTargetSelector(
     IActionGroupRepository actionGroupRepository,
     ISemaphoreProvider<ITargetSelectionSemaphore> semaphoreProvider,
     IDecisionPointActionRepository decisionPointActionRepository,
-    INodeStateRepository nodeStateRepository,
+    INodeRepository nodeRepository,
     IBus bus)
     : ITargetSelector
 {
@@ -75,10 +77,10 @@ public class PriorityAwareTargetSelector(
             var agvCorrelationId = actionGroup.AssignedAgv!.Value;
             logger.LogInformation("Trigger target selection for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
 
-            Guid? stationId = await SelectTarget(_consideredStations, action.Value, skipForShortLoopOrder, agvCorrelationId);
-            if (stationId != null)
+            var node = await SelectTarget(_consideredStations, action.Value, skipForShortLoopOrder, agvCorrelationId);
+            if (node != null)
             {
-                await AssignTarget(action.Value, actionGroup, agvCorrelationId, stationId.Value, stoppingToken);
+                await AssignTarget(action.Value, actionGroup, agvCorrelationId, node, stoppingToken);
             }
         }, stoppingToken);
     }
@@ -103,18 +105,19 @@ public class PriorityAwareTargetSelector(
         return null;
     }
 
-    private async Task<Guid?> SelectTarget(ICollection<Guid> consideredStations, Guid actionId, Func<Guid, bool> shouldSkipStation, Guid agvCorrelationId)
+    private async Task<GraphNode?> SelectTarget(ICollection<Guid> consideredStations, Guid actionId, Func<Guid, bool> shouldSkipStation, Guid agvCorrelationId)
     {
         ICollection<Station> stations = await stationRepository.GetStationsById(consideredStations);
 
         ICollection<Station> availableStations = GetAvailableStations(stations);
-        Guid? selectedTarget = null;
+        GraphNode? selectedNode = null;
         foreach (var station in availableStations)
         {
-            if (!station.IsEmpty)
+            var node = await nodeRepository.GetNodeAsync(station.Id);
+            if (!node.IsFree)
             {
                 logger.LogInformation("Station: {Station} is not free, as it's occupied by {AgvCorrelationId} agv, StationCount set to {StationCount}",
-                    station.Id, station.NodeLock?.AgvCorrelationId, consideredStations);
+                    station.Id, node.Lock?.AgvCorrelationId, consideredStations);
                 continue;
             }
             if (_useJamState)
@@ -132,28 +135,36 @@ public class PriorityAwareTargetSelector(
                 logger.LogInformation("Skipping station {Station} for DP1 action {Action} as there is a short loop order that has priority", station.Id, actionId);
                 continue;
             }
-            if (!await nodeStateRepository.ReserveNodeAsync(station.Id, agvCorrelationId))
+           
+            if (!node.Reserve(agvCorrelationId))
             {
                 continue;
             }
-            selectedTarget = station.Id;
+
+            if (!await nodeRepository.UpdateLock(node))
+            {
+                continue;
+            }
+            selectedNode = node;
             break;
         }
 
-        return selectedTarget;
+        return selectedNode;
     }
 
-    private async Task AssignTarget(Guid actionId, ActionGroup actionGroup, Guid agvCorrelationId, Guid stationId, CancellationToken stoppingToken)
+    private async Task AssignTarget(Guid actionId, ActionGroup actionGroup, Guid agvCorrelationId, GraphNode node, CancellationToken stoppingToken)
     {
         logger.LogInformation("Selected target {Target} for agv {Agv} running action group {ActionGroup} and adding to station",
-            stationId, agvCorrelationId, actionGroup.CorrelationId);
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(stationId);
-        await bus.Publish(new NodeStateChanged(nodeState!, stationId, null, null, null), stoppingToken);
+            node.Id, agvCorrelationId, actionGroup.CorrelationId);
+        if (node.Lock != null)
+        {
+            await bus.Publish(new NodeStateChanged(node.Lock, node.Name, node.Id, null, null, null), stoppingToken);
+        }
         _lastEvaluatedActions.Add(actionId);
-        await bus.Publish(new SetTargetForAction(actionId, actionGroup.CorrelationId, agvCorrelationId, stationId), stoppingToken);
+        await bus.Publish(new SetTargetForAction(actionId, actionGroup.CorrelationId, agvCorrelationId, node.Id), stoppingToken);
 
         var decisionPointAction = await decisionPointActionRepository.GetByIdAsync(actionId);
-        decisionPointAction.SetTarget(stationId);
+        decisionPointAction.SetTarget(node.Id);
         await decisionPointActionRepository.UpdateAsync(decisionPointAction);
     }
 

@@ -13,7 +13,6 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -70,7 +69,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     private readonly SystemOptions _productionOptions = new() { AutoAccept = true };
 
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
 
     private readonly Mock<IParkPointService> _parkPointService = new();
 
@@ -356,8 +355,13 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).Verifiable();
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(new NodeLock("target".ToGraphNode(), NodeLockState.Reserved, true, Guid.NewGuid(), DateTime.UtcNow));
+        _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).Verifiable();
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync((Guid _) =>
+        {
+            var node = "target".ToGraphNode();
+            node.Lock = new NodeLock(node, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
+            return node;
+        });
 
         AddConsumers<FakeQueueActionGroupConsumer>();
 
@@ -377,7 +381,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _queueManager.Object);
             sc.AddTransient(_ => _productionOptions);
             sc.AddTransient(_ => _routeService.Object);
-            sc.AddTransient(_ => _nodeStateRepository.Object);
+            sc.AddTransient(_ => _nodeRepository.Object);
             sc.AddTransient(_ => _parkPointService.Object);
             sc.AddTransient(_ => _queueRepository.Object);
             sc.AddTransient(_ => _logEntryRepository.Object);

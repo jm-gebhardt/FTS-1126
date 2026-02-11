@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;

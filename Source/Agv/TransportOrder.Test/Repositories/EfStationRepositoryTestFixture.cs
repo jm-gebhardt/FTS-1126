@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -15,7 +14,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 public class EfStationRepositoryTestFixture : ActionGroupRepositoryTestFixture
 {
     private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
-    private readonly List<(NodeLock, bool)> _nodeLocks = [];
+    private readonly List<(NodeLock Lock, string Name, bool AddNode)> _nodeLocks = [];
 
     public EfStationRepository Repository { get; }
 
@@ -40,9 +39,9 @@ public class EfStationRepositoryTestFixture : ActionGroupRepositoryTestFixture
         await AddAsync(map);
     }
 
-    public EfStationRepositoryTestFixture WithNodeLockAsync(NodeLock nodeLock, bool addNode = true)
+    public EfStationRepositoryTestFixture WithNodeLockAsync(NodeLock nodeLock, string nodeName, bool addNode = true)
     {
-        _nodeLocks.Add((nodeLock, addNode));
+        _nodeLocks.Add((nodeLock, nodeName, addNode));
 
         return this;
     }
@@ -54,11 +53,16 @@ public class EfStationRepositoryTestFixture : ActionGroupRepositoryTestFixture
         {
             AddInitTask(Task.Run(async () =>
             {
-                if (nl.Item2)
+                var node = new GraphNode
                 {
-                    await AddAsync(nl.Item1);
+                    Id = nl.Lock.NodeId,
+                    Name = nl.Name
+                };
+                if (nl.AddNode)
+                {
+                    node.Lock = nl.Lock;
                 }
-                await AddNodesAsync([nl.Item1.Node]);
+                await AddNodesAsync([node]);
             }));
         }
         await base.BuildAsync();

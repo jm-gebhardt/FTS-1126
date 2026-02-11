@@ -13,8 +13,8 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 public class MaintenanceService : BaseNodePicker, IMaintenanceService
 {
     /// <inheritdoc cref="MaintenanceService"/>>
-    public MaintenanceService(IAgvDb agvDb, INodeStateRepository nodeStateRepository, IRouteService routeService, ILogger<MaintenanceService> logger)
-        : base(nodeStateRepository, routeService, agvDb, logger)
+    public MaintenanceService(IAgvDb agvDb, INodeRepository nodeRepository, IRouteService routeService, ILogger<MaintenanceService> logger)
+        : base(nodeRepository, routeService, agvDb, logger)
     {
     }
 

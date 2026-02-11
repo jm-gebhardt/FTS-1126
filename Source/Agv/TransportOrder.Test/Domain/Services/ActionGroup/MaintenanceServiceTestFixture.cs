@@ -14,12 +14,12 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 public class MaintenanceServiceTestFixture
 {
     private readonly Mock<IAgvDb> _agvDb = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
 
     public MaintenanceServiceTestFixture()
     {
         _agvDb.AddAgvData((AgvData?) null);
-        MaintenanceService = new MaintenanceService(_agvDb.Object, _nodeStateRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object);
+        MaintenanceService = new MaintenanceService(_agvDb.Object, _nodeRepository.Object, RouteService.Object, new Mock<ILogger<MaintenanceService>>().Object);
     }
 
     public Mock<IRouteService> RouteService { get; } = new();
@@ -35,8 +35,6 @@ public class MaintenanceServiceTestFixture
             _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
-
-        _nodeStateRepository.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
         return this;
     }
 

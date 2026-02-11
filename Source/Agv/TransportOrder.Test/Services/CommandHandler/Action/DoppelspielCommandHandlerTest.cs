@@ -1592,7 +1592,7 @@ public class DoppelspielCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_StartActionCommand_DropActionAtStationWithStationGroup_PublishesReserveStation()
+    public async Task Consume_StartActionCommand_DropActionAtStationWithStationGroup_PublishesStationReserved()
     {
         var station = StationGenerator.GetPickDropStation("PS01", stationGroup: ["PS02".ToGuid()]);
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(

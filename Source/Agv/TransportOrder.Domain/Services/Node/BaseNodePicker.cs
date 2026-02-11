@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using JetBrains.Annotations;
@@ -22,9 +23,9 @@ public abstract class BaseNodePicker
     protected readonly IAgvDb AgvDb;
 
     /// <summary>
-    /// Note State repository.
+    /// Note repository.
     /// </summary>
-    protected readonly INodeStateRepository NodeStateRepository;
+    protected readonly INodeRepository NodeRepository;
 
     private readonly IRouteService _routeService;
 
@@ -35,12 +36,12 @@ public abstract class BaseNodePicker
 
     /// <inheritdoc cref="BaseNodePicker"/>>
     protected BaseNodePicker(
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IRouteService routeService,
         IAgvDb agvDb,
         ILogger<BaseNodePicker> logger)
     {
-        NodeStateRepository = nodeStateRepository;
+        NodeRepository = nodeRepository;
         _routeService = routeService;
         Logger = logger;
         AgvDb = agvDb;
@@ -81,13 +82,11 @@ public abstract class BaseNodePicker
     private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Agv agv)
     {
         IEnumerable<GraphNode> nodes = await AgvDb.Graphs.GetNodesAsync(agv.CorrelationId, NodeFilter);
-        IEnumerable<GraphNode> availableNodes = NodeStateRepository.FilterFreeUnlockedNodes(nodes);
-        // ReSharper disable once PossibleMultipleEnumeration
-        if (availableNodes == null || !availableNodes.Any())
+        List<GraphNode> availableNodes = nodes.Where(n => n.IsFree).ToList();
+        if (availableNodes.Count == 0)
         {
             throw new NoNodesAvailableException(Description);
         }
-        // ReSharper disable once PossibleMultipleEnumeration
         return availableNodes;
     }
 

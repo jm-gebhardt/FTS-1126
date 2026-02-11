@@ -16,12 +16,12 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
     public DynamicPrioritizationChooser(
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
         ILogger<DynamicPrioritizationChooser> logger,
         ILoggingService loggingService
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService,  logger, loggingService)
+    ) : base(actionGroupRepository, nodeRepository, queueRepository, queueManager, routeService,  logger, loggingService)
     {
     }
 

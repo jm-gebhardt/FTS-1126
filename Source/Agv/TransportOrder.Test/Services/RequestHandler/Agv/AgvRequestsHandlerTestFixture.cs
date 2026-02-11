@@ -10,7 +10,6 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -33,7 +32,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     private readonly Mock<IActionGroupRetrievalService> _actionGroupRetrievalService = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepositoryMock = new();
+    private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     public AgvSettingsReadModel AgvSettings => EfAgvSettingsProvider.DefaultSettings;
@@ -48,7 +47,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddTransient(_ => _agvDb.Object);
             s.AddTransient(_ => _actionGroupRetrievalService.Object);
             s.AddTransient(_ => _actionGroupRepository.Object);
-            s.AddTransient(_ => _nodeStateRepositoryMock.Object);
+            s.AddTransient(_ => _nodeRepositoryMock.Object);
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
             if (bus != null)
@@ -112,7 +111,20 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithNodesStates(ICollection<NodeLock> nodeLocks)
     {
-        _nodeStateRepositoryMock.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
+        _nodeRepositoryMock.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>())).ReturnsAsync(() =>
+        {
+            List<GraphNode> nodes = [];
+            foreach (var nodeLock in nodeLocks)
+            {
+                var node = new GraphNode()
+                {
+                    Id = nodeLock.NodeId,
+                    Lock = nodeLock
+                };
+                nodes.Add(node);
+            }
+            return nodes;
+        });
         return this;
     }
 

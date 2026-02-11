@@ -126,7 +126,7 @@ public class MoveAgvRequestHandlerTest
             .AddAgvs([agv])
             .WithNode(charger)
             .BuildAsync();
-        fixture.ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<Guid>(), agv.CorrelationId, It.IsAny<bool>())).ThrowsAsync(new ParkNodeNotAvailableException(charger.Id));
+        fixture.ParkPointService.Setup(x => x.ReserveParkAsync(It.IsAny<Guid>(), agv.CorrelationId, true)).ThrowsAsync(new ParkNodeNotAvailableException(charger.Id));
 
         await MediatorShould.ThrowRequestExceptionAsync<ParkNodeNotAvailableException>(async () => await fixture.GetResponseAsync<AgvMoveSuccessful>(new MoveAgv(agv.CorrelationId, charger.Id, ActionGroupCreator.TransportOrderWebApi, "user")));
     }

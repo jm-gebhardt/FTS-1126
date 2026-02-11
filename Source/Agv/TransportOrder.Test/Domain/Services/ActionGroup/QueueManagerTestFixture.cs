@@ -23,7 +23,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Domain.Services.ActionGroup;
 public sealed class QueueManagerTestFixture : FixtureBase
 {
     private readonly Mock<IQueueRepository> _queueRepository = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IRouteService> _routeService = new();
     private readonly SemaphoreProvider<IQueueingSemaphore> _semaphore = new(new Mock<ILogger<SemaphoreProvider<IQueueingSemaphore>>>().Object);
@@ -38,7 +38,7 @@ public sealed class QueueManagerTestFixture : FixtureBase
         AddServices(s =>
         {
             s.AddTransient(_ => _queueRepository.Object);
-            s.AddTransient(_ => _nodeStateRepository.Object);
+            s.AddTransient(_ => _nodeRepository.Object);
             s.AddTransient(_ => _routeService.Object);
             s.AddTransient(_ => _graphRepository.Object);
             s.AddTransient(_ => _agvDb.Object);
@@ -52,10 +52,7 @@ public sealed class QueueManagerTestFixture : FixtureBase
         QueueManager = Provider.GetRequiredService<QueueManager>();
         _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync([]);
         _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>())).Verifiable();
-        _nodeStateRepository.Setup(x => x.FilterFreeUnlockedNodes(It.IsAny<IEnumerable<GraphNode>>())).Returns([]);
-        _nodeStateRepository.Setup(x => x.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
-        _nodeStateRepository.Setup(x => x.ForceOccupyNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
-        _nodeStateRepository.Setup(x => x.ForceReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(true);
+        _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>())).ReturnsAsync(true);
         _queueRepository.Setup(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>())).Verifiable();
         _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>())).ReturnsAsync(true);
     }

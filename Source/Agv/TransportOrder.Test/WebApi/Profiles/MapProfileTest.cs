@@ -1,15 +1,15 @@
 using System.Collections.Immutable;
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
-using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
 using Shouldly;
+using Map = Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Profiles;
 
@@ -76,7 +76,6 @@ public class MapProfileTest
         nodeStateDto.ShouldNotBeNull();
         nodeStateDto.AgvCorrelationId.ShouldBe(nodeLock.AgvCorrelationId);
         nodeStateDto.IsLocked.ShouldBe(nodeLock.IsLocked);
-        nodeStateDto.NodeId.ShouldBe(nodeLock.Node.Name);
         nodeStateDto.NodeState.ShouldBe(nodeLock.NodeState);
     }
 }

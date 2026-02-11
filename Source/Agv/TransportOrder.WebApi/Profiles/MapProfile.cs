@@ -1,9 +1,10 @@
 using AutoMapper;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
+using Map = Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
@@ -32,7 +33,7 @@ public class MapProfile : WebApiProfile
 
         CreateMap<NodeLock, NodeStateDto>()
             .ConstructUsing(_ => new NodeStateDto())
-            .ForMember(m => m.NodeId, opt => opt.MapFrom(src => src.Node.Name))
+            .ForMember(m => m.NodeId, opt => opt.Ignore())
             .ForMember(m => m.StationId, opt => opt.Ignore())
             .ForMember(m => m.User, opt => opt.Ignore())
             .ForMember(m => m.LockReason, opt => opt.Ignore())

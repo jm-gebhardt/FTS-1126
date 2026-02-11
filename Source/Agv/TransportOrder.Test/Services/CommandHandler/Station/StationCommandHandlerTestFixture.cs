@@ -8,7 +8,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -19,7 +18,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Station;
 
 public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<StationCommandHandler>
 {
-    public readonly Mock<INodeStateRepository> NodeStateRepository = new();
+    public readonly Mock<INodeRepository> NodeRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IGraphRepository> _graphRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
@@ -35,24 +34,25 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
     protected override MassTransitConsumerTestFixture<StationCommandHandler> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
-        collection.AddTransient(_ => NodeStateRepository.Object);
+        collection.AddTransient(_ => NodeRepository.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _graphRepository.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
 
-        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<Guid>())).Verifiable();
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
-        _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Verifiable();
+        _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Returns(Task.CompletedTask).Verifiable();
+        NodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(true).Verifiable();
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
             It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
         return this;
     }
 
-    public StationCommandHandlerTestFixture WithNodeState(NodeLock? nodeState)
+    public StationCommandHandlerTestFixture WithNode(GraphNode node)
     {
-        NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeState);
+        NodeRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+        NodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(node);
         return this;
     }
 
@@ -62,13 +62,6 @@ public class StationCommandHandlerTestFixture : MassTransitConsumerTestFixture<S
         var id = station.Id;
         _stationRepository.Setup(x => x.GetStation(id)).ReturnsAsync(station);
         _stationRepository.Setup(x => x.GetStation(nodeName.ToGuid())).ReturnsAsync(station);
-        return this;
-    }
-
-    public StationCommandHandlerTestFixture WithLockableAndUnlockableNode(string nodeName)
-    {
-        NodeStateRepository.Setup(x => x.LockNodeAsync(nodeName.ToGuid())).ReturnsAsync(true);
-        NodeStateRepository.Setup(x => x.UnlockNodeAsync(nodeName.ToGuid())).ReturnsAsync(true);
         return this;
     }
 

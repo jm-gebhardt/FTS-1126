@@ -23,7 +23,7 @@ public static class NodeGenerator
         {
             timeStamp = DateTime.UtcNow;
         }
-        return new GraphNode(nodeName.ToGuid(), nodeName) { Type = nodeType, X = x, Y = y, Z = z, Theta = theta, TimeStamp = timeStamp, Id = nodeName.ToGuid() };
+        return new GraphNode(nodeName.ToGuid(), nodeName) { Type = nodeType, X = x, Y = y, Z = z, Theta = theta, TimeStamp = timeStamp, Id = nodeName.ToGuid(), Lock = new NodeLock(){NodeId = nodeName.ToGuid() } };
     }
 
     public static GraphNode GenerateParkingNode(string nodeId = "PRK1")

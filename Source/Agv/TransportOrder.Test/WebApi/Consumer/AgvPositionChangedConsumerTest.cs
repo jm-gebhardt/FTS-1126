@@ -34,7 +34,6 @@ public class AgvPositionChangedConsumerTest
     public async Task Consume_AgvLastNodeIdChanged_AgvRouteIsNull_SendAgvRouteAsyncNotCalled()
     {
         var fixture = new AgvPositionChangedConsumerTestFixture()
-            .WithNodeStates(null, null)
             .WithAgvRoute(AgvSerialNumber.ToGuid(), "new", null);
 
         await fixture.TestHarness.Bus.Publish(
@@ -54,7 +53,6 @@ public class AgvPositionChangedConsumerTest
         var agvCorrelationId = Guid.NewGuid();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, NodeGenerator.GenerateRouteNodes(), []);
         var fixture = new AgvPositionChangedConsumerTestFixture()
-            .WithNodeStates(null, null)
             .WithAgvRoute(agvCorrelationId, "new", agvRoute);
 
         await fixture.TestHarness.Bus.Publish(

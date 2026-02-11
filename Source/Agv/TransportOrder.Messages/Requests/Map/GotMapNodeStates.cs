@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 
@@ -6,4 +6,4 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 /// Provides the response to the <see cref="GetMapNodeStates"/> request.
 /// </summary>
 /// <param name="NodeStates">The node states.</param>
-public record GotMapNodeStates(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser)> NodeStates);
+public record GotMapNodeStates(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> NodeStates);

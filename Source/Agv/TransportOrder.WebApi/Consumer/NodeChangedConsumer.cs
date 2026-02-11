@@ -38,9 +38,9 @@ public class NodeChangedConsumer :
     /// </summary>
     public async Task Consume(ConsumeContext<NodeStateChanged> context)
     {
-        var (nodeLock, stationId, modifyingUser, lockReason, lockDescription) = context.Message;
+        var (nodeLock, nodeName, stationId, modifyingUser, lockReason, lockDescription) = context.Message;
 
-        if (stationId != null && !nodeLock.IsLocked)
+       if (stationId != null && !nodeLock.IsLocked)
         {
             await _loggingService.LogStation(_logger, LogLevel.Information,
                  LogCodes.StationStateChanged,
@@ -50,7 +50,7 @@ public class NodeChangedConsumer :
                 new Dictionary<string, object?> { { LogLabels.NodeState, nodeLock.NodeState } });
         }
 
-        await _mapPublisher.SendNodeStateChangedAsync(nodeLock, stationId, modifyingUser, lockReason, lockDescription);
+        await _mapPublisher.SendNodeStateChangedAsync(nodeLock, nodeName, stationId, modifyingUser, lockReason, lockDescription);
     }
 
     /// <summary>

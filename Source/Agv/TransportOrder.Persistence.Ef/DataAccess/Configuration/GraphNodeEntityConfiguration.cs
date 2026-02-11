@@ -25,6 +25,6 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<GraphNode>
             v => JsonSerializer.Deserialize<object>(v, jsonOptions)!);
         builder.Property(e => e.DockingDirection).HasMaxLength(DbStringLimits.State);
 
-        builder.ConfigureAllProperties();
+        builder.ConfigureAllProperties(except: [nameof(GraphNode.Lock)]);
     }
 }

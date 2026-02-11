@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +13,8 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Node;
 
 public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<NodeCommandHandler>
 {
-    public readonly Mock<INodeStateRepository> NodeStateRepository = new();
-    private readonly Mock<IStationRepository> _stationRepository = new();
+    public readonly Mock<INodeRepository> NodeRepository = new();
+    public readonly Mock<IStationRepository> StationRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<IMapRepository> _mapRepository = new();
@@ -29,20 +28,28 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
     protected override MassTransitConsumerTestFixture<NodeCommandHandler> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
-        collection.AddTransient(_ => NodeStateRepository.Object);
-        collection.AddTransient(_ => _stationRepository.Object);
+        collection.AddTransient(_ => NodeRepository.Object);
+        collection.AddTransient(_ => StationRepository.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _mapRepository.Object);
         collection.AddTransient(_ => _agvDb.Object);
-        NodeStateRepository.Setup(x => x.FreeNodeAsync(It.IsAny<Guid>())).Verifiable();
+        NodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(true).Verifiable();
+        StationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Returns(Task.CompletedTask).Verifiable();
         _agvDb.Setup(x => x.Graphs.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithNodeState(NodeLock? nodeState)
+    public NodeCommandHandlerTestFixture WithNodeLock(NodeLock? nodeLock)
     {
-        NodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeState);
+        NodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() =>
+        {
+            var node = new GraphNode(nodeLock?.NodeId?? Guid.NewGuid(), "")
+            {
+                Lock = nodeLock
+            };
+            return node;
+        });
         return this;
     }
 
@@ -60,38 +67,46 @@ public class NodeCommandHandlerTestFixture : MassTransitConsumerTestFixture<Node
 
     public NodeCommandHandlerTestFixture WithStation(TransportOrder.Domain.Models.Station.Station station)
     {
-        _stationRepository.Setup(x => x.GetStation(station.Id)).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStation(station.Name.ToGuid())).ReturnsAsync(station);
-        return WithNodeState(station.NodeLock);
+        StationRepository.Setup(x => x.GetStation(station.Id)).ReturnsAsync(station);
+        StationRepository.Setup(x => x.GetStation(station.Name.ToGuid())).ReturnsAsync(station);
+        return WithNodeLock(station.NodeLock);
     }
 
     public NodeCommandHandlerTestFixture WithAnyStation()
     {
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        StationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithNodeReserved(string nodeName, bool reserve = true)
+    public NodeCommandHandlerTestFixture WithNodeReserved(bool reserve = true)
     {
-        NodeStateRepository.Setup(x => x.OccupyNodeAsync(nodeName.ToGuid(), It.IsAny<Guid>())).Verifiable();
-        NodeStateRepository.Setup(x => x.IsNodeReservedAsync(nodeName.ToGuid())).ReturnsAsync(reserve);
+        NodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(reserve).Verifiable();
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithNodeOccupied(Guid agvId)
+    public NodeCommandHandlerTestFixture WithNodeOccupied()
     {
-        NodeStateRepository.Setup(x => x.UnOccupyNodeAsync(agvId)).ReturnsAsync(true);
+        NodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(true);
         return this;
     }
 
-    public NodeCommandHandlerTestFixture WithNodeStates(ICollection<NodeLock> nodeLocks)
+    public NodeCommandHandlerTestFixture WithNodeLocks(ICollection<NodeLock> nodeLocks)
     {
-        NodeStateRepository.Setup(x => x.GetNodeLocksForAgv(It.IsAny<Guid>())).ReturnsAsync(nodeLocks);
-        foreach (var nodeLock in nodeLocks)
+        NodeRepository.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>())).ReturnsAsync((Guid _) =>
         {
-            WithNode(nodeLock.Node);
-        }
+            List<GraphNode> nodes = [];
+            foreach (var nodeLock in nodeLocks)
+            {
+                var node = new GraphNode()
+                {
+                    Lock = nodeLock,
+                    Id = nodeLock.NodeId
+                };
+                nodes.Add(node);
+            }
+            return nodes;
+        });
+       
         return this;
     }
 

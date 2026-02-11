@@ -23,12 +23,12 @@ public class AlternatingModeChooser : BaseChooseAgvActionGroupService
     public AlternatingModeChooser(
         IRouteService routeService,
         IActionGroupRepository actionGroupRepository,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
         ILogger<AlternatingModeChooser> logger,
         ILoggingService loggingService
-    ) : base(actionGroupRepository, nodeStateRepository, queueRepository, queueManager, routeService, logger, loggingService)
+    ) : base(actionGroupRepository, nodeRepository, queueRepository, queueManager, routeService, logger, loggingService)
     {
     }
 

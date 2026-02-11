@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 
@@ -21,7 +22,7 @@ public class PriorityAwareWaitingHandler(
     IActionGroupRepository actionGroupRepository,
     IWaitingPointActionRepository waitingPointActionRepository,
     ISemaphoreProvider<IWaitingHandlerSemaphore> semaphoreProvider,
-    INodeStateRepository nodeStateRepository,
+    INodeRepository nodeRepository,
     IBus bus) : IWaitingHandler
 {
     private readonly ConcurrentDictionary<Guid, DateTime> _actionsToSelectTarget = new();
@@ -123,12 +124,16 @@ public class PriorityAwareWaitingHandler(
 
     private async Task AssignTarget(Guid actionId, ActionGroup actionGroup, Guid agvCorrelationId, Guid targetNodeId, CancellationToken stoppingToken)
     {
-        if (await nodeStateRepository.ReserveNodeAsync(targetNodeId, agvCorrelationId))
+        var node = await nodeRepository.GetNodeAsync(targetNodeId);
+        node.Reserve(agvCorrelationId);
+        if (await nodeRepository.UpdateLock(node))
         {
             _lastEvaluatedActions.Add(actionId);
             logger.LogInformation("Adding agv {Agv} to station {Station} for short loop waiting", agvCorrelationId, targetNodeId);
-            var nodeState = await nodeStateRepository.GetNodeStateAsync(targetNodeId);
-            await bus.Publish(new NodeStateChanged(nodeState!, targetNodeId, null, null, null), stoppingToken);
+            if (node.Lock != null)
+            {
+                await bus.Publish(new NodeStateChanged(node.Lock!, node.Name, targetNodeId, null, null, null), stoppingToken);
+            }
             await bus.Publish(new SetTargetForAction(actionId, actionGroup.CorrelationId, agvCorrelationId, targetNodeId), stoppingToken);
 
             var waitingPointAction = await waitingPointActionRepository.GetByIdAsync(actionId);

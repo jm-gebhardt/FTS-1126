@@ -63,6 +63,11 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
     public DockingDirection? DockingDirection { get; set; }
 
     /// <summary>
+    /// The node lock.
+    /// </summary>
+    public NodeLock? Lock { get; set; }
+
+    /// <summary>
     /// The Theta coordinate of the node
     /// </summary>
     public float Theta

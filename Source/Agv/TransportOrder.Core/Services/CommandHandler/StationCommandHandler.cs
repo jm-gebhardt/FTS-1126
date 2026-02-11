@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -21,7 +22,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// </remarks>
 /// <inheritdoc cref="StationCommandHandler"/>>
 [UsedImplicitly]
-public class StationCommandHandler(INodeStateRepository nodeStateRepository,
+public class StationCommandHandler(INodeRepository nodeRepository,
     IStationRepository stationRepository,
     IGraphRepository graphRepository,
     ILogger<StationCommandHandler> logger,
@@ -42,17 +43,17 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
         (var id, string user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
 
         var station = await stationRepository.GetStation(id);
-
-        bool lockResult = await nodeStateRepository.LockNodeAsync(station.Id);
-
+        var node = await nodeRepository.GetNodeAsync(id);
+        bool lockResult = node.Lock();
         if (!lockResult)
         {
             logger.LogError("Lock of station {StationName} failed ", station.Name);
             return;
         }
 
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Id);
-        station.NodeLock = nodeState;
+        station.NodeLock = node.Lock;
+        await nodeRepository.UpdateLock(node);
+
         station.Lock(user, reason, lockDescription, lockOrderHandling);
 
         await stationRepository.Update(station);
@@ -62,9 +63,9 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
             new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
         await context.Publish(new StationLocked(station.Name));
 
-        if (nodeState != null)
+        if (node.Lock != null)
         {
-            await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+            await context.Publish(new NodeStateChanged(node.Lock, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
         }
     }
 
@@ -76,8 +77,8 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
         (var id, string user) = context.Message;
 
         var station = await stationRepository.GetStation(id);
-
-        bool unlockResult = await nodeStateRepository.UnlockNodeAsync(station.Id);
+        var node = await nodeRepository.GetNodeAsync(id);
+        bool unlockResult = node.Unlock();
 
         if (!unlockResult)
         {
@@ -85,22 +86,21 @@ public class StationCommandHandler(INodeStateRepository nodeStateRepository,
             return;
         }
 
-        var nodeState = await nodeStateRepository.GetNodeStateAsync(station.Id);
-         
-        station.NodeLock = nodeState;
+        await nodeRepository.UpdateLock(node);
+
         station.Unlock();
+        station.NodeLock = node.Lock;
         await stationRepository.Update(station);
 
-        if (nodeState != null)
+        if (node.Lock != null)
         {
-            await context.Publish(new NodeStateChanged(nodeState, station.Id, user, station.LockReason, station.LockDescription));
+            await context.Publish(new NodeStateChanged(node.Lock, node.Name, station.Id, user, station.LockReason, station.LockDescription));
         }
 
         await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationUnlocked, id, "Station Unlocked",
             $"User {user} unlocked station",
             new Dictionary<string, object?> { { LogLabels.User, user } });
 
-        var node = await graphRepository.GetNodeAsync(station.Id);
         await context.Publish(new StationUnlocked(node));
     }
 

@@ -513,7 +513,7 @@ public class DoppelspielCommandHandler(
         {
             await QueueUnmatchedDoppelspielPicks(context, dropAction.Target.Node!, actionGroup.CorrelationId);
         }
-        var pickAction = actionGroup.Actions.FirstOrDefault(a => a is { ActionType: ActionType.Pick, ShouldSkip: false, DoppelspielPartner: null, IsRegisteredForDoppelspiel: true, State: (ActionState.Aborted or ActionState.Canceled)});
+        var pickAction = actionGroup.Actions.FirstOrDefault(a => a is { ActionType: ActionType.Pick, ShouldSkip: false, DoppelspielPartner: null, IsRegisteredForDoppelspiel: true, State: (ActionState.Aborted or ActionState.Canceled) });
         if (pickAction != null)
         {
             await doppelspielSemaphore.ExecuteLockedAsync(async () =>
@@ -550,6 +550,7 @@ public class DoppelspielCommandHandler(
         var agvCorrelationId = context.Message.CorrelationId;
         if (action.Target.Node == null)
         {
+            logger.LogWarning("No target node, not trying to reserve agv limited station for action {ActionCorrelationId}", action.CorrelationId);
             return;
         }
         try
@@ -558,10 +559,10 @@ public class DoppelspielCommandHandler(
             if (station.StationGroup.Count > 0)
             {
                 // If it is a manual action force reservation for locked station
-                bool ignoreStateLocked = (await actionGroupRepository.GetActionGroupAsync(action.ParentId))!.IsManual;
+                bool ignoreLocked = (await actionGroupRepository.GetActionGroupAsync(action.ParentId))!.IsManual;
                 logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, reserve target station {TargetStation}",
                     nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, action.Nodes.FirstOrDefault()?.Name, action.Target.Node.Name);
-                await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId, ignoreStateLocked));
+                await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId, ignoreLocked));
             }
         }
         catch (NodeNotFoundException)

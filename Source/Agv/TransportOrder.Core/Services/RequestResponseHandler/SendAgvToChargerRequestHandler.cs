@@ -24,7 +24,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     private readonly IAgvDb _agvDb;
     private readonly IActionGroupRepository _actionGroupDb;
     private readonly IChargingPointManager _chargingPointManager;
-    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly INodeRepository _nodeRepository;
     private readonly IStationRepository _stationRepository;
     private readonly IBus _bus;
     private readonly ILogger<SendAgvToChargerRequestHandler> _logger;
@@ -37,7 +37,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         IActionGroupRepository actionGroupDb,
         IChargingPointManager chargingPointManager,
         IStationRepository stationRepository,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IBus bus,
         ILoggingService loggingService
     )
@@ -45,7 +45,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
         _agvDb = agvDb;
         _actionGroupDb = actionGroupDb;
         _chargingPointManager = chargingPointManager;
-        _nodeStateRepository = nodeStateRepository;
+        _nodeRepository = nodeRepository;
         _logger = logger;
         _stationRepository = stationRepository;
         _bus = bus;
@@ -67,7 +67,7 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
 
         var currentAction = await _actionGroupDb.GetCurrentAgvActionAsync(agv.CorrelationId);
 
-        var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.Node?.Id, ignoreStateLocked: true);
+        var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.Node?.Id, ignoreLocked: true);
         await PublishNodeStateChange(charger.Id);
 
         await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger, ActionGroupCreator.TransportOrderWebApi));
@@ -78,8 +78,12 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
 
     private async Task PublishNodeStateChange(Guid nodeId)
     {
-        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
+        var node= await _nodeRepository.GetNodeAsync(nodeId);
         var station = await _stationRepository.GetStation(nodeId);
-        await _bus.Publish(new NodeStateChanged(nodeState!, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        if (node.Lock == null)
+        {
+            return;
+        }
+        await _bus.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 }

@@ -30,7 +30,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
 
     private Mock<IActionGroupRepository> AgvActionRepository { get; } = new();
 
-    private Mock<INodeStateRepository> NodeStateRepository { get; } = new();
+    private Mock<INodeRepository> NodeRepository { get; } = new();
 
     private Mock<IQueueRepository> QueueRepository { get; } = new();
 
@@ -41,7 +41,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
     public ChooseAgvActionGroupTestFixture(bool realRouteService = false)
     {
         AgvActionRepository.Setup(x => x.GetNotStartedActionGroupsAsync(It.IsAny<Guid>())).ReturnsAsync(NotStartedActionGroups);
-        NodeStateRepository.Setup(n => n.GetLockedNodes()).ReturnsAsync(LockedNodes);
+        NodeRepository.Setup(n => n.GetLockedNodes()).ReturnsAsync(LockedNodes);
         AddServices(s =>
         {
             if (realRouteService)
@@ -55,7 +55,7 @@ public class ChooseAgvActionGroupTestFixture<TChooser> : FixtureBase
             s.AddTransient(_ => AgvActionRepository.Object);
             s.AddTransient(_ => QueueRepository.Object);
             s.AddTransient(_ => QueueManager.Object);
-            s.AddTransient(_ => NodeStateRepository.Object);
+            s.AddTransient(_ => NodeRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient(_ => new Mock<IBus>().Object);

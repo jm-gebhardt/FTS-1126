@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Shouldly;
@@ -157,9 +156,10 @@ public class EfStationRepositoryTest
     {
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
-        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var node = graph.Nodes.First(n => n.IsStation());
+        var nodeLock = new NodeLock(node, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         var fixture = await new EfStationRepositoryTestFixture()
-            .WithNodeLockAsync(nodeLock)
+            .WithNodeLockAsync(nodeLock, node.Name)
             .BuildAsync();
 
         string destination = graph.Nodes.First(n => n.IsStation()).Name;
@@ -200,9 +200,10 @@ public class EfStationRepositoryTest
     {
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
-        var nodeLock = new NodeLock(graph.Nodes.First(n => n.IsStation()), NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var node = graph.Nodes.First(n => n.IsStation());
+        var nodeLock = new NodeLock(node, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
         var fixture = await new EfStationRepositoryTestFixture()
-            .WithNodeLockAsync(nodeLock)
+            .WithNodeLockAsync(nodeLock, node.Name)
             .BuildAsync();
 
         string destination = graph.Nodes.First(n => n.IsStation()).Name;

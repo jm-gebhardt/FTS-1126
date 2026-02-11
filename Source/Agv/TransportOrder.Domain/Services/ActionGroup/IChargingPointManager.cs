@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -15,9 +14,9 @@ public interface IChargingPointManager
     /// </summary>
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
-    /// <param name="ignoreStateLocked">Flag to reserve charger even if it is locked.</param>
+    /// <param name="ignoreLocked">Flag to reserve charger even if it is locked.</param>
     /// <returns>The best free charger, throws if it could not reserve it</returns>
-    Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreStateLocked = false);
+    Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreLocked = false);
 
     /// <summary>
     /// Chooses the best free charger based on the agvs graph
@@ -31,10 +30,10 @@ public interface IChargingPointManager
     /// Reserves the given charger
     /// </summary>
     /// <param name="node">The charger to reserve</param>
-    /// <param name="agvCorrelationId">The correlationId of the agv.</param>
-    /// <param name="ignoreStateLocked">Flag to reserve charger even if it is locked.</param>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="ignoreLocked">Flag to reserve charger even if it is locked.</param>
     /// <returns></returns>
-    Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreStateLocked = false);
+    Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreLocked = false);
 
     /// <summary>
     /// Checks if the agv is on a charging node
@@ -56,5 +55,5 @@ public interface IChargingPointManager
     /// </summary>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    Task<NodeLock?> GetReservedChargerForAgvAsync(Guid agvCorrelationId);
+    Task<GraphNode?> GetReservedChargerForAgvAsync(Guid agvCorrelationId);
 }

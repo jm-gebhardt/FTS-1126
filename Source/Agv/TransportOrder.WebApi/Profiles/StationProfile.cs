@@ -1,4 +1,4 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using JetBrains.Annotations;

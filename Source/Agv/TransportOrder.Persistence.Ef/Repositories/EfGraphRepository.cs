@@ -95,53 +95,78 @@ public class EfGraphRepository : IGraphRepository
         var graph = await GetAgvGraphAsync(agvCorrelationId);
         Func<GraphNode, bool>? filter = predicate?.Compile();
 
-        IEnumerable<GraphNode> nodes = graph.Nodes.Where(n => filter?.Invoke(n) ?? true);
-
-        return nodes;
+        IEnumerable<GraphNode> agvNodes = graph.Nodes.Where(n => filter?.Invoke(n) ?? true);
+       
+        return await GetNodesByIdsAsync(agvNodes.Select(a => a.Id).ToList());
     }
 
     /// <inheritdoc />
     public async Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<Guid> nodeIds)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        List<GraphNode> nodes = await context.Set<GraphNode>()
-            .Where(n => nodeIds.Contains(n.Id))
+        var data = await context.Set<GraphNode>()
             .AsNoTracking()
+            .LeftJoin(context.Set<NodeLock>().AsNoTracking(),
+                n => n.Id,
+                nl => nl.NodeId,
+                (n, nl) => new { nl, n })
+            .Where(t => nodeIds.Contains(t.n.Id))
+            .Select(t => new { t.nl, t.n })
             .ToListAsync();
-        return _mapper.Map<List<GraphNode>>(nodes);
+
+        return data.Select(x =>
+        {
+            x.n.Lock = x.nl;
+            return x.n;
+        }).ToList();
     }
 
     /// <inheritdoc />
     public async Task<GraphNode> GetNodeAsync(Guid id)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var node = await context.Set<GraphNode>()
-            .Where(n => n.Id == id)
+        var data = await context.Set<GraphNode>()
             .AsNoTracking()
-            .SingleOrDefaultAsync();
+            .LeftJoin(context.Set<NodeLock>().AsNoTracking(),
+                n => n.Id,
+                nl => nl.NodeId,
+                (n, nl) => new { nl, n })
+            .Where(t => t.n.Id == id)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
+
+        var node = data.Select(x =>
+        {
+            x.n.Lock = x.nl;
+            return x.n;
+        }).SingleOrDefault();
 
         if (node == null)
         {
             throw new NodeNotFoundException(id);
         }
-
-        var graphNode = _mapper.Map<GraphNode>(node);
-
-        return graphNode;
+        return node;
     }
 
     /// <inheritdoc />
     public async Task<GraphNode?> TryGetNodeByIdAsync(Guid nodeId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var node = await context.Set<GraphNode>()
-            .Where(n => n.Id == nodeId)
+        var data = await context.Set<GraphNode>()
             .AsNoTracking()
-            .SingleOrDefaultAsync();
+            .LeftJoin(context.Set<NodeLock>().AsNoTracking(),
+                n => n.Id,
+                nl => nl.NodeId,
+                (n, nl) => new { nl, n })
+            .Where(t => t.n.Id == nodeId)
+            .Select(t => new { t.nl, t.n })
+            .ToListAsync();
 
-        var graphNode = _mapper.Map<GraphNode?>(node);
-
-        return graphNode;
+        return data.Select(x =>
+        {
+            x.n.Lock = x.nl;
+            return x.n;
+        }).SingleOrDefault();
     }
 
     /// <inheritdoc />
@@ -355,9 +380,13 @@ public class EfGraphRepository : IGraphRepository
             query = query.Where(predicate);
         }
 
-        List<GraphNode> efNodes = await query.ToListAsync();
-        var graphNodes = _mapper.Map<List<GraphNode>>(efNodes);
+        List<GraphNode> graphNodes = await query.ToListAsync();
+        List<Guid> nodeIds = graphNodes.Select(n => n.Id).ToList();
 
+        List<NodeLock> nodeLocks = await context.Set<NodeLock>()
+            .Where(x => nodeIds.Contains(x.NodeId))
+            .ToListAsync();
+        graphNodes.ForEach(gn => gn.Lock = nodeLocks.SingleOrDefault(nl => nl.NodeId == gn.Id));
         return graphNodes;
     }
 

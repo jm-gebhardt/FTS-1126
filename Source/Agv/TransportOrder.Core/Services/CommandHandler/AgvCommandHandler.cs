@@ -100,11 +100,12 @@ public class AgvCommandHandler :
     private readonly IParkPointService _parkPointService;
     private readonly IQueueManager _queueManager;
     private readonly IQueueRepository _queueRepository;
-    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly INodeRepository _nodeRepository;
     private readonly IChargingPointManager _chargingPointManager;
     private readonly IStationRepository _stationRepository;
     private readonly ISemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider;
     private readonly ILoggingService _loggingService;
+    private readonly TimeProvider _timeProvider;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
@@ -113,14 +114,15 @@ public class AgvCommandHandler :
         IParkPointService parkPointService,
         IQueueManager queueManager,
         IChargingPointManager chargingPointManager,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IMapper mapper,
         SystemOptions systemOptions,
         IStationRepository stationRepository,
         ISemaphoreProvider<IQueueingSemaphore> queueSemaphoreProvider,
         IQueueRepository queueRepository,
         ILogger<AgvCommandHandler> logger,
-        ILoggingService loggingService
+        ILoggingService loggingService,
+        TimeProvider timeProvider
     )
     {
         _logger = logger;
@@ -129,7 +131,7 @@ public class AgvCommandHandler :
         _actionGroupRepository = actionGroupRepository;
         _parkPointService = parkPointService;
         _queueManager = queueManager;
-        _nodeStateRepository = nodeStateRepository;
+        _nodeRepository = nodeRepository;
         _mapper = mapper;
         _systemOptions = systemOptions;
         _chargingPointManager = chargingPointManager;
@@ -137,6 +139,7 @@ public class AgvCommandHandler :
         _queueSemaphoreProvider = queueSemaphoreProvider;
         _queueRepository = queueRepository;
         _loggingService = loggingService;
+        _timeProvider = timeProvider;
     }
 
     /// <summary>
@@ -194,9 +197,9 @@ public class AgvCommandHandler :
         var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agvCorrelationId);
         try
         {
-            var nodeIdToPublish = reservedChargingNode?.NodeId ?? (await _chargingPointManager.ReserveChargerAsync(agv)).Id;
-            await PublishNodeStateChange(context, nodeIdToPublish);
-            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, nodeIdToPublish, initiator));
+            var node = reservedChargingNode ?? await _chargingPointManager.ReserveChargerAsync(agv);
+            await PublishNodeStateChange(context, node);
+            await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, node.Id, initiator));
         }
         catch (NoChargeStationAvailableException)
         {
@@ -296,13 +299,13 @@ public class AgvCommandHandler :
         }
 
         var reservedChargingNode = await _chargingPointManager.GetReservedChargerForAgvAsync(agv.CorrelationId);
-        Guid? chargingNodeId = reservedChargingNode?.NodeId;
-        if (chargingNodeId == null)
+        var chargingNode = reservedChargingNode;
+        if (chargingNode == null)
         {
             try
             {
                 var node = await _chargingPointManager.ReserveChargerAsync(agv);
-                chargingNodeId = node.Id;
+                chargingNode = node;
             }
             catch (NoChargeStationAvailableException)
             {
@@ -311,8 +314,8 @@ public class AgvCommandHandler :
             }
         }
 
-        await PublishNodeStateChange(context, chargingNodeId.Value);
-        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, chargingNodeId.Value));
+        await PublishNodeStateChange(context, chargingNode);
+        await context.Publish(new ChargingNodeSelectedForAgv(agv.CorrelationId, chargingNode.Id));
         return true;
     }
 
@@ -329,7 +332,7 @@ public class AgvCommandHandler :
         {
             _logger.LogInformation("Starting park action for agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
             var parkNode = await _parkPointService.ReserveParkAsync(agv);
-            await PublishNodeStateChange(context, parkNode.Id);
+            await PublishNodeStateChange(context, parkNode);
             await context.Publish(new ParkingNodeSelectedForAgv(agv.CorrelationId, parkNode));
             return;
         }
@@ -772,13 +775,13 @@ public class AgvCommandHandler :
         }
 
         // Add ResourceBlockingError(s)
-        ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId);
-        if (!hasResourceErrors && !agv.IsOnline && nodeLocks.Count > 0)
+        ICollection<GraphNode> nodes = await _nodeRepository.GetNodesForAgv(agv.CorrelationId);
+        if (!hasResourceErrors && !agv.IsOnline && nodes.Count > 0)
         {
             _logger.LogInformation("Adding resource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
-            foreach (var nodeLock in nodeLocks)
+            foreach (var node in nodes)
             {
-                errors.Add(new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, nodeLock.NodeId));
+                errors.Add(new ResourceBlockingError(agv.CorrelationId, _timeProvider.GetUtcNow().UtcDateTime, node.Id));
             }
         }
     }
@@ -1543,22 +1546,20 @@ public class AgvCommandHandler :
         }
     }
 
-    private async Task PublishNodeStateChange(IPublishEndpoint context, Guid nodeId)
+    private async Task PublishNodeStateChange(IPublishEndpoint context, GraphNode node)
     {
-        var nodeState = await _nodeStateRepository.GetNodeStateAsync(nodeId);
-        if (nodeState == null)
+        if (node.Lock == null)
         {
-            _logger.LogError("Could not retrieve node state for node {NodeId}", nodeId);
             return;
         }
         try
         {
-            var station = await _stationRepository.GetStation(nodeId);
-            await context.Publish(new NodeStateChanged(nodeState, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+            var station = await _stationRepository.GetStation(node.Id);
+            await context.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
         }
         catch (NodeNotFoundException)
         {
-            await context.Publish(new NodeStateChanged(nodeState, null, null, null, null));
+            await context.Publish(new NodeStateChanged(node.Lock!, node.Name, null, null, null, null));
         }
     }
 
@@ -1603,7 +1604,7 @@ public class AgvCommandHandler :
             return;
         }
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-        List<Guid> lockedNodes = (await _nodeStateRepository.GetNodeLocksForAgv(agv.CorrelationId)).Select(n => n.NodeId).ToList();
+        List<Guid> lockedNodes = (await _nodeRepository.GetNodesForAgv(agv.CorrelationId)).Select(n => n.Id).ToList();
 
         List<Guid> currentNodeIds = actionGroups.SelectMany(a => a.Actions).Select(a => a.Target.Node?.Id).Where(t => t != null).Select(t => t!.Value).ToList();
         if (agvStatus.LastNodeId != null && agvStatus.LastNodeId != Guid.Empty)
@@ -1628,13 +1629,14 @@ public class AgvCommandHandler :
             if (node.Id == agvStatus.LastNodeId)
             {
                 _logger.LogInformation("Preparing nodes for AGV {AgvCorrelationId}. Occupy node {NodeId}", agv.CorrelationId, node.Name);
-
-                await _nodeStateRepository.ForceOccupyNodeAsync(node.Id, agv.CorrelationId);
-                await PublishNodeStateChange(context, node.Id);
+                node.Occupy(agv.CorrelationId, true);
+                await _nodeRepository.UpdateLock(node, true, true);
+                await PublishNodeStateChange(context, node);
                 continue;
             }
 
-            if (!await _nodeStateRepository.ReserveNodeAsync(node.Id, agv.CorrelationId))
+            node.Reserve(agv.CorrelationId, true);
+            if (!await _nodeRepository.UpdateLock(node, ignoreLocked: true))
             {
                 if (actionGroup != null)
                 {
@@ -1642,7 +1644,7 @@ public class AgvCommandHandler :
                     await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
                     continue;
                 }
-                await PublishNodeStateChange(context, node.Id);
+                await PublishNodeStateChange(context, node);
             }
         }
 
@@ -1679,8 +1681,10 @@ public class AgvCommandHandler :
 
         _logger.LogInformation("Try switching charging agv {AgvCorrelationId} with non-charging agv {NonChargingAgvCorrelationId}", chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
 
-        ICollection<NodeLock> nodeLocks = await _nodeStateRepository.GetNodeLocksForAgv(chargingAgvId);
-        Guid? chargingNode = nodeLocks.FirstOrDefault(n => n.IsOccupiedByAgv(chargingAgvId))?.NodeId ?? chargingAgv.AgvStatus?.LastNodeId;
+        ICollection<GraphNode> nodesForChargingAgv = await _nodeRepository.GetNodesForAgv(chargingAgvId);
+        var chargingNode = nodesForChargingAgv.FirstOrDefault(n => n.Lock!.IsOccupiedByAgv(chargingAgvId)) ??
+                           (chargingAgv.AgvStatus == null ?
+                               null : await _nodeRepository.GetNodeAsync(chargingAgv.AgvStatus!.LastNodeId.GetValueOrDefault()));
 
         if (chargingNode == null)
         {
@@ -1705,7 +1709,7 @@ public class AgvCommandHandler :
 
         if (foundQueueToEnter)
         {
-            await TakeOverCharger(context, chargingNode.Value, nonChargingAgv, chargingAgv, nonChargingAgvId);
+            await TakeOverCharger(context, chargingNode, nonChargingAgv, chargingAgv, nonChargingAgvId);
             return;
         }
 
@@ -1736,19 +1740,20 @@ public class AgvCommandHandler :
             await context.Publish(new QueueActionGroup(_mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup), false));
         }
 
-        await TakeOverCharger(context, chargingNode.Value, nonChargingAgv, chargingAgv, nonChargingAgvId);
+        await TakeOverCharger(context, chargingNode, nonChargingAgv, chargingAgv, nonChargingAgvId);
     }
 
-    private async Task TakeOverCharger(IPublishEndpoint context, Guid chargingNodeId, Agv nonChargingAgv, Agv chargingAgv, Guid nonChargingAgvId)
+    private async Task TakeOverCharger(IPublishEndpoint context, GraphNode chargingNode, Agv nonChargingAgv, Agv chargingAgv, Guid nonChargingAgvId)
     {
-        if (!await _nodeStateRepository.ForceReserveNodeAsync(chargingNodeId, nonChargingAgv.CorrelationId))
+        chargingNode.Reserve(nonChargingAgv.CorrelationId, true);
+        if (!await _nodeRepository.UpdateLock(chargingNode, true))
         {
-            _logger.LogError("{Command}: Cannot reserve charger {Charger} to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", nameof(SwitchChargingAgvs), chargingNodeId, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
+            _logger.LogError("{Command}: Cannot reserve charger {Charger} to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", nameof(SwitchChargingAgvs), chargingNode.Id, chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
             return;
         }
 
-        await context.Publish(new ChargingNodeSelectedForAgv(nonChargingAgvId, chargingNodeId));
-        await PublishNodeStateChange(context, chargingNodeId);
+        await context.Publish(new ChargingNodeSelectedForAgv(nonChargingAgvId, chargingNode.Id));
+        await PublishNodeStateChange(context, chargingNode);
         await context.Publish(new AbortChargeAction(chargingAgv.CorrelationId));
     }
 
@@ -1796,14 +1801,14 @@ public class AgvCommandHandler :
 
         if (await _parkPointService.IsOnAParkNodeAsync(nonChargingAgv) || await _parkPointService.AgvHasReservedParkingNodeAsync(nonChargingAgv.CorrelationId))
         {
-            Guid? parker = (await _nodeStateRepository.GetNodeLocksForAgv(nonChargingAgv.CorrelationId)).FirstOrDefault()?.NodeId;
+            var parker = (await _nodeRepository.GetNodesForAgv(nonChargingAgv.CorrelationId)).FirstOrDefault();
             if (parker != null)
             {
-                await _nodeStateRepository.ForceReserveNodeAsync(parker.Value, chargingAgv.CorrelationId);
+                parker.Reserve(chargingAgv.CorrelationId, true);
+                await _nodeRepository.UpdateLock(parker, true);
                 _logger.LogInformation("Starting park action to {ParkNode} for agv with CorrelationId: {AgvCorrelationId}", parker, chargingAgv.CorrelationId);
-                await PublishNodeStateChange(context, parker.Value);
-                var parkerNode = await _agvDb.Graphs.GetNodeAsync(parker.Value);
-                await context.Publish(new ParkingNodeSelectedForAgv(chargingAgv.CorrelationId, parkerNode));
+                await PublishNodeStateChange(context, parker);
+                await context.Publish(new ParkingNodeSelectedForAgv(chargingAgv.CorrelationId, parker));
                 return true;
             }
         }
@@ -1812,7 +1817,7 @@ public class AgvCommandHandler :
         {
             var parkNode = await _parkPointService.ReserveParkAsync(chargingAgv);
             _logger.LogInformation("Starting park action to {ParkNode} for agv with CorrelationId: {AgvCorrelationId}", parkNode, chargingAgv.CorrelationId);
-            await PublishNodeStateChange(context, parkNode.Id);
+            await PublishNodeStateChange(context, parkNode);
             await context.Publish(new ParkingNodeSelectedForAgv(chargingAgv.CorrelationId, parkNode));
             return true;
         }

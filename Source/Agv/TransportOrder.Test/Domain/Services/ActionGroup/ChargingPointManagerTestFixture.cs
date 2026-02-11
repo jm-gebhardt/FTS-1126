@@ -39,7 +39,7 @@ public class ChargingPointManagerTestFixture
 
     private readonly Mock<IAgvDb> _agvDb = new();
 
-    public Mock<INodeStateRepository> NodeStateRepository { get; } = new();
+    public Mock<INodeRepository> NodeRepository { get; } = new();
 
     public Mock<IRouteService> RouteService { get; } = new();
 
@@ -94,9 +94,15 @@ public class ChargingPointManagerTestFixture
         return this;
     }
 
-    public ChargingPointManagerTestFixture WithNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
+    public ChargingPointManagerTestFixture WithNodeLocker(bool success)
     {
-        SetupNodeLocker(reserveSuccess, lockSuccess, unlockSuccess, filterFreeUnlockedNodesFunction);
+        NodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(success);
+        return this;
+    }
+
+    public ChargingPointManagerTestFixture WithNode(GraphNode node)
+    {
+        NodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(node);
         return this;
     }
 
@@ -120,7 +126,7 @@ public class ChargingPointManagerTestFixture
     public ChargingPointManagerTestFixture WithChargingPointManager()
     {
         _agvDb.AddAgvData((AgvData?) null);
-        ChargingPointManager = new ChargingPointManager(_agvDb.Object, NodeStateRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>(new Mock<ILogger<SemaphoreProvider<IChargingSemaphore>>>().Object));
+        ChargingPointManager = new ChargingPointManager(_agvDb.Object, NodeRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>(new Mock<ILogger<SemaphoreProvider<IChargingSemaphore>>>().Object));
         return this;
     }
 
@@ -133,8 +139,6 @@ public class ChargingPointManagerTestFixture
             _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
-
-        NodeStateRepository.Setup(x => x.FilterFreeUnlockedNodes(availableNodes)).Returns(availableNodes);
         return this;
     }
 
@@ -142,16 +146,6 @@ public class ChargingPointManagerTestFixture
     {
         RouteService.WithRouteLowestCostNode(Agv, availableNodes, node);
         return this;
-    }
-
-    public void SetupNodeLocker(bool reserveSuccess, bool lockSuccess, bool unlockSuccess, Func<IQueryable<GraphNode>, IQueryable<GraphNode>>? filterFreeUnlockedNodesFunction = null)
-    {
-        NodeStateRepository.Setup(s => s.ReserveNodeAsync(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(reserveSuccess);
-        NodeStateRepository.Setup(s => s.LockNodeAsync(It.IsAny<Guid>())).ReturnsAsync(lockSuccess);
-        NodeStateRepository.Setup(s => s.UnlockNodeAsync(It.IsAny<Guid>())).ReturnsAsync(unlockSuccess);
-
-        filterFreeUnlockedNodesFunction ??= nodes => nodes;
-        NodeStateRepository.Setup(s => s.FilterFreeUnlockedNodes(It.IsAny<IQueryable<GraphNode>>())).Returns(filterFreeUnlockedNodesFunction);
     }
 
     public void SetupGraphRepository(AgvGraph graph)

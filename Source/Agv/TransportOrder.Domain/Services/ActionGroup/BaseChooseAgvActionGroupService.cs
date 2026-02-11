@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupService
 {
     private readonly IActionGroupRepository _actionGroupRepository;
-    private readonly INodeStateRepository _nodeStateRepository;
+    private readonly INodeRepository _nodeRepository;
     private readonly ILogger<BaseChooseAgvActionGroupService> _logger;
     private readonly IQueueRepository _queueRepository;
     private readonly IQueueManager _queueManager;
@@ -29,7 +29,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     /// <inheritdoc cref="IChooseAgvActionGroupService"/>>
     protected BaseChooseAgvActionGroupService(
         IActionGroupRepository actionGroupRepository,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeStateRepository,
         IQueueRepository queueRepository,
         IQueueManager queueManager,
         IRouteService routeService,
@@ -39,7 +39,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     {
         _logger = logger;
         _actionGroupRepository = actionGroupRepository;
-        _nodeStateRepository = nodeStateRepository;
+        _nodeRepository = nodeStateRepository;
         _queueRepository = queueRepository;
         _queueManager = queueManager;
         RouteService = routeService;
@@ -62,7 +62,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     /// <exception cref="AgvLocationUnknownException"></exception>
     public async Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(Agv agv, AgvData? agvData, CancellationToken cancellationToken = default)
     {
-        IReadOnlyCollection<Guid>? lockedNodeIds = await _nodeStateRepository.GetLockedNodes();
+        IReadOnlyCollection<Guid>? lockedNodeIds = await _nodeRepository.GetLockedNodes();
         if (lockedNodeIds is { Count: > 0 })
         {
             _logger.LogDebug("Locked nodes: {Ids}", string.Join(",", lockedNodeIds));

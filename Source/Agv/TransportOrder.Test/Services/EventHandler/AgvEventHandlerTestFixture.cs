@@ -33,7 +33,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     private readonly Mock<IMaintenanceService> _maintenanceService = new();
     private readonly SemaphoreProvider<IAgvsSemaphore> _agvSemaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IAgvsSemaphore>>>().Object);
     private readonly Mock<IChooseAgvActionGroupService> _chooseAgvActionGroupService = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     private readonly Mock<IChargingPointManager> _chargingPointManager = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<IQueueManager> _queueManager = new();
@@ -55,7 +55,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddSingleton<ISemaphoreProvider<IAgvsSemaphore>>(_ => _agvSemaphoreProvider);
         collection.AddTransient(_ => _chooseAgvActionGroupService.Object);
         collection.AddTransient(_ => _agvDb.Object);
-        collection.AddTransient(_ => _nodeStateRepository.Object);
+        collection.AddTransient(_ => _nodeRepository.Object);
         collection.AddTransient(_ => _queueRepository.Object);
         collection.AddTransient(_ => _chargingPointManager.Object);
         collection.AddTransient(_ => _queueManager.Object);

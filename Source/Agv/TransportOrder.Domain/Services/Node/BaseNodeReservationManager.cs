@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using JetBrains.Annotations;
@@ -23,11 +24,11 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <inheritdoc cref="BaseNodeReservationManager"/>>
     protected BaseNodeReservationManager(
         IAgvDb agvDb,
-        INodeStateRepository nodeStateRepository,
+        INodeRepository nodeRepository,
         IRouteService routeService,
         ILogger<BaseNodeReservationManager> logger,
         ISemaphoreProvider semaphoreProvider
-    ) : base(nodeStateRepository, routeService, agvDb, logger)
+    ) : base(nodeRepository, routeService, agvDb, logger)
     {
         SemaphoreProvider = semaphoreProvider;
     }
@@ -38,10 +39,10 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <param name="reserveNode"></param>
-    /// <param name="ignoreStateLocked">Flag to reserve node even if it is locked.</param>
+    /// <param name="ignoreLocked">Flag to reserve node even if it is locked.</param>
     /// <param name="ignoredNodes">Nodes to ignore.</param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true,  bool ignoreStateLocked = false, params Guid[] ignoredNodes)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true, bool ignoreLocked = false, params Guid[] ignoredNodes)
     {
         return await SemaphoreProvider.ExecuteLockedAsync(async () =>
         {
@@ -50,23 +51,35 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
 
             if (reserveNode)
             {
-                await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreStateLocked);
+                await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreLocked);
             }
             return node;
         });
     }
 
-    ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
-    [UsedImplicitly]
-    protected Task<bool> TryLockNode(Guid nodeId)
+    /// <summary>
+    /// Reserve the given node for the given agv.
+    /// </summary>
+    /// <param name="nodeId">The node id.</param>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    /// <param name="ignoreLocked">Flag to reserve node even if it is locked.</param>
+    /// <exception cref="ReserveNodeFailedException">Thrown, in case node reservation failed.</exception>
+    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreLocked = false)
     {
-        return NodeStateRepository.LockNodeAsync(nodeId);
-    }
+        try
+        {
+            var node = await NodeRepository.GetNodeAsync(nodeId);
+            if (!node.Reserve(agvCorrelationId, ignoreLocked))
+            {
+                throw new ReserveNodeFailedException(nodeId);
+            }
 
-    ///  <inheritdoc cref="INodeStateRepository.ReserveNodeAsync"/>
-    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreStateLocked = false)
-    {
-        if (!await NodeStateRepository.ReserveNodeAsync(nodeId, agvCorrelationId, ignoreStateLocked))
+            if (!await NodeRepository.UpdateLock(node, ignoreLocked))
+            {
+                throw new ReserveNodeFailedException(nodeId);
+            }
+        }
+        catch (Exception)
         {
             throw new ReserveNodeFailedException(nodeId);
         }

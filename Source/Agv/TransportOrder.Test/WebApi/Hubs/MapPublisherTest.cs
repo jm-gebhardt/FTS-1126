@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Moq;
@@ -22,7 +22,7 @@ public class MapPublisherTest
 
         fixture.MapperMock.Setup(m => m.Map<NodeStateDto>(It.IsAny<NodeLock>())).Returns(expectedDto);
 
-        await fixture.Publisher.SendNodeStateChangedAsync(data, stationId, null, null, null);
+        await fixture.Publisher.SendNodeStateChangedAsync(data, nodeName, stationId, null, null, null);
 
         fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).NodeStateChanged(It.IsAny<NodeStateDto>()), Times.Once);
     }

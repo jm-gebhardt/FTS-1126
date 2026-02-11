@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.LogEntry;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
@@ -24,7 +23,7 @@ public class MapPublisher : IMapPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendNodeStateChangedAsync(NodeLock nodeState, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription)
+    public Task SendNodeStateChangedAsync(NodeLock nodeState, string nodeName, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription)
     {
         var dto = _mapper.Map<NodeStateDto>(nodeState);
         dto = dto with
@@ -32,7 +31,8 @@ public class MapPublisher : IMapPublisher
             StationId = stationId,
             User = modifyingUser,
             LockReason = lockReason,
-            LockDescription = lockDescription
+            LockDescription = lockDescription,
+            NodeId = nodeName
         };
 
         _hubBroadcaster.Broadcast(c => c.NodeStateChanged(dto));

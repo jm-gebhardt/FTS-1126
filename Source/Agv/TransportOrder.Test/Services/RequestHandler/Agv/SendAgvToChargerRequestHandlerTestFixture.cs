@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -20,7 +19,7 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
 {
     private readonly Mock<IAgvDb> _agvDb = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
-    private readonly Mock<INodeStateRepository> _nodeStateRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
@@ -38,7 +37,7 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
         base.AddServices(collection);
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
-        collection.AddTransient(_ => _nodeStateRepository.Object);
+        collection.AddTransient(_ => _nodeRepository.Object);
         collection.AddTransient(_ => ChargingPointManager.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
@@ -61,14 +60,13 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
 
     public SendAgvToChargerRequestHandlerTestFixture ReserveChargerReturns(GraphNode chargingNode)
     {
-        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(),
-            It.IsAny<Guid?>(), It.IsAny<bool>())).ReturnsAsync(chargingNode);
+        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>())).ReturnsAsync(chargingNode);
         return this;
     }
 
     public SendAgvToChargerRequestHandlerTestFixture WithNodeLock(NodeLock nodeLock)
     {
-        _nodeStateRepository.Setup(x => x.GetNodeStateAsync(It.IsAny<Guid>())).ReturnsAsync(nodeLock);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new GraphNode{Id = nodeLock.NodeId, Lock = nodeLock});
         return this;
     }
 }
