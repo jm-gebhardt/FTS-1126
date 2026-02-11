@@ -885,7 +885,7 @@ public class ActionCommandHandlerTest
 
         var command = new CancelActionGroup(actionGroup.CorrelationId, CancelReason.WebApi);
         await fixture.TestHarness.Bus.Publish(command);
-        (await fixture.ConsumerHarness.Consumed.Any<CancelActionGroup>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<CancelActionGroup>();
         (await fixture.TestHarness.Published.Any<ActionGroupCanceled>()).ShouldBeTrue();
         fixture.ActionGroupRepository.Verify(a => a.UpdateActionAndGroupStateAsync(actionGroup.Actions[0], null, ActionState.Canceled, It.Is<Reason>(r => r.Template.Equals("ActionGroup was canceled manually")), It.IsAny<DateTimeOffset>()));
     }

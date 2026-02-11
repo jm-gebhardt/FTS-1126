@@ -35,7 +35,7 @@ public class EfTriggerRepository : ITriggerRepository
 
     private static Task<Location?> GetLocationByIdAsync(TransportOrderDbContext context, Location location)
     {
-        return context.Set<Location>().AsSplitQuery().SingleOrDefaultAsync(l => l.Id == location.Id);
+        return context.Set<Location>().SingleOrDefaultAsync(l => l.Id == location.Id);
     }
 
     /// <summary>
@@ -60,7 +60,6 @@ public class EfTriggerRepository : ITriggerRepository
             .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .AsNoTracking()
-            .AsSplitQuery()
             .ToListAsync();
 
         return listAsync;
@@ -75,7 +74,6 @@ public class EfTriggerRepository : ITriggerRepository
                 .Include(t => t.ConfigurationParameters)
                 .Include(t => t.Locations)
                 .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
-                .AsSplitQuery()
                 .AnyAsync(t => t.Id == trigger.Id))
         {
             await Update(trigger, updateLocations);
@@ -113,7 +111,6 @@ public class EfTriggerRepository : ITriggerRepository
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
-            .AsSplitQuery()
             .SingleOrDefaultAsync(t => t.Id == triggerId);
         if (trigger == null)
         {
@@ -131,7 +128,6 @@ public class EfTriggerRepository : ITriggerRepository
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
-            .AsSplitQuery()
             .SingleOrDefaultAsync(t => t.Id == trigger.Id);
         if (triggerToUpdate == null)
         {

@@ -60,6 +60,7 @@ public static class WcsCommunicationHostBuilder
                         {
                             // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
                             m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                            m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                         });
                     });
                     services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
@@ -92,6 +93,7 @@ public static class WcsCommunicationHostBuilder
                     m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName);
                     // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
                     m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                    m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 });
             });
             services.AddTransient<IHostOrderRepository, HostOrderRepository>();

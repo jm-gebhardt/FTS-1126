@@ -80,7 +80,9 @@ public static class HostBuilderExtension
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<OrderTranslatorDbContext>.MigrationTableName);
-                        m.UseCompatibilityLevel(120); // EF9 compatibility level
+                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
                 });
                 services.AddSingleton<IStationRepository, EfStationRepository>();

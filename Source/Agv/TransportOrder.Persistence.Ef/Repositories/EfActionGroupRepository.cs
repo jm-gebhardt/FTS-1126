@@ -242,7 +242,6 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         List<ActionGroup> actionGroupsAsync = await actionGroups
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -289,7 +288,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var actionGroup = await context.Set<ActionGroup>().OrderByDescending(g => g.StartedDate)
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -324,7 +322,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -374,7 +371,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         }
 
         var actionGroup = await context.Set<ActionGroup>()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(an => an.Node)
@@ -388,7 +384,6 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return (await context.Set<ActionGroup>()
-                .AsSplitQuery()
                 .Include(g => g.Actions)
                 .ThenInclude(a => a.AgvActionNodes)
                 .ThenInclude(a => a.Node)
@@ -401,7 +396,6 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -417,7 +411,6 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         var action = await queryable
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -585,7 +578,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         List<ActionGroup> notStartedActionGroups = await queryable
             .Where(actionGroup => actionGroup.State == ActionGroupState.Invalid)
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -605,7 +597,6 @@ public class EfActionGroupRepository : IActionGroupRepository
                                   actionGroup.Actions.Any(a => a.State != ActionState.Completed))
             .OrderBy(a => a.StartedDate)
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -739,7 +730,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         var actionGroup = await queryable
             .Include(ag => ag.Actions)
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
@@ -781,7 +771,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         // Actions are auto-included.
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node);
@@ -837,7 +826,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node);
@@ -853,7 +841,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node);
@@ -1052,7 +1039,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         // Actions are auto-included.
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node);
@@ -1092,7 +1078,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(a => a.Actions)
             .ThenInclude(a => a.Target)
             .ThenInclude(t => t.Node)
@@ -1110,7 +1095,6 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node);
@@ -1126,7 +1110,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node);
@@ -1160,7 +1143,6 @@ public class EfActionGroupRepository : IActionGroupRepository
         
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<Guid> filteredAgvIds = await context.Set<ActionGroup>()
-            .AsSplitQuery()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)

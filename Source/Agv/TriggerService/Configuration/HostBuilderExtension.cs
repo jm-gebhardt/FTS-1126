@@ -71,7 +71,11 @@ public static class HostBuilderExtension
             {
                 string? connectionString = context.Configuration.GetConnectionString(TriggerServiceDbContext.ConfigSectionName);
 
-                builder.UseSqlServer(connectionString, m => { m.MigrationsHistoryTable(IDbContext<TriggerServiceDbContext>.MigrationTableName); });
+                builder.UseSqlServer(connectionString, m =>
+                {
+                    m.MigrationsHistoryTable(IDbContext<TriggerServiceDbContext>.MigrationTableName);
+                    m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                });
             });
         });
         return hostBuilder;

@@ -4,7 +4,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -23,7 +22,7 @@ public class NodeStateChangedConsumerTest
 
         await fixture.TestHarness.Bus.Publish(new NodeStateChanged(nodeState, stationId, null, null, null));
 
-        (await fixture.ConsumerHarness.Consumed.Any<NodeStateChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<NodeStateChanged>();
         fixture.PublisherMock.Verify(h => h.SendNodeStateChangedAsync(nodeState, stationId, null, null, null), Times.Once);
     }
 

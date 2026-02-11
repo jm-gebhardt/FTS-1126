@@ -5,7 +5,6 @@ using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.CommandHandler;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
 using Gebhardt.Acc.Statistics.Test.Helper;
-using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Services.CommandHandler;
 
@@ -20,7 +19,7 @@ public class ErrorCommandHandlerTest
             .WithGridCells([position]);
         var error = AgvErrorGenerator.GenerateAgvError();
         await fixture.TestHarness.Bus.Publish(new AddError(error, [position.CellId]));
-        (await fixture.ConsumerHarness.Consumed.Any<AddError>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AddError>();
         fixture.StatisticsDbMock.VerifyErrorAdded();
     }
 
@@ -32,7 +31,7 @@ public class ErrorCommandHandlerTest
             .WithGridCells([position]);
         var fieldViolation = new FieldViolation(Guid.NewGuid(), DateTime.UtcNow);
         await fixture.TestHarness.Bus.Publish(new AddError(fieldViolation, [position.CellId]));
-        (await fixture.ConsumerHarness.Consumed.Any<AddError>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AddError>();
         fixture.StatisticsDbMock.VerifyFieldViolationAdded();
     }
 }

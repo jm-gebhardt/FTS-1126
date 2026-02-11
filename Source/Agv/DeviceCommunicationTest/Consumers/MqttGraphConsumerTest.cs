@@ -40,7 +40,7 @@ public class MqttGraphConsumerTest
 
         // ... and has the message been consumed?
         await fixture.ShouldHaveConsumedAsync<MqttGraph>();
-        var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
+        var consumed = await fixture.GetFirstConsumedMessageAsync<MqttGraph>();
         consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 
         // Did the consumer forward a Graph message ...
@@ -94,7 +94,7 @@ public class MqttGraphConsumerTest
         await fixture.ShouldHavePublishedAsync<MqttGraph>();
         // ... and has the message been consumed?
         await fixture.ShouldHaveConsumedAsync<MqttGraph>();
-        var consumed = fixture.ConsumerHarness.Consumed.Select<MqttGraph>().First().Context.Message;
+        var consumed = await fixture.GetFirstConsumedMessageAsync<MqttGraph>();
         consumed.SerialNumber.ShouldBe(AgvSerialNumber);
 
         // Did the consumer forward a Graph message ...

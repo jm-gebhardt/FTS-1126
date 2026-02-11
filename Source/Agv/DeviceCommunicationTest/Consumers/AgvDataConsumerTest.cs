@@ -86,7 +86,7 @@ public class AgvDataConsumerTest
         await fixture.TestHarness.Bus.PublishMqtt(message, null);
         await fixture.ShouldHavePublishedAsync<MqttAgvData>();
 
-        var consumedMessage = fixture.ConsumerHarness.Consumed.Select<MqttAgvData>().First().Context.Message;
+        var consumedMessage = await fixture.GetFirstConsumedMessageAsync<MqttAgvData>();
         consumedMessage.SerialNumber.ShouldBe(AgvSerialNumber);
         await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
         await fixture.ShouldHavePublishedAsync<AgvInstantActionDefinitionReceived>();

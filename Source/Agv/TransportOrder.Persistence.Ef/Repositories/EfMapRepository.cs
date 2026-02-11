@@ -49,7 +49,6 @@ public class EfMapRepository : IMapRepository
             .Include(g => g.Edges)
             .Include(g => g.MapAgvs)
             .AsNoTracking()
-            .AsSplitQuery()
             .ToListAsync();
 
         return maps;
@@ -180,7 +179,6 @@ public class EfMapRepository : IMapRepository
                 List<Map> maps = await context.Set<Map>()
                     .Include(m => m.Nodes)
                     .Include(m => m.MapAgvs)
-                    .AsSplitQuery()
                     .Where(m => m.Nodes.Any(n => agvGraph.Nodes.Select(x => x.Id).Contains(n.Id)))
                     .ToListAsync();
 
@@ -231,7 +229,6 @@ public class EfMapRepository : IMapRepository
                 .Include(m => m.MapAgvs)
                 .Include(m => m.Edges)
                 .Include(m => m.Nodes)
-                .AsSplitQuery()
                 .SingleOrDefaultAsync(g => g.CorrelationId == map.CorrelationId);
 
             if (existingMap == null)

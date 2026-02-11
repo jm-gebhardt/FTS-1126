@@ -14,7 +14,6 @@ public class EfZoneRepository(IDbContextFactory<TransportOrderDbContext> context
         await using var context = await contextFactory.CreateDbContextAsync();
         var existingZone = await context.Set<Zone>()
             .Include(z => z.Polygon)
-            .AsSplitQuery()
             .AsNoTracking()
             .SingleOrDefaultAsync(z => z.CorrelationId == zone.CorrelationId);
         if (existingZone == null)

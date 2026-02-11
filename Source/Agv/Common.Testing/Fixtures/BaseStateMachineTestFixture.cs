@@ -24,8 +24,6 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance> : Ma
     /// </summary>
     public ISagaStateMachineTestHarness<TStateMachine, TInstance> SagaHarness { get; private set; } = null!;
 
-    protected override IReceivedMessageList ConsumedMessages => SagaHarness.Consumed;
-
     /// <summary>
     /// Saga Dictionary. This can be used to manipulate an OrderSaga directly.
     /// </summary>

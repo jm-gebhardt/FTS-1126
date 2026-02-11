@@ -25,7 +25,7 @@ public class AgvPositionReceivedHandlerTest
 
         await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId",
             new AgvPosition(true, 1, 1, 0, 0)));
-        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvPositionReceived>();
 
         fixture.VerifyCellIdsRequested();
         await fixture.ShouldNotHavePublishedAsync<AddGridCellStay>();
@@ -42,7 +42,7 @@ public class AgvPositionReceivedHandlerTest
             .WithMaps([map]);
 
         await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId", new AgvPosition(true, 1, 1, 0, 0)));
-        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvPositionReceived>();
 
         fixture.VerifyCellIdsRequested();
     }
@@ -58,7 +58,7 @@ public class AgvPositionReceivedHandlerTest
             .WithMaps([map]);
 
         await fixture.TestHarness.Bus.Publish(new AgvPositionReceived(Guid.NewGuid(), "agvId", new AgvPosition(true, 41, 59, 0, 0)));
-        (await fixture.ConsumerHarness.Consumed.Any<AgvPositionReceived>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvPositionReceived>();
 
         fixture.VerifyCellIdsRequested();
         fixture.VerifyAgvMapPositionsAdded(0);

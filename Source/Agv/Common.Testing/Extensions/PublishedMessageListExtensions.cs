@@ -9,11 +9,20 @@ public static class PublishedMessageListExtensions
     {
         public async Task<T> GetFirstPublishedMessageAsync<T>(int occurrenceNumber = 1) where T : class
         {
-            await published.ShouldHavePublishedAsync<T>();
-            IPublishedMessage<T>? first = published.Select<T>()
-                .Skip(occurrenceNumber - 1)
-                .First();
-            return first.Context.Message;
+            var timeout = TimeSpan.FromSeconds(10);
+            var startTime = DateTime.UtcNow;
+            
+            while (DateTime.UtcNow - startTime < timeout)
+            {
+                List<IPublishedMessage<T>> messages = published.Select<T>().ToList();
+                if (messages.Count >= occurrenceNumber)
+                {
+                    return messages[occurrenceNumber - 1].Context.Message;
+                }
+                await Task.Delay(50);
+            }
+            
+            throw new TimeoutException($"Timed out waiting for {occurrenceNumber} message(s) of type {typeof(T).Name}. Only {published.Select<T>().Count()} message(s) available.");
         }
 
         public async Task ShouldHavePublishedAsync<T>() where T : class

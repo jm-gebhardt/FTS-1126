@@ -83,7 +83,7 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return await context.Set<Queue>()
-            .AsSplitQuery().ToListAsync();
+            .ToListAsync();
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
@@ -96,7 +96,6 @@ public class EfQueueRepository(
 
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return await context.Set<Queue>()
-            .AsSplitQuery()
             .Where(q => q.Id == id).SingleOrDefaultAsync();
     }
 
@@ -112,7 +111,6 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var queue = await context.Set<Queue>()
-            .AsSplitQuery()
             .Where(q => q.Name == name)
             .SingleOrDefaultAsync();
         return queue ?? throw new QueueNotFoundException(name);
@@ -123,7 +121,6 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         var queue = await context.Set<Queue>()
-            .AsSplitQuery()
             .Where(q => q.Id == id).SingleOrDefaultAsync();
         if (queue == null)
         {
@@ -139,7 +136,7 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return (await context.Set<Queue>()
-                .AsSplitQuery().ToListAsync())
+                .ToListAsync())
             .Where(q => q.AgvFillQuantity != q.Nodes.Count).ToList();
     }
 
@@ -148,7 +145,7 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         List<Queue> queues = await context.Set<Queue>()
-            .AsSplitQuery().ToListAsync();
+            .ToListAsync();
 
         List<Guid> reservedOrOccupiedNodes = queues
             .Where(q => q.AgvFillQuantity > 0)
@@ -167,7 +164,7 @@ public class EfQueueRepository(
     public async Task<Queue?> GetQueueByEntryNode(Guid entryNode)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return await context.Set<Queue>().AsSplitQuery()
+        return await context.Set<Queue>()
             .Where(q => q.Nodes.OrderBy(p => p.Position).Last().NodeId == entryNode)
             .SingleOrDefaultAsync();
     }
@@ -177,7 +174,7 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return (await context.Set<Queue>()
-                .AsSplitQuery().ToListAsync())
+                .ToListAsync())
             .Where(q => q.Nodes.OrderBy(p => p.Position).First().GetCurrentAgv() != null).ToList();
     }
 
@@ -186,7 +183,7 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return (await context.Set<Queue>()
-            .AsSplitQuery().ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
+            .ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
     }
 
     /// <inheritdoc />
@@ -194,7 +191,6 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         return await context.Set<Queue>()
-            .AsSplitQuery()
             .Where(q => q.Nodes.Any(n => n.NodeId == queueNodeId))
             .SingleOrDefaultAsync();
     }

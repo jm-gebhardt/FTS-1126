@@ -566,7 +566,8 @@ public class ActionCommandConsumerTest
         mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
 
         var updateCommand = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(updateCommand, 3);
+        await fixture.TestHarness.Bus.Publish(updateCommand);
+        mqtt = await fixture.GetFirstPublishedMessageAsync<MqttOrder>(3);
         mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
     }
 }

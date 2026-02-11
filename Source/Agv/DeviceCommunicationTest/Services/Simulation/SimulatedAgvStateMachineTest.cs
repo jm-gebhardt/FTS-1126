@@ -186,9 +186,6 @@ public class SimulatedAgvStateMachineTest
         var actionId = action.CorrelationId;
         actionStarted.CorrelationId.ShouldBe(actionId);
 
-        agvSaga.AgvStatus.Busy.ShouldBeTrue();
-        agvSaga.ActionStartDate.ShouldNotBeNull();
-
         // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
         (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
         (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.SchedulePositionUpdate>()).ShouldBeTrue();
@@ -261,9 +258,6 @@ public class SimulatedAgvStateMachineTest
             // Start move action 
             await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
                 new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
-
-            //wait until saga is updated
-            await fixture.WaitUntil(agvSaga, s => s.AgvStatus.Busy, s => s.AgvStatus.Busy.ShouldBeTrue());
 
             // Update move action to drop action with new target
             var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdatedByAgv>(

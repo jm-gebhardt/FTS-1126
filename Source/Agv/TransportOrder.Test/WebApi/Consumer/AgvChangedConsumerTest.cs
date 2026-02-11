@@ -19,7 +19,6 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Consumer;
 
@@ -61,7 +60,7 @@ public class AgvChangedConsumerTest
                 true
             ));
 
-        (await fixture.ConsumerHarness.Consumed.Any<AgvOnlineChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvOnlineChanged>();
 
         fixture.PublisherMock.Verify(h => h.SendAgvOnlineChangedAsync(
             agv.CorrelationId, true), Times.Once);
@@ -75,7 +74,7 @@ public class AgvChangedConsumerTest
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
 
         await fixture.TestHarness.Bus.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
-        (await fixture.ConsumerHarness.Consumed.Any<HasCargoChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<HasCargoChanged>();
         fixture.PublisherMock.Verify(h => h.SendAgvHasCargoChangedAsync(agvCorrelationId, hasCargo),
             Times.Once);
     }
@@ -88,7 +87,7 @@ public class AgvChangedConsumerTest
       
         await fixture.TestHarness.Bus.Publish(new AgvModeChanged(agv.CorrelationId, agv.Mode));
 
-        (await fixture.ConsumerHarness.Consumed.Any<AgvModeChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvModeChanged>();
 
         var mapper = GetMapper();
         var agvModeDto = mapper.Map<AgvModeDto>(agv.Mode);
@@ -105,7 +104,7 @@ public class AgvChangedConsumerTest
         var fixture = new ConsumerHubTestFixture<AgvChangedConsumer, IAgvPublisher>();
 
         await fixture.TestHarness.Bus.Publish(new AgvStationsChanged(agvCorrelationId, stations));
-        (await fixture.ConsumerHarness.Consumed.Any<AgvStationsChanged>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AgvStationsChanged>();
         fixture.PublisherMock.Verify(h => h.SendAgvStationsChangedAsync(agvCorrelationId, stations),
             Times.Once);
     }

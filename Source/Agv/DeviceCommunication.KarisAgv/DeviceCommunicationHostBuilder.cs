@@ -148,7 +148,9 @@ public static class DeviceCommunicationHostBuilder
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationDbContext>.MigrationTableName);
-                        m.UseCompatibilityLevel(120); // EF9 compatibility level
+                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
+                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
+                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
                 }
             })

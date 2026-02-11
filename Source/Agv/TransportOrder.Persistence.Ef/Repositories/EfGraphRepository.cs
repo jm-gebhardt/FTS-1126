@@ -43,7 +43,6 @@ public class EfGraphRepository : IGraphRepository
         return context.Set<AgvGraph>()
             .Include(g => g.Nodes)
             .Include(g => g.Edges)
-            .AsSplitQuery()
             .AsNoTracking();
     }
 
@@ -162,7 +161,6 @@ public class EfGraphRepository : IGraphRepository
 
         var map = await context.Set<Map>()
             .AsNoTracking()
-            .AsSplitQuery()
             .Where(m => m.CorrelationId == mapCorrelationId)
             .Include(m => m.Nodes
                 .Where(n => ((IEnumerable<Guid>)nodeIdsUsedByGraphs).Contains(n.Id)))

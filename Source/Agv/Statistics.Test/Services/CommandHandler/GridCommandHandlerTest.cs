@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.CommandHandler;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
-using Shouldly;
 
 namespace Gebhardt.Acc.Statistics.Test.Services.CommandHandler;
 
@@ -13,7 +12,7 @@ public class GridCommandHandlerTest
     {
         var fixture = new MockDbConsumerTestFixture<GridCommandHandler>();
         await fixture.TestHarness.Bus.Publish(new AddGrid("gridName", 1, 1));
-        (await fixture.ConsumerHarness.Consumed.Any<AddGrid>()).ShouldBeTrue();
+        await fixture.ShouldHaveConsumedAsync<AddGrid>();
         fixture.StatisticsDbMock.VerifyGridAdded();
     }
 }
