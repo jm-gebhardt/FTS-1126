@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.StationCommunication.Domain.Models;
 using Gebhardt.Acc.StationCommunication.Messages.JamState;
 using Moq;
@@ -20,6 +21,7 @@ public class JamStateCommandHandlerTest
 
         await fixture.PublishMessageAsync(updateJamState);
 
+        await fixture.ShouldHavePublishedAsync<JamStateUpdated>();
         fixture.VerifyJamStateAdded(Times.Once());
         fixture.VerifyJamStateUpdated(Times.Never());
     }
@@ -36,6 +38,7 @@ public class JamStateCommandHandlerTest
 
         await fixture.PublishMessageAsync(updateJamState);
 
+        await fixture.ShouldHavePublishedAsync<JamStateUpdated>();
         fixture.VerifyJamStateAdded(Times.Never());
         fixture.VerifyJamStateUpdated(Times.Once());
     }

@@ -128,12 +128,19 @@ public class StationCommandHandler(INodeRepository nodeRepository,
     {
         var now = DateTime.UtcNow;
         var station = await stationRepository.GetStation(context.Message.CorrelationId);
-        //publish first to transfer old and new state
-        await context.Publish(new JamStateChanged(station.Id, context.Message.HasPalletJam, station.PalletJamChangedDate, station.HasPalletJam, now));
-        station.HasPalletJam = context.Message.HasPalletJam;
-        station.PalletJamChangedDate = now;
-        await stationRepository.Update(station);
-        logger.LogInformation("Jam state of station {StationName} updated to {JamState}", station.Name, station.HasPalletJam);
+        if (station.HasPalletJam != context.Message.HasPalletJam)
+        {
+            //publish first to transfer old and new state
+            await context.Publish(new JamStateChanged(station.Id, context.Message.HasPalletJam, station.PalletJamChangedDate, station.HasPalletJam, now));
+            station.HasPalletJam = context.Message.HasPalletJam;
+            station.PalletJamChangedDate = now;
+            await stationRepository.Update(station);
+            logger.LogInformation("Jam state of station {StationName} updated to {JamState}", station.Name, station.HasPalletJam);
+        }
+        else
+        {
+            logger.LogDebug("Jam state '{JamState}' of station {StationName} not changed.", station.HasPalletJam, station.Name);
+        }
     }
 
     /// <inheritdoc />

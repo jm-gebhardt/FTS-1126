@@ -119,6 +119,19 @@ public class StationCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateStationJamState_UnchangedJamState_DoesNotPublishJamStateChanged()
+    {
+        const string station = "station";
+        var fixture = new StationCommandHandlerTestFixture()
+            .WithStation(station);
+
+        await fixture.PublishMessageAsync(new UpdateStationJamState(station.ToGuid(), false));
+
+        await fixture.ShouldNotHavePublishedAsync<JamStateChanged>();
+        fixture.VerifyStationUpdated(Times.Never());
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateStationAdditionalInformation_StationUpdated()
     {
         const string station = "station";

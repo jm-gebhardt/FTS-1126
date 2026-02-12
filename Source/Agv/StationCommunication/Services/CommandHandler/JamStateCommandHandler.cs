@@ -28,12 +28,11 @@ public class JamStateCommandHandler(ILogger<JamStateCommandHandler> logger, IJam
             jamState = new JamState(stationId, state, timeStamp);
             logger.LogInformation("Adding jam state {State} for station {StationId}", jamState.State, jamState.StationId);
             await jamStateRepository.AddAsync(jamState);
+            await context.Publish(new JamStateUpdated(jamState.StationId, state == 1));
             return;
         }
-        if (state != jamState.State)
-        {
-            await context.Publish(new JamStateUpdated(jamState.StationId, state == 1));
-        }
+        
+        await context.Publish(new JamStateUpdated(jamState.StationId, state == 1));
 
         jamState.SetState(state, timeStamp);
         await jamStateRepository.UpdateAsync(jamState);
