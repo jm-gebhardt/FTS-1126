@@ -14,7 +14,6 @@ namespace Gebhardt.Acc.OrderTranslator.Services.EventHandler;
 [UsedImplicitly]
 public class CargoTriggerPointEventHandler(
     ILogger<CargoTriggerPointEventHandler> logger, 
-    IHostOrderRepository hostOrderRepository,
     IStationRepository stationRepository) : 
     IConsumer<AgvPassedCargoTriggerPoint>
 {
@@ -38,10 +37,14 @@ public class CargoTriggerPointEventHandler(
         {
             return;
         }
-        var hostOrder = await hostOrderRepository.GetByIdAsync(actionGroupCorrelationId.Value);
+        if (action.ActionType != ActionType.Pick && action.ActionType != ActionType.Drop)
+        {
+            logger.LogWarning("Skip reporting APL cargo state to conveyor: Agv {Agv} is not handling pick-drop action group ", agv);
+            return;
+        }
 
         var targetStation = await stationRepository.GetStationByName(action.Target.Node.Name);
-        if (targetStation is {NeedsCargoReporting: false})
+        if (targetStation is { NeedsCargoReporting: false })
         {
             logger.LogWarning("Target station {Target} does not need cargo reporting", targetStation.Name);
             return;
@@ -52,7 +55,7 @@ public class CargoTriggerPointEventHandler(
             logger.LogWarning("Inconsistent information on APL cargo state for Agv {Agv}: message content {MessageContent} / host order {HostOrder}", agv, hasCargo, isDropping);
             return;
         }
-        logger.LogInformation("Reporting cargo state of agv {Agv} running action group {ActionGroupCorrelationId} with cargo {HasCargo}", agv, hostOrder.CorrelationId, hasCargo);
-        await context.Publish(new CargoReportingRequested(hostOrder.CorrelationId, hasCargo));
+        logger.LogInformation("Reporting cargo state of agv {Agv} running action group {ActionGroupCorrelationId} with cargo {HasCargo}", agv, actionGroupCorrelationId.Value, hasCargo);
+        await context.Publish(new CargoReportingRequested(actionGroupCorrelationId.Value, hasCargo));
     }
 }

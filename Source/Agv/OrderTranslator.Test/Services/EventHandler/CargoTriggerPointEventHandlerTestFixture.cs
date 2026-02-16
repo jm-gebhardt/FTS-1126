@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.OrderTranslator.Domain.Models.HostOrder;
 using Gebhardt.Acc.OrderTranslator.Domain.Models.Station;
 using Gebhardt.Acc.OrderTranslator.Domain.Repositories;
 using Gebhardt.Acc.OrderTranslator.Services.EventHandler;
@@ -11,7 +10,6 @@ namespace Gebhardt.Acc.OrderTranslator.Test.Services.EventHandler;
 
 public class CargoTriggerPointEventHandlerTestFixture : MassTransitConsumerTestFixture<CargoTriggerPointEventHandler>
 {
-    private readonly Mock<IHostOrderRepository> _hostOrderRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
 
     /// <inheritdoc cref="MassTransitConsumerTestFixture{CargoTriggerPointEventHandler}"/>>
@@ -19,7 +17,6 @@ public class CargoTriggerPointEventHandlerTestFixture : MassTransitConsumerTestF
     {
         base.AddServices(collection);
         collection.AddTransient(_ => new Mock<ILogger<CargoTriggerPointEventHandler>>().Object);
-        collection.AddSingleton(_ => _hostOrderRepository.Object);
         collection.AddSingleton(_ => _stationRepository.Object);
         return this;
     }
@@ -28,15 +25,6 @@ public class CargoTriggerPointEventHandlerTestFixture : MassTransitConsumerTestF
     public CargoTriggerPointEventHandlerTestFixture()
     {
         Build();
-    }
-
-    public CargoTriggerPointEventHandlerTestFixture WithHostOrder(HostOrder? order)
-    {
-        if (order != null)
-        {
-            _hostOrderRepository.Setup(x => x.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync(order);
-        }
-        return this;
     }
 
     public CargoTriggerPointEventHandlerTestFixture WithStation(Station? station)

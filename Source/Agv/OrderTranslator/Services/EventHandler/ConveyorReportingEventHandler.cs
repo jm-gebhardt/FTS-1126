@@ -82,10 +82,17 @@ public class ConveyorReportingEventHandler(
         {
             return;
         }
-        var pendingPickOrder = await hostOrderRepository.GetByIdAsync(orderId);
-        string pickStation = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
-        logger.LogInformation("Late reporting of order {Order}/{OrderCorrelationId} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pendingPickOrder.CorrelationId, pickStation, DateTime.UtcNow);
-        await context.Publish(new OrderReportingRequested(orderId, targetStationName, null, pickStation, null, null));
+        try
+        {
+            var pendingPickOrder = await hostOrderRepository.GetByIdAsync(orderId);
+            string pickStation = pendingPickOrder.Actions.Single(a => a.ActionType == ActionType.Pick).Node;
+            logger.LogInformation("Late reporting of order {Order}/{OrderCorrelationId} for picking at target {Target} at {Time}", pendingPickOrder.OrderId, pendingPickOrder.CorrelationId, pickStation, DateTime.UtcNow);
+            await context.Publish(new OrderReportingRequested(orderId, targetStationName, null, pickStation, null, null));
+        }
+        catch (InvalidOperationException)
+        {
+            logger.LogWarning("Not requesting report of order at station {StationName} for order {OrderCorrelationId}, host order, thus Sap is unknown", targetStationName, orderId);
+        }
     }
 
     /// <inheritdoc/>
@@ -112,7 +119,6 @@ public class ConveyorReportingEventHandler(
     {
         var (correlationId, actionCorrelationId, actionGroup, _) = context.Message;
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
-        var droppingHostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
         logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
         var targetNode = action.Target.Node;
         var targetStation = await stationRepository.GetStationByName(targetNode!.Name);
@@ -137,8 +143,16 @@ public class ConveyorReportingEventHandler(
             await context.Publish(new PalletDropReportingRequested(actionGroup.CorrelationId, action.Target.Node!.Name, sap, actionGroup.HandlingUnit));
             return;
         }
-        string dropTarget = droppingHostOrder.Target;
-        logger.LogInformation("Requesting report of pallet drop at station {StationName} to conveyor {Sap} for order {OrderCorrelationId}", action.Target.Node!.Name, dropTarget, actionGroup.CorrelationId);
-        await context.Publish(new PalletDropReportingRequested(actionGroup.CorrelationId, action.Target.Node!.Name, dropTarget, droppingHostOrder.Hu));
+        try
+        {
+            var droppingHostOrder = await hostOrderRepository.GetByIdAsync(correlationId);
+            string dropTarget = droppingHostOrder.Target;
+            logger.LogInformation("Requesting report of pallet drop at station {StationName} to conveyor {Sap} for order {OrderCorrelationId}", action.Target.Node!.Name, dropTarget, actionGroup.CorrelationId);
+            await context.Publish(new PalletDropReportingRequested(actionGroup.CorrelationId, action.Target.Node!.Name, dropTarget, droppingHostOrder.Hu));
+        }
+        catch(InvalidOperationException)
+        {
+            logger.LogWarning("Not requesting report of pallet drop at station {StationName} for order {OrderCorrelationId}, host order, thus Sap is unknown", action.Target.Node!.Name, actionGroup.CorrelationId);
+        }
     }
 }

@@ -16,7 +16,6 @@ public class CargoTriggerPointEventHandlerTest
         var actionGroup = OrderGenerator.GetActionGroupFromOrder(order, OrderGenerator.Ps01, OrderGenerator.Apl1);
 
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(order)
             .WithStation(OrderGenerator.Apl1);
 
         await fixture.PublishMessageAsync(new AgvPassedCargoTriggerPoint(Guid.NewGuid(), actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop), true));
@@ -31,7 +30,6 @@ public class CargoTriggerPointEventHandlerTest
         var actionGroup = OrderGenerator.GetActionGroupFromOrder(order, OrderGenerator.Ps01, OrderGenerator.Apl1);
 
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(order)
             .WithStation(OrderGenerator.Ps01);
 
         await fixture.PublishMessageAsync(new AgvPassedCargoTriggerPoint(Guid.NewGuid(), actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick), false));
@@ -68,7 +66,6 @@ public class CargoTriggerPointEventHandlerTest
         var actionGroup = OrderGenerator.GetActionGroupFromOrder(order, OrderGenerator.Ps01, OrderGenerator.Apl1);
 
         var fixture = new CargoTriggerPointEventHandlerTestFixture()
-            .WithHostOrder(order)
             .WithStation(OrderGenerator.Apl1);
 
         await fixture.PublishMessageAsync(new AgvPassedCargoTriggerPoint(Guid.NewGuid(), actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Drop), false));
