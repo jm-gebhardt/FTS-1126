@@ -105,12 +105,19 @@ public class AgvTravelSimulator : IAgvTravelSimulator
             return;
         }
 
+        if (nodes.Count == 1 && edges.Count == 0 && CurrentNode == null)
+        {
+            // spawned at action target
+            SetArrived(nodes);
+            return;
+        }
+
         double entryAngle = 0;
         BaseEdge? followingEdge;
 
         if (nodes.Count == 1 && CurrentNode != null && !AddedVirtualNodes.Contains(CurrentNode.Name))
         {
-            EstimateTimeForChargeAction(nodes);
+            SetArrived(nodes);
             return;
         }
 
@@ -152,7 +159,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         }
     }
 
-    private void EstimateTimeForChargeAction(IReadOnlyList<string> nodes)
+    private void SetArrived(IReadOnlyList<string> nodes)
     {
         CurrentEdge = null;
         CurrentNode = _nodes.Single(e => e.Name == nodes.Single());

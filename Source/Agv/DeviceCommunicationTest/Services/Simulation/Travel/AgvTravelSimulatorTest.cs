@@ -309,6 +309,28 @@ public class AgvTravelSimulatorTest
     }
 
     [TestMethod]
+    public void EstimateTravelTimes_SpawnedAtActionTarget_TravelTimeSet()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph(correlationId);
+        var agvData = new KarisType1(correlationId, "ip address");
+        var node = agvGraph.Nodes.First(n => n.IsCharger());
+        var position = new AgvPosition(true, node.X, node.Y, node.Z, node.Theta);
+        var fakeTimeProvider = new FakeTimeProvider(DateTime.UtcNow);
+        var simulator = new AgvTravelSimulator(agvGraph, position, fakeTimeProvider);
+
+        simulator.EstimateTravelTimes(new List<string> { node.Name }, [], fakeTimeProvider.GetUtcNow().UtcDateTime, agvData, 0);
+
+        simulator.CurrentEdge.ShouldBeNull();
+        simulator.CurrentNode.ShouldBe(node);
+        simulator.FollowingEdges.ShouldBeEmpty();
+        simulator.TravelDuration.ShouldBe(TimeSpan.Zero);
+
+        simulator.UpdatePosition(agvData);
+        simulator.Position.ShouldBe(position);
+    }
+
+    [TestMethod]
     public void EstimateTravelTimes_OneEdge_IsDriven()
     {
         var correlationId = Guid.NewGuid();
