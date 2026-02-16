@@ -24,7 +24,7 @@ public static class ServiceCollectionExtension
         var config = new StationConfiguration();
         string configFile = GetConfigFile();
         Console.WriteLine($"Using station configuration from {configFile}.");
-        config.UpdateFromFile(configFile);
+        config.ConfigFilePath = configFile;
         return config;
     });
 

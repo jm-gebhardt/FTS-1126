@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TestPlanRunner.Domain;
 using Gebhardt.Acc.TestPlanRunner.Providers;
@@ -56,6 +57,7 @@ public class TestPlanManager : ITestPlanManager
     public async Task ApplyTestPlanAsync(TestPlan testPlan)
     {
         _logger.LogInformation("Applying test plan: {TestPlanName}", testPlan.Name);
+        await _bus.Publish(new StationConfigurationUpdateRequested());
 
         _testPlanProvider.ConcurrentDict.AddOrUpdate(testPlan.Name, testPlan, (_, _) => testPlan);
 

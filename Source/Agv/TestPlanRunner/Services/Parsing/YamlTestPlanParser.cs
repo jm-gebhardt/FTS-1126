@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.TestPlanRunner.Domain;
 using JetBrains.Annotations;
+using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -11,11 +12,13 @@ namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
 [UsedImplicitly]
 public class YamlTestPlanParser : ITestPlanParser
 {
+    private readonly ILogger<YamlTestPlanParser> _logger;
     private readonly IDeserializer _deserializer;
 
     /// <inheritdoc cref="YamlTestPlanParser"/>
-    public YamlTestPlanParser()
+    public YamlTestPlanParser(ILogger<YamlTestPlanParser> logger)
     {
+        _logger = logger;
         _deserializer = new DeserializerBuilder()
             .WithNamingConvention(PascalCaseNamingConvention.Instance)
             .Build();
@@ -32,8 +35,9 @@ public class YamlTestPlanParser : ITestPlanParser
             var result = _deserializer.Deserialize<TestPlan>(content);
             return Task.FromResult<TestPlan?>(result);
         }
-        catch (Exception)
+        catch (Exception exc)
         {
+            _logger.LogError(exc, "Error parsing YAML test plan");
             return Task.FromResult<TestPlan?>(null);
         }
     }

@@ -38,6 +38,8 @@ public static class BusRegistrationExtension
                 c.Message<ReportCargo>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
                 c.Message<ReportPalletDrop>(x => x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
             });
+            cfg.AddConsumer<StationCommandHandler>(c => c.ConcurrentMessageLimit = 1);
+            cfg.AddConsumer<StationEventHandler>();
         }
     }
 }

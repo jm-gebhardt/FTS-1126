@@ -69,7 +69,6 @@ public static class OrderGenerator
 
     public static StationConfiguration TestConfiguration = new()
     {
-        IsLoaded = true,
         Stations = [Ps01, Apl1, Ap01, Ap02]
     };
 

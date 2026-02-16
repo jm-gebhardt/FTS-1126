@@ -5,10 +5,10 @@ using MassTransit;
 namespace Gebhardt.Acc.OrderTranslator.Messages;
 
 /// <summary>
-/// Provides a command to create a station.
+/// Provides a command to create or update an existing station.
 /// </summary>
 [PublicAPI]
-public record CreateStation : CorrelatedBy<Guid>
+public record CreateOrUpdateStation : CorrelatedBy<Guid>
 {
     /// <summary>
     /// The station.
@@ -20,8 +20,8 @@ public record CreateStation : CorrelatedBy<Guid>
     /// </summary>
     public Guid CorrelationId => Station.Id;
 
-    /// <inheritdoc cref="CreateStation"/>>
-    public CreateStation(Station station)
+    /// <inheritdoc cref="CreateOrUpdateStation"/>>
+    public CreateOrUpdateStation(Station station)
     {
         Station = station;
     }

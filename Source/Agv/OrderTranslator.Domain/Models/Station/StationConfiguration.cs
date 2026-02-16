@@ -11,35 +11,39 @@ namespace Gebhardt.Acc.OrderTranslator.Domain.Models.Station;
 public class StationConfiguration
 {
     /// <summary>
-    /// True, if the configuration has been loaded from file.
-    /// </summary>
-    public bool IsLoaded { get; set; }
-
-    /// <summary>
     /// Stations.
     /// </summary>
     public ICollection<Station> Stations { get; set; }
 
+    /// <summary>
+    /// The path to the configuration file.
+    /// </summary>
+    public string? ConfigFilePath { get; set; }
+
     /// <inheritdoc cref="StationConfiguration"/>
     public StationConfiguration()
     {
-        IsLoaded = false;
         Stations = [];
     }
 
     /// <summary>
-    /// Update the configuration from a yaml file.
+    /// Reload the configuration from file.
     /// </summary>
-    public void UpdateFromFile(string configPath)
+    /// <exception cref="InvalidOperationException">Thrown if no configuration path is set.</exception>
+    public void Reload()
     {
-        using var reader = new StreamReader(configPath);
+        if (string.IsNullOrEmpty(ConfigFilePath))
+        {
+            throw new InvalidOperationException("Cannot reload configuration: No configuration file path is set.");
+        }
+
+        using var reader = new StreamReader(ConfigFilePath);
         var deserializer = new DeserializerBuilder()
             .IgnoreUnmatchedProperties()
             .WithNamingConvention(PascalCaseNamingConvention.Instance)
             .Build();
         var yamlData = deserializer.Deserialize<StationConfiguration>(reader);
         Stations = yamlData.Stations;
-        IsLoaded = true;
     }
 
     /// <summary>

@@ -42,8 +42,9 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<StationCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
-            partitioner.PartitionMessageById<CreateStation, StationCommandHandler>(c);
+            partitioner.PartitionMessageById<CreateOrUpdateStation, StationCommandHandler>(c);
         });
+        cfg.AddConsumer<StationEventHandler>();
         return cfg;
     }
 }

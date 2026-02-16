@@ -1,6 +1,5 @@
 Stations:
 - Name: "PS01"
-  HasJamState: True
   NeedsCargoReporting: False
   NeedsPalletReporting: True
   PickRouting:
@@ -35,7 +34,6 @@ Stations:
   - "1050"
   - "1060"
 - Name: "PS02"
-  HasJamState: True
   NeedsPalletReporting: True
   NeedsCargoReporting: False
   PickRouting:
@@ -70,7 +68,6 @@ Stations:
   - "1050"
   - "1060"
 - Name: "PS03"
-  HasJamState: True
   NeedsCargoReporting: False
   PickRouting:
   - Station: "APL1"
@@ -105,7 +102,6 @@ Stations:
   - "1060"
 - Name: "APL1"
   NeedsPalletReporting: False
-  HasJamState: False
   NeedsCargoReporting: True
   PickRouting:
   DropRouting:
@@ -118,7 +114,6 @@ Stations:
   - "9070"
 - Name: "AP01"
   NeedsPalletReporting: False
-  HasJamState: False
   NeedsCargoReporting: False
   PickRouting:
   DropRouting:
@@ -132,7 +127,6 @@ Stations:
   - "2110"
 - Name: "AP02"
   NeedsPalletReporting: False
-  HasJamState: False
   NeedsCargoReporting: False
   PickRouting:
   DropRouting:
@@ -146,7 +140,6 @@ Stations:
   - "2210"
 - Name: "AP03"
   NeedsPalletReporting: False
-  HasJamState: False
   NeedsCargoReporting: False
   PickRouting:
   DropRouting:
@@ -160,7 +153,6 @@ Stations:
   - "2310"
 - Name: "AP04"
   NeedsPalletReporting: False
-  HasJamState: False
   NeedsCargoReporting: False
   PickRouting:
   DropRouting:
