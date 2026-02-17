@@ -18,7 +18,7 @@ jobs:
   steps:
   - task: dependabot@2
     inputs:
-      experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=false'
+      experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=true'
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -29,5 +29,15 @@ jobs:
     displayName: 'Post-process Dependabot PR'
     condition: succeeded()
     env:
-      # Configure git for the pipeline
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  # Workaround for Dependabot SDK-managed package bug (dependabot-core#12544):
+  # Dependabot misclassifies packages like EF Core as SDK-managed and skips them.
+  # This step checks NuGet directly and creates PRs for those packages.
+  - bash: |
+      chmod +x pipelines/scripts/nuget-update-check.sh
+      ./pipelines/scripts/nuget-update-check.sh
+    displayName: 'Check SDK-managed packages for updates'
+    condition: always()
+    env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
