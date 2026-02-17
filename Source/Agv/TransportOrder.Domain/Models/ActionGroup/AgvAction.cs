@@ -324,7 +324,6 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
             var pauseTimeSpan = (TimeSpan)(now.UtcDateTime - PausedDate);
             var previousRunTime = (TimeSpan)(PausedDate - StartedDate.GetValueOrDefault());
             PriorRunAndPauseDuration += (long)pauseTimeSpan.TotalSeconds + (long)previousRunTime.TotalSeconds;
-
             PausedDate = null;
         }
 

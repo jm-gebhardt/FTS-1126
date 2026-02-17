@@ -135,7 +135,21 @@ public class ActionGroup
     /// <summary>
     /// Duration of the action group.
     /// </summary>
-    public TimeSpan? Duration => CompletedDate - StartedDate;
+    public TimeSpan? TotalDuration => CompletedDate - StartedDate;
+
+    /// <summary>
+    /// Duration (from start to completion) in seconds.
+    /// </summary>
+    public long Duration
+    {
+        // This is a computed property meant to be written to the database for
+        // later filtering. Thus, it needs a setter for EfCore, and does not need the backing field.
+#pragma warning disable CS9266 // The '{0}' accessor of property '{1}' should use 'field' because the other accessor is using it.
+        get => TotalDuration != null ? (long)TotalDuration.Value.TotalSeconds : 0;
+#pragma warning restore CS9266 // The '{0}' accessor of property '{1}' should use 'field' because the other accessor is using it.
+        // ReSharper disable once UnusedMember.Local
+        private set => field = value;
+    }
 
     /// <summary>
     /// Are set when the ActionGroup went into a not successful state, like invalid, aborted or canceled. In case of invalid, this is considered as errors.

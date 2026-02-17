@@ -16,8 +16,8 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Ignore(e => e.FirstNotStartedAction);
         builder.Ignore(e => e.IsMovingCargo);
         builder.Ignore(e => e.IsChargingOrder);
+        builder.Ignore(e => e.TotalDuration);
         builder.Ignore(e => e.IsIncomplete);
-        builder.Ignore(e => e.Duration);
         builder.Ignore(e => e.IsQueueingOrder);
         builder.Ignore(e => e.LogEntries);
         builder.Ignore(e => e.IsRegisteredForDoppelspielDrop);
@@ -26,6 +26,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Property(e => e.Priority).HasConversion<int>().HasDefaultValue(Priority.Default);
         builder.Property(g => g.State).HasMaxLength(DbStringLimits.State);
         builder.HasIndex(g => g.AssignedAgv);
+        builder.Property(e => e.Duration);
         builder.Property(e => e.IsQueued);
         builder.Property(e => e.AssignedAgv);
         builder.Property(e => e.DoNotPause);

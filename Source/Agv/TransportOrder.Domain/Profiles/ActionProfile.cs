@@ -15,6 +15,7 @@ public class ActionProfile : Profile
             .ForMember(a => a.DoNotPause, a => a.Ignore())
             .ForMember(a => a.ShouldEscapeQueue, a => a.Ignore())
             .ForMember(a => a.LogEntries, a => a.Ignore())
+            .ForMember(a => a.Duration, a => a.Ignore())
             .ReverseMap();
 
         CreateMap<AgvAction, Models.ActionGroup.AgvAction>()

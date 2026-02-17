@@ -85,6 +85,10 @@ public class ActionGroupFilterable : ActionGroup, IFilterable<ActionGroup, Actio
     [FilterProperty]
     public new bool DoNotPause {get; init; }
 
+    /// <inheritdoc cref="ActionGroup.Duration"/>
+    [FilterProperty]
+    public new long Duration { get; init; }
+
     /// <summary>
     /// Log entries associated with this action group.
     /// </summary>

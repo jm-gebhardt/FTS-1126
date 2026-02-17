@@ -62,6 +62,11 @@ public record FilteredActionGroup
     public Priority Priority { get; init; }
 
     /// <summary>
+    /// Total duration (from start to completion) in seconds.
+    /// </summary>
+    public long Duration { get; init; }
+
+    /// <summary>
     /// Log entries associated with this action group.
     /// </summary>
     public ICollection<FilteredLogEntry> LogEntries { get; init; } = [];

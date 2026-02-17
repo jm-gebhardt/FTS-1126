@@ -70,6 +70,12 @@ public record FilteredActionGroupDto
     public bool DoNotPause { get; init; }
 
     /// <summary>
+    /// Total duration (from start to completion) in seconds.
+    /// </summary>
+    [SwaggerFilterableProperty]
+    public long Duration { get; init; }
+
+    /// <summary>
     /// The date/time that the action group is estimated to be finished.
     /// </summary>
     public DateTime EstimatedCompletionDate { get; set; }

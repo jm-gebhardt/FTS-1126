@@ -375,7 +375,7 @@ public class ActionGroupTest
         actionGroup.CompleteAction(dropAction.CorrelationId, now);
 
         double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations);
+        actionGroup.TotalDuration!.Value.TotalSeconds.ShouldBe(actionDurations);
     }
 
     [TestMethod]
@@ -405,7 +405,7 @@ public class ActionGroupTest
         actionGroup.CompleteAction(moveAction.CorrelationId, now);
 
         double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations);
+        actionGroup.TotalDuration!.Value.TotalSeconds.ShouldBe(actionDurations);
     }
 
     [TestMethod]
@@ -443,7 +443,7 @@ public class ActionGroupTest
         // Complete
         actionGroup.CompleteAction(moveAction.CorrelationId, now);
 
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(moveAction.Duration!.Value.TotalSeconds);
+        actionGroup.TotalDuration!.Value.TotalSeconds.ShouldBe(moveAction.Duration!.Value.TotalSeconds);
     }
 
     [TestMethod]
@@ -476,7 +476,7 @@ public class ActionGroupTest
         actionGroup.CompleteAction(moveAction.CorrelationId, now);
 
         double actionDurations = actionGroup.Actions.Select(a => a.Duration!.Value.TotalSeconds).Sum();
-        actionGroup.Duration!.Value.TotalSeconds.ShouldBe(actionDurations);
+        actionGroup.TotalDuration!.Value.TotalSeconds.ShouldBe(actionDurations);
     }
 
     [TestMethod]

@@ -13,6 +13,7 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
 using MassTransit.Initializers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -87,6 +88,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         await context.AddAsync(actionGroup);
+        UpdateComputedProperties(context);
         bool changes = await context.SaveChangesAsync() > 0;
         RestoreNodes(actionGroup, savedNodes);
         return changes;
@@ -104,6 +106,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             return true;
         }
         await context.AddAsync(actionGroup);
+        UpdateComputedProperties(context);
         await context.SaveChangesAsync();
         RestoreNodes(actionGroup, savedNodes);
         return false;
@@ -138,7 +141,24 @@ public class EfActionGroupRepository : IActionGroupRepository
         {
             context.UpdateRange(actionsToUpdate);
         }
+        UpdateComputedProperties(context);
         await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Update any computed properties that are meant to be written into the database here explicitly
+    /// (e.g. for allowing to use them in database filters).
+    /// </summary>
+    /// <param name="context"></param>
+    private void UpdateComputedProperties(TransportOrderDbContext context)
+    {
+        foreach (EntityEntry<ActionGroup> entry in context.ChangeTracker.Entries<ActionGroup>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                entry.Property(e => e.Duration).CurrentValue = entry.Entity.Duration;
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -649,6 +669,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Set<ActionGroup>().Update(actionGroup);
+        UpdateComputedProperties(context);
         int result = await context.SaveChangesAsync();
         _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
         await context.Entry(actionGroup).ReloadAsync();
