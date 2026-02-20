@@ -23,6 +23,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
@@ -426,6 +427,14 @@ public class ActionCommandHandler :
     {
         var (groupCorrelationId, agvCorrelationId, parkNode) = context.Message;
         var cancellationToken = context.CancellationToken;
+
+        var actionGroupsByState = await _actionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agvCorrelationId);
+        if (actionGroupsByState.Created != null || actionGroupsByState.Started != null)
+        {
+            _logger.LogInformation("Aborting creation of parking action for agv {AgvCorrelationId}, other action group created or started in the meantime", agvCorrelationId);
+            await context.Publish(new FreeNode(parkNode.Id, true), cancellationToken);
+            return;
+        }
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         var actionGroup = new Domain.Models.ActionGroup.ActionGroup(

@@ -14,6 +14,8 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -1510,6 +1512,44 @@ public class ActionCommandHandlerTest
         await fixture.TestHarness.Bus.Publish(command);
 
         await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateParkingActionGroup_CreatedActionGroupExists_FreesNodeAndDoesNotPublishActionGroupCreated()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var existingActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var actionGroupsByState = new AgvActionGroupsByState(Created: existingActionGroup, Started: null, Completed: null);
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithLatestActionGroupsByState(actionGroupsByState)
+            .AddAgv(agv);
+
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<FreeNode>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateParkingActionGroup_StartedActionGroupExists_FreesNodeAndDoesNotPublishActionGroupCreated()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var existingActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        var actionGroupsByState = new AgvActionGroupsByState(Created: null, Started: existingActionGroup, Completed: null);
+
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithLatestActionGroupsByState(actionGroupsByState)
+            .AddAgv(agv);
+
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<FreeNode>();
         await fixture.ShouldNotHavePublishedAsync<ActionGroupCreated>();
     }
 
