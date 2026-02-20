@@ -34,7 +34,9 @@ public class StationProfileTest
             x => x.MapId.ShouldBe(station.MapId),
             x => x.PrimaryType.ShouldBe(station.PrimaryType),
             x => x.AdditionalTypes.ShouldBeEquivalentTo(station.AdditionalTypes),
-            x => x.State.ShouldBe(NodeLockState.Free));
+            x => x.State.ShouldBe(NodeLockState.Free),
+            x => x.HasPalletJam.ShouldBe(station.HasPalletJam),
+            x => x.PalletJamChangedDate.ShouldBe(station.PalletJamChangedDate));
     }
 
     [TestMethod]

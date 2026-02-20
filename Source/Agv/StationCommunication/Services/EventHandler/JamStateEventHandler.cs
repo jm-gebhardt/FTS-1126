@@ -13,7 +13,8 @@ namespace Gebhardt.Acc.StationCommunication.Services.EventHandler;
 [UsedImplicitly]
 public class JamStateEventHandler(IStationRepository stationRepository) :
     IConsumer<JamStateReceived>,
-    IConsumer<StationUnlocked>
+    IConsumer<StationUnlocked>,
+    IConsumer<JamStateRequested>
 {
     /// <inheritdoc cref="JamStateEventHandler"/>
     public async Task Consume(ConsumeContext<JamStateReceived> context)
@@ -28,6 +29,17 @@ public class JamStateEventHandler(IStationRepository stationRepository) :
         var unlockedStation = context.Message.StationNode;
         var station = await stationRepository.GetStationByName(unlockedStation.Name);
         if (station is { HasJamState: true })
+        {
+            await context.Publish(new RequestJamState(station.Name));
+        }
+    }
+
+    /// <inheritdoc cref="JamStateEventHandler"/>
+    public async Task Consume(ConsumeContext<JamStateRequested> context)
+    {
+        var stationNode = context.Message.StationNode;
+        var station = await stationRepository.GetStationByName(stationNode.Name);
+        if (station != null)
         {
             await context.Publish(new RequestJamState(station.Name));
         }

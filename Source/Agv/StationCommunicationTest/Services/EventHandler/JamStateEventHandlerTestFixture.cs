@@ -21,4 +21,11 @@ public class JamStateEventHandlerTestFixture: MassTransitConsumerTestFixture<Jam
     {
         Build();
     }
+    
+    public JamStateEventHandlerTestFixture WithStation(string nodeName, bool hasJamState = false)
+    {
+        var station = new Domain.Models.Station(nodeName, hasJamState);
+        _stationRepository.Setup(x => x.GetStationByName(nodeName)).ReturnsAsync(station);
+        return this;
+    }
 }

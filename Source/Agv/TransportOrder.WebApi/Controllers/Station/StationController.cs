@@ -23,16 +23,19 @@ public class StationController : Controller
     private readonly IRequestClient<TryUnlockStation> _unlockStationClient;
     private readonly IRequestClient<UnblockStation> _unblockStationClient;
     private readonly IRequestClient<TryLockStation> _lockStationClient;
+    private readonly IRequestClient<SendJamStateRequest> _sendJamStateRequestClient;
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="StationController"/>
     public StationController(IMapper mapper,
-        IRequestClient<GetStation> getStationClient, IRequestClient<TryLockStation> lockStationClient, IRequestClient<TryUnlockStation> unlockStationClient, IRequestClient<UnblockStation> unblockStationClient)
+        IRequestClient<GetStation> getStationClient, IRequestClient<TryLockStation> lockStationClient, IRequestClient<TryUnlockStation> unlockStationClient,
+        IRequestClient<UnblockStation> unblockStationClient, IRequestClient<SendJamStateRequest> sendJamStateRequestClient) 
     {
         _getStationClient = getStationClient;
         _lockStationClient = lockStationClient;
         _unlockStationClient = unlockStationClient;
         _unblockStationClient = unblockStationClient;
+        _sendJamStateRequestClient = sendJamStateRequestClient; 
         _mapper = mapper;
     }
 
@@ -113,6 +116,26 @@ public class StationController : Controller
             return Unauthorized();
         }
         await _unblockStationClient.GetResponse<Success>(new UnblockStation(id, email));
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Send JamState request for a station.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Station with given id not found.</response>
+    [HttpPost]
+    [Route("/station/{id:Guid}/sendJamStateRequest")]
+    public async Task<ActionResult> SendJamStateRequest([Required] Guid id)
+    {
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _sendJamStateRequestClient.GetResponse<Success>(new SendJamStateRequest(id, email));
 
         return Ok();
     }

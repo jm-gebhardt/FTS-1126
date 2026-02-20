@@ -21,6 +21,8 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
     [UsedImplicitly]
     private readonly Mock<IStationRepository> _stationRepository = new();
 
+    private readonly Mock<INodeRepository> _nodeRepository = new();
+
     [UsedImplicitly]
     private readonly Mock<IMapRepository> _mapRepository = new();
 
@@ -46,6 +48,7 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
         {
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
+            sc.AddTransient(_ => _nodeRepository.Object);
             sc.AddTransient(_ => _actionGroupRepository.Object);
             sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient<ILoggingService, LoggingService>();
@@ -59,6 +62,11 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
     {
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
         _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode
+        {
+            Id = station.Id,
+            Name = station.Name
+        });
         return this;
     }
 

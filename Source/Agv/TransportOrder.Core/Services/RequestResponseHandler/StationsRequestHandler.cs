@@ -26,11 +26,13 @@ public class StationsRequestHandler :
     IConsumer<GetStation>,
     IConsumer<TryLockStation>,
     IConsumer<TryUnlockStation>,
-    IConsumer<UnblockStation>
+    IConsumer<UnblockStation>,
+    IConsumer<SendJamStateRequest>
 {
     private readonly ILogger<StationsRequestHandler> _logger;
     private readonly IMapRepository _mapRepository;
     private readonly IStationRepository _stationRepository;
+    private readonly INodeRepository _nodeRepository;
     private readonly IActionGroupRepository _actionGroupRepository;
     private readonly IBus _bus;
     private readonly ILoggingService _loggingService;
@@ -41,6 +43,7 @@ public class StationsRequestHandler :
     public StationsRequestHandler(ILogger<StationsRequestHandler> logger,
         IMapRepository mapRepository,
         IStationRepository stationRepository,
+        INodeRepository nodeRepository,
         IActionGroupRepository actionGroupRepository,
         IBus bus,
         ILoggingService loggingService)
@@ -48,6 +51,7 @@ public class StationsRequestHandler :
         _logger = logger;
         _mapRepository = mapRepository;
         _stationRepository = stationRepository;
+        _nodeRepository = nodeRepository;
         _actionGroupRepository = actionGroupRepository;
         _bus = bus;
         _loggingService = loggingService;
@@ -182,6 +186,24 @@ public class StationsRequestHandler :
         await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationUnblocked}});
 
         await _bus.Publish(new Common.Messages.Stations.UnblockStation(station.Id));
+
+        await context.RespondAsync(new Success());
+    }
+
+    /// <summary>
+    /// Handles the <see cref="SendJamStateRequest"/> request.
+    /// </summary>
+    public async Task Consume(ConsumeContext<SendJamStateRequest> context)
+    {
+        // check if node exists as station
+        await _stationRepository.GetStation(context.Message.CorrelationId);
+        var stationNode = await _nodeRepository.GetNodeAsync(context.Message.CorrelationId);
+        string user = context.Message.User;
+
+        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationJamStateRequested, stationNode.Id, "JamState Requested", "JamState for station requested", new Dictionary<string, object?>{{LogLabels.User, user}});
+        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, stationNode.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationJamStateRequested}});
+
+        await _bus.Publish(new Common.Messages.Graphs.Events.JamStateRequested(stationNode));
 
         await context.RespondAsync(new Success());
     }

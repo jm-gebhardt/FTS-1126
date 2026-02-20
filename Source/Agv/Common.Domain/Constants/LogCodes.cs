@@ -93,6 +93,7 @@ public static class LogCodes
     public const int StationUnlocked = 408;
     public const int StationUnblocked = 409;
     public const int StationOperatorInteraction = 410;
+    public const int StationJamStateRequested = 411;
 
     //System
     public const int SystemOperatorInteraction = 500;

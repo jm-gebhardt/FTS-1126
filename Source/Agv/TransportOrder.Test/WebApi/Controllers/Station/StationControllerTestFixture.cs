@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System.Security.Claims;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using LogEntryProfile = Gebhardt.Acc.TransportOrder.Domain.Profiles.LogEntryProfile;
@@ -44,7 +45,9 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
         IRequestClient<TryLockStation> lockStationRequestClient = GetRequestClient<TryLockStation>();
         IRequestClient<TryUnlockStation> unlockStationRequestClient = GetRequestClient<TryUnlockStation>();
         IRequestClient<UnblockStation> unblockStationRequestClient = GetRequestClient<UnblockStation>();
-        var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient, unblockStationRequestClient);
+        IRequestClient<SendJamStateRequest> sendJamStateRequestClient = GetRequestClient<SendJamStateRequest>();
+        var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient,
+            unblockStationRequestClient, sendJamStateRequestClient);
         return controller;
     }
 
@@ -96,6 +99,10 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
     {
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
         _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new GraphNode {
+            Id = station.Id,
+            Name = station.Name
+        });
         return this;
     }
 

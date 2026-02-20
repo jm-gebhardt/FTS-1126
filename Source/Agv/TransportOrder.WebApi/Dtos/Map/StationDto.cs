@@ -90,6 +90,11 @@ public record StationDto
     public bool HasPalletJam { get; set; }
 
     /// <summary>
+    /// The date and time the pallet jam state last changed.
+    /// </summary>
+    public DateTime PalletJamChangedDate { get; set; }
+
+    /// <summary>
     /// The handling of orders that involve this station.
     /// </summary>
     public LockedOrderHandlingType? LockedOrderHandling { get; set; }

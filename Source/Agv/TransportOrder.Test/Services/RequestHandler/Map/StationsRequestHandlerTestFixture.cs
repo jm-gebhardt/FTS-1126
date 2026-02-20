@@ -20,6 +20,7 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
     private readonly Mock<IMapRepository> _mapRepository = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+    private readonly Mock<INodeRepository> _nodeRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
     protected override IEnumerable<Profile> GetProfiles() => [new LogEntryProfile()];
@@ -28,6 +29,11 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
     {
         _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode
+        {
+            Id = station.Id,
+            Name = station.Name
+        });
         return this;
     }
 
@@ -50,6 +56,7 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
         {
             sc.AddTransient(_ => _mapRepository.Object);
             sc.AddTransient(_ => _stationRepository.Object);
+            sc.AddTransient(_ => _nodeRepository.Object);
             sc.AddTransient(_ => _actionGroupRepository.Object);
             sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient<ILoggingService, LoggingService>();
