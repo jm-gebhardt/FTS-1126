@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Microsoft.OpenApi;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.Swagger;
+namespace Gebhardt.Acc.Common.WebApi.Swagger;
 
 /// <summary>
 /// Api Group Interface
@@ -40,7 +40,7 @@ public abstract class ApiGroup : IApiGroup
         new()
         {
             Version = Version,
-            Title = $"TransportOrder {Title}"
+            Title = Title
         };
 
     /// <inheritdoc />

@@ -7,7 +7,7 @@
     <ItemGroup>
         <PackageReference Include="MassTransit.Prometheus" />
         <PackageReference Include="MassTransit" />
-        <PackageReference Include="FluentValidation"  />
+        <PackageReference Include="FluentValidation" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>

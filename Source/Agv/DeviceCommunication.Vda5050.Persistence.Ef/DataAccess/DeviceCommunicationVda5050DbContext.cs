@@ -1,0 +1,26 @@
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Microsoft.EntityFrameworkCore;
+
+namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
+
+/// <summary>
+/// Provides a db context.
+/// </summary>
+public class DeviceCommunicationVda5050DbContext : BaseDbContext<DeviceCommunicationVda5050DbContext>, IDbContext<DeviceCommunicationVda5050DbContext>
+{
+    /// <inheritdoc />
+    public static string ConfigSectionName => "DEVICECOMMUNICATIONVDA5050";
+
+    /// <inheritdoc />
+    public DeviceCommunicationVda5050DbContext(DbContextOptions options) : base(options)
+    {
+    }
+
+    /// <inheritdoc />
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+       // modelBuilder.ApplyConfiguration(new HostOrderEntityConfiguration());
+    }
+}
+
+ 

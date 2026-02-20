@@ -1,6 +1,6 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.Swagger;
+namespace Gebhardt.Acc.Common.WebApi.Swagger;
 
 /// <summary>
 /// SwaggerGenOptions

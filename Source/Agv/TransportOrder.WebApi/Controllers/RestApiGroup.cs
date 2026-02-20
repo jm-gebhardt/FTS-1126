@@ -1,4 +1,4 @@
-using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
+using Gebhardt.Acc.Common.WebApi.Swagger;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers;
 

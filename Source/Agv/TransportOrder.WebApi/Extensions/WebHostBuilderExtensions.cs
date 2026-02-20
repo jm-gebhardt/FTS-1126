@@ -10,6 +10,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.WebApi;
+using Gebhardt.Acc.Common.WebApi.Swagger;
 using Gebhardt.Acc.TransportOrder.WebApi.Constants;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
@@ -25,7 +26,6 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.System;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Trigger;
 using Gebhardt.Acc.TransportOrder.WebApi.Middleware;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
-using Gebhardt.Acc.TransportOrder.WebApi.Swagger;
 using Gebhardt.Acc.TransportOrder.WebApi.Swagger.Examples;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -216,6 +216,17 @@ public static class WebHostBuilderExtensions
         return webHostBuilder;
     }
 
+    private static void IncludeXmlComments(SwaggerGenOptions options)
+    {
+        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
+
+        // Add resolved XML docs to Swagger
+        foreach (var doc in resolvedXmlDocs)
+        {
+            options.IncludeXmlComments(() => new XPathDocument(doc.CreateReader()), true);
+        }
+    }
+
     private static void AddFilterExamples(this SwaggerGenOptions options)
     {
         options.OperationFilter<ActionGroupFilterExample>();
@@ -226,17 +237,6 @@ public static class WebHostBuilderExtensions
     {
         services.AddSingleton<IAbortableHubLifetimeManager<THub>, AbortableHubLifetimeManager<THub>>();
         services.AddSingleton<HubLifetimeManager<THub>>(sp => (HubLifetimeManager<THub>) sp.GetRequiredService<IAbortableHubLifetimeManager<THub>>());
-    }
-
-    private static void IncludeXmlComments(SwaggerGenOptions options)
-    {
-        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
-
-        // Add resolved XML docs to Swagger
-        foreach (var doc in resolvedXmlDocs)
-        {
-            options.IncludeXmlComments(() => new XPathDocument(doc.CreateReader()), true);
-        }
     }
 
     /// <summary>

@@ -34,9 +34,6 @@
         <Folder Remove="Configurations\**" />
     </ItemGroup>
     <ItemGroup>
-        <None Remove="DataAccess\Configuration\o0fbniyx.am4~" />
-    </ItemGroup>
-    <ItemGroup>
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />
         <ProjectReference Include="..\Common.Persistence.Ef\Common.Persistence.Ef.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />

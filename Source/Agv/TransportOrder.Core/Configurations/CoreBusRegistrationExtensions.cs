@@ -97,7 +97,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<LeaveQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);
-            partitioner.PartitionMessageById<UpdateAgvData, AgvCommandHandler>(c);
+           
             partitioner.PartitionMessageById<AcceptAgvCommand, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetMaintenanceMode, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetUserMode, AgvCommandHandler>(c);
@@ -121,6 +121,16 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RefreshAgvInformation, AgvCommandHandler>(c);
+
+            c.Message<UpdateAgvData>(x =>
+            {
+                x.UsePartitioner(partitioner, p => p.Message.CorrelationId);
+                x.UseMessageRetry(r =>
+                {
+                    r.Interval(6, TimeSpan.FromSeconds(5));
+                    r.Handle<AgvNotFoundException>();
+                });
+            });
         });
 
         busRegistrationConfigurator.AddConsumer<ZoneCommandHandler>(c =>
