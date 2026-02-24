@@ -68,7 +68,7 @@ public static class TestPlanRunnerHostBuilder
                 services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
                 services.AddTransient<IAgvRouteRetrievalService, AgvRouteRetrievalService>();
                 services.AddSingleton<ITestPlanManager, TestPlanManager>();
-                services.AddSingleton<IActionCancellationEvaluator, ActionCancellationEvaluator>();
+                services.AddSingleton<ITestStepCancellationEvaluator, TestStepCancellationEvaluator>();
 
                 // File watcher
                 services.AddSingleton<TestPlanFileWatcher>();

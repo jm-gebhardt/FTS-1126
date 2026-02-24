@@ -16,6 +16,11 @@ public record CreateActionGroup : CorrelatedBy<Guid>
     public Guid CorrelationId { get; }
 
     /// <summary>
+    /// Assigned AGV that needs to execute the ActionGroup.
+    /// </summary>
+    public Guid? AssignedAgv { get; }
+
+    /// <summary>
     /// Order details.
     /// </summary>
     public OrderDetails OrderDetails { get; }
@@ -24,12 +29,13 @@ public record CreateActionGroup : CorrelatedBy<Guid>
     /// Handling unit.
     /// </summary>
     public string Hu { get; }
-    
+
     /// <inheritdoc cref="CreateActionGroup"/>
-    public CreateActionGroup(string hu, OrderDetails orderDetails)
+    public CreateActionGroup(string hu, OrderDetails orderDetails, Guid? assignedAgv = null)
     {
         CorrelationId = orderDetails.CorrelationId;
         OrderDetails = orderDetails;
+        AssignedAgv = assignedAgv;
         Hu = hu;
     }
 }

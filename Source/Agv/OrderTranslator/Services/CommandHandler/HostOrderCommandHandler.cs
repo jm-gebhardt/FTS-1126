@@ -16,7 +16,8 @@ namespace Gebhardt.Acc.OrderTranslator.Services.CommandHandler;
 /// Handles host order related requests.
 /// </summary>
 [UsedImplicitly]
-public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger,
+public class HostOrderCommandHandler(
+    ILogger<HostOrderCommandHandler> logger,
     IHostOrderRepository hostOrderRepository,
     IStationRepository stationRepository,
     IHostOrderValidationService validationService) :
@@ -29,7 +30,10 @@ public class HostOrderCommandHandler(ILogger<HostOrderCommandHandler> logger,
         var orderDetails = context.Message.OrderDetails;
         string hu = context.Message.Hu;
 
-        var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate);
+        var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate)
+        {
+            AssignedAgv = context.Message.AssignedAgv
+        };
 
         (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message);
         logger.LogDebug("pickInfoToAgv: {PickInfoToAgv}", pickInfoToAgv == null ? "empty" : string.Join(", ", pickInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));

@@ -14,15 +14,17 @@ public class TestPlanTriggerEventHandler : IConsumer<AgvBecameIdle>, IConsumer<A
 {
     private readonly ILogger<TestPlanTriggerEventHandler> _logger;
     private readonly ITestPlanManager _testPlanManager;
+    private readonly IAgvExecutionStateProvider _executionStateProvider;
 
     /// <inheritdoc cref="TestPlanTriggerEventHandler"/>
     public TestPlanTriggerEventHandler(
         ITestPlanManager testPlanManager,
-        ILogger<TestPlanTriggerEventHandler> logger
-    )
+        IAgvExecutionStateProvider executionStateProvider,
+        ILogger<TestPlanTriggerEventHandler> logger)
     {
         _logger = logger;
         _testPlanManager = testPlanManager;
+        _executionStateProvider = executionStateProvider;
     }
 
     /// <inheritdoc />
@@ -45,16 +47,31 @@ public class TestPlanTriggerEventHandler : IConsumer<AgvBecameIdle>, IConsumer<A
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupCompleted> context)
     {
-        var agvCorrelationId = context.Message.CorrelationId;
+        Guid? agvCorrelationId = context.Message.ActionGroup.AssignedAgv;
+        if (agvCorrelationId == null)
+        {
+            _logger.LogDebug("ActionGroupCompleted has no assigned AGV, skipping");
+            return;
+        }
+
+        var actionGroupCorrelationId = context.Message.CorrelationId;
 
         _logger.LogDebug("AGV {AgvCorrelationId} completed action group (last action type: {ActionType}, Id: {ActionGroupId}), checking for test plan actions",
             agvCorrelationId,
             context.Message.ActionGroup.Actions.Last().ActionType,
-            context.Message.ActionGroup.CorrelationId);
+            actionGroupCorrelationId);
 
         try
         {
-            await _testPlanManager.TryStartAgvAsync(agvCorrelationId);
+            var state = _executionStateProvider.GetOrCreate(agvCorrelationId.Value);
+            if (state.CurrentHostOrderCorrelationId == actionGroupCorrelationId)
+            {
+                _logger.LogDebug("AGV {AgvCorrelationId} completed HostOrder {HostOrderCorrelationId}",
+                    agvCorrelationId, actionGroupCorrelationId);
+                state.CurrentHostOrderCorrelationId = null;
+            }
+
+            await _testPlanManager.TryStartAgvAsync(agvCorrelationId.Value);
         }
         catch (Exception ex)
         {

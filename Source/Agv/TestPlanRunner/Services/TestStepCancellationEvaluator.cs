@@ -1,15 +1,15 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.TestPlanRunner.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services;
 
 /// <summary>
-/// Implementation of <see cref="IActionCancellationEvaluator"/>.
+/// Implementation of <see cref="ITestStepCancellationEvaluator"/>.
 /// </summary>
-public class ActionCancellationEvaluator : IActionCancellationEvaluator
+public class TestStepCancellationEvaluator : ITestStepCancellationEvaluator
 {
-    private readonly ILogger<ActionCancellationEvaluator> _logger;
+    private readonly ILogger<TestStepCancellationEvaluator> _logger;
     private readonly IAgvRouteRetrievalService _agvRouteRetrievalService;
 
     /// <summary>
@@ -17,9 +17,9 @@ public class ActionCancellationEvaluator : IActionCancellationEvaluator
     /// </summary>
     private const int MinNodesForPickCancellation = 3;
 
-    /// <inheritdoc cref="ActionCancellationEvaluator"/>
-    public ActionCancellationEvaluator(
-        ILogger<ActionCancellationEvaluator> logger,
+    /// <inheritdoc cref="TestStepCancellationEvaluator"/>
+    public TestStepCancellationEvaluator(
+        ILogger<TestStepCancellationEvaluator> logger,
         IAgvRouteRetrievalService agvRouteRetrievalService)
     {
         _logger = logger;
@@ -27,24 +27,28 @@ public class ActionCancellationEvaluator : IActionCancellationEvaluator
     }
 
     /// <inheritdoc />
-    public async Task<bool> CanCancelAsync(Guid agvCorrelationId, ActionType actionType)
+    public async Task<bool> CanCancelAsync(Guid agvCorrelationId, StepType stepType)
     {
-        switch (actionType)
+        switch (stepType)
         {
-            case ActionType.Drop:
+            case StepType.HostOrder:
+                _logger.LogDebug("HostOrder step cannot be cancelled for AGV {AgvCorrelationId}", agvCorrelationId);
+                return false;
+
+            case StepType.Drop:
                 _logger.LogDebug("Drop action cannot be cancelled for AGV {AgvCorrelationId}", agvCorrelationId);
                 return false;
 
-            case ActionType.Move:
-            case ActionType.Charge:
-                _logger.LogDebug("{ActionType} action can always be cancelled for AGV {AgvCorrelationId}", actionType, agvCorrelationId);
+            case StepType.Move:
+            case StepType.Charge:
+                _logger.LogDebug("{StepType} action can always be cancelled for AGV {AgvCorrelationId}", stepType, agvCorrelationId);
                 return true;
 
-            case ActionType.Pick:
+            case StepType.Pick:
                 return await CanCancelPickAsync(agvCorrelationId);
 
             default:
-                _logger.LogWarning("Unknown action type {ActionType} for AGV {AgvCorrelationId}, probably not cancellable", actionType, agvCorrelationId);
+                _logger.LogWarning("Unknown step type {StepType} for AGV {AgvCorrelationId}, probably not cancellable", stepType, agvCorrelationId);
                 return false;
         }
     }

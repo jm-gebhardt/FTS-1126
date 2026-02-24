@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TestPlanRunner.Domain;
 
@@ -40,9 +39,14 @@ public class AgvExecutionState
     public Guid? CurrentActionGroupCorrelationId { get; set; }
 
     /// <summary>
-    /// The type of the currently executing action.
+    /// The type of the currently executing step.
     /// </summary>
-    public ActionType? CurrentActionType { get; set; }
+    public StepType? CurrentStepType { get; set; }
+
+    /// <summary>
+    /// The correlation Id of the currently executing host order (for HostOrder steps).
+    /// </summary>
+    public Guid? CurrentHostOrderCorrelationId { get; set; }
 
     /// <summary>
     /// Whether a cancellation of the current test plan is pending (waiting for safe cancellation point).
@@ -120,7 +124,8 @@ public class AgvExecutionState
         CurrentIterationIndex = 0;
         CurrentStepIndex = 0;
         CurrentActionGroupCorrelationId = null;
-        CurrentActionType = null;
+        CurrentStepType = null;
+        CurrentHostOrderCorrelationId = null;
         CancellationPending = false;
         MarkedForRemoval = false;
         PendingWaitTimeSeconds = 0;

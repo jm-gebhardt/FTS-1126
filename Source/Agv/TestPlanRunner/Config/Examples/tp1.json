@@ -1,26 +1,32 @@
 ﻿{
-  "agvSerialNumbers": [ "SimAgv-0"],
-//  "agvSerialNumbers": [ "SimAgv-1"],
-  
+  "agvSerialNumbers": [
+    "SimAgv-0"
+  ],
   "iterations": 3,
   "steps": [
     {
-      "targetNode": "PS01",
-      "actionType": "Pick"
+      "stepType": "Pick",
+      "targetNode": "PS01"
     },
     {
-      "targetNode": "AP03",
-      "actionType": "Drop"
+      "stepType": "Drop",
+      "targetNode": "AP03"
     },
     {
+      "stepType": "Move",
       "targetNode": "map/NODE-10",
-      "actionType": "Move",
       "waitTimeSeconds": 1
+    },
+    {
+      "stepType": "HostOrder",
+      "source": "1020",
+      "destination": "2410",
+      "leRotation": 0
     }
-//  ,
-//    {
-//      "targetNode": "charger5",
-//      "actionType": "Charge"
-//    }
+    //  ,
+    //    {
+    //      "stepType": "Charge",
+    //      "targetNode": "charger5"
+    //    }
   ]
 }

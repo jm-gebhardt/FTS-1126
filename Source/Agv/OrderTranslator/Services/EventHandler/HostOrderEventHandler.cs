@@ -15,6 +15,6 @@ public class HostOrderEventHandler:
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<HostOrderCreated> context)
     {
-        await context.Publish(new CreateActionGroup(context.Message.Hu, context.Message.OrderDetails));
+        await context.Publish(new CreateActionGroup(context.Message.Hu, context.Message.OrderDetails, context.Message.AssignedAgv));
     }
 }

@@ -12,12 +12,17 @@ namespace Gebhardt.Acc.OrderTranslator.Domain.Models.HostOrder;
 [PublicAPI]
 public class HostOrder
 {
-    private readonly List<Action> _actions = new();
+    private readonly List<Action> _actions = [];
 
     /// <summary>
     /// The correlation id of the host order
     /// </summary>
     public Guid CorrelationId { get; init; }
+
+    /// <summary>
+    /// Assigned AGV that needs to execute the HostOrder.
+    /// </summary>
+    public Guid? AssignedAgv { get; init; }
 
     /// <summary>
     /// The order id as given from the host.
@@ -143,17 +148,17 @@ public class HostOrder
         bool canRunDoppelspiel = dropStation.DropDoppelspielMode is not (DoppelspielMode.None or DoppelspielMode.OrderOrQueueHead);
         DateTime? consideredForDoppelspielDate = canRunDoppelspiel ? DateTime.UtcNow : null;
         return new ActionGroup(
-            CorrelationId,
-            TransportOrderId,
-            [
-                Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, new ActionTarget(pickStation.Name.ToGraphNode(), null, [], pickStation.PickDoppelspielMode), CorrelationId, a.InfoToAgv) { Sequence = 0 }).First(),
-                Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, new ActionTarget(dropStation.Name.ToGraphNode(), null, [], dropStation.DropDoppelspielMode), CorrelationId, a.InfoToAgv) { Sequence = 1 }).First()
-            ],
-            ActionGroupCreator.Wms,
-            Priority.Default,
-            false,
-            CreatedDate)
-        { HandlingUnit = Hu, CanRunDoppelspiel = canRunDoppelspiel, ConsideredForDoppelspielDate = consideredForDoppelspielDate};
+                CorrelationId,
+                TransportOrderId,
+                [
+                    Actions.Where(a => a.ActionType == ActionType.Pick).Select(a => new AgvAction(a.CorrelationId, a.ActionType, new ActionTarget(pickStation.Name.ToGraphNode(), null, [], pickStation.PickDoppelspielMode), CorrelationId, a.InfoToAgv) { Sequence = 0 }).First(),
+                    Actions.Where(a => a.ActionType == ActionType.Drop).Select(a => new AgvAction(a.CorrelationId, a.ActionType, new ActionTarget(dropStation.Name.ToGraphNode(), null, [], dropStation.DropDoppelspielMode), CorrelationId, a.InfoToAgv) { Sequence = 1 }).First()
+                ],
+                ActionGroupCreator.Wms,
+                Priority.Default,
+                false,
+                CreatedDate)
+            { HandlingUnit = Hu, CanRunDoppelspiel = canRunDoppelspiel, ConsideredForDoppelspielDate = consideredForDoppelspielDate, AssignedAgv = AssignedAgv };
     }
 
     private ActionGroup CreatePickMoveDropActionGroup(Station.Station pickStation, ICollection<Station.Station> dropStations)
@@ -174,7 +179,7 @@ public class HostOrder
                 Priority.Default,
                 false,
                 CreatedDate)
-        { HandlingUnit = Hu, CanRunDoppelspiel = canRunDoppelspiel, ConsideredForDoppelspielDate = consideredForDoppelspielDate };
+            { HandlingUnit = Hu, CanRunDoppelspiel = canRunDoppelspiel, ConsideredForDoppelspielDate = consideredForDoppelspielDate, AssignedAgv = AssignedAgv };
     }
 
     private ActionGroup CreateMovePickDropActionGroup(ICollection<Station.Station> pickStations, Station.Station dropStation)
@@ -195,6 +200,6 @@ public class HostOrder
                 Priority.Default,
                 false,
                 CreatedDate)
-            { HandlingUnit = Hu, CanRunDoppelspiel = canRunDoppelspiel, ConsideredForDoppelspielDate = consideredForDoppelspielDate };
+            { HandlingUnit = Hu, CanRunDoppelspiel = canRunDoppelspiel, ConsideredForDoppelspielDate = consideredForDoppelspielDate, AssignedAgv = AssignedAgv };
     }
 }

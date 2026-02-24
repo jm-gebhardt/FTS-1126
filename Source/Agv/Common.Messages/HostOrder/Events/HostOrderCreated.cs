@@ -13,6 +13,11 @@ public record HostOrderCreated : CorrelatedBy<Guid>
     public Guid CorrelationId { get; }
 
     /// <summary>
+    /// Assigned AGV that needs to execute the HostOrder.
+    /// </summary>
+    public Guid? AssignedAgv { get; }
+
+    /// <summary>
     /// OrderID
     /// </summary>
     public OrderDetails OrderDetails { get; }
@@ -23,10 +28,11 @@ public record HostOrderCreated : CorrelatedBy<Guid>
     public string Hu { get; }
 
     /// <inheritdoc cref="HostOrderCreated"/>
-    public HostOrderCreated(string hu, OrderDetails orderDetails)
+    public HostOrderCreated(string hu, OrderDetails orderDetails, Guid? assignedAgv = null)
     {
         CorrelationId = orderDetails.CorrelationId;
         OrderDetails = orderDetails;
+        AssignedAgv = assignedAgv;
         Hu = hu;
     }
 }

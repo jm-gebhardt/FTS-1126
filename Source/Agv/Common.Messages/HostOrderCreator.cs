@@ -16,5 +16,10 @@ public enum HostOrderCreator
     /// <summary>
     /// A simulation module is creator of the order
     /// </summary>
-    Simulation
+    Simulation,
+
+    /// <summary>
+    /// The TestPlanRunner service created the order
+    /// </summary>
+    TestPlanRunner
 }

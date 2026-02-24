@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TestPlanRunner.Domain;
 
@@ -10,14 +9,29 @@ namespace Gebhardt.Acc.TestPlanRunner.Domain;
 public record TestPlanStep
 {
     /// <summary>
-    /// The node/station name where the action should be performed.
+    /// The type of step to perform.
     /// </summary>
-    public required string TargetNode { get; init; }
+    public required StepType StepType { get; init; }
 
     /// <summary>
-    /// The action type to perform.
+    /// The node/station name where the action should be performed.
     /// </summary>
-    public required ActionType ActionType { get; init; }
+    public string? TargetNode { get; init; }
+
+    /// <summary>
+    /// The source where to pick up the order (for HostOrder step).
+    /// </summary>
+    public string? Source { get; init; }
+
+    /// <summary>
+    /// The destination where to drop the order (for HostOrder step).
+    /// </summary>
+    public string? Destination { get; init; }
+
+    /// <summary>
+    /// The rotation info for the orders handled box or transportation good in rad (for HostOrder step).
+    /// </summary>
+    public double? LeRotation { get; init; }
 
     /// <summary>
     /// Delay in seconds after completing this step before proceeding to next step.

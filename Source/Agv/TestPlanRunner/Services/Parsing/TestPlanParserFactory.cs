@@ -101,10 +101,42 @@ public class TestPlanParserFactory : ITestPlanParserFactory
         for (int i = 0; i < testPlan.Steps.Count; i++)
         {
             var step = testPlan.Steps[i];
-            if (string.IsNullOrWhiteSpace(step.TargetNode))
+
+            if (step.StepType == StepType.HostOrder)
             {
-                _logger.LogError("Step {StepIndex} must have a target node: {FilePath}", i, filePath);
-                return false;
+                if (string.IsNullOrWhiteSpace(step.Source))
+                {
+                    _logger.LogError("HostOrder step {StepIndex} must have a source: {FilePath}", i, filePath);
+                    return false;
+                }
+                if (string.IsNullOrWhiteSpace(step.Destination))
+                {
+                    _logger.LogError("HostOrder step {StepIndex} must have a destination: {FilePath}", i, filePath);
+                    return false;
+                }
+                if (!string.IsNullOrWhiteSpace(step.TargetNode))
+                {
+                    _logger.LogError("HostOrder step {StepIndex} must not have a target node: {FilePath}", i, filePath);
+                    return false;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(step.TargetNode))
+                {
+                    _logger.LogError("Step {StepIndex} must have a target node: {FilePath}", i, filePath);
+                    return false;
+                }
+                if (!string.IsNullOrWhiteSpace(step.Source))
+                {
+                    _logger.LogError("HostOrder step {StepIndex} must not have a source: {FilePath}", i, filePath);
+                    return false;
+                }
+                if (!string.IsNullOrWhiteSpace(step.Destination))
+                {
+                    _logger.LogError("HostOrder step {StepIndex} must not have a destination: {FilePath}", i, filePath);
+                    return false;
+                }
             }
 
             if (step.WaitTimeSeconds < 0)

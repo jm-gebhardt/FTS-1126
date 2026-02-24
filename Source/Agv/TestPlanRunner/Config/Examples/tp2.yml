@@ -2,10 +2,14 @@
     - SimAgv-0
 Iterations: 10
 Steps:
-    - TargetNode: PS01
-      ActionType: Pick
-    - TargetNode: AP03
-      ActionType: Drop
-    - TargetNode: map/NODE-10
-      ActionType: Move
+    - StepType: Pick
+      TargetNode: PS01
+    - StepType: Drop
+      TargetNode: AP03
+    - StepType: Move
+      TargetNode: map/NODE-10
       WaitTimeSeconds: 1
+    - StepType: HostOrder
+      Source: 1020
+      Destination: 2410
+      LeRotation: 0
