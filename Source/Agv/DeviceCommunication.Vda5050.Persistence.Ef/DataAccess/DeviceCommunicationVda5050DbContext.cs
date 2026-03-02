@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
@@ -19,7 +20,8 @@ public class DeviceCommunicationVda5050DbContext : BaseDbContext<DeviceCommunica
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-       // modelBuilder.ApplyConfiguration(new HostOrderEntityConfiguration());
+       modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
+       modelBuilder.ApplyConfiguration(new AgvActionEntityConfiguration());
     }
 }
 

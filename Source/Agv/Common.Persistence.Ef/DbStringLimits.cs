@@ -17,5 +17,6 @@ public static class DbStringLimits
     public const int State = 50;
     public const int ErrorInformation = 50;
     public const int ActionType = 50;
+    public const int AgvActionTypeMaxLength = 64;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

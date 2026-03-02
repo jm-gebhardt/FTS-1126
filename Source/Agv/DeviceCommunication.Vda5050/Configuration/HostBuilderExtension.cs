@@ -3,9 +3,11 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.Repositories;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -85,9 +87,13 @@ public static class HostBuilderExtension
                     });
                 });
 
+                services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
+                services.AddTransient<IAgvActionRepository, EfAgvActionRepository>();
                 services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
                 services.AddSingleton<ISignificanceChecker<MqttState>, MqttStateSignificanceChecker>();
                 services.AddSingleton<UnTimedInMemoryFilter<MqttState>>();
+
+                services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
             });
             return hostBuilder;
         }

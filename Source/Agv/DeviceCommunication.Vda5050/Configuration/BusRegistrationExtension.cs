@@ -1,4 +1,7 @@
-﻿using MassTransit;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.MqttMessageHandler;
+using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Configuration;
 
@@ -15,7 +18,10 @@ public static class BusRegistrationExtension
         // ReSharper disable once UnusedMethodReturnValue.Global
         public IBusRegistrationConfigurator AddMqttConsumers()
         {
-            //configurator.AddMqttConsumer<MqttVisualizationConsumer>();
+            configurator.AddMqttConsumer<MqttConnectionConsumer>();
+            configurator.AddMqttConsumer<MqttStateConsumer>();
+            configurator.AddMqttConsumer<MqttVisualizationConsumer>();
+            configurator.AddMqttConsumer<MqttFactSheetConsumer>();
             return configurator;
         }
 
@@ -25,8 +31,7 @@ public static class BusRegistrationExtension
         // ReSharper disable once UnusedMethodReturnValue.Global
         public IBusRegistrationConfigurator AddConsumers()
         {
-          //  configurator.AddSagaStateMachine<AgvGraphBuilderStateMachine, AgvGraphBuilderSaga>().InMemoryRepository();
-          //  configurator.AddConsumer<InstantActionsConsumer>();
+            configurator.AddConsumer<ResendCommandHandler>();
             return configurator;
         }
     }

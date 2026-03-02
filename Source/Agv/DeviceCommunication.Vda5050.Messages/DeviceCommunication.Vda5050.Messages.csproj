@@ -14,6 +14,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\DeviceCommunication.Vda5050.Domain\DeviceCommunication.Vda5050.Domain.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Schemas\" />

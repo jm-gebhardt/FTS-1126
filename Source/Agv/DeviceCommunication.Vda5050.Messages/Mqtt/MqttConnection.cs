@@ -48,6 +48,19 @@ public record MqttConnection
     /// Current connection state between the AGV and the broker.
     /// </summary>
     public MqttConnectionState ConnectionState { get; set; }
+
+    /// <summary>
+    /// Deconstructs <see cref="MqttConnection"/>
+    /// </summary>
+    public void Deconstruct(out int headerId, out DateTimeOffset timestamp, out string version, out string manufacturer, out string serialNumber, out MqttConnectionState connectionState)
+    {
+        headerId = HeaderId;
+        timestamp = Timestamp;
+        version = Version;
+        manufacturer = Manufacturer;
+        serialNumber = SerialNumber;
+        connectionState = ConnectionState;
+    }
 }
 
 /// <summary>

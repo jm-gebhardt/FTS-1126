@@ -13,7 +13,7 @@ Each Service is build as a separate project.
 ```
 - Agv
     - Common: Containing all shared items such as Messages, Models, Utils
-    - DeviceCommunication: The service is the proxy to the AGVs.
+    - DeviceCommunication(.Simagv/.Karis/.Vda5050): The service is the proxy to the AGVs.
     - TransportOrder: Manage HostOrders and distribute resulting TransportOrders
     - WCSCommunication: Taking HostOrders from StoreWare and sending them to be managed by TransportOrder
 ```

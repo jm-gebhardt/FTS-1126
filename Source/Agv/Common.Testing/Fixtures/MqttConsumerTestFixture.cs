@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
+using MassTransit.Testing;
+using Shouldly;
 
 namespace Gebhardt.Acc.Common.Testing.Fixtures;
 
@@ -22,5 +24,18 @@ public abstract class MqttConsumerTestFixture<TConsumer> : MassTransitConsumerTe
     {
         base.ConfigureInMemory(cfg, context);
         MqttTestFixture.ConfigureMqtt(cfg);
+    }
+
+    /// <summary>
+    /// Publish and consume the mqtt message.
+    /// </summary>
+    /// <param name="message">Message to be published.</param>
+    /// <param name="filter">Message filter.</param>
+    /// <typeparam name="T">Type of message to be published.</typeparam>
+    public async Task PublishMqttMessageAsync<T>(T message, FilterDelegate<IReceivedMessage<T>>? filter = null)
+        where T : class
+    {
+        await TestHarness.Bus.Publish(message);
+        ConsumedMessages.Select<T>().Count().ShouldBe(1);
     }
 }
