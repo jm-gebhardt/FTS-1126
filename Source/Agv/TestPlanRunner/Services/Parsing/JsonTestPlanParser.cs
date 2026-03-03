@@ -2,7 +2,6 @@
 using System.Text.Json.Serialization;
 using Gebhardt.Acc.TestPlanRunner.Domain;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
 

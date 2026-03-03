@@ -14,11 +14,8 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using System.Xml.Linq;
-using System.Xml.XPath;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Configuration;
 
@@ -98,12 +95,12 @@ public static class WebHostBuilderExtension
                     {
                         opt.ScanAssemblies(executingAssembly);
                         opt.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
-                        []
-                    }
-                });
+                        {
+                            {
+                                new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                                []
+                            }
+                        });
                         opt.AddOperationFilter(new SecurityRequirementsOperationFilter(true, JwtBearerDefaults.AuthenticationScheme));
                     });
                     options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
@@ -126,29 +123,18 @@ public static class WebHostBuilderExtension
                     };
                     options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
                     options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
-                    new List<string>()
-                }
-            });
+                    {
+                        {
+                            new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                            []
+                        }
+                    });
                     options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
-                    IncludeXmlComments(options);
+                    options.IncludeXmlComments();
                 });
                 IdentityModelEventSource.ShowPII = true;
             });
             return webHostBuilder;
-        }
-    }
-
-    private static void IncludeXmlComments(SwaggerGenOptions options)
-    {
-        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
-
-        // Add resolved XML docs to Swagger
-        foreach (var doc in resolvedXmlDocs)
-        {
-            options.IncludeXmlComments(() => new XPathDocument(doc.CreateReader()), true);
         }
     }
 

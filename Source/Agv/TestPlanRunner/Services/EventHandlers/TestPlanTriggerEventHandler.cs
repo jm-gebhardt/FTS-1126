@@ -2,7 +2,6 @@
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services.EventHandlers;
 

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TestPlanRunner.Domain;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
 
@@ -12,6 +11,9 @@ public class TestPlanParserFactory : ITestPlanParserFactory
 {
     private readonly ILogger<TestPlanParserFactory> _logger;
     private readonly Dictionary<string, ITestPlanParser> _parsers = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <inheritdoc />
+    public IEnumerable<string> SupportedExtensions => _parsers.Keys;
 
     /// <inheritdoc cref="TestPlanParserFactory"/>
     public TestPlanParserFactory(
@@ -62,7 +64,7 @@ public class TestPlanParserFactory : ITestPlanParserFactory
 
             var lastWriteTime = File.GetLastWriteTimeUtc(filePath);
             string testPlanName = Path.GetFileNameWithoutExtension(filePath);
-            testPlan = testPlan with { Name = testPlanName, LastWriteTime = lastWriteTime };
+            testPlan = testPlan with { Name = testPlanName, LastUpdateTime = lastWriteTime };
 
             if (!ValidateTestPlan(testPlan, filePath))
             {

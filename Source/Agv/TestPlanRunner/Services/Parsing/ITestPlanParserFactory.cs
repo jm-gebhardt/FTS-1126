@@ -8,6 +8,11 @@ namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
 public interface ITestPlanParserFactory
 {
     /// <summary>
+    /// Gets all currently supported test plan file extensions.
+    /// </summary>
+    IEnumerable<string> SupportedExtensions { get; }
+
+    /// <summary>
     /// Tries to parse a test plan file asynchronously.
     /// </summary>
     /// <param name="filePath">The path to the test plan file.</param>

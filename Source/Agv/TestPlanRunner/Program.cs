@@ -1,7 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.TestPlanRunner;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 var initialLogger = InitialLogger.Create<Program>();
 

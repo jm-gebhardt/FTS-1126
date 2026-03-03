@@ -36,5 +36,5 @@ public record TestPlanStep
     /// <summary>
     /// Delay in seconds after completing this step before proceeding to next step.
     /// </summary>
-    public int WaitTimeSeconds { get; init; }
+    public int? WaitTimeSeconds { get; init; }
 }

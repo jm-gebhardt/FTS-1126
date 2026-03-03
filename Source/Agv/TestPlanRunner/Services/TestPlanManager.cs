@@ -12,7 +12,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.ActionGroup;
 using AgvAction = Gebhardt.Acc.Common.Messages.ActionGroups.AgvAction;
 
@@ -244,7 +243,7 @@ public class TestPlanManager : ITestPlanManager
         state.IsIdle = false;
 
         _logger.LogInformation(
-            "Queueing HostOrder for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Iteration={Iteration}/{Iterations}, Step={StepIndex}, Source={Source}, Destination={Destination}, Hu={Hu}",
+            "Queueing HostOrder for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Step={StepNumber}, Iteration={Iteration}/{Iterations}, Source={Source}, Destination={Destination}, Hu={Hu}",
             agvCorrelationId,
             state.ActiveTestPlan?.Name,
             state.CurrentIterationIndex + 1,
@@ -284,7 +283,7 @@ public class TestPlanManager : ITestPlanManager
         state.IsIdle = false;
 
         _logger.LogInformation(
-            "Queueing action for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Iteration={Iteration}/{Iterations}, Step={StepIndex}, Action={StepType}, Target={TargetNode}",
+            "Queueing action for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Step={StepNumber}, Iteration={Iteration}/{Iterations}, Action={StepType}, Target={TargetNode}",
             agvCorrelationId,
             state.ActiveTestPlan?.Name,
             state.CurrentIterationIndex + 1,
@@ -379,7 +378,7 @@ public class TestPlanManager : ITestPlanManager
             var completedStep = state.GetCurrentStep();
             if (completedStep != null)
             {
-                state.PendingWaitTimeSeconds = completedStep.WaitTimeSeconds;
+                state.PendingWaitTimeSeconds = completedStep.WaitTimeSeconds ?? 0;
             }
 
             // Advance to next step

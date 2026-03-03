@@ -25,13 +25,14 @@ public record TestPlan
     public Collection<Guid>? AgvCorrelationIds { get; init; }
 
     /// <summary>
-    /// AGV serial numbers. Automatically converted to AgvCorrelationIds.
+    /// AGV serial numbers this test plan applies to. Automatically converted to AgvCorrelationIds.
     /// </summary>
     public Collection<string>? AgvSerialNumbers
     {
-        get => null; // Needed for JSON deserialization
+        get;
         init
         {
+            field = value;
             if (value != null)
             {
                 AgvCorrelationIds = new Collection<Guid>(value.Select(x => x.ToGuid()).ToList());
@@ -50,9 +51,9 @@ public record TestPlan
     public required Collection<TestPlanStep> Steps { get; init; }
 
     /// <summary>
-    /// The last write time of the file this test plan was loaded from.
+    /// The last update time of the test plan was updated.
     /// </summary>
-    public DateTime LastWriteTime { get; init; }
+    public DateTime LastUpdateTime { get; init; }
 
     /// <summary>
     /// Returns true if the test plan applies to all AGVs.

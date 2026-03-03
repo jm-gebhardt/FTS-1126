@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.TestPlanRunner.Domain;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 

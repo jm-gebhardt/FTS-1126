@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Swagger;
@@ -11,7 +9,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using SwaggerGenOptionsExtensions = Gebhardt.Acc.Common.WebApi.Swagger.SwaggerGenOptionsExtensions;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Configuration;
 
@@ -24,7 +22,7 @@ public static class WebHostBuilderExtension
     /// Health Endpoint name 
     /// </summary>
     private const string HealthEndpoint = "/health";
-    
+
     /// <summary>
     /// Extended health endpoint name with detailed information
     /// </summary>
@@ -47,64 +45,53 @@ public static class WebHostBuilderExtension
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
             var config = context.Configuration.GetSection("KEYCLOAK");
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
-            {
-                o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
-                o.RequireHttpsMetadata = false;
-                o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
-                o.TokenValidationParameters.ValidateIssuer = false;
-                o.TokenValidationParameters.ValidateAudience = false;
-                o.TokenValidationParameters.ValidateIssuerSigningKey = false;
-                o.TokenValidationParameters.SignatureValidator =
-                    (token, _) =>
-                    {
-                        var jwt = new JsonWebToken(token);
-                        return jwt;
-                    };
-            });
-        services.AddSwaggerGen(options =>
-        {
-            options.SwaggerDoc(new RestApiGroup());
-            options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
-            options.SchemaFilter<RequireNonNullableEnumPropertiesSchemaFilter>();
-            options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
-            options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
-            options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
-            options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
-            var securityScheme = new OpenApiSecurityScheme
-            {
-                In = ParameterLocation.Header,
-                Description = "Please enter a valid token",
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                BearerFormat = "JWT",
-                Scheme = JwtBearerDefaults.AuthenticationScheme
-            };
-            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
-            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
-            {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
                 {
-                    new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
-                    new List<string>()
-                }
+                    o.MetadataAddress = $"{config["URL"]!}/realms/{config["REALM"]!}/.well-known/openid-configuration";
+                    o.RequireHttpsMetadata = false;
+                    o.Authority = $"{config["URL"]!}/auth/realms/{config["REALM"]!}";
+                    o.TokenValidationParameters.ValidateIssuer = false;
+                    o.TokenValidationParameters.ValidateAudience = false;
+                    o.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                    o.TokenValidationParameters.SignatureValidator =
+                        (token, _) =>
+                        {
+                            var jwt = new JsonWebToken(token);
+                            return jwt;
+                        };
+                });
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc(new RestApiGroup());
+                options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
+                options.SchemaFilter<RequireNonNullableEnumPropertiesSchemaFilter>();
+                options.SupportNonNullableReferenceTypes(); // Sets Nullable flags appropriately.
+                options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
+                options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
+                options.CustomSchemaIds(CustomSchemaSelector.RemoveDtoSuffix);
+                var securityScheme = new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = JwtBearerDefaults.AuthenticationScheme
+                };
+                options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
+                options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                        []
+                    }
+                });
+                options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
+                SwaggerGenOptionsExtensions.IncludeXmlComments(options);
             });
-            options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
-            IncludeXmlComments(options);
-        });
         });
         return webHostBuilder;
-    }
-
-    private static void IncludeXmlComments(SwaggerGenOptions options)
-    {
-        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
-
-        // Add resolved XML docs to Swagger
-        foreach (var doc in resolvedXmlDocs)
-        {
-            options.IncludeXmlComments(() => new XPathDocument(doc.CreateReader()), true);
-        }
     }
 
     /// <summary>

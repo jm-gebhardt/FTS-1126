@@ -3,7 +3,6 @@ using Gebhardt.Acc.TestPlanRunner.Configuration;
 using Gebhardt.Acc.TestPlanRunner.Domain;
 using Gebhardt.Acc.TestPlanRunner.Services.Parsing;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services;
 
@@ -37,13 +36,11 @@ public class TestPlanFileWatcher : IPollable
         _configuration = configuration;
     }
 
-    private static IEnumerable<string> GetSupportedFiles(string directoryPath)
+    private static IEnumerable<string> GetSupportedFiles(string directoryPath, IEnumerable<string> extensions)
     {
-        string[] extensions = ["*.json", "*.yaml", "*.yml"];
-
         foreach (string extension in extensions)
         {
-            foreach (string file in Directory.EnumerateFiles(directoryPath, extension, SearchOption.TopDirectoryOnly))
+            foreach (string file in Directory.EnumerateFiles(directoryPath, "*" + extension, SearchOption.TopDirectoryOnly))
             {
                 yield return file;
             }
@@ -73,7 +70,7 @@ public class TestPlanFileWatcher : IPollable
 
     private async Task ProcessDirectoryAsync(string directoryPath, CancellationToken cancellationToken)
     {
-        HashSet<string> currentFiles = GetSupportedFiles(directoryPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> currentFiles = GetSupportedFiles(directoryPath, _parserFactory.SupportedExtensions).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         List<string> deletedFiles = _knownFiles.Where(f => !currentFiles.Contains(f)).ToList();
         foreach (string deletedFile in deletedFiles)
