@@ -15,7 +15,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance> : Ma
     private readonly TimeSpan? _inactivityTimeout;
 
     /// <summary>
-    /// A registered Saga AgvState Machine 
+    /// A registered Saga AgvState Machine
     /// </summary>
     protected TStateMachine Machine { get; private set; } = null!;
 
@@ -23,6 +23,8 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance> : Ma
     /// Saga AgvState Machine test harness
     /// </summary>
     public ISagaStateMachineTestHarness<TStateMachine, TInstance> SagaHarness { get; private set; } = null!;
+
+    protected override IReceivedMessageList ConsumedMessages => SagaHarness.Consumed;
 
     /// <summary>
     /// Saga Dictionary. This can be used to manipulate an OrderSaga directly.

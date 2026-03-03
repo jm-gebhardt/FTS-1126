@@ -45,7 +45,13 @@ public class MaintenanceLogCommandHandlerTestFixture: MassTransitConsumerTestFix
     public MaintenanceLogCommandHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+        _agvDb.Setup(r => r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(true).Verifiable();
         return this;
+    }
+
+    public void VerifyAgvUpdated(Times times)
+    {
+        _agvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), times);
     }
 
     public MaintenanceLogCommandHandlerTestFixture WithLastMaintenance(TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog? maintenanceLog=null)

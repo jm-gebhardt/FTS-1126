@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Events.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using JetBrains.Annotations;
@@ -59,6 +60,13 @@ public class MaintenanceLogCommandHandler :
             });
 
         await context.Publish(new MaintenanceLogCreated(agv.CorrelationId, maintenanceLog));
+
+        if (maintenanceLog.MaintenanceType == MaintenanceType.BatteryReplaced && agv.AgvStatus != null
+            && (agv.AgvStatus.LastBatteryReplacement == null || maintenanceLog.ExecutionDate > agv.AgvStatus.LastBatteryReplacement))
+        {
+            agv.AgvStatus.UpdateLastBatteryReplacement(maintenanceLog.ExecutionDate);
+            await _agvDb.Agvs.UpdateAgvAsync(agv);
+        }
 
         // Raise AgvMaintained event only if the current log is not for an old maintenance
         if (lastMaintenance == null || lastMaintenance.ExecutionDate <= maintenanceLog.ExecutionDate)

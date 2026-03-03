@@ -453,7 +453,7 @@ public class Agv : IAgv
                 newStatus.BatteryCurrent,
                 newStatus.BatteryTemperature,
                 newStatus.EstimatedFullyChargedTime,
-                newStatus.LastBatteryReplacement,
+                AgvStatus.LastBatteryReplacement,
                 newStatus.ZoneIds,
                 newStatus.StationIds,
                 // use old operating data if it is not considered significant

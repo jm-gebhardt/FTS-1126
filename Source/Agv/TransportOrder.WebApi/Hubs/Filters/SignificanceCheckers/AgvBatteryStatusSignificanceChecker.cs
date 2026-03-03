@@ -22,9 +22,9 @@ public class AgvBatteryStatusSignificanceChecker : ReflectionSignificanceChecker
         { nameof(AgvBatteryStatusDto.BatteryVoltage), (obj1, obj2) => Math.Abs(obj1.BatteryVoltage - obj2.BatteryVoltage) >= _agvBatteryConfiguration.BatteryVoltageThreshold },
         { nameof(AgvBatteryStatusDto.BatteryCurrent), (obj1, obj2) => Math.Abs(obj1.BatteryCurrent - obj2.BatteryCurrent) >= _agvBatteryConfiguration.BatteryCurrentThreshold },
         { nameof(AgvBatteryStatusDto.BatteryTemperature), (obj1, obj2) => Math.Abs(obj1.BatteryTemperature - obj2.BatteryTemperature) >= _agvBatteryConfiguration.BatteryTemperatureThreshold },
-        // just exclude EstimatedFullyChargedTime and LastBatteryReplacement, because they change with every init of AgvStatus, as this is not fully implemented yet.
+        // just exclude EstimatedFullyChargedTime, because it changes with every init of AgvStatus, as this is not fully implemented yet.
         { nameof(AgvBatteryStatusDto.EstimatedFullyChargedTime), (_, _) => false },
-        { nameof(AgvBatteryStatusDto.LastBatteryReplacement), (_, _) => false },
+        { nameof(AgvBatteryStatusDto.LastBatteryReplacement), (obj1, obj2) => obj1.LastBatteryReplacement != obj2.LastBatteryReplacement },
         // message created date will be considered in the message filter
         { nameof(AgvBatteryStatusDto.MessageCreatedDate), (_, _) => false }
     };

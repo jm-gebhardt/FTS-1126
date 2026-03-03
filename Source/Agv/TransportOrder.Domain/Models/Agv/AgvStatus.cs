@@ -72,7 +72,7 @@ public record AgvStatus
     public DateTime? EstimatedFullyChargedTime { get; init; }
 
     /// <summary>The date when the battery was replaced the last time.</summary>
-    public DateTime? LastBatteryReplacement { get; init; }
+    public DateTime? LastBatteryReplacement { get; private set; }
 
     /// <summary>
     /// AGV is disturbed.
@@ -181,7 +181,6 @@ public record AgvStatus
         BatteryCharge = 0;
         Charging = false;
         Disturbed = false;
-        LastBatteryReplacement = DateTime.UtcNow.AddDays(-2);
         TotalDistance = 0;
         TotalLifetime = 0;
     }
@@ -193,6 +192,15 @@ public record AgvStatus
     public void UpdateLastNodeId(Guid? nodeId)
     {
         LastNodeId = nodeId;
+    }
+
+    /// <summary>
+    /// Update the last battery replacement date.
+    /// </summary>
+    /// <param name="date">The date of the battery replacement.</param>
+    public void UpdateLastBatteryReplacement(DateTime date)
+    {
+        LastBatteryReplacement = date;
     }
 
     /// <summary>

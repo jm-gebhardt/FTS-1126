@@ -22,6 +22,7 @@ public class AgvBatteryStatusSignificanceCheckerTests
     public void HasSignificantChanges_WhenBatteryChargeDoesNotChangeSignificantly_ReturnsFalse()
     {
         var checker = new AgvBatteryStatusSignificanceChecker(new AgvBatteryConfiguration(0.3, 0.2, 0.5, 0.5));
+        var lastBatteryReplacement = DateTime.Parse("2024-02-18T11:49:55.0538627Z");
         var oldStatus = new AgvBatteryStatusDto
         {
             CorrelationId = Guid.Parse("14f7f5cd-efe9-5550-fce2-a60b86db78dc"),
@@ -31,7 +32,7 @@ public class AgvBatteryStatusSignificanceCheckerTests
             BatteryCurrent = -2.0832419395446777,
             BatteryTemperature = 20.03445281982422,
             EstimatedFullyChargedTime = null,
-            LastBatteryReplacement = DateTime.Parse("2024-02-18T11:49:55.0538627Z"),
+            LastBatteryReplacement = lastBatteryReplacement,
             BatteryLevelCritical = 15,
             BatteryLevelLow = 40,
             MinChargeUp = 60,
@@ -47,7 +48,7 @@ public class AgvBatteryStatusSignificanceCheckerTests
             BatteryCurrent = -2.0769848823547363,
             BatteryTemperature = 19.955346298217773,
             EstimatedFullyChargedTime = null,
-            LastBatteryReplacement = DateTime.Parse("2024-02-18T11:49:56.0625123Z"),
+            LastBatteryReplacement = lastBatteryReplacement,
             BatteryLevelCritical = 15,
             BatteryLevelLow = 40,
             MinChargeUp = 60,

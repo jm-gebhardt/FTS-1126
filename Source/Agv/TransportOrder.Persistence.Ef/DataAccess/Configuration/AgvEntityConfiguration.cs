@@ -39,11 +39,6 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
                     case nameof(AgvStatus.CorrelationId):
                         continue;
 
-                    // read only property, until further implementation.
-                    case nameof(AgvStatus.LastBatteryReplacement):
-                        o.Ignore(propertyInfo.Name);
-                        break;
-
                     case nameof(AgvStatus.OrderId):
                         o.Property(propertyInfo.PropertyType, propertyInfo.Name).HasMaxLength(DbStringLimits.OrderId);
                         break;
