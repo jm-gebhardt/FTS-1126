@@ -115,13 +115,14 @@ public class FromWePlcTelegramProcessor : InboundTelegramProcessorBase<ConveyorT
         if (CurrentProcessor != null)
         {
             _logger.LogDebug("Sending telegram {Telegram} to processor", telegram);
-
             CurrentProcessor.ProcessReceivedTelegram(telegram);
-            SendAcknowledgement = true;
-            CurrentTelegram = conveyorTelegram;
-            return;
         }
-        _logger.LogError("Could not process telegram");
+        else
+        {
+            _logger.LogWarning("Unknown telegram acknowledged without processing: {Func}", conveyorTelegram.Func);
+        }
+        SendAcknowledgement = true;
+        CurrentTelegram = conveyorTelegram;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{ConveyorTelegram}"/>>

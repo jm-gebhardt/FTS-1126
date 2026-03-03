@@ -75,7 +75,7 @@ public class FromPrismatTelegramProcessorTest
     }
 
     [TestMethod]
-    public void ProcessReceivedTelegram_NoProcessor_NoCurrentTelegram()
+    public void ProcessReceivedTelegram_NoProcessor_TelegramAcknowledged()
     {
         const string telegram = TestTelegram.Tord;
         var fixture = new FromPrismatTelegramProcessorTestFixture()
@@ -83,7 +83,8 @@ public class FromPrismatTelegramProcessorTest
             .WithoutCurrentProcessor();
 
         fixture.Processor.ProcessReceivedTelegram(telegram);
-        fixture.Processor.CurrentTelegram.ShouldBeNull();
+        fixture.Processor.CurrentTelegram.ShouldNotBeNull();
+        fixture.Processor.ShouldReceiveTelegram().ShouldBeFalse();
         fixture.VerifyTelegramProcessed(telegram, Times.Never());
     }
 

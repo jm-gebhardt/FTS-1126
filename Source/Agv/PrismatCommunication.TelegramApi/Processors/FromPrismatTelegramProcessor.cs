@@ -114,13 +114,14 @@ public class FromPrismatTelegramProcessor : InboundTelegramProcessorBase<Prismat
         if (CurrentProcessor != null)
         {
             _logger.LogDebug("Sending it to processor");
-
             CurrentProcessor.ProcessReceivedTelegram(telegram);
-            SendAcknowledgement = true;
-            CurrentTelegram = prismatTelegram;
-            return;
         }
-        _logger.LogError("Could not process telegram");
+        else
+        {
+            _logger.LogWarning("Unknown telegram acknowledged without processing: {Func}", prismatTelegram.Func);
+        }
+        SendAcknowledgement = true;
+        CurrentTelegram = prismatTelegram;
     }
 
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
