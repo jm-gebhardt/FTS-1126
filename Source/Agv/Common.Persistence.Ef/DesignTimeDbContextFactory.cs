@@ -46,8 +46,6 @@ public abstract class DesignTimeDbContextFactory<TDbContext> : IDesignTimeDbCont
                     m =>
                     {
                         m.MigrationsHistoryTable(_migrationTableName);
-                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
             });

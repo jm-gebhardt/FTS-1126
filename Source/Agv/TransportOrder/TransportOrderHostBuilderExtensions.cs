@@ -35,7 +35,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder;
 
@@ -88,11 +87,8 @@ public static class TransportOrderHostBuilderExtensions
             builder.UseSqlServer(connectionString, m =>
                 {
                     m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
-                    // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                    m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                     m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                })
-                .LogTo(Console.WriteLine, LogLevel.Information);
+                });
         });
 
         services.AddHealthChecks()

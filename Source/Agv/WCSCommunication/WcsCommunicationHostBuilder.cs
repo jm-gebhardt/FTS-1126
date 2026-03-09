@@ -58,8 +58,6 @@ public static class WcsCommunicationHostBuilder
                         string? connectionString = context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName);
                         builder.UseSqlServer(connectionString, m =>
                         {
-                            // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                            m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                             m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                         });
                     });
@@ -91,8 +89,6 @@ public static class WcsCommunicationHostBuilder
                 builder.UseSqlServer(connectionString, m =>
                 {
                     m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName);
-                    // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                    m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                     m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 });
             });

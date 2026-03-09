@@ -123,8 +123,6 @@ public static class HostBuilderExtension
                     {
                         m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
                         m.EnableRetryOnFailure();
-                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     }));
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();

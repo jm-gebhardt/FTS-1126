@@ -79,8 +79,6 @@ public static class HostBuilderExtension
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<StationCommunicationDbContext>.MigrationTableName);
-                        // EF Core 10: Avoid OPENJSON by using constants for parameterized collections
-                        m.UseParameterizedCollectionMode(ParameterTranslationMode.Constant);
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
                 });
