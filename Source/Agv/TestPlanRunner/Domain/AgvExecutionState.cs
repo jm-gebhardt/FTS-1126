@@ -34,9 +34,10 @@ public class AgvExecutionState
     public int CurrentStepIndex { get; set; }
 
     /// <summary>
-    /// The correlation Id of the currently executing action group.
+    /// The correlation id of the currently executing step (host order or action group).
+    /// When set, indicates a step is queued/executing.
     /// </summary>
-    public Guid? CurrentActionGroupCorrelationId { get; set; }
+    public Guid? CurrentStepCorrelationId { get; set; }
 
     /// <summary>
     /// The type of the currently executing step.
@@ -44,9 +45,9 @@ public class AgvExecutionState
     public StepType? CurrentStepType { get; set; }
 
     /// <summary>
-    /// The correlation Id of the currently executing host order (for HostOrder steps).
+    /// Indicates that the step has been completed.
     /// </summary>
-    public Guid? CurrentHostOrderCorrelationId { get; set; }
+    public bool IsStepCompleted { get; set; }
 
     /// <summary>
     /// Whether a cancellation of the current test plan is pending (waiting for safe cancellation point).
@@ -69,9 +70,9 @@ public class AgvExecutionState
     public int PendingWaitTimeSeconds { get; set; }
 
     /// <summary>
-    /// The time when the last action completed (used for wait time tracking).
+    /// The time when the last step completed (used for wait time tracking).
     /// </summary>
-    public DateTime? LastActionCompletedTime { get; set; }
+    public DateTime? LastStepCompletedTime { get; set; }
 
     /// <summary>
     /// Gets the current step from the active test plan, or null if none.
@@ -123,13 +124,13 @@ public class AgvExecutionState
         PendingTestPlan = null;
         CurrentIterationIndex = 0;
         CurrentStepIndex = 0;
-        CurrentActionGroupCorrelationId = null;
+        CurrentStepCorrelationId  = null;
         CurrentStepType = null;
-        CurrentHostOrderCorrelationId = null;
+        IsStepCompleted = false;
         CancellationPending = false;
         MarkedForRemoval = false;
         PendingWaitTimeSeconds = 0;
-        LastActionCompletedTime = null;
+        LastStepCompletedTime  = null;
     }
 
     /// <summary>

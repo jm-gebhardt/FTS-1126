@@ -51,9 +51,9 @@ public record TestPlan
     public required Collection<TestPlanStep> Steps { get; init; }
 
     /// <summary>
-    /// The last update time of the test plan was updated.
+    /// The last write time of the test plan was updated.
     /// </summary>
-    public DateTime LastUpdateTime { get; init; }
+    public DateTime LastWriteTime  { get; init; }
 
     /// <summary>
     /// Returns true if the test plan applies to all AGVs.

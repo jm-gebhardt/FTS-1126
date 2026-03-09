@@ -42,7 +42,7 @@ public static class TestPlanJsonOptions
             string[] propertyNamesToExclude =
             [
                 nameof(TestPlan.Name).ToLower(),
-                nameof(TestPlan.LastUpdateTime).ToLower(),
+                nameof(TestPlan.LastWriteTime).ToLower(),
                 nameof(TestPlan.AppliesToAllAgvs).ToLower(),
                 nameof(TestPlan.HasInfiniteIterations).ToLower()
             ];

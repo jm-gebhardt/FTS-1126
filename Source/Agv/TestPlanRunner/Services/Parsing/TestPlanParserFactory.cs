@@ -64,7 +64,7 @@ public class TestPlanParserFactory : ITestPlanParserFactory
 
             var lastWriteTime = File.GetLastWriteTimeUtc(filePath);
             string testPlanName = Path.GetFileNameWithoutExtension(filePath);
-            testPlan = testPlan with { Name = testPlanName, LastUpdateTime = lastWriteTime };
+            testPlan = testPlan with { Name = testPlanName, LastWriteTime = lastWriteTime };
 
             if (!ValidateTestPlan(testPlan, filePath))
             {

@@ -46,14 +46,13 @@ public class TestPlanTriggerEventHandler : IConsumer<AgvBecameIdle>, IConsumer<A
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupCompleted> context)
     {
+        var actionGroupCorrelationId = context.Message.CorrelationId;
         Guid? agvCorrelationId = context.Message.ActionGroup.AssignedAgv;
         if (agvCorrelationId == null)
         {
-            _logger.LogDebug("ActionGroupCompleted has no assigned AGV, skipping");
+            _logger.LogDebug("ActionGroupCompleted {ActionGroupId} has no assigned AGV, skipping", actionGroupCorrelationId);
             return;
         }
-
-        var actionGroupCorrelationId = context.Message.CorrelationId;
 
         _logger.LogDebug("AGV {AgvCorrelationId} completed action group (last action type: {ActionType}, Id: {ActionGroupId}), checking for test plan actions",
             agvCorrelationId,
@@ -63,14 +62,16 @@ public class TestPlanTriggerEventHandler : IConsumer<AgvBecameIdle>, IConsumer<A
         try
         {
             var state = _executionStateProvider.GetOrCreate(agvCorrelationId.Value);
-            if (state.CurrentHostOrderCorrelationId == actionGroupCorrelationId)
+            if (state.CurrentStepCorrelationId != actionGroupCorrelationId)
             {
-                _logger.LogDebug("AGV {AgvCorrelationId} completed HostOrder {HostOrderCorrelationId}",
-                    agvCorrelationId, actionGroupCorrelationId);
-                state.CurrentHostOrderCorrelationId = null;
+                _logger.LogDebug("AGV {AgvCorrelationId} completed action group {ActionGroupId} but waiting for {ExpectedId}, skipping",
+                    agvCorrelationId, actionGroupCorrelationId, state.CurrentStepCorrelationId);
+                return;
             }
-
-            await _testPlanManager.TryStartAgvAsync(agvCorrelationId.Value);
+            _logger.LogDebug("AGV {AgvCorrelationId} marking action group {ActionGroupId} as completed",
+                agvCorrelationId, actionGroupCorrelationId);
+            
+            await _testPlanManager.SetStepCompletedAsync(agvCorrelationId.Value);
         }
         catch (Exception ex)
         {

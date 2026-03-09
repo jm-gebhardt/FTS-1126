@@ -76,7 +76,9 @@ public class TestPlanManager : ITestPlanManager
 
     private async Task ApplyTestPlanToAgvAsync(TestPlan testPlan, Guid agvCorrelationId)
     {
-        var state = _executionStateProvider.GetOrCreate(agvCorrelationId);
+        await _agvIdleHandlerSemaphoreProvider.Get(agvCorrelationId).ExecuteLockedAsync(async () =>
+        {
+            var state = _executionStateProvider.GetOrCreate(agvCorrelationId);
 
         if (state.IsIdle || state.ActiveTestPlan == null)
         {
@@ -84,7 +86,12 @@ public class TestPlanManager : ITestPlanManager
                 agvCorrelationId, testPlan.Name);
 
             state.Reset(testPlan);
-            await QueueNextActionAsync(agvCorrelationId);
+            if (state.CurrentStepCorrelationId.HasValue)
+            {
+                _logger.LogDebug("AGV {AgvCorrelationId} current step already queued, skipping", agvCorrelationId);
+                return;
+            }
+            await QueueNextStepAsync(agvCorrelationId);
         }
         else
         {
@@ -99,11 +106,13 @@ public class TestPlanManager : ITestPlanManager
                         "AGV {AgvCorrelationId} is executing cancellable action {StepType}, cancelling and starting test plan {TestPlanName}",
                         agvCorrelationId, state.CurrentStepType.Value, testPlan.Name);
 
-                    // Cancel current action - the AGV will become idle after the abort
-                    if (state.CurrentActionGroupCorrelationId.HasValue)
+                    if (state.CurrentStepCorrelationId.HasValue)
                     {
-                        await _bus.Publish(new AbortActionGroup(state.CurrentActionGroupCorrelationId.Value, AbortReason.TestPlanChange));
+                        await _bus.Publish(new AbortActionGroup(state.CurrentStepCorrelationId.Value, AbortReason.TestPlanChange));
                     }
+                    
+                    // We are ok with directly queueing the next test step after sending the abort.
+                    state.IsStepCompleted = true;
                 }
                 else
                 {
@@ -113,10 +122,10 @@ public class TestPlanManager : ITestPlanManager
                 }
             }
 
-            // Set pending test plan - will be picked up when AGV becomes idle
             state.PendingTestPlan = testPlan;
             state.CancellationPending = true;
         }
+        });
     }
 
     /// <inheritdoc />
@@ -138,7 +147,7 @@ public class TestPlanManager : ITestPlanManager
                 state.CancellationPending = true;
 
                 // If the AGV is executing a cancellable action, cancel it
-                if (state is { CurrentStepType: not null, CurrentActionGroupCorrelationId: not null })
+                if (state is { CurrentStepType: not null, CurrentStepCorrelationId: not null })
                 {
                     bool canCancel = await _cancellationEvaluator.CanCancelAsync(state.AgvCorrelationId, state.CurrentStepType.Value);
 
@@ -146,7 +155,7 @@ public class TestPlanManager : ITestPlanManager
                     {
                         _logger.LogInformation("AGV {AgvCorrelationId} test plan removed, cancelling current cancellable action", state.AgvCorrelationId);
 
-                        await _bus.Publish(new AbortActionGroup(state.CurrentActionGroupCorrelationId.Value, AbortReason.TestPlanChange));
+                        await _bus.Publish(new AbortActionGroup(state.CurrentStepCorrelationId.Value, AbortReason.TestPlanChange));
                     }
                     else
                     {
@@ -178,7 +187,7 @@ public class TestPlanManager : ITestPlanManager
         return _testPlanProvider.ConcurrentDict.GetValueOrDefault(name);
     }
 
-    private async Task QueueNextActionAsync(Guid agvCorrelationId)
+    private async Task QueueNextStepAsync(Guid agvCorrelationId)
     {
         var state = _executionStateProvider.GetOrCreate(agvCorrelationId);
 
@@ -190,9 +199,9 @@ public class TestPlanManager : ITestPlanManager
         }
 
         // Check if we need to wait
-        if (state is { PendingWaitTimeSeconds: > 0, LastActionCompletedTime: not null })
+        if (state is { PendingWaitTimeSeconds: > 0, LastStepCompletedTime: not null })
         {
-            var elapsed = DateTime.UtcNow - state.LastActionCompletedTime.Value;
+            var elapsed = DateTime.UtcNow - state.LastStepCompletedTime.Value;
             var waitTime = TimeSpan.FromSeconds(state.PendingWaitTimeSeconds);
 
             if (elapsed < waitTime)
@@ -204,7 +213,7 @@ public class TestPlanManager : ITestPlanManager
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(remainingWait);
-                    await QueueNextActionAsync(agvCorrelationId);
+                    await QueueNextStepAsync(agvCorrelationId);
                 });
                 return;
             }
@@ -220,6 +229,19 @@ public class TestPlanManager : ITestPlanManager
         {
             await QueueActionAsync(agvCorrelationId, state, currentStep);
         }
+        
+        _logger.LogInformation(
+            "Queued {StepType} for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Step={StepNumber}, Iteration={Iteration}/{Iterations}, ActionGroupId={ActionGroupId}, Target={TargetNode}, Source={Source}, Destination={Destination}",
+            currentStep.StepType,
+            agvCorrelationId,
+            state.ActiveTestPlan?.Name,
+            state.CurrentStepIndex + 1,
+            state.CurrentIterationIndex + 1,
+            state.ActiveTestPlan?.HasInfiniteIterations == false ? state.ActiveTestPlan?.Iterations : "∞",
+            state.CurrentStepCorrelationId,
+            currentStep.TargetNode,
+            currentStep.Source,
+            currentStep.Destination);
     }
 
     private async Task QueueHostOrderAsync(Guid agvCorrelationId, AgvExecutionState state, TestPlanStep currentStep)
@@ -237,23 +259,11 @@ public class TestPlanManager : ITestPlanManager
             creator: HostOrderCreator.TestPlanRunner,
             leRotation: currentStep.LeRotation ?? 0);
 
-        state.CurrentActionGroupCorrelationId = correlationId;
-        state.CurrentHostOrderCorrelationId = correlationId;
+        state.CurrentStepCorrelationId  = correlationId;
         state.CurrentStepType = StepType.HostOrder;
         state.IsIdle = false;
 
-        _logger.LogInformation(
-            "Queueing HostOrder for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Step={StepNumber}, Iteration={Iteration}/{Iterations}, Source={Source}, Destination={Destination}, Hu={Hu}",
-            agvCorrelationId,
-            state.ActiveTestPlan?.Name,
-            state.CurrentIterationIndex + 1,
-            state.ActiveTestPlan?.HasInfiniteIterations == false ? state.ActiveTestPlan?.Iterations : "∞",
-            state.CurrentStepIndex,
-            currentStep.Source,
-            currentStep.Destination,
-            hu);
-
-        await _bus.Publish(new HostOrderCreated(hu, orderDetails));
+        await _bus.Publish(new HostOrderCreated(hu, orderDetails, agvCorrelationId));
     }
 
     private async Task QueueActionAsync(Guid agvCorrelationId, AgvExecutionState state, TestPlanStep currentStep)
@@ -277,20 +287,9 @@ public class TestPlanManager : ITestPlanManager
             creator: ActionGroupCreator.TestPlanRunner,
             assignedAgv: agvCorrelationId);
 
-        state.CurrentActionGroupCorrelationId = correlationId;
-        state.CurrentHostOrderCorrelationId = null;
+        state.CurrentStepCorrelationId  = null;
         state.CurrentStepType = currentStep.StepType;
         state.IsIdle = false;
-
-        _logger.LogInformation(
-            "Queueing action for AGV {AgvCorrelationId}: TestPlan={TestPlanName}, Step={StepNumber}, Iteration={Iteration}/{Iterations}, Action={StepType}, Target={TargetNode}",
-            agvCorrelationId,
-            state.ActiveTestPlan?.Name,
-            state.CurrentIterationIndex + 1,
-            state.ActiveTestPlan?.HasInfiniteIterations == false ? state.ActiveTestPlan?.Iterations : "∞",
-            state.CurrentStepIndex,
-            currentStep.StepType,
-            currentStep.TargetNode);
 
         await _bus.Publish(new QueueActionGroup(actionGroup, ThrowOnInvalid: false));
     }
@@ -316,9 +315,10 @@ public class TestPlanManager : ITestPlanManager
             _logger.LogDebug("Try starting AGV {AgvCorrelationId}", agvCorrelationId);
             var state = _executionStateProvider.GetOrCreate(agvCorrelationId);
 
-            if (state.CurrentHostOrderCorrelationId.HasValue)
+            if (state is { CurrentStepCorrelationId: not null, IsStepCompleted: false })
             {
-                _logger.LogDebug("AGV {AgvCorrelationId} is waiting for HostOrder completion, skipping", agvCorrelationId);
+                _logger.LogDebug("AGV {AgvCorrelationId} is waiting for ActionGroupCompleted for step {StepCorrelationId}, skipping",
+                    agvCorrelationId, state.CurrentStepCorrelationId);
                 return;
             }
 
@@ -335,19 +335,19 @@ public class TestPlanManager : ITestPlanManager
                 return;
             }
 
-            if (state is { IsIdle: false, CurrentActionGroupCorrelationId: not null })
+            if (state is { IsIdle: false, CurrentStepCorrelationId: not null })
             {
-                var currentActionGroup = await _actionGroupRepository.GetActionGroupAsync(state.CurrentActionGroupCorrelationId.Value);
+                var currentActionGroup = await _actionGroupRepository.GetActionGroupAsync(state.CurrentStepCorrelationId.Value);
                 if (currentActionGroup is { State: ActionGroupState.Started or ActionGroupState.Created })
                 {
                     _logger.LogDebug("AGV {AgvCorrelationId} current action group {ActionGroupId} is still in state {State}, skipping",
-                        agvCorrelationId, state.CurrentActionGroupCorrelationId.Value, currentActionGroup.State);
+                        agvCorrelationId, state.CurrentStepCorrelationId.Value, currentActionGroup.State);
                     return;
                 }
             }
 
             state.IsIdle = true;
-            state.LastActionCompletedTime = DateTime.UtcNow;
+            state.LastStepCompletedTime = DateTime.UtcNow;
 
             // Check if marked for removal
             if (state.MarkedForRemoval)
@@ -364,7 +364,12 @@ public class TestPlanManager : ITestPlanManager
                     agvCorrelationId, state.PendingTestPlan.Name);
 
                 state.SwitchToPendingTestPlan();
-                await QueueNextActionAsync(agvCorrelationId);
+                if (state.CurrentStepCorrelationId.HasValue)
+                {
+                    _logger.LogDebug("AGV {AgvCorrelationId} current step already queued after plan switch, skipping", agvCorrelationId);
+                    return;
+                }
+                await QueueNextStepAsync(agvCorrelationId);
                 return;
             }
 
@@ -391,8 +396,22 @@ public class TestPlanManager : ITestPlanManager
                 return;
             }
 
-            await QueueNextActionAsync(agvCorrelationId);
+            state.IsStepCompleted = false;
+            await QueueNextStepAsync(agvCorrelationId);
         });
+    }
+
+    /// <inheritdoc />
+    public async Task SetStepCompletedAsync(Guid agvCorrelationId)
+    {
+        await _agvIdleHandlerSemaphoreProvider.Get(agvCorrelationId).ExecuteLockedAsync(() =>
+        {
+            var state = _executionStateProvider.GetOrCreate(agvCorrelationId);
+            state.IsStepCompleted = true;
+            return Task.CompletedTask;
+        });
+        
+        await TryStartAgvAsync(agvCorrelationId);
     }
 
     private async Task<IEnumerable<Guid>> GetAffectedAgvIdsAsync(TestPlan testPlan)

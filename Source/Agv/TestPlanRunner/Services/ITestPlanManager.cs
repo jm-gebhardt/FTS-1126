@@ -31,4 +31,9 @@ public interface ITestPlanManager
     /// Tries to start next test plan step of AGV for the specified test plan.
     /// </summary>
     Task TryStartAgvAsync(Guid agvCorrelationId);
+    
+    /// <summary>
+    /// Marks the current step of the test plan for the AGV as completed and try to the start next step.
+    /// </summary>
+    Task SetStepCompletedAsync(Guid agvCorrelationId);
 }
