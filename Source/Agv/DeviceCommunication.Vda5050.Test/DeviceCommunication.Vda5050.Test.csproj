@@ -35,7 +35,4 @@
         <ProjectReference Include="..\DeviceCommunication.Vda5050.WebApi\DeviceCommunication.Vda5050.WebApi.csproj" />
         <ProjectReference Include="..\DeviceCommunication.Vda5050\DeviceCommunication.Vda5050.csproj" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Services\Messages\" />
-    </ItemGroup>
 </Project>

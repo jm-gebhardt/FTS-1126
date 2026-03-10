@@ -9,6 +9,7 @@
         <PackageReference Include="MassTransit" />
         <PackageReference Include="FluentValidation" />
         <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="tinyspline" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
