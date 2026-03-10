@@ -39,6 +39,11 @@ public static class EnvVars
     /// TAR's Docker Registry Password
     /// </summary>
     public const string DockerRegistryPassword = "DOCKER_REGISTRY_PASSWORD";
+    
+    /// <summary>
+    /// The PAT for Nuget
+    /// </summary>
+    public const string NugetPat = "NUGET_PAT";
 
     /// <summary>
     /// Default keycloak client ID.

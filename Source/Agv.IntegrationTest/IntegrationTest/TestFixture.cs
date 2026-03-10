@@ -22,19 +22,21 @@ internal class TestFixture
     private TransportOrder _transportOrder = null!;
     private TransportOrderClient _api = null!;
     private bool _withVirtualAgv = false;
+    private readonly string _nugetPat = EnvHelper.GetRequiredEnvVar(EnvVars.NugetPat);
 
     public TestFixture()
     {
         _cancellationTokenSource = new CancellationTokenSource();
-        _dockerCompose = new DockerCompose([EnvVars.ComposeFileEnvVar]);
+        _dockerCompose = new DockerCompose([EnvVars.ComposeFileEnvVar], nugetPat: _nugetPat);
         var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
         _logger = loggerFactory.CreateLogger<CompleteOrderTest>();
     }
 
     public TestFixture WithVirtualAgv()
     {
-        _dockerCompose = new DockerCompose([EnvVars.ComposeFileEnvVar, EnvVars.ComposeFileEnvVarVirtualAgv], _dockerRegistryUrl,
-            _dockerRegistryRepository, _dockerRegistryUser, _dockerRegistryPassword, _dockerCompose.EnvFile);
+        _dockerCompose = new DockerCompose([EnvVars.ComposeFileEnvVar, EnvVars.ComposeFileEnvVarVirtualAgv],
+            _dockerRegistryUrl,
+            _dockerRegistryRepository, _dockerRegistryUser, _dockerRegistryPassword, _nugetPat, _dockerCompose.EnvFile);
         _withVirtualAgv = true;
         return this;
     }
@@ -67,7 +69,9 @@ internal class TestFixture
 
     public async Task<(FakeAgv data, Guid agvCorrelationId)> AddAgv(string agvSerialNumber)
     {
-        var agv = new FakeAgv(agvSerialNumber, new MqttClient(_dockerCompose.EnvFile.RabbitMqUser, _dockerCompose.EnvFile.RabbitMqPassword, _logger), _logger)
+        var agv = new FakeAgv(agvSerialNumber,
+                new MqttClient(_dockerCompose.EnvFile.RabbitMqUser, _dockerCompose.EnvFile.RabbitMqPassword, _logger),
+                _logger)
             .WithGraphTemplate(FileHelper.ReadJson(_mqttSamplePath, "Graph.json"))
             .WithAgvStatusTemplate(FileHelper.ReadJson(_mqttSamplePath, "state.json"))
             .WithOrderEventTemplate(FileHelper.ReadJson(_mqttSamplePath, "OrderEvent.json"))
@@ -116,9 +120,11 @@ internal class TestFixture
     public async Task AddAndCompleteOrder(string source, string destination, Guid agvCorrelationId)
     {
         var orderId = $"Order-{Guid.NewGuid()}";
-        _logger.LogInformation("Adding Order {OrderId} from {Source} to {Destination} for agv {AgvCorrelationId}", orderId, source, destination,
+        _logger.LogInformation("Adding Order {OrderId} from {Source} to {Destination} for agv {AgvCorrelationId}",
+            orderId, source, destination,
             agvCorrelationId);
-        var actionGroup = await _api.ActionGroupPOSTAsync(source, destination, null, null, orderId, null, null, agvCorrelationId);
+        var actionGroup =
+            await _api.ActionGroupPOSTAsync(source, destination, null, null, orderId, null, null, agvCorrelationId);
         actionGroup.ShouldNotBeNull();
         actionGroup = await _transportOrder.WaitForFinishedActionGroupForOrder(actionGroup.CorrelationId);
         _logger.LogInformation("Order {OrderId} completed", orderId);

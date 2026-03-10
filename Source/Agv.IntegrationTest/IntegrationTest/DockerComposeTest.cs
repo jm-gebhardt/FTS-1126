@@ -14,6 +14,7 @@ public class DockerComposeTest
     private readonly string _dockerRegistryRepository = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryRepository);
     private readonly string _dockerRegistryUser = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryUser);
     private readonly string _dockerRegistryPassword = EnvHelper.GetRequiredEnvVar(EnvVars.DockerRegistryPassword);
+    private readonly string _nugetPat = EnvHelper.GetRequiredEnvVar(EnvVars.NugetPat);
 
     /// <summary>
     /// Start and stop all services without VirtualAgv
@@ -42,6 +43,7 @@ public class DockerComposeTest
             _dockerRegistryRepository,
             _dockerRegistryUser,
             _dockerRegistryPassword,
+            _nugetPat,
             dc.EnvFile);
         (await dc.AreRemovedAsync()).ShouldBeTrue();
         (await dc.UpAsync()).ShouldBeTrue();

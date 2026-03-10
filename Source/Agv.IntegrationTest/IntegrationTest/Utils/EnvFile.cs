@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Gebhardt.Acc.IntegrationTest.Commands;
+﻿using Gebhardt.Acc.IntegrationTest.Commands;
 using Gebhardt.Acc.IntegrationTest.Helpers;
 using Microsoft.Extensions.Logging;
 
@@ -13,29 +12,32 @@ public class EnvFile
     private readonly ILogger _logger;
 
     private readonly string _binFilePath;
+    private readonly string _nugetPat;
 
     /// <summary>
     /// File path of generated environment file.
     /// </summary>
-    public string? EnvFilePath { get; set; }
+    public string? EnvFilePath { get; private set; }
 
-    public string RabbitMqUser { get; set; } = null!;
-    public string RabbitMqPassword { get; set; } = null!;
-    public string DatabaseUser { get; set; } = null!;
-    public string DatabasePassword { get; set; } = null!;
-    public string KeycloakClientId { get; set; } = null!;
-    public string KeycloakUsername { get; set; } = null!;
-    public string KeycloakUserPassword { get; set; } = null!;
+    public string RabbitMqUser { get; private set; } = null!;
+    public string RabbitMqPassword { get; private set; } = null!;
+    public string DatabaseUser { get; private set; } = null!;
+    public string DatabasePassword { get; private set; } = null!;
+    public string KeycloakClientId { get; private set; } = null!;
+    public string KeycloakUsername { get; private set; } = null!;
+    public string KeycloakUserPassword { get; private set; } = null!;
 
     /// <summary>
     /// EnvFile Constructor
     /// </summary>
     /// <param name="binFilePath"></param>
+    /// <param name="nugetPat"></param>
     /// <param name="logger"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public EnvFile(string binFilePath, ILogger logger)
+    public EnvFile(string binFilePath, string nugetPat, ILogger logger)
     {
         _binFilePath = binFilePath;
+        _nugetPat = nugetPat;
         _logger = logger;
     }
 
@@ -51,7 +53,7 @@ public class EnvFile
         }
 
         var result = new Command($"yes | {PathHelper.ToDockerPath(_binFilePath)}", _logger);
-        
+
         if (!await result.ExecuteAsync(TimeSpan.FromSeconds(10)))
         {
             throw new Exception("Failed to create env file");
@@ -63,6 +65,8 @@ public class EnvFile
         parent = Directory.GetParent(parent)!.FullName;
         var envFilePath = Path.Combine(parent, ".env");
 
+        InjectVariables(envFilePath);
+
         File.Copy(envFilePath, EnvFilePath, true);
 
         var lines = (await File.ReadAllLinesAsync(EnvFilePath)).ToList();
@@ -73,6 +77,30 @@ public class EnvFile
         KeycloakClientId = GetValue(lines, "KEYCLOAK_CLIENTID");
         KeycloakUsername = "agv";
         KeycloakUserPassword = "agv";
+    }
+
+    private void InjectVariables(string envFilePath)
+    {
+        var lines = File.ReadAllLines(envFilePath).ToList();
+
+        SetVariable(lines, EnvVars.NugetPat, _nugetPat);
+
+        File.WriteAllLines(envFilePath, lines);
+    }
+
+    private void SetVariable(List<string> lines, string key, string value)
+    {
+        var entry = $"{key}={value}";
+        var index = lines.FindIndex(l => l.StartsWith($"{key}="));
+
+        if (index != -1)
+        {
+            lines[index] = entry;
+        }
+        else
+        {
+            lines.Add(entry);
+        }
     }
 
     private static string GetValue(List<string> lines, string key)

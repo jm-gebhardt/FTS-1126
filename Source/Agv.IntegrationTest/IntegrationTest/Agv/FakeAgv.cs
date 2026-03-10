@@ -102,7 +102,8 @@ public class FakeAgv
     {
         _mqttClient.SubscribeAndRespond(MqttTopics.RequestData, MqttTopics.AgvData, _agvData!, IsCurrentAgv);
         _mqttClient.SubscribeAndRespond(MqttTopics.RequestGraph, MqttTopics.Graph, _graph!, IsCurrentAgv);
-        _mqttClient.SubscribeAndRespond(MqttTopics.RequestStationList, MqttTopics.StationList, _stationList!, IsCurrentAgv);
+        _mqttClient.SubscribeAndRespond(MqttTopics.RequestStationList, MqttTopics.StationList, _stationList!,
+            IsCurrentAgv);
         _mqttClient.SubscribeAndRespond(MqttTopics.RequestGraph, MqttTopics.Map, _map!, IsCurrentAgv);
     }
 
@@ -158,7 +159,7 @@ public class FakeAgv
     private void SetLastNode(string lastNodeName)
     {
         var graphNode = _graph?["nodes"]?.FirstOrDefault(n => n["nodeId"]?.ToString() == lastNodeName);
-        ChangeLastNode(_agvStatus!, lastNodeName, (float?) graphNode?["x"], (float?) graphNode?["y"]);
+        ChangeLastNode(_agvStatus!, lastNodeName, (float?)graphNode?["x"], (float?)graphNode?["y"]);
     }
 
     private void ChangeLastNode(JObject message, string lastNodeName, float? x = null, float? y = null)
@@ -185,8 +186,15 @@ public class FakeAgv
         _agvStatus = agvStatusTemplate;
 
         ChangeAgvSerialNumber(_agvStatus);
+        RemoveErrors(_agvStatus);
+
         SetLastNode("map/NODE-9");
         return this;
+    }
+
+    private static void RemoveErrors(JObject agvStatus)
+    {
+        agvStatus.Remove("errors");
     }
 
     public FakeAgv WithOrderEventTemplate(JObject orderEventTemplate)

@@ -11,7 +11,8 @@ namespace Gebhardt.Acc.IntegrationTest.Utils;
 /// </summary>
 public class DockerCompose
 {
-    private static readonly string[] ExcludedContainers = ["mssql.config", "sqlpad", "provisioning"];
+    private static readonly string[] ExcludedContainers =
+        ["mssql.config", "sqlpad", "provisioning", "init", "tempo", "otel"];
 
     private readonly ILogger _logger;
     private readonly string[] _composeFiles;
@@ -28,13 +29,16 @@ public class DockerCompose
     /// <param name="dockerRegistryRepository">The name of the docker repository where to pull specific containers from</param>
     /// <param name="dockerRegistryUser">The user for the docker registry</param>
     /// <param name="dockerRegistryPassword">The password for the docker registry</param>
+    /// <param name="nugetPat">The PAT for Nuget</param>
     /// <param name="envFile">The env file to use. If null, the default env file will be created</param>
     /// </summary>
-    public DockerCompose(string[] composeFilesLocations, string dockerRegistry = "", string dockerRegistryRepository = "", string dockerRegistryUser = "",
-        string dockerRegistryPassword = "", EnvFile? envFile = null)
+    public DockerCompose(string[] composeFilesLocations, string dockerRegistry = "",
+        string dockerRegistryRepository = "", string dockerRegistryUser = "",
+        string dockerRegistryPassword = "", string nugetPat = "", EnvFile? envFile = null)
     {
         var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
-        _composeFiles = composeFilesLocations.SelectMany(e => EnvHelper.GetRequiredEnvVar(e).Split(',').Select(f => f.Trim().Trim('"'))).ToArray();
+        _composeFiles = composeFilesLocations
+            .SelectMany(e => EnvHelper.GetRequiredEnvVar(e).Split(',').Select(f => f.Trim().Trim('"'))).ToArray();
         _dockerRegistry = dockerRegistry;
         _dockerRegistryRepository = dockerRegistryRepository;
         _dockerRegistryUser = dockerRegistryUser;
@@ -43,7 +47,8 @@ public class DockerCompose
         _logger = loggerFactory.CreateLogger<DockerCompose>();
         var agvDevCombPath = FindAgvDevCombPath();
 
-        EnvFile = envFile ?? new EnvFile(Path.Combine(agvDevCombPath, "bin", "17_create_kaeserkaris_env.sh"), _logger);
+        EnvFile = envFile ?? new EnvFile(Path.Combine(agvDevCombPath, "bin", "17_create_kaeserkaris_env.sh"), nugetPat,
+            _logger);
     }
 
     public Task InitializeAsync() => EnvFile.CreateAsync();
@@ -53,6 +58,9 @@ public class DockerCompose
         var agvDevCombPath = Environment.CurrentDirectory;
         while (Directory.Exists(agvDevCombPath) && Path.GetFileName(agvDevCombPath) != "AgvDevComb")
         {
+            Console.WriteLine($"Checking directory: {agvDevCombPath}");
+            Console.WriteLine($"Files/Folders: {string.Join(", ", Directory.GetFileSystemEntries(agvDevCombPath))}");
+            
             agvDevCombPath = Directory.GetParent(agvDevCombPath)?.FullName ?? string.Empty;
         }
 
@@ -82,7 +90,8 @@ public class DockerCompose
     /// <returns></returns>
     public async Task<bool> LoginAsync()
     {
-        var loginCommand = new DockerLoginCommand(_dockerRegistry, _dockerRegistryUser, _dockerRegistryPassword, _logger);
+        var loginCommand =
+            new DockerLoginCommand(_dockerRegistry, _dockerRegistryUser, _dockerRegistryPassword, _logger);
         if (!await loginCommand.ExecuteAsync(TimeSpan.FromSeconds(30)))
         {
             _logger.LogError("docker login failed: {Error}", loginCommand.Stderr);
@@ -110,7 +119,8 @@ public class DockerCompose
     /// </summary>
     public async Task<bool> UpAsync(string specificContainers = "")
     {
-        var dockerCommand = new DockerComposeCommand($"up{(!string.IsNullOrEmpty(specificContainers) ? $" {specificContainers}" : "")} -d",
+        var dockerCommand = new DockerComposeCommand(
+            $"up{(!string.IsNullOrEmpty(specificContainers) ? $" {specificContainers}" : "")} -d",
             _composeFiles,
             EnvFile.EnvFilePath!,
             _logger);
@@ -127,7 +137,8 @@ public class DockerCompose
     /// <returns>true if command execution was successful</returns>
     public async Task<bool> DownAsync()
     {
-        var dockerCommand = new DockerComposeCommand("down -v --remove-orphans", _composeFiles, EnvFile.EnvFilePath!, _logger);
+        var dockerCommand =
+            new DockerComposeCommand("down -v --remove-orphans", _composeFiles, EnvFile.EnvFilePath!, _logger);
         var mainDown = await dockerCommand.ExecuteAsync(TimeSpan.FromMinutes(10));
 
         var removeNetworkCommand = new DockerCommand("network rm agv_net", _logger);
@@ -152,7 +163,8 @@ public class DockerCompose
 
         if (containers.Count > 0)
         {
-            _logger.LogError("Still running containers: {RunningContainers}", string.Join(", ", containers.Select(c => c.Name)));
+            _logger.LogError("Still running containers: {RunningContainers}",
+                string.Join(", ", containers.Select(c => c.Name)));
             return false;
         }
 
@@ -163,7 +175,7 @@ public class DockerCompose
     {
         var defaultSleepTime = TimeSpan.FromSeconds(5);
         var defaultTimeout = TimeSpan.FromMinutes(1);
-        var retryCount = (int) ((timeout ?? defaultTimeout).TotalSeconds / defaultSleepTime.TotalSeconds);
+        var retryCount = (int)((timeout ?? defaultTimeout).TotalSeconds / defaultSleepTime.TotalSeconds);
 
         var policy = Policy
             .HandleResult<bool>(result => result == false)
@@ -172,7 +184,9 @@ public class DockerCompose
                 sleepDurationProvider: _ => defaultSleepTime,
                 onRetry: (_, timespan, retryAttempt, _) =>
                 {
-                    _logger.LogInformation("Waiting for all containers to be running... Retry {RetryAttempt} in {SleepDuration}", retryAttempt, timespan);
+                    _logger.LogInformation(
+                        "Waiting for all containers to be running... Retry {RetryAttempt} in {SleepDuration}",
+                        retryAttempt, timespan);
                 });
 
         var result = await policy.ExecuteAsync(async () =>
@@ -186,7 +200,7 @@ public class DockerCompose
             }
 
             var failedContainers = containers
-                .Where(c => !excludedContainers?.Contains(GetServiceName(c.Name), StringComparer.OrdinalIgnoreCase) ?? true)
+                .Where(c => !excludedContainers?.Any(ex => c.Name.Contains(ex)) ?? true)
                 .Where(c => c.State != ContainerState.Running || c.Health != ContainerHealth.Healthy);
 
             var success = !failedContainers.Any() && containers.Count > 0;
