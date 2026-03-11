@@ -95,7 +95,44 @@ public class StationControllerTests
     }
 
     [TestMethod]
-    public async Task SendJamStateRequest_ValidData_JamStateRequested()
+    public async Task SendJamStateRequest_HasJamStateTrue_JamStateRequested()
+    {
+        var station = new TransportOrder.Domain.Models.Station.Station("PickDropStation", AgvGraph.NodeType.PickDrop, []);
+        var infos = new Dictionary<string, object?> { { "HasJamState", true } };
+
+        station.UpdateAdditionalInfo(infos);
+        StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler> fixture =
+            new StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler>()
+                .WithStation(station)
+                .Build();
+
+        await fixture.Controller.SendJamStateRequest(station.Id);
+
+        (await fixture.MediatorTestHarness.Consumed.Any<SendJamStateRequest>()).ShouldBeTrue();
+        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.Graphs.Events.JamStateRequested>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task SendJamStateRequest_HasJamStateFalse_NoJamStateRequested()
+    {
+        var station = new TransportOrder.Domain.Models.Station.Station("PickDropStation", AgvGraph.NodeType.PickDrop, []);
+        var infos = new Dictionary<string, object?> { { "HasJamState", false } };
+
+        station.UpdateAdditionalInfo(infos);
+
+        StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler> fixture =
+            new StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler>()
+                .WithStation(station)
+                .Build();
+
+        await fixture.Controller.SendJamStateRequest(station.Id);
+
+        (await fixture.MediatorTestHarness.Consumed.Any<SendJamStateRequest>()).ShouldBeTrue();
+        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.Graphs.Events.JamStateRequested>()).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task SendJamStateRequest_WithoutAdditionalInfo_NoJamStateRequested()
     {
         var station = new TransportOrder.Domain.Models.Station.Station("PickDropStation", AgvGraph.NodeType.PickDrop, []);
 
@@ -107,6 +144,6 @@ public class StationControllerTests
         await fixture.Controller.SendJamStateRequest(station.Id);
 
         (await fixture.MediatorTestHarness.Consumed.Any<SendJamStateRequest>()).ShouldBeTrue();
-        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.Graphs.Events.JamStateRequested>()).ShouldBeTrue();
+        (await fixture.MassTransitTestHarness.Published.Any<Common.Messages.Graphs.Events.JamStateRequested>()).ShouldBeFalse();
     }
 }

@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -196,14 +197,20 @@ public class StationsRequestHandler :
     public async Task Consume(ConsumeContext<SendJamStateRequest> context)
     {
         // check if node exists as station
-        await _stationRepository.GetStation(context.Message.CorrelationId);
-        var stationNode = await _nodeRepository.GetNodeAsync(context.Message.CorrelationId);
-        string user = context.Message.User;
+        var station = await _stationRepository.GetStation(context.Message.CorrelationId);
+        bool hasJamStateValue = station.AdditionalInfo.GetBool("HasJamState");
+        
+         _logger.LogInformation("Station {StationName} ({StationId}) supports JamState:  {HasJamState}", station.Name, station.Id, hasJamStateValue);
+        if (hasJamStateValue)
+        {
+            var stationNode = await _nodeRepository.GetNodeAsync(context.Message.CorrelationId);
+            string user = context.Message.User;
 
-        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationJamStateRequested, stationNode.Id, "JamState Requested", "JamState for station requested", new Dictionary<string, object?>{{LogLabels.User, user}});
-        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, stationNode.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationJamStateRequested}});
+            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationJamStateRequested, stationNode.Id, "JamState Requested", "JamState for station requested", new Dictionary<string, object?>{{LogLabels.User, user}});
+            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, stationNode.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationJamStateRequested}});
 
-        await _bus.Publish(new Common.Messages.Graphs.Events.JamStateRequested(stationNode));
+            await _bus.Publish(new Common.Messages.Graphs.Events.JamStateRequested(stationNode));
+        }
 
         await context.RespondAsync(new Success());
     }
