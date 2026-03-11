@@ -13,17 +13,13 @@ public class AgvEventHandler:
     IConsumer<AllAgvsOffline>,
     IConsumer<AgvWentOnline>
 {
-    /// <summary>
-    /// Handles the <see cref="AllAgvsOffline"/> event.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AllAgvsOffline> context)
     {
         await context.Publish(new SetNotReady());
     }
 
-    /// <summary>
-    /// Handles the <see cref="AgvWentOnline"/> event.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AgvWentOnline> context)
     {
         await context.Publish(new SetReady());

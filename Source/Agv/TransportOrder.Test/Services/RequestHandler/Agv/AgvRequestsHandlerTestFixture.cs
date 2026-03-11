@@ -194,6 +194,12 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
         return this;
     }
 
+    public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithHasOnlineAgvs(bool hasOnlineAgvs)
+    {
+        _agvDb.Setup(x => x.Agvs.HasOnlineAgvs()).ReturnsAsync(hasOnlineAgvs);
+        return this;
+    }
+
     public new AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> Build()
     {
         base.Build();

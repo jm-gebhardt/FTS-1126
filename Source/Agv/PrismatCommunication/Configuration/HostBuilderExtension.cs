@@ -1,27 +1,28 @@
 ﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Filters;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
+using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Domain.Services;
+using Gebhardt.Acc.PrismatCommunication.Messages.Filters;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
+using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
+using Gebhardt.Acc.PrismatCommunication.Simulation;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.PrismatCommunication.Messages.Filters;
-using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
-using Gebhardt.Acc.PrismatCommunication.Domain.Services;
-using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
-using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.Common.Services.Filters;
-using Gebhardt.Acc.PrismatCommunication.Simulation;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -93,6 +94,7 @@ public static class HostBuilderExtension
                 });
             }
 
+            services.AddHostedService<InitializationProvider>();
             services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
 
             services.AddDbContextFactory<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
