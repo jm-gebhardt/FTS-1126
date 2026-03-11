@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
@@ -20,7 +20,7 @@ public class InstantActionProfileTest
             Description = "description",
             ResultDescription = "resultDescription",
             ActionType = "actionType",
-            BlockingTypes = [ActionBlockingType.Hard],
+            BlockingTypes = [BlockingType.HARD],
             Parameters = [new AgvInstantActionParameterDefinition()
             {
                 Description = "Parameter description",
@@ -43,7 +43,7 @@ public class InstantActionProfileTest
             Description = "description",
             ResultDescription = "resultDescription",
             ActionType = "actionType",
-            BlockingTypes = [ActionBlockingType.Hard],
+            BlockingTypes = [BlockingType.HARD],
             Parameters = [new AgvInstantActionParameterDefinition()
             {
                 Description = "Parameter description",

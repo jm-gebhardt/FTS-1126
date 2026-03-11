@@ -7,5 +7,5 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 /// </summary>
 /// <param name="CorrelationId">Correlation id of the agv.</param>
 /// <param name="SerialNumber">The serial number of the agv.</param>
-/// <param name="ActionId">The id of the action.</param>
-public record ResendAction(Guid CorrelationId, string SerialNumber, AgvAction ActionId): CorrelatedBy<Guid>;
+/// <param name="Action">The action.</param>
+public record ResendAction(Guid CorrelationId, string SerialNumber, AgvAction Action): CorrelatedBy<Guid>;

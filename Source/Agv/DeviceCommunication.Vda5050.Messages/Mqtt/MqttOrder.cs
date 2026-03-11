@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -10,14 +10,13 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 /// </summary>
 [PublicAPI]
 [EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
-[RoutingKey("*.*.*.*.order")] // Specifies the topic where subscribers can receive the message
 public record MqttOrder
 {
     /// <summary>
     /// HeaderId of the message.
     /// The headerId is defined per topic and incremented by 1 with each sent (but not necessarily received) message.
     /// </summary>
-    public int HeaderId { get; set; }
+    public uint HeaderId { get; set; }
 
     /// <summary>
     /// Timestamp in ISO8601 format (YYYY-MM-DDTHH:mm:ss.ffZ).
@@ -331,7 +330,7 @@ public record MqttOrderAction
     /// <summary>
     /// Regulates if the action is allowed to be executed during movement and/or parallel to other actions.
     /// </summary>
-    public MqttBlockingType BlockingType { get; set; }
+    public BlockingType BlockingType { get; set; }
 
     /// <summary>
     /// Array of action parameters for the indicated action.

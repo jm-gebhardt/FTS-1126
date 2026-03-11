@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;

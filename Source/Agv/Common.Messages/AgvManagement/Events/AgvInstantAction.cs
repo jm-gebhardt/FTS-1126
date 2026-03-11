@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -27,7 +27,7 @@ public class AgvInstantAction
     /// <summary>
     /// Array of possible blocking types for defined action.
     /// </summary>
-    public List<ActionBlockingType>? BlockingTypes { get; set; }
+    public List<BlockingType>? BlockingTypes { get; set; }
 
     /// <summary>
     /// Array of parameters an action has. If not defined, the action has no parameters.

@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -10,14 +10,13 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 /// </summary>
 [PublicAPI]
 [EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
-[RoutingKey("*.*.*.*.instantActions")] // Specifies the topic where subscribers can receive the message
 public record MqttInstantActions
 {
     /// <summary>
     /// HeaderId of the message.
     /// The headerId is defined per topic and incremented by 1 with each sent (but not necessarily received) message.
     /// </summary>
-    public int HeaderId { get; set; }
+    public uint HeaderId { get; set; }
 
     /// <summary>
     /// Timestamp in ISO8601 format (YYYY-MM-DDTHH:mm:ss.ffZ).
@@ -42,7 +41,7 @@ public record MqttInstantActions
     /// <summary>
     /// The actions that the AGV can perform.
     /// </summary>
-    public ICollection<MqttInstantActions> Actions { get; set; } = [];
+    public ICollection<MqttInstantAction> Actions { get; set; } = [];
 }
 
 /// <summary>
@@ -67,17 +66,12 @@ public record MqttInstantAction
     public string? ActionDescription { get; set; }
 
     /// <summary>
-    /// Manufacturer of the AGV.
-    /// </summary>
-    public string Manufacturer { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Serial number of the AGV.
-    /// </summary>
-    public string SerialNumber { get; set; } = string.Empty;
-
-    /// <summary>
     /// Parameter values of the instant action. If not defined, the action has no parameters.
     /// </summary>
     public Dictionary<string, object>? Parameters { get; set; }
+
+    /// <summary>
+    /// The blocking type to be used.
+    /// </summary>
+    public BlockingType BlockingType { get; set; }
 }

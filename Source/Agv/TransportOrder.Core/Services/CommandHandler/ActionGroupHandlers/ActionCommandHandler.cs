@@ -396,7 +396,7 @@ public class ActionCommandHandler :
             }
 
             var action = chosenActionGroup.FirstNotStartedAction!;
-            _logger.LogDebug("Trying to start action {ActionId} of group {ActionGroupCorrelationId} with type {ActionType}", action.CorrelationId, action.ParentId, Enum.GetName(action.ActionType));
+            _logger.LogDebug("Trying to start action {Action} of group {ActionGroupCorrelationId} with type {ActionType}", action.CorrelationId, action.ParentId, Enum.GetName(action.ActionType));
 
             if (await _actionCommandHelper.SelectNodesForAgvAction(action, agv, false, false, context.CancellationToken))
             {

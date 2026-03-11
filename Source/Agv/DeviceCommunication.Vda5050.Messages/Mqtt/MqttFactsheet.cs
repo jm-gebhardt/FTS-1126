@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using MassTransit;
@@ -493,7 +494,7 @@ public record MqttAgvAction
     /// <summary>
     /// Array of possible blocking types for this action.
     /// </summary>
-    public ICollection<MqttBlockingType>? BlockingTypes { get; set; }
+    public ICollection<BlockingType>? BlockingTypes { get; set; }
 }
 
 /// <summary>

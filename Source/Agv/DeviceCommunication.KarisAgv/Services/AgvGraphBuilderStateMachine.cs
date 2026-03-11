@@ -83,7 +83,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
             // Create a new request ID and store in saga instance.
             .Then(c => c.Saga.CurrentMqttRequestId = Guid.NewGuid())
             // Request the station list.
-            .Then(c => c.PublishMqtt(new MqttRequestStationList(c.Message.SerialNumber, c.Saga.CurrentMqttRequestId), null));
+            .Then(c => c.PublishMqtt(new MqttRequestStationList(c.Message.SerialNumber, c.Saga.CurrentMqttRequestId), callback:null));
     }
 
     private EventActivityBinder<AgvGraphBuilderSaga, InternalStationListReceived> StationListHandler()
@@ -99,7 +99,7 @@ public sealed class AgvGraphBuilderStateMachine : MassTransitStateMachine<AgvGra
                     // Create a new request ID and store in saga instance.
                     .Then(c => c.Saga.CurrentMqttRequestId = Guid.NewGuid())
                     // Request the graph.
-                    .Then(c => c.PublishMqtt(new MqttRequestGraph(c.Message.StationList.SerialNumber, c.Saga.CurrentMqttRequestId), null)),
+                    .Then(c => c.PublishMqtt(new MqttRequestGraph(c.Message.StationList.SerialNumber, c.Saga.CurrentMqttRequestId), callback: null)),
                 // The response does not correlate to the request
                 e => e.Then(_ => _logger.LogWarning("{MessageType} does not match the request", nameof(InternalStationListReceived))));
     }

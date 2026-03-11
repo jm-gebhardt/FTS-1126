@@ -2,7 +2,8 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Action;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Microsoft.Extensions.Logging;
 
@@ -29,6 +30,11 @@ public class FactsheetParser(ILogger logger, IMapper mapper)
     public AgvData AgvData { get; private set; } = null!;
 
     /// <summary>
+    /// The agv.
+    /// </summary>
+    public Agv? Agv { get; set; }
+
+    /// <summary>
     /// The agv actions.
     /// </summary>
     public ICollection<AgvAction> Actions { get; private set; } = [];
@@ -39,8 +45,19 @@ public class FactsheetParser(ILogger logger, IMapper mapper)
     public void Parse(MqttFactsheet factSheet)
     {
         GetSerialNumber(factSheet);
+        GetAgv(factSheet);
         GetAgvData(factSheet);
         GetAgvActions(factSheet);
+    }
+
+    private void GetAgv(MqttFactsheet factSheet)
+    {
+        if (Agv == null)
+        {
+            Agv = new Agv(CorrelationId, factSheet.Manufacturer, factSheet.TypeSpecification.SeriesName, SerialNumber);
+            return;
+        }
+        Agv.SeriesName = factSheet.TypeSpecification.SeriesName;
     }
 
     private void GetSerialNumber(MqttFactsheet factSheet)

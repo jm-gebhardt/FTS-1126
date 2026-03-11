@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using MassTransit;

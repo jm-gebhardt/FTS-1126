@@ -19,7 +19,7 @@ public class MqttStateConsumerTest
     public async Task ReceiveStatusMessage_WithInvalidContent_NoMessageSend()
     {
         var fixture = new AgvStateConsumerTestFixture();
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), null);
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState("", ""), callback: null);
 
         await fixture.ShouldNotHavePublishedAsync<AgvStatusReceived>();
     }
@@ -34,7 +34,7 @@ public class MqttStateConsumerTest
         const string agvTestIdentifier = "#0815#";
         const string orderId = "Order123";
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId), null);
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId), callback: null);
         await fixture.ShouldHavePublishedAsync<MqttState>();
 
         var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
@@ -63,7 +63,7 @@ public class MqttStateConsumerTest
         {
             LastNodeId = sentLastNodeId,
             AgvPosition = null
-        }, null);
+        }, callback: null);
 
         await fixture.ShouldHaveConsumedAsync<MqttState>();
 
@@ -95,7 +95,7 @@ public class MqttStateConsumerTest
                 X = x,
                 Y = y
             }
-        }, null);
+        }, callback: null);
 
         await fixture.ShouldHaveConsumedAsync<MqttState>();
 
@@ -156,7 +156,7 @@ public class MqttStateConsumerTest
                 X = 12,
                 Y = 12
             }
-        }, null);
+        }, callback: null);
 
         await fixture.ShouldHavePublishedAsync<MqttState>();
         await fixture.ShouldHaveConsumedAsync<MqttState>();
@@ -201,7 +201,7 @@ public class MqttStateConsumerTest
                 X = 12,
                 Y = 12
             }
-            }, null);
+            }, callback: null);
         await fixture.ShouldHavePublishedAsync<MqttState>();
         
         var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();

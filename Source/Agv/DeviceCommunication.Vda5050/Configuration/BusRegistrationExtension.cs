@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.EventHandler;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.MqttMessageHandler;
 using MassTransit;
 
@@ -32,6 +33,8 @@ public static class BusRegistrationExtension
         public IBusRegistrationConfigurator AddConsumers()
         {
             configurator.AddConsumer<ResendCommandHandler>();
+            configurator.AddConsumer<ActionCommandHandler>();
+            configurator.AddConsumer<ActionEventHandler>();
             return configurator;
         }
     }

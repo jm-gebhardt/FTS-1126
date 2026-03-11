@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.MqttMessageHandler;
@@ -20,6 +20,7 @@ public class MqttFactSheetConsumerTest
 
         fixture.VerifyActionsUpdated(Times.Once());
         fixture.VerifyDataUpdated();
+        fixture.VerifyAgvUpdated(Times.Once());
     }
 
     [TestMethod]
@@ -35,5 +36,6 @@ public class MqttFactSheetConsumerTest
 
         fixture.VerifyActionsUpdated(Times.Never());
         fixture.VerifyDataUpdated();
+        fixture.VerifyAgvUpdated(Times.Once());
     }
 }

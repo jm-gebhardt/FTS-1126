@@ -32,7 +32,7 @@ public class ExecuteMqttPublishTest
 
         using (fixture.TestHarness.Bus.ConnectPublishObserver(publishObserver))
         {
-            await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { OperatingMode = MqttOperatingMode.Automatic }, null);
+            await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { OperatingMode = MqttOperatingMode.Automatic }, callback: null);
 
             IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
 

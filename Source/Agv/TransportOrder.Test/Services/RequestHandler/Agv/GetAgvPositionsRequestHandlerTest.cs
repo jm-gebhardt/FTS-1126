@@ -1,8 +1,8 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;

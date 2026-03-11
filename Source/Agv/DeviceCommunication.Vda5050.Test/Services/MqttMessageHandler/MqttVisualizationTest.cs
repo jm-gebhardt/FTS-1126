@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.MqttMessageHandler;
 

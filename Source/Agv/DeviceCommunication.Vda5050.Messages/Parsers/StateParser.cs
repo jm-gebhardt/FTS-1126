@@ -4,7 +4,9 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
 
@@ -44,6 +46,11 @@ public class StateParser(ILogger logger, IMapper mapper)
     public List<AgvError>? AgvErrors { get; private set; }
 
     /// <summary>
+    /// The current state of the order.
+    /// </summary>
+    public OrderState OrderState { get; private set; } = null!;
+
+    /// <summary>
     /// Parse the <see cref="MqttState"/>.
     /// </summary>
     /// <param name="state">The state.</param>
@@ -56,6 +63,7 @@ public class StateParser(ILogger logger, IMapper mapper)
         GetErrors(state);
         GetInformation(state);
         ConvertFieldViolationToWarning(state);
+        GetOrderState(state);
     }
 
     private void GetSerialNumber(MqttState state)
@@ -178,6 +186,19 @@ public class StateParser(ILogger logger, IMapper mapper)
             (float)state.AgvPosition.Theta, 
             (float?)state.AgvPosition.DeviationRange
         );
+    }
+
+    private void GetOrderState(MqttState state)
+    {
+        OrderState = new OrderState()
+        {
+            OrderId = state.OrderId,
+            OrderUpdateId = state.OrderUpdateId,
+            LastNodeSequenceId = state.LastNodeSequenceId,
+            NewBaseRequest = state.NewBaseRequest,
+            Errors = AgvErrors?.Where(e => Vda5050Specifications.OrderErrors.IsOrderError(e.ErrorType)).ToList() ?? [],
+            ActionStates = mapper.Map<List<OrderActionState>>(state.ActionStates)
+        };
     }
 
     private void GetErrors(MqttState state)

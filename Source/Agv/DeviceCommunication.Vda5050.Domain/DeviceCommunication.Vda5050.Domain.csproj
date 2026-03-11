@@ -15,6 +15,8 @@
         <PackageReference Include="Vdma.Lif" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
+        <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 </Project>

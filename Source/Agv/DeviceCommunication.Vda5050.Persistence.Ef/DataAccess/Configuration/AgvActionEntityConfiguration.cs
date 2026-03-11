@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Action;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -49,6 +49,7 @@ public static class LogCodes
     public const int AgvRemoveFromNode = 328;
     public const int AgvOperatorInteraction = 329;
     public const int AgvRemoveFromQueue = 336;
+    public const int AgvSentInstantActionStatusChanged = 337;
 
     // Order
     public const int OrderCreated = 100;
@@ -80,6 +81,7 @@ public static class LogCodes
     public const int OrderActionResent = 126;
     public const int OrderAgvWarning = 127;
     public const int OrderAgvError = 128;
+    public const int AgvSentVehicleActionStatusChanged = 129;
 
     //Station
     public const int StationStateChanged = 400;

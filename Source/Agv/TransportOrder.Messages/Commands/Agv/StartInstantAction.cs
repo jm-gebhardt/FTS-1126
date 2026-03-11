@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.Converter;
 using JetBrains.Annotations;
 
@@ -30,7 +30,7 @@ public class StartInstantAction
     /// <summary>
     /// The blocking type of the action.
     /// </summary>
-    public ActionBlockingType? BlockingType { get; set; }
+    public BlockingType? BlockingType { get; set; }
 
     /// <summary>
     /// The user who started the instant action.
@@ -38,7 +38,7 @@ public class StartInstantAction
     public string User { get; set; }
 
     /// <inheritdoc cref="StartInstantAction"/>>
-    public StartInstantAction(Guid agvCorrelationId, string agvInstantActionType, Dictionary<string, object>? parameters, ActionBlockingType? blockingType, string user)
+    public StartInstantAction(Guid agvCorrelationId, string agvInstantActionType, Dictionary<string, object>? parameters, BlockingType? blockingType, string user)
     {
         AgvInstantActionType = agvInstantActionType;
         AgvCorrelationId = agvCorrelationId;
@@ -50,7 +50,7 @@ public class StartInstantAction
     /// <summary>
     /// Deconstruct the message.
     /// </summary>
-    public void Deconstruct(out Guid agvCorrelationId, out string agvInstantActionType, out Dictionary<string, object>? parameters, out ActionBlockingType? blockingType, out string user)
+    public void Deconstruct(out Guid agvCorrelationId, out string agvInstantActionType, out Dictionary<string, object>? parameters, out BlockingType? blockingType, out string user)
     {
         agvCorrelationId = AgvCorrelationId;
         agvInstantActionType = AgvInstantActionType;

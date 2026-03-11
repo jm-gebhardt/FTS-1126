@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -31,6 +33,13 @@ public class FactSheetParserTest
         agvData.Payload.ShouldBe((long)factSheet.TypeSpecification.MaxLoadMass);
     }
 
+    private void ValidateAgv(Agv agv, MqttFactsheet factSheet)
+    {
+        agv.SeriesName.ShouldBe(factSheet.TypeSpecification.SeriesName);
+        agv.Manufacturer.ShouldBe(factSheet.Manufacturer);
+        agv.CorrelationId.ShouldBe(factSheet.SerialNumber.ToGuid());
+    }
+
     [TestMethod]
     public void Parse_MissingSerialNumber_ThrowsSerialNumberNotSetException()
     {
@@ -51,6 +60,7 @@ public class FactSheetParserTest
         parser.Parse(factSheet);
 
         ValidateAgvData(parser.AgvData, factSheet);
+        ValidateAgv(parser.Agv!, factSheet);
         parser.Actions.Count.ShouldBe(factSheet.ProtocolFeatures.AgvActions.Count);
     }
 }

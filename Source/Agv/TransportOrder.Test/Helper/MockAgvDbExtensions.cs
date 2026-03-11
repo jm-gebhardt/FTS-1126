@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain;

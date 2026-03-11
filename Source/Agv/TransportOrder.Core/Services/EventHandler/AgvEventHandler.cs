@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -21,6 +22,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
+using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
@@ -50,7 +52,8 @@ public class AgvEventHandler :
     IConsumer<AgvBatteryChargedToMinimum>,
     IConsumer<SwitchChargingAgvsFailed>,
     IConsumer<AgvSetToPushOrJoystickMode>,
-    IConsumer<AgvRemovedFromZones>
+    IConsumer<AgvRemovedFromZones>,
+    IConsumer<VehicleActionStatusChanged>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -502,5 +505,41 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvRemovedFromZones> context)
     {
         await context.Publish(new RemoveAgvFromZones(context.Message.CorrelationId, context.Message.Zones));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<VehicleActionStatusChanged> context)
+    {
+        (var correlationId, var agvCorrelationId, string actionType, var actionStatus) = context.Message;
+        var action = await _actionGroupRepository.GetActionByIdAsync(correlationId);
+        if (action == null)
+        {
+            await _loggingService.LogAgv(_logger, 
+                LogLevel.Information, 
+                LogCodes.AgvSentInstantActionStatusChanged, 
+                agvCorrelationId, 
+                null, 
+                "AGV Sent Instant Action Status Changed",
+                $"AGV instant action {actionType} changed to status {actionStatus}",
+                new Dictionary<string, object?>
+                {
+                    { LogLabels.ActionType, actionType },
+                    { LogLabels.ActionStatus, actionStatus }
+                });
+            return;
+        }
+
+        await _loggingService.LogOrder(_logger,
+            LogLevel.Information,
+            LogCodes.AgvSentVehicleActionStatusChanged,
+            agvCorrelationId,
+            action.ParentId,
+            "AGV Sent Action Status Changed",
+            $"AGV action {actionType} changed to status {actionStatus}",
+            new Dictionary<string, object?>
+            {
+                {LogLabels.ActionType, actionType},
+                {LogLabels.ActionStatus, actionStatus}
+            });
     }
 }

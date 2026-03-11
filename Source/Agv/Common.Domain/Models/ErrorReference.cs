@@ -18,4 +18,13 @@ public record ErrorReference
     /// Property for reference value
     /// </summary>
     public string? ReferenceValue { get; set; }
+
+    /// <summary>
+    /// Convert to string.
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return $"{ReferenceKey}:{ReferenceValue}";
+    }
 }

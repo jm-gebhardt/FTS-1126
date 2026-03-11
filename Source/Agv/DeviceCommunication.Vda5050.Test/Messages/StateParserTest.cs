@@ -6,7 +6,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -16,7 +16,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Messages;
 [TestClass]
 public class StateParserTest
 {
-    private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile(), new MqttErrorProfile());
+    private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile(), new MqttErrorProfile(), new OrderProfile());
     private readonly Mock<ILogger> _logger = new();
 
     private static void ValidateAgvStatus(AgvStatus agvStatus, MqttState state)

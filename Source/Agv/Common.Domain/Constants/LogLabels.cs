@@ -11,6 +11,7 @@ public static class LogLabels
     public const string ErrorDescription = "ErrorDescription";
     public const string OrderId = "OrderId";
     public const string ActionType = "ActionType";
+    public const string ActionStatus = "ActionStatus";
     public const string NodeId = "NodeId";
     public const string Reason = "Reason";
     public const string ReasonDescription = "ReasonDescription";

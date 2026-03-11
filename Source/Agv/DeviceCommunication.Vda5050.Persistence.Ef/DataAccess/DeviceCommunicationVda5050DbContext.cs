@@ -22,6 +22,7 @@ public class DeviceCommunicationVda5050DbContext : BaseDbContext<DeviceCommunica
     {
        modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
        modelBuilder.ApplyConfiguration(new AgvActionEntityConfiguration());
+       modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
     }
 }
 

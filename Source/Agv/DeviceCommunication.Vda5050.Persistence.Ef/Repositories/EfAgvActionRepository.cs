@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Action;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -30,5 +30,12 @@ public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050D
         IEnumerable<AgvAction> newActions = actions.Except(handledActions);
         await context.AddRangeAsync(newActions);
         await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber && a.ActionScopes.Contains(scope)).ToListAsync();
     }
 }

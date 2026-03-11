@@ -33,7 +33,7 @@ public class MqttGraphConsumerTest
         };
         var message = new MqttGraph(AgvSerialNumber, DateTimeOffset.UtcNow, nodes, edges, string.Empty);
 
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
 
         // Did the test publish MqttGraph ...
         await fixture.ShouldHavePublishedAsync<MqttGraph>();
@@ -88,7 +88,7 @@ public class MqttGraphConsumerTest
 
         var message = new MqttGraph(AgvSerialNumber, DateTimeOffset.UtcNow, nodes, edges, string.Empty);
 
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
 
         // Did the test publish MqttGraph ...
         await fixture.ShouldHavePublishedAsync<MqttGraph>();

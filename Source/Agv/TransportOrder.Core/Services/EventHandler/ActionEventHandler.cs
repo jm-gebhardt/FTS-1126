@@ -40,13 +40,13 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
         if (action.CompletedDate != null)
         {
-            logger.LogWarning("Action {ActionId} of group {ActionGroupCorrelationId} is in state {ActionStation}, not triggering completion ", actionCorrelationId, actionGroup.CorrelationId, action.State);
+            logger.LogWarning("Action {Action} of group {ActionGroupCorrelationId} is in state {ActionStation}, not triggering completion ", actionCorrelationId, actionGroup.CorrelationId, action.State);
             return;
         }
 
         if (actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
         {
-            logger.LogWarning("Action group {ActionGroupCorrelationId} was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} requested by {Agv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
+            logger.LogWarning("Action group {ActionGroupCorrelationId} was reassigned to agv {AgvCorrelationId}, not triggering completion of action {Action} requested by {Agv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
 
@@ -104,7 +104,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         }
         if (assignedAgv != context.Message.AgvCorrelationId)
         {
-            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} abortion requested by {Agv}", assignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
+            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {Action} abortion requested by {Agv}", assignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
         await context.Publish(new HandleActionCompletion(assignedAgv.Value));
@@ -129,7 +129,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         }
         if (agv != context.Message.AgvCorrelationId)
         {
-            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {ActionId} cancellation requested by {Agv}", agv, actionCorrelationId, context.Message.AgvCorrelationId);
+            logger.LogWarning("Action group was reassigned to agv {AgvCorrelationId}, not triggering completion of action {Action} cancellation requested by {Agv}", agv, actionCorrelationId, context.Message.AgvCorrelationId);
             return;
         }
         if (action.State is ActionState.Aborted)

@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Messages.Converter;
 using JetBrains.Annotations;
 using MassTransit;
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models;
 
 namespace Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 
@@ -29,29 +30,13 @@ public record StartInstantAction: CorrelatedBy<Guid>
     /// <summary>
     /// The blocking type to be used.
     /// </summary>
-    public ActionBlockingType? BlockingType { get; set; }
+    public BlockingType? BlockingType { get; set; }
 
     /// <summary>
     /// Parameter values of the instant action. If not defined, the action has no parameters.
     /// </summary>
     [JsonConverter(typeof(InstantActionParameterJsonConverter))]
     public Dictionary<string, object>? Parameters { get; set; } = [];
-}
-
-/// <summary>
-/// The blocking type of the action.
-/// </summary>
-[PublicAPI]
-public enum ActionBlockingType
-{
-    /// <summary/>
-    None,
-
-    /// <summary/>
-    Soft,
-
-    /// <summary/>
-    Hard
 }
 
 /// <summary>

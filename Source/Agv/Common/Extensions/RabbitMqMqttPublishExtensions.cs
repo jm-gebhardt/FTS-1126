@@ -44,11 +44,43 @@ public static class RabbitMqMqttPublishExtensions
         /// </summary>
         /// <typeparam name="T">Type of the message that shall be sent</typeparam>
         /// <param name="values">The values to be sent in <ref>T</ref></param>
+        /// <param name="callback">The callback action to be invoked after sending</param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <param name="routingKey">Routing key of the message.</param>
+        /// <returns>Task</returns>
+        public Task PublishMqtt<T>(T values, string routingKey, Action<PublishContext<T>>? callback = null, CancellationToken cancellationToken = default) where T : class
+        {
+            return endpoint.Publish(values, context =>
+            {
+                context.Serializer = context.Serialization.GetMessageSerializer(SystemTextJsonRawMessageSerializer.JsonContentType);
+                context.SetRoutingKey(routingKey);
+                callback?.Invoke(context);
+            }, cancellationToken);
+        }
+
+        /// <summary>
+        /// Publish values in raw JSON format
+        /// </summary>
+        /// <typeparam name="T">Type of the message that shall be sent</typeparam>
+        /// <param name="values">The values to be sent in <ref>T</ref></param>
         /// <param name="cancellationToken">The cancellation token</param>
         /// <returns>Task</returns>
         public Task PublishMqtt<T>(T values, CancellationToken cancellationToken = default) where T : class
         {
-            return endpoint.PublishMqtt(values, null, cancellationToken);
+            return endpoint.PublishMqtt(values, callback: null, cancellationToken);
+        }
+
+        /// <summary>
+        /// Publish values in raw JSON format
+        /// </summary>
+        /// <typeparam name="T">Type of the message that shall be sent</typeparam>
+        /// <param name="values">The values to be sent in <ref>T</ref></param>
+        /// <param name="cancellationToken">The cancellation token</param>
+        /// <param name="routingKey">Routing key of the message.</param>
+        /// <returns>Task</returns>
+        public Task PublishMqtt<T>(T values,string routingKey, CancellationToken cancellationToken = default) where T : class
+        {
+            return endpoint.PublishMqtt(values, routingKey, null, cancellationToken);
         }
     }
 }

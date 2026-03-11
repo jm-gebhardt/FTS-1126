@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using StartInstantAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.StartInstantAction;
 
@@ -20,7 +20,7 @@ public class InstantActionMessageSerializationTest
     [TestMethod]
     public void StartInstantAction_BlockingType_SerializesAllProperties()
     {
-        var message = new StartInstantAction(Guid.NewGuid(), "action Type", null, ActionBlockingType.Hard, "user");
+        var message = new StartInstantAction(Guid.NewGuid(), "action Type", null, BlockingType.HARD, "user");
 
         var fixture = new MessageSerialisationTestFixture();
 

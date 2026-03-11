@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Messages.Contracts;
+using JetBrains.Annotations;
 using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -6,6 +7,7 @@ namespace Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 /// <summary>
 /// Triggers abortion of an action on the agv side and start of a new action.
 /// </summary>
+[PublicAPI]
 public record AbortAndStartActionCommand : CorrelatedBy<Guid>, IAgv
 {
     /// <summary>
@@ -35,5 +37,14 @@ public record AbortAndStartActionCommand : CorrelatedBy<Guid>, IAgv
         Action = action;
         SerialNumber = serialNumber;
         AbortedActionCorrelationId = abortedActionCorrelationId;
+    }
+
+    /// <inheritdoc cref="AbortAndStartActionCommand"/>>
+    public void Deconstruct(out Guid correlationId, out string serialNumber, out AgvAction action, out Guid? abortedActionCorrelationId)
+    {
+        correlationId = CorrelationId;
+        action = Action;
+        serialNumber = SerialNumber;
+        abortedActionCorrelationId = AbortedActionCorrelationId;
     }
 }

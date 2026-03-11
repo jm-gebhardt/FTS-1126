@@ -32,7 +32,7 @@ public class MqttStationListConsumerTest
         };
         var message = new MqttStationList(AgvSerialNumber, DateTimeOffset.UtcNow, stations);
 
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
 
         // Did the test publish MqttStationList ...
         await fixture.ShouldHavePublishedAsync<MqttStationList>();

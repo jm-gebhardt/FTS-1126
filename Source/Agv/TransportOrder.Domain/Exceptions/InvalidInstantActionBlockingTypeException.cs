@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
@@ -8,5 +8,5 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 public class InvalidInstantActionBlockingTypeException : Exception
 {
     /// <inheritdoc cref="InvalidInstantActionBlockingTypeException"/>>
-    public InvalidInstantActionBlockingTypeException(ActionBlockingType? blockingType, string actionType): base($"Block type {blockingType} not valid for action {actionType}"){}
+    public InvalidInstantActionBlockingTypeException(BlockingType? blockingType, string actionType): base($"Block type {blockingType} not valid for action {actionType}"){}
 }

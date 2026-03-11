@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Routing;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;

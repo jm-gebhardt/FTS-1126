@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
@@ -20,8 +20,8 @@ public class InstantActionDefinitionEntityConfiguration : IEntityTypeConfigurati
         builder.Property(e => e.ResultDescription).HasMaxLength(DbStringLimits.Description);
 
         builder.Property(e => e.BlockingTypes)
-            .HasConversion(EfValueConverters.CreateEnumListConverter<ActionBlockingType>())
-            .Metadata.SetValueComparer(EfValueConverters.CreateListComparer<ActionBlockingType>());
+            .HasConversion(EfValueConverters.CreateEnumListConverter<BlockingType>())
+            .Metadata.SetValueComparer(EfValueConverters.CreateListComparer<BlockingType>());
 
         builder.Property(e => e.Parameters)
             .HasConversion(EfValueConverters.CreateJsonConverter<List<AgvInstantActionParameterDefinition>?>())

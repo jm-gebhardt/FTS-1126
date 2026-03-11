@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;

@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
@@ -62,14 +62,14 @@ public class InstantActionDefinition : AgvInstantAction
     /// </summary>
     /// <param name="blockingType">The blocking type.</param>
     /// <exception cref="InvalidInstantActionBlockingTypeException"></exception>
-    public void ValidateBlockingType(ActionBlockingType? blockingType)
+    public void ValidateBlockingType(BlockingType? blockingType)
     {
         if (BlockingTypes == null && blockingType == null)
         {
             return;
         }
 
-        bool noBlockingTypeGivenButIsNeeded = blockingType == null && BlockingTypes != null && !BlockingTypes.Contains(ActionBlockingType.None);
+        bool noBlockingTypeGivenButIsNeeded = blockingType == null && BlockingTypes != null && !BlockingTypes.Contains(BlockingType.NONE);
         if (noBlockingTypeGivenButIsNeeded)
         {
             throw new InvalidInstantActionBlockingTypeException(blockingType, ActionType);
@@ -101,6 +101,11 @@ public class InstantActionDefinition : AgvInstantAction
             return;
         }
 
+        if (parameterValues is { Count: 0 } or null  && Parameters is { Count: 0 } or null)
+        {
+            return;
+        }
+
         if (Parameters == null && parameterValues != null)
         {
             throw new InstantActionParameterValueNotFoundException(ActionType);
@@ -126,7 +131,7 @@ public class InstantActionDefinition : AgvInstantAction
     /// <param name="agvCorrelationId">The gav correlation id.</param>
     /// <param name="blockingType">The blocking type.</param>
     /// <param name="parameters">The parameters.</param>
-    public void ValidateStartValues(Guid agvCorrelationId, ActionBlockingType? blockingType, Dictionary<string, object>? parameters)
+    public void ValidateStartValues(Guid agvCorrelationId, BlockingType? blockingType, Dictionary<string, object>? parameters)
     {
         ValidateAgv(agvCorrelationId);
         ValidateBlockingType(blockingType);

@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 
@@ -43,3 +44,8 @@ public record ActionAbortionFailedByAgv(Guid CorrelationId, Guid AgvCorrelationI
 /// </summary>
 [PublicAPI]
 public record ActionAbortionCompletedByAgv(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent;
+
+/// <summary>
+/// Signals that an action the agv runs on a node/edge or as an instant action changed its status.
+/// </summary>
+public record VehicleActionStatusChanged(Guid CorrelationId, Guid AgvCorrelationId, string ActionType, VehicleActionStatus ActionStatus) : CorrelatedBy<Guid>;

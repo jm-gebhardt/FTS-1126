@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
@@ -32,7 +33,7 @@ public record AgvInstantActionDefinitionDto
     /// <summary>
     /// Array of possible blocking types for defined action
     /// </summary>
-    public ICollection<ActionBlockingType> BlockingTypes { get; set; } = [];
+    public ICollection<BlockingType> BlockingTypes { get; set; } = [];
 }
 
 /// <summary>
@@ -60,4 +61,4 @@ public record AgvInstantActionParameterDto(string Key, object Value);
 /// <param name="BlockingType">The blocking type</param>
 /// <param name="Parameters">The parameters of the action.</param>
 [PublicAPI]
-public record AgvInstantActionDto(string ActionType, ActionBlockingType? BlockingType, ICollection<AgvInstantActionParameterDto>? Parameters);
+public record AgvInstantActionDto(string ActionType, BlockingType? BlockingType, ICollection<AgvInstantActionParameterDto>? Parameters);

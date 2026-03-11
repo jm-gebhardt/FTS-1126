@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
@@ -49,7 +49,7 @@ public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> 
     /// </summary>
     public async Task Consume(ConsumeContext<StartInstantAction> context)
     {
-        (var agvCorrelationId, string actionType, Dictionary<string, object>? parameters, ActionBlockingType? blockingType, string user) = context.Message;
+        (var agvCorrelationId, string actionType, Dictionary<string, object>? parameters, BlockingType? blockingType, string user) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 

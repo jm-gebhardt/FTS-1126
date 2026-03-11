@@ -30,7 +30,7 @@ public class AgvDataConsumerTest
         var message = new MqttAgvData("4711", "", "", null, null, 0.0, 0.0, null, null, null,
             0.0, null, null, null, []);
 
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
 
         await fixture.ShouldNotHavePublishedAsync<AgvDataReceived>();
         await fixture.ShouldNotHavePublishedAsync<AgvInstantActionDefinitionReceived>();
@@ -51,7 +51,7 @@ public class AgvDataConsumerTest
             new() { SensorIdentifier = "Front02" }
         };
         var message = new MqttAgvData(AgvSerialNumber, "KARIS", "BF1", "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7, 0.9, 2.5, 1.5, 1000, sensors);
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
         await fixture.ShouldHaveConsumedAsync<MqttAgvData>();
 
         var publishedData = await fixture.GetFirstPublishedMessageAsync<AgvDataReceived>();
@@ -83,7 +83,7 @@ public class AgvDataConsumerTest
             .AddInstantActionDefinition(model, type, action).Build();
         var message = new MqttAgvData(AgvSerialNumber, model, type, "127.0.0.1", "v3.1", 1.8, 120.0, 0.6, 0.8, 0.7,
             0.9, 2.5, 1.5, 1000, []);
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
         await fixture.ShouldHavePublishedAsync<MqttAgvData>();
 
         var consumedMessage = await fixture.GetFirstConsumedMessageAsync<MqttAgvData>();

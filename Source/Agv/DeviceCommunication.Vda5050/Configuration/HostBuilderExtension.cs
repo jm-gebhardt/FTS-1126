@@ -1,13 +1,20 @@
 ﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Sagas;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.StateMachines;
+using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,6 +48,8 @@ public static class HostBuilderExtension
                         {
                             configurator.AddMqttConsumers();
                             configurator.AddConsumers();
+                            configurator.AddSagaStateMachine<OrderExecutionStateMachine, OrderExecutionSaga>()
+                                .InMemoryRepository(); 
                         }
                         ,
                         // ReSharper disable once UnusedParameter.Local
@@ -84,14 +93,40 @@ public static class HostBuilderExtension
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
                 });
+                services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
 
+                //Repositories
                 services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
                 services.AddTransient<IAgvActionRepository, EfAgvActionRepository>();
+                services.AddTransient<IAgvGraphRepository, EfAgvGraphRepository>();
+                services.AddTransient<IAgvRepository, EfAgvRepository>();
+                
+                //Caches
+                services.AddSingleton<IAgvCacheProvider, AgvCache>();
+                services.AddSingleton<IOrderActionStatusCacheProvider, OrderActionStatusCache>();
+                
+                //Filter
                 services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
                 services.AddSingleton<ISignificanceChecker<MqttState>, MqttStateSignificanceChecker>();
                 services.AddSingleton<UnTimedInMemoryFilter<MqttState>>();
 
-                services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+                // Order action builder
+                // Predefined VDA5050 order actions
+                services.AddTransient<IOrderActionBuilder, DetectObjectOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, DropOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, EnableMapOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, FinePositioningOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, InitPositionOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, PickOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, StartChargingOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, StopChargingOrderActionBuilder>();
+                services.AddTransient<IOrderActionBuilder, WaitForTriggerOrderActionBuilder>();
+
+                services.AddTransient<OrderActionBuilderRegistry>();
+                services.AddTransient<IOrderBuilder, OrderBuilder>();
+
+                // Sequence counters for topics wise header id incrementation for messages sent to the agv.
+                services.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));
             });
             return hostBuilder;
         }

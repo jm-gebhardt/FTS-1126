@@ -147,7 +147,7 @@ internal class OrderEventConsumerFixture : ActionRepositoryConsumerTestFixture<M
 
     public async Task<IPublishedMessageList> PublishAndConsumeAsync(MqttOrderEvent message, bool shouldMappingBeNull)
     {
-        await TestHarness.Bus.PublishMqtt(message, null);
+        await TestHarness.Bus.PublishMqtt(message, callback: null);
         await ShouldHaveConsumedAsync<MqttOrderEvent>();
 
         var consumed = await GetFirstConsumedMessageAsync<MqttOrderEvent>();

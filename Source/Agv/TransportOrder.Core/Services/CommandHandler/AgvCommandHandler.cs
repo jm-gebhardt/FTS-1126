@@ -1161,7 +1161,7 @@ public class AgvCommandHandler :
                     return;
                 }
                 await TryRemoveQueueBlocking(context, agv.CorrelationId);
-                _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
+                _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {Action}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
                 await PublishStateChange(context, agv, context.CancellationToken);
                 await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
             });
@@ -1177,7 +1177,7 @@ public class AgvCommandHandler :
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await TryDequeueAgv(context, agv, actionGroup.CorrelationId);
-            _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {ActionId}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
+            _logger.LogInformation("{Command}: Prepared agv {AgvCorrelationId} for starting action {Action}", nameof(PrepareAgvForStartingAction), agv.CorrelationId, action.CorrelationId);
             await context.Publish(new AgvPreparedForStartingAction(agvCorrelationId, action));
             await TryRemoveQueueBlocking(context, agv.CorrelationId);
         });

@@ -21,7 +21,7 @@ public class MqttZonesConsumerTest
 
         var message = new MqttZones(string.Empty, "request id", [new MqttZone("zone id", 1, [new MqttPolygonPoint(1, 0, null), new MqttPolygonPoint(1, 1, null), new MqttPolygonPoint(0, 0, null)], [])]);
         
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
         await fixture.ShouldHaveConsumedAsync<MqttZones>();
         await fixture.ShouldNotHavePublishedAsync<AgvZonesReceived>();
     }
@@ -34,7 +34,7 @@ public class MqttZonesConsumerTest
 
         var message = new MqttZones("serial number", "request id", [new MqttZone("zone id", 1, [new MqttPolygonPoint(1, 0, null), new MqttPolygonPoint(1, 1, null), new MqttPolygonPoint(0, 0, null)], [])]);
 
-        await fixture.TestHarness.Bus.PublishMqtt(message, null);
+        await fixture.TestHarness.Bus.PublishMqtt(message, callback: null);
         await fixture.ShouldHaveConsumedAsync<MqttZones>();
         await fixture.ShouldHavePublishedAsync<AgvRemovedFromZones>();
         var publishedMessage = await fixture.GetFirstPublishedMessageAsync<AgvZonesReceived>();

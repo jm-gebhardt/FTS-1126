@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.MqttMessageHandler;
 
@@ -9,7 +10,8 @@ public class MqttStateConsumerTest
     [TestMethod]
     public async Task Consume_MqttState_ValidData_PublishesAgvStatusReceived_AgvPositionReceived_AgvErrorStatusReceived_AgvLoadStatusReceived()
     {
-        var fixture = new MqttStateConsumerTestFixture();
+        var agv = AgvGenerator.Generate(Guid.NewGuid());
+        var fixture = new MqttStateConsumerTestFixture().AddAgv(agv);
 
         var message = MqttStateGenerator.Generate(position: MqttVisualizationGenerator.GeneratePosition());
 
@@ -24,7 +26,8 @@ public class MqttStateConsumerTest
     [TestMethod]
     public async Task Consume_MqttState_NoPosition_DoesNotPublishAgvPositionReceived()
     {
-        var fixture = new MqttStateConsumerTestFixture();
+        var agv = AgvGenerator.Generate(Guid.NewGuid());
+        var fixture = new MqttStateConsumerTestFixture().AddAgv(agv);
 
         var message = MqttStateGenerator.Generate(position: null);
 

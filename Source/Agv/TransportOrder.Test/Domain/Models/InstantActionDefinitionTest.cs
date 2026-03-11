@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Shouldly;
@@ -21,7 +21,7 @@ public class InstantActionDefinitionTest
     [TestMethod]
     public void ValidateBlockingType_NoBlockingTypeGivenButIsNeeded_ThrowsInvalidInstantActionBlockingTypeException()
     {
-        var action = new InstantActionDefinition { BlockingTypes = [ActionBlockingType.Hard] };
+        var action = new InstantActionDefinition { BlockingTypes = [BlockingType.HARD] };
         Should.Throw<InvalidInstantActionBlockingTypeException>(() => action.ValidateBlockingType(null));
     }
 
@@ -29,14 +29,14 @@ public class InstantActionDefinitionTest
     public void ValidateBlockingType_BlockingTypeGivenButNoneDefined_ThrowsInvalidInstantActionBlockingTypeException()
     {
         var action = new InstantActionDefinition { BlockingTypes = null };
-        Should.Throw<InvalidInstantActionBlockingTypeException>(() => action.ValidateBlockingType(ActionBlockingType.Hard));
+        Should.Throw<InvalidInstantActionBlockingTypeException>(() => action.ValidateBlockingType(BlockingType.HARD));
     }
 
     [TestMethod]
     public void ValidateBlockingType_UnsupportedBlockingTypeGiven_ThrowsInvalidInstantActionBlockingTypeException()
     {
-        var action = new InstantActionDefinition { BlockingTypes = [ActionBlockingType.Hard] };
-        Should.Throw<InvalidInstantActionBlockingTypeException>(() => action.ValidateBlockingType(ActionBlockingType.Soft));
+        var action = new InstantActionDefinition { BlockingTypes = [BlockingType.HARD] };
+        Should.Throw<InvalidInstantActionBlockingTypeException>(() => action.ValidateBlockingType(BlockingType.SOFT));
     }
 
     [TestMethod]

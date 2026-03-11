@@ -119,7 +119,7 @@ public class ConveyorReportingEventHandler(
     {
         var (correlationId, actionCorrelationId, actionGroup, _) = context.Message;
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
-        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {ActionId} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
+        logger.LogInformation("Agv {AgvCorrelationId} finished {ActionType} {Action} of action group {ActionGroupCorrelationId}", actionGroup.AssignedAgv, action.ActionType, action.CorrelationId, actionGroup.CorrelationId);
         var targetNode = action.Target.Node;
         var targetStation = await stationRepository.GetStationByName(targetNode!.Name);
         if (targetStation is { NeedsPalletReporting: false } or null)
