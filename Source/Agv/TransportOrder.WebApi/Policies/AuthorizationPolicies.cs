@@ -33,9 +33,14 @@ public static class AuthorizationPolicies
     public const string NodePropertiesUpdate = "NodePropertiesUpdate";
 
     /// <summary>
-    /// Policy name for allowing full access to restricted area endpoints.
+    /// Policy name for allowing full access to queue endpoints.
     /// </summary>
     public const string QueueFullAccess = "QueueFullAccess";
+
+    /// <summary>
+    /// Policy name for allowing queue endpoints for repair.
+    /// </summary>
+    public const string QueueRepair = "QueueRepair";
 
     private static class ClaimTypes
     {
@@ -51,7 +56,8 @@ public static class AuthorizationPolicies
         new(MapFullAccess, "fm-map-full", ClaimTypes.ResourceAccess),
         new(NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess),
         new(MaintenanceLogFullAccess, "fm-maintenanceLogs-full", ClaimTypes.ResourceAccess),
-        new(QueueFullAccess, "fm-queues-full", ClaimTypes.ResourceAccess)
+        new(QueueFullAccess, "fm-queues-full", ClaimTypes.ResourceAccess),
+        new(QueueRepair, "fm-queues-repair", ClaimTypes.ResourceAccess)
     ];
 
     private static void AddNewPolicy(this AuthorizationOptions options, Policy newPolicy)

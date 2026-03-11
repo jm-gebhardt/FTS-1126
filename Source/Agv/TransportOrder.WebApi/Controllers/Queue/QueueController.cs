@@ -97,7 +97,7 @@ public class QueueController : Controller
     [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
     [HttpDelete]
     [Route("/queue/{id:guid}")]
-    public async Task<ActionResult> DeleteRestrictedArea([FromRoute] Guid id)
+    public async Task<ActionResult> DeleteQueue([FromRoute] Guid id)
     {
         await _deleteQueueClient.GetResponse<Success>(new DeleteQueue(id));
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemQueueDeleted } });
@@ -113,7 +113,7 @@ public class QueueController : Controller
     /// <response code="200">Ok</response>
     /// <response code="400">Bad Request. E.g. AGV is not in any queue.</response>
     /// <response code="404">Queue with given id not found.</response>
-    [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
+    [Authorize(Policy = AuthorizationPolicies.QueueRepair)]
     [HttpPost]
     [Route("/queue/{queueId:guid}/node/{nodeId}/removeAgv")]
     public async Task<ActionResult> ClearQueueNode([FromRoute] Guid queueId, [FromRoute] string nodeId, [FromBody] RemoveAgvFromQueueNodeDto body)
@@ -131,7 +131,7 @@ public class QueueController : Controller
     /// <response code="200">Ok</response>
     /// <response code="400">Bad Request.</response>
     /// <response code="404">Queue with given id not found.</response>
-    [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
+    [Authorize(Policy = AuthorizationPolicies.QueueRepair)]
     [HttpPost]
     [Route("/queue/{queueId:guid}/adjustAgvFillQuantity")]
     public async Task<ActionResult> AdjustAgvFillQuantity ([FromRoute] Guid queueId)
