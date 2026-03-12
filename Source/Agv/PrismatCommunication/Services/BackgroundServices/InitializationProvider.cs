@@ -12,12 +12,14 @@ namespace Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
 public class InitializationProvider(IBus bus, ILogger<InitializationProvider> logger): BackgroundService
 {
     private readonly RequestTimeout _requestTimeOut = RequestTimeout.After(m: 1);
+    private const int MaxRetryAttempts = 3;
 
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         bool responseReceived= false;
-        while (!responseReceived)
+        int attempts = 1;
+        while (!responseReceived && attempts < MaxRetryAttempts )
         {
             IRequestClient<RequestAgvAvailabilityStatus>? client = bus.CreateRequestClient<RequestAgvAvailabilityStatus>();
             try
@@ -30,12 +32,15 @@ public class InitializationProvider(IBus bus, ILogger<InitializationProvider> lo
                     return;
                 }
                 await bus.Publish(new SetNotReady(), stoppingToken);
+                return;
             }
             catch (Exception)
             {
                logger.LogInformation("No response received on agv availability request, trying again");
                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
+            attempts += 1;
         }
+        await bus.Publish(new GetSystemStatus(), stoppingToken);
     }
 }
