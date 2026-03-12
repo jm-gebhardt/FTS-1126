@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;

@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Immutable;
+using JetBrains.Annotations;
 using System.Numerics;
 
 namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
@@ -29,7 +30,7 @@ public class Bezier
         {
             throw new ArgumentOutOfRangeException(nameof(controlPolygon), controlPolygon, "Bezier curve has to be at least degree 3.");
         }
-        ControlPolygon = (IReadOnlyCollection<Vector2>)controlPolygon;
+        ControlPolygon = controlPolygon.ToImmutableList();
     }
 
     /// <summary>

@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
@@ -23,6 +24,7 @@ public class MqttFactSheetConsumer:
     private readonly IAgvDataRepository _agvDataRepository;
     private readonly IAgvActionRepository _agvActionRepository;
     private readonly IAgvRepository _agvRepository;
+    private readonly IMapper _mapper;
 
     /// <inheritdoc cref="MqttFactSheetConsumer"/>
     public MqttFactSheetConsumer(ILogger<MqttFactSheetConsumer> logger, IAgvDataRepository agvDataRepository, IAgvActionRepository agvActionRepository, IAgvRepository agvRepository, IMapper mapper)
@@ -32,6 +34,7 @@ public class MqttFactSheetConsumer:
         _agvDataRepository = agvDataRepository;
         _agvActionRepository = agvActionRepository;
         _agvRepository = agvRepository;
+        _mapper = mapper;
     }
 
     /// <inheritdoc/>
@@ -53,7 +56,15 @@ public class MqttFactSheetConsumer:
         if (_parser.Actions.Count > 0)
         {
             await _agvActionRepository.AddOrUpdateActionsAsync(_parser.Actions, _parser.SerialNumber);
+            await PublishInstantActions(context);
         }
         await context.Publish(new AgvDataReceived(_parser.CorrelationId, _parser.SerialNumber, _parser.AgvData));
+    }
+
+    private async Task PublishInstantActions(ConsumeContext<MqttFactsheet> context)
+    {
+        List<AgvAction> instantActions = _parser.Actions.Where(a => a.ActionScopes.Contains(ActionScope.Instant)).ToList();
+        IEnumerable<Task> publishTasks = instantActions.Select(i => context.Publish(new AgvInstantActionDefinitionReceived(_parser.CorrelationId, _mapper.Map<AgvInstantAction>(i))));
+        await Task.WhenAll(publishTasks);
     }
 }

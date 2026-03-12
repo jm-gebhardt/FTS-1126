@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 
@@ -6,6 +7,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 /// <summary>
 /// Provides values of pre-defined vda5050 constants.
 /// </summary>
+[PublicAPI]
 public static class Vda5050Specifications
 {
     public const string Version = "2.1.0";

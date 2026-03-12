@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 
@@ -19,5 +20,16 @@ public class AgvActionProfile: Profile
         
         CreateMap<MqttAgvAction, AgvAction>()
             .ForMember(a => a.AgvSerialNumber, opt => opt.Ignore());
+
+        CreateMap<AgvAction, AgvInstantAction>()
+            .ForMember(ia => ia.Description, opt => opt.MapFrom(a => a.ActionDescription ?? string.Empty))
+            .ForMember(ia => ia.ResultDescription, opt => opt.MapFrom(a => a.ResultDescription ?? string.Empty))
+            .ForMember(ia => ia.Parameters, opt => opt.MapFrom(a => a.ActionParameters))
+            .ForSourceMember(a => a.ActionScopes, opt => opt.DoNotValidate())
+            .ForSourceMember(a => a.AgvSerialNumber, opt => opt.DoNotValidate());
+
+        CreateMap<AgvActionParameter, AgvInstantActionParameterDefinition>()
+            .ForMember(iap => iap.ValueType, opt => opt.MapFrom(a => a.ValueDataType))
+            .ForMember(iap => iap.Description, opt => opt.MapFrom(a => a.Description ?? string.Empty));
     }
 }

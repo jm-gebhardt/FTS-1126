@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using JetBrains.Annotations;
 using OrderAction = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders.OrderAction;
@@ -52,7 +52,15 @@ public static class OrderGenerator
         ]);
     }
 
-    public static OrderState GenerateOrderState(string orderId, int orderUpdateId, int lastNodeSequenceId, bool? newBaseRequest, List<OrderActionState>? actionStates=null, List<AgvError>? errors = null )
+    public static AgvError GenerateAgvError(string errorType, List<ErrorReference>? errorReferences=null)
+    {
+        return new AgvError(
+            Guid.NewGuid(), "error title", "error description", null,
+            ErrorLevel.Fatal, errorType, ErrorCategory.General, errorReferences,
+            DateTime.UtcNow, ErrorFlag.Agv, AgvErrorSource.Agv);
+    }
+
+    public static OrderState GenerateOrderState(string orderId, int orderUpdateId, int lastNodeSequenceId, bool? newBaseRequest, List<OrderActionState>? actionStates = null, List<AgvError>? errors = null)
     {
         return new OrderState
         {
@@ -63,14 +71,6 @@ public static class OrderGenerator
             ActionStates = actionStates ?? [],
             Errors = errors ?? []
         };
-    }
-
-    public static AgvError GenerateAgvError(string errorType, List<ErrorReference>? errorReferences=null)
-    {
-        return new AgvError(
-            Guid.NewGuid(), "error title", "error description", null,
-            ErrorLevel.Fatal, errorType, ErrorCategory.General, errorReferences,
-            DateTime.UtcNow, ErrorFlag.Agv, AgvErrorSource.Agv);
     }
 }
 

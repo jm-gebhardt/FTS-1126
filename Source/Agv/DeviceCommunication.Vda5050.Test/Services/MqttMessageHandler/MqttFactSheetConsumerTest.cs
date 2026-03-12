@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 using Moq;
 
@@ -35,6 +36,23 @@ public class MqttFactSheetConsumerTest
         await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
 
         fixture.VerifyActionsUpdated(Times.Never());
+        fixture.VerifyDataUpdated();
+        fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttFactSheet_InstantAction_PublishesAgvInstantActionDefinitionReceived()
+    {
+        var fixture = new MqttFactSheetConsumerTestFixture();
+
+        var message = MqttFactSheetGenerator.Generate(actions: [MqttFactSheetGenerator.GenerateAgvAction("initToStation", MqttActionScope.Instant)]);
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
+        await fixture.ShouldHavePublishedAsync<AgvInstantActionDefinitionReceived>();
+
+        fixture.VerifyActionsUpdated(Times.Once());
         fixture.VerifyDataUpdated();
         fixture.VerifyAgvUpdated(Times.Once());
     }

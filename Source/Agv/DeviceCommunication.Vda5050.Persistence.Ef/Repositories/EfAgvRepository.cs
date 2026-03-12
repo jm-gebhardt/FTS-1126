@@ -28,6 +28,20 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     }
 
     /// <inheritdoc cref="IAgvRepository"/>
+    public async Task<Agv> GetAgvByCurrentOrderAsync(Guid orderId)
+    {
+        var agv = await agvCache.GetAgvByCurrentOrderAsync(orderId);
+        if (agv != null)
+        {
+            return agv;
+        }
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        DbSet<Agv> dbSet = context.Set<Agv>();
+        agv = await dbSet.SingleOrDefaultAsync(a => a.CurrentOrder == orderId);
+        return agv ?? throw new AgvNotFoundException(orderId);
+    }
+
+    /// <inheritdoc cref="IAgvRepository"/>
     public async Task AddOrUpdateAsync(Agv agv)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();

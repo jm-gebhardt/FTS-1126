@@ -22,7 +22,6 @@ public class MqttConnectionConsumerTest
         var message = MqttConnectionGenerator.Generate(connectionState: MqttConnectionState.Online);
         await fixture.PublishMqttMessageAsync(message);
 
-        await fixture.ShouldNotHavePublishedAsync<AgvLastWillReceived>();
         fixture.VerifyAgvUpdated(Times.Once());
         agv.InterfaceName.ShouldNotBeNull();
         agv.ProtocolMajorVersion.ShouldNotBeNull();

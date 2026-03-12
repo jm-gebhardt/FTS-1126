@@ -33,9 +33,9 @@ public class OrderBuilderTest
         var fixture = new OrderBuilderTestFixture()
             .AddActions([
                 AgvGenerator.GenerateNodeAction(pickAction.ActionType,
-                    agv.SerialNumber,
-                    BlockingType.SOFT,
-                    [
+                    blockingType: BlockingType.SOFT,
+                    agvSerialNumber: agv.SerialNumber,
+                    parameters: [
                         new AgvActionParameter
                         {
                             IsOptional = false,
@@ -70,9 +70,9 @@ public class OrderBuilderTest
         var fixture = new OrderBuilderTestFixture()
             .AddActions([
                 AgvGenerator.GenerateNodeAction(pickAction.ActionType,
-                    agv.SerialNumber,
-                    BlockingType.SOFT,
-                    [
+                    blockingType: BlockingType.SOFT,
+                    agvSerialNumber: agv.SerialNumber,
+                    parameters: [
                         new AgvActionParameter
                         {
                             IsOptional = false,

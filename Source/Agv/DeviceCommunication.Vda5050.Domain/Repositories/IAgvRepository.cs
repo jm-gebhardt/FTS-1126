@@ -21,4 +21,12 @@ public interface IAgvRepository
     /// </summary>
     /// <param name="agv">The agv.</param>
     Task AddOrUpdateAsync(Agv agv);
+
+    /// <summary>
+    /// Get agv by the id of the current order.
+    /// </summary>
+    /// <param name="orderId">The order id.</param>
+    /// <returns>An agv.</returns>
+    /// <exception cref="AgvNotFoundException"></exception>
+    Task<Agv> GetAgvByCurrentOrderAsync(Guid orderId);
 }
