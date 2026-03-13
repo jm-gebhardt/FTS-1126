@@ -21,6 +21,7 @@ public class InitializationProvider(IBus bus, ILogger<InitializationProvider> lo
         int attempts = 1;
         while (!responseReceived && attempts < MaxRetryAttempts )
         {
+            logger.LogInformation("Requesting system status");
             IRequestClient<RequestAgvAvailabilityStatus>? client = bus.CreateRequestClient<RequestAgvAvailabilityStatus>();
             try
             {

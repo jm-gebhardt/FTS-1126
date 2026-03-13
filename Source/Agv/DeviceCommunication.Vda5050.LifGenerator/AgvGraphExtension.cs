@@ -51,7 +51,8 @@ public static class AgvGraphExtension
                     new VehicleTypeEdgeProperty()
                     {
                         RotationAllowed = true, ReentryAllowed = true, MaxSpeed = 10, OrientationType = "TANGENTIAL",
-                        VehicleOrientation = 0.0, Trajectory = edge.GetTrajectory(fromNode, toNode)
+                        VehicleOrientation = 0.0, Trajectory = edge.GetTrajectory(fromNode, toNode),
+                        VehicleTypeId = "rikeb.series"
                     }
                 ],
                 StartNodeId = fromNode.Id.ToString(),
@@ -163,8 +164,8 @@ public static class AgvGraphExtension
             return new VehicleTypeNodePropertyAction()
             {
                 RequirementType = RequirementType.Optional,
-                ActionDescription = "pick pallet",
-                ActionType = "pick",
+                ActionDescription = "drop pallet",
+                ActionType = "drop",
                 BlockingType = BlockingType.Hard,
                 ActionParameters = [new FluffyActionParameter { Key = "stationType", Value = "active conveyor" }, new FluffyActionParameter() { Key = "loadType", Value = "pallet" }]
             };
