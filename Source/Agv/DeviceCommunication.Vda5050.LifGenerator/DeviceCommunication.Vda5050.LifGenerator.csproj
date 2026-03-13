@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <AssemblyName>Gebhardt.Acc.DeviceCommunication.Vda5050.LifGenerator</AssemblyName>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="MassTransit" />
+        <PackageReference Include="MassTransit.Prometheus" />
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="MassTransit.Quartz" />
+        <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="AutoMapper" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+        <PackageReference Include="Vdma.Lif" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj" />
+    </ItemGroup>
+</Project>
