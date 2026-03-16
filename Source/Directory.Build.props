@@ -10,5 +10,12 @@
     -->
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-7jgj-8wvc-jh57" />
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-cmhx-cq75-c4mj" />
+
+    <!--
+      AutoMapper 14.0.0 has a DoS vulnerability (GHSA-rvv3-g6hj-g44x) via uncontrolled recursion on
+      deeply nested object graphs. The fix requires v16.1.1+ which is commercially licensed.
+      Risk is low: all mapped objects are internal system DTOs, not user-controlled input.
+    -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
   </ItemGroup>
 </Project>

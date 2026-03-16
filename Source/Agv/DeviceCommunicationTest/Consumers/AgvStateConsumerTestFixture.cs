@@ -1,3 +1,4 @@
+using AutoMapper.Internal;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
@@ -19,7 +20,7 @@ public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCons
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
     }
 
     public AgvStateConsumerTestFixture WithAgvInformation(AgvInformation agvInformation)

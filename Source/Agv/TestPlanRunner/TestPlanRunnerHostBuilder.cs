@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common;
+﻿using AutoMapper.Internal;
+using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
@@ -82,7 +83,7 @@ public static class TestPlanRunnerHostBuilder
                 services.AddHostedService<PollingBackgroundService<TestPlanFileWatcher>>();
 
                 // WebAPI
-                services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+                services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
                 services.AddControllers()
                     .AddJsonOptions(options =>
                     {

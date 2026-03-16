@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common;
+﻿using AutoMapper.Internal;
+using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.OrderTranslator.CmdOptions;
@@ -52,7 +53,7 @@ public static class OrderTranslatorHostBuilder
 
         hostBuilder.ConfigureServices(s =>
         {
-            s.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+            s.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
             s.AddHealthChecks()
                 .AddCheck<StartupHealthCheck>("Startup",  tags: new[] { "ready" });
         });

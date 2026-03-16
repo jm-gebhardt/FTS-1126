@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
+using AutoMapper.Internal;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Swagger;
@@ -39,7 +40,7 @@ public static class WebHostBuilderExtension
 
         webHostBuilder.ConfigureServices((context, services) =>
         {
-            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
             services.AddControllers()
                 .AddApplicationPart(executingAssembly)
                 .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });

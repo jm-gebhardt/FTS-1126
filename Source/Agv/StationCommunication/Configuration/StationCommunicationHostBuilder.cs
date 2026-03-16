@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common;
+﻿using AutoMapper.Internal;
+using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.StationCommunication.CmdOptions;
@@ -44,7 +45,7 @@ public static class StationCommunicationHostBuilder
                     }));
 
         hostBuilder.ConfigureServices(s =>
-            s.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies())
+            s.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies())
         );
         return hostBuilder;
     }

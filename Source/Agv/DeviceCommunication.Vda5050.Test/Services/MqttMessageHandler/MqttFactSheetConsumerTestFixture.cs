@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using AutoMapper.Internal;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
@@ -31,7 +32,7 @@ public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
     }
 
     public void VerifyDataUpdated()

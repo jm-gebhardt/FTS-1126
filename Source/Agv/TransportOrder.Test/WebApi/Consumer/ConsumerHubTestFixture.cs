@@ -1,4 +1,5 @@
 using AutoMapper;
+using AutoMapper.Internal;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
@@ -68,7 +69,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
-        collection.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+        collection.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
         return this;
     }
 }

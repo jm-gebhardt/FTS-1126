@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
+using AutoMapper.Internal;
 using System.Xml.XPath;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Statistics.WebApi.Controllers;
@@ -45,7 +46,7 @@ public static class WebHostBuilderExtension
 
         webHostBuilder.ConfigureServices((context, services) =>
         {
-            services.AddAutoMapper(_ => { }, AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
             services.AddScoped<ExceptionHandlerMiddleware>();
             services.AddMvc();
             services.AddControllers()
