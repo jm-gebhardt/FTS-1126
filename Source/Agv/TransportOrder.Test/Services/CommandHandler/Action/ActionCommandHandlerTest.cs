@@ -158,6 +158,47 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_StartActionOfActionGroup_ActionIsNotNextInGroup_PublishesStartingActionForAgvFailed()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup);
+        var dropAction = actionGroup.Actions.Last();
+        var startAction = new StartActionOfActionGroup(dropAction, agv.CorrelationId);
+
+        await fixture.PublishMessageAsync(startAction);
+        await fixture.ShouldNotHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
+        await fixture.ShouldHavePublishedAsync<StartingActionForAgvFailed>();
+    }
+
+    [TestMethod]
+    public async Task Consume_StartActionOfActionGroup_AllActionsAlreadyStarted_PublishesStartingActionForAgvFailed()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
+        foreach (var action in actionGroup.Actions)
+        {
+            action.UpdateActionState(ActionState.Started, DateTimeOffset.Now);
+        }
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .AddActionGroup(actionGroup);
+        var pickAction = actionGroup.Actions.First();
+        var startAction = new StartActionOfActionGroup(pickAction, agv.CorrelationId);
+
+        await fixture.PublishMessageAsync(startAction);
+        await fixture.ShouldHaveConsumedAsync<StartActionOfActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<StartActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupStarted>();
+        await fixture.ShouldHavePublishedAsync<StartingActionForAgvFailed>();
+    }
+
+    [TestMethod]
     public async Task Consume_StartActionOfActionGroup_AgvIsLocked_PublishesStartingActionForAgvFailed()
     {
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: "NodeId", mode: new AgvMode(ModeType.Locked));

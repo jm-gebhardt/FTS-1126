@@ -251,12 +251,14 @@ public class ActionCommandHelper
         if (actionGroup.FirstNotStartedAction == null)
         {
             _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, {Action}, {ActionInGroup}", action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).ToString());
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {
             _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first", action.CorrelationId, actionGroup.CorrelationId);
+            await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
 
