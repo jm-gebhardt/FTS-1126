@@ -39,6 +39,9 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
                     case nameof(AgvStatus.CorrelationId):
                         continue;
 
+                    case nameof(AgvStatus.LastKnownPosition):
+                        continue;
+
                     case nameof(AgvStatus.OrderId):
                         o.Property(propertyInfo.PropertyType, propertyInfo.Name).HasMaxLength(DbStringLimits.OrderId);
                         break;
@@ -60,6 +63,16 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
                         break;
                 }
             }
+
+            o.OwnsOne(s => s.LastKnownPosition, lkp =>
+            {
+                lkp.Property(p => p.PositionInitialized).HasColumnName("LastKnownPositionInitialized");
+                lkp.Property(p => p.X).HasColumnName("LastKnownX");
+                lkp.Property(p => p.Y).HasColumnName("LastKnownY");
+                lkp.Property(p => p.Z).HasColumnName("LastKnownZ");
+                lkp.Property(p => p.Theta).HasColumnName("LastKnownTheta");
+                lkp.Property(p => p.DeviationRange).HasColumnName("LastKnownDeviationRange");
+            });
         });
         builder.Navigation(e => e.AgvStatus).AutoInclude();
         builder.HasOne<Domain.Models.Settings.AgvSettingsGroup>()

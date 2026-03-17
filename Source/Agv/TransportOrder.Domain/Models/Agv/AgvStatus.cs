@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -107,6 +108,12 @@ public record AgvStatus
     public float TotalLifetime { get; init; }
 
     /// <summary>
+    /// Last known position persisted on GoOffline or graceful shutdown.
+    /// Used to restore AGV map positions after container restart.
+    /// </summary>
+    public AgvPosition? LastKnownPosition { get; private set; }
+
+    /// <summary>
     /// Constructor of AgvStatus
     /// </summary>
     /// <param name="correlationId">AGV correlation ID</param>
@@ -201,6 +208,15 @@ public record AgvStatus
     public void UpdateLastBatteryReplacement(DateTime date)
     {
         LastBatteryReplacement = date;
+    }
+
+    /// <summary>
+    /// Update the last known position (persisted to DB on GoOffline/shutdown).
+    /// </summary>
+    /// <param name="position">The position to persist.</param>
+    public void UpdateLastKnownPosition(AgvPosition? position)
+    {
+        LastKnownPosition = position;
     }
 
     /// <summary>

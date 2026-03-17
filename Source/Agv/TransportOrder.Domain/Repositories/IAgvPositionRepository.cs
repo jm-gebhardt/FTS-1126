@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using JetBrains.Annotations;
 
@@ -43,4 +44,27 @@ public interface IAgvPositionRepository
     /// <param name="correlationIds">The correlation ids of the selected agvs.</param>
     /// <returns></returns>
     ICollection<AgvPositionStatus> GetSelectedAgvsPositions(ICollection<Guid> correlationIds);
+
+    /// <summary>
+    /// Restores persisted last-known positions from the database into the in-memory cache.
+    /// Uses TryAdd so it won't overwrite positions from AGVs that are already online.
+    /// </summary>
+    Task RestorePersistedPositionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persists a single AGV's position to the database (LastKnownPosition on AgvStatus).
+    /// Uses tracked entities to avoid EF Core issues with disconnected owned entities.
+    /// </summary>
+    Task PersistPositionAsync(Guid correlationId, AgvPosition position, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Clears a persisted last-known position from the database when an AGV comes back online.
+    /// </summary>
+    Task ClearPersistedPositionAsync(Guid correlationId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persists all current in-memory positions to the database (LastKnownPosition on AgvStatus).
+    /// Used during graceful shutdown.
+    /// </summary>
+    Task PersistAllPositionsAsync(CancellationToken cancellationToken = default);
 }

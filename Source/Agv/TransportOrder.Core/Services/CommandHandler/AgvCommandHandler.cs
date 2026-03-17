@@ -460,6 +460,7 @@ public class AgvCommandHandler :
         if (!wasOnline)
         {
             agv.SetOnline();
+            await _agvDb.Positions.ClearPersistedPositionAsync(agv.CorrelationId);
             await PrepareNodes(context, agvStatus, agv);
             await TryRemoveQueueBlocking(context, agv.CorrelationId);
             await context.Publish(new CheckAgvLoad(agv.CorrelationId));
@@ -690,6 +691,19 @@ public class AgvCommandHandler :
         agv.GoOffline();
         if (wasOnline && !agv.IsOnline)
         {
+            try
+            {
+                var lastPosition = _agvDb.Positions.GetPositionIfExisting(correlationId);
+                if (lastPosition != null)
+                {
+                    await _agvDb.Positions.PersistPositionAsync(correlationId, lastPosition.AgvPosition);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "{Command}: Failed to persist last known position for AGV {AgvCorrelationId}", nameof(GoOffline), agv.CorrelationId);
+            }
+
             await UpdateOfflineErrors(context, agv, handleQueueBlockingErrors: true);
             if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
             {

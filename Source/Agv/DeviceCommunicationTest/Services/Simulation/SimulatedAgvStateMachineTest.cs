@@ -355,7 +355,19 @@ public class SimulatedAgvStateMachineTest
             (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<UpdateActionCommand>()).ShouldBeTrue();
 
-            // Wait for action completed event to be published
+            // Wait until saga has finished the updated action before asserting publication
+            await fixture.WaitUntil(agvSaga, s =>
+                {
+                    bool ok = !s.AgvStatus.Busy;
+                    ok &= s.LastNodeId == updatedMoveAction.Target.Node?.Id;
+                    return ok;
+                },
+                s =>
+                {
+                    s.AgvStatus.Busy.ShouldBeFalse();
+                    s.LastNodeId.ShouldBe(updatedMoveAction.Target.Node?.Id);
+                }, timeoutInMs: 10000);
+
             await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
         }
     }

@@ -440,6 +440,9 @@ public class Agv : IAgv
         bool operatingDataTotalLifetimeChanged = CheckOperatingDataTotalLifetimeChanged(newStatus.TotalLifetime);
         if (AgvStatus != null)
         {
+            // LastKnownPosition is intentionally NOT carried forward here.
+            // It is a DB-only field managed via tracked entity operations in AgvPositionRepository
+            // (PersistPositionAsync / ClearPersistedPositionAsync), not through in-memory domain state.
             newStatus = new AgvStatus(newStatus.CorrelationId,
                 newStatus.OrderId,
                 newStatus.Busy,

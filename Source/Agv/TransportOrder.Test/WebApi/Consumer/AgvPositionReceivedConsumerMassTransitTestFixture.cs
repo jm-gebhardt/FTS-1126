@@ -8,9 +8,11 @@ using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
@@ -63,6 +65,7 @@ internal class AgvPositionReceivedConsumerMassTransitTestFixture :
         collection.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         if (AgvPositionRepositoryMock is null)
         {
+            collection.AddSingleton(new Mock<IDbContextFactory<TransportOrderDbContext>>().Object);
             collection.AddSingleton<IAgvPositionRepository, AgvPositionRepository>();
             collection.AddSingleton(_graphRepositoryMock.Object);
         }

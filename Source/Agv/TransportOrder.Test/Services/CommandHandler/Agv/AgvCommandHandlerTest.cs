@@ -204,6 +204,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<AgvWentOnline>();
         await fixture.ShouldHavePublishedAsync<CheckAgvLoad>();
         await fixture.ShouldNotHavePublishedAsync<ResolveSystemAgvError>();
+        fixture.AgvDb.Verify(x => x.Positions.ClearPersistedPositionAsync(agv.CorrelationId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
@@ -859,6 +860,44 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
 
         (await fixture.TestHarness.Published.Any<AgvOnlineChanged>()).ShouldBeFalse();
+        agv.IsOnline.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_GoOffline_AgvWasOnline_PersistsLastKnownPosition()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetOnline();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithNodesStates([], [])
+            .WithHasOnlineAgvs(false);
+
+        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
+
+        agv.IsOnline.ShouldBeFalse();
+        // ReSharper disable CompareOfFloatsByEqualityOperator
+        fixture.AgvDb.Verify(x => x.Positions.PersistPositionAsync(
+            agv.CorrelationId,
+            It.Is<AgvPosition>(p => p.X == 1 && p.Y == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // ReSharper restore CompareOfFloatsByEqualityOperator
+    }
+
+    [TestMethod]
+    public async Task Consume_GoOffline_AgvWasOnline_PersistFails_StillGoesOffline()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetOnline();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
+            .WithNodesStates([], [])
+            .WithHasOnlineAgvs(false);
+        fixture.AgvDb.Setup(x => x.Positions.PersistPositionAsync(It.IsAny<Guid>(), It.IsAny<AgvPosition>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("DB failure"));
+
+        await fixture.PublishMessageAsync(new GoOffline(agv.CorrelationId));
+
         agv.IsOnline.ShouldBeFalse();
     }
 

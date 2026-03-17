@@ -59,4 +59,16 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
 
     /// <inheritdoc />
     public abstract ICollection<AgvPositionStatus> GetSelectedAgvsPositions(ICollection<Guid> correlationIds);
+
+    /// <inheritdoc />
+    public virtual Task RestorePersistedPositionsAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual Task PersistPositionAsync(Guid correlationId, AgvPosition position, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual Task ClearPersistedPositionAsync(Guid correlationId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual Task PersistAllPositionsAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 }

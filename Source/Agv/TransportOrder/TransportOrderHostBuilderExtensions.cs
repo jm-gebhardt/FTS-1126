@@ -77,6 +77,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddHostedService<AgvSettingsInitializer>();
         services.AddHostedService<InMemoryCacheInitializer>();
+        services.AddHostedService<AgvPositionPersistenceService>();
         services.AddHostedService<FactoryTimeZoneInitializer>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
