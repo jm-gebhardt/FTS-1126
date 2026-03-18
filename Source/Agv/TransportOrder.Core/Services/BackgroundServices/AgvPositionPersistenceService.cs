@@ -20,7 +20,7 @@ public class AgvPositionPersistenceService(IServiceScopeFactory scopeFactory, IL
         {
             using var scope = scopeFactory.CreateScope();
             var positionRepository = scope.ServiceProvider.GetRequiredService<IAgvPositionRepository>();
-            var positionCount = positionRepository.GetAllPositions().Count;
+            int positionCount = positionRepository.GetAllPositions().Count;
             logger.LogInformation("Persisting {Count} AGV positions on shutdown", positionCount);
             await positionRepository.PersistAllPositionsAsync(cancellationToken);
             logger.LogInformation("Persisted all AGV positions on shutdown");

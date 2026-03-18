@@ -209,21 +209,24 @@ public class ActionCommandHelper
     {
         if (actionGroup.State == ActionGroupState.Paused)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action group is paused", action.CorrelationId, actionGroup.CorrelationId);
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action group is paused. Agv: {AgvCorrelationId}",
+                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
 
         if (assignedAgv.IsLocked)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start any actions in mode {Mode}", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start any actions in mode {Mode}",
+                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
 
         if (actionGroup is { IsMovingCargo: true, IsManual: true } && !assignedAgv.CanStartManualPickDropAction)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start pick/drop actions in mode {Mode}",
+                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
             var pauseReason = assignedAgv.Mode.GetPauseReason();
 
             await context.Publish(new PauseActionGroup(actionGroup.CorrelationId, pauseReason));
@@ -233,7 +236,8 @@ public class ActionCommandHelper
 
         if (!actionGroup.IsManual && !assignedAgv.CanStartAutomaticAction)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start automatic action in mode {Mode}", action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because agv {CorrelationId} can not start automatic action in mode {Mode}",
+                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, assignedAgv.Mode.Type.ToString());
 
             var pauseReason = assignedAgv.Mode.GetPauseReason();
 
@@ -244,20 +248,24 @@ public class ActionCommandHelper
         var actionToBeStarted = actionGroup.Actions.First(a => a.CorrelationId == action.CorrelationId);
         if (actionToBeStarted.State is ActionState.Aborted or ActionState.Canceled)
         {
-            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId}. Action has been aborted or cancelled: {ActionState}", action.CorrelationId, actionGroup.CorrelationId, actionToBeStarted.State);
+            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId}. Action has been aborted or cancelled: {ActionState}. Agv: {AgvCorrelationId}", 
+                action.CorrelationId, actionGroup.CorrelationId, actionToBeStarted.State, assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
         if (actionGroup.FirstNotStartedAction == null)
         {
-            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, {Action}, {ActionInGroup}", action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).ToString());
+            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, " +
+                               "{Action}, {ActionInGroup}. Agv: {AgvCorrelationId}", 
+                action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).ToString(), assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first", action.CorrelationId, actionGroup.CorrelationId);
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first. Agv: {AgvCorrelationId}", 
+                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }
