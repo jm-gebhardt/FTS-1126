@@ -26,5 +26,8 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
         builder.Property(o => o.ErrorDescription).HasMaxLength(DbStringLimits.Description);
         builder.Property(o => o.Source).HasConversion<string>().HasMaxLength(DbStringLimits.Enum);
         builder.Property(o => o.ErrorTitle).HasMaxLength(DbStringLimits.Name);
+
+        builder.HasIndex(e => e.ErrorResolved)
+            .HasFilter("[ErrorResolved] IS NULL");
     }
 }
