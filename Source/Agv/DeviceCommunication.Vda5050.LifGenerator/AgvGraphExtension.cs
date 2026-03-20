@@ -176,7 +176,8 @@ public static class AgvGraphExtension
             return new VehicleTypeNodePropertyAction()
             {
                 RequirementType = RequirementType.Optional,
-                ActionDescription = "startCharging",
+                ActionDescription = "start charging",
+                ActionType = "startCharging",
                 BlockingType = BlockingType.Hard,
             };
         }
