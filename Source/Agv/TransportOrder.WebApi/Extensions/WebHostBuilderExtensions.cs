@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AutoMapper.Internal;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Api;
@@ -70,7 +69,7 @@ public static class WebHostBuilderExtensions
 
         webHostBuilder.ConfigureServices((context, services) =>
         {
-            services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+            services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddTransient<ITriggerPublisher, TriggerPublisher>();
             services.AddTransient<IActionGroupPublisher, ActionGroupPublisher>();

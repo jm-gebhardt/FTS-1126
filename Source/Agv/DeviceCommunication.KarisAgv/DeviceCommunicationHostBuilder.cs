@@ -1,5 +1,4 @@
-﻿using AutoMapper.Internal;
-using Gebhardt.Acc.Common;
+﻿using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
@@ -186,7 +185,7 @@ public static class DeviceCommunicationHostBuilder
             services.AddSingleton<IGraphRepository, EfGraphRepository>();
             services.AddSingleton(TimeProvider.System);
 
-            services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+            services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });
         return hostBuilder;
     }

@@ -1,5 +1,4 @@
-﻿using AutoMapper.Internal;
-using Gebhardt.Acc.Common;
+﻿using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
@@ -25,6 +24,7 @@ using Gebhardt.Acc.TestPlanRunner.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.TestPlanRunner.Domain;
 using MassTransit;
 
@@ -83,7 +83,7 @@ public static class TestPlanRunnerHostBuilder
                 services.AddHostedService<PollingBackgroundService<TestPlanFileWatcher>>();
 
                 // WebAPI
-                services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+                services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddControllers()
                     .AddJsonOptions(options =>
                     {

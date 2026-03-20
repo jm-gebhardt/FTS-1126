@@ -1,8 +1,8 @@
-﻿using AutoMapper.Internal;
-using FluentValidation;
+﻿using FluentValidation;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.MassTransit;
 using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Persistence.Ef;
@@ -65,7 +65,7 @@ public static class TransportOrderHostBuilderExtensions
 
             RegisterMiscellaneousServices(services);
 
-            services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+            services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         });
 
         return hostBuilder;

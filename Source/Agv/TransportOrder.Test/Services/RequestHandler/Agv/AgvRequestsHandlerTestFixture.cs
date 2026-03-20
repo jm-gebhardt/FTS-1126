@@ -1,7 +1,7 @@
 using AutoMapper;
-using AutoMapper.Internal;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Configurations;
@@ -88,7 +88,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()

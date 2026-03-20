@@ -12,6 +12,8 @@ namespace Gebhardt.Acc.Common.Persistence.Ef;
 public abstract class BaseDbContext<TContext> : DbContext
     where TContext : DbContext, IDbContext<TContext>
 {
+    private const int CommandTimeOutMin = 5;
+    
     /// <inheritdoc />
     protected BaseDbContext(DbContextOptions options) : base(options)
     {
@@ -73,5 +75,15 @@ public abstract class BaseDbContext<TContext> : DbContext
                       END
                       """;
         await Database.ExecuteSqlRawAsync(sql);
+    }
+
+    /// <summary>
+    /// Sets the timeout to use for commands with this context.
+    /// </summary>
+    // ReSharper disable once UnusedMethodReturnValue.Global
+    public BaseDbContext<TContext> SetCommandTimeOut()
+    {
+        Database.SetCommandTimeout(TimeSpan.FromMinutes(CommandTimeOutMin));
+        return this;
     }
 }

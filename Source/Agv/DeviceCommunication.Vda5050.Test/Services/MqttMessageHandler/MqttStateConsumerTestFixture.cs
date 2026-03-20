@@ -1,4 +1,4 @@
-﻿using AutoMapper.Internal;
+﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
@@ -29,6 +29,6 @@ public class MqttStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCon
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
     }
 }

@@ -45,15 +45,29 @@ steps:
     targetType: 'inline'
     script: |
       set -ex
+      # Advisories suppressed via NuGetAuditSuppress in Directory.Packages.props.
+      # dotnet list package --vulnerable ignores NuGetAuditSuppress, so we filter them here.
+      # Keep in sync with NuGetAuditSuppress entries in Directory.Build.props
+      SUPPRESSED_ADVISORIES=(
+        "https://github.com/advisories/GHSA-7jgj-8wvc-jh57"
+        "https://github.com/advisories/GHSA-cmhx-cq75-c4mj"
+        "https://github.com/advisories/GHSA-rvv3-g6hj-g44x"
+      )
+
       OUTPUT=$(dotnet list package --vulnerable --include-transitive)
       echo "${OUTPUT}"
-      VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z\.]+` has the following vulnerable packages/{ print $2}'))
-      for i in "${VULNERABLE_PROJECTS[@]}"
-      do
-          echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
+
+      # Filter out suppressed advisories, then fail if any advisory URLs remain
+      FILTERED_OUTPUT="${OUTPUT}"
+      for advisory in "${SUPPRESSED_ADVISORIES[@]}"; do
+        FILTERED_OUTPUT=$(echo "${FILTERED_OUTPUT}" | grep -v "${advisory}")
       done
-      if [ -n "${VULNERABLE_PROJECTS}" ]; then
-        exit 1;
+
+      REMAINING=$(echo "${FILTERED_OUTPUT}" | grep "https://github.com/advisories/" || true)
+      if [ -n "${REMAINING}" ]; then
+        echo "##vso[task.logissue type=error]Unsuppressed vulnerable dependencies found" >&2
+        echo "${REMAINING}" >&2
+        exit 1
       fi
     workingDirectory: 'Source/Agv'
 - task: DotNetCoreCli@2
@@ -69,14 +83,28 @@ steps:
     targetType: 'inline'
     script: |
       set -ex
+      # Advisories suppressed via NuGetAuditSuppress in Directory.Packages.props.
+      # dotnet list package --vulnerable ignores NuGetAuditSuppress, so we filter them here.
+      # Keep in sync with NuGetAuditSuppress entries in Directory.Build.props
+      SUPPRESSED_ADVISORIES=(
+        "https://github.com/advisories/GHSA-7jgj-8wvc-jh57"
+        "https://github.com/advisories/GHSA-cmhx-cq75-c4mj"
+        "https://github.com/advisories/GHSA-rvv3-g6hj-g44x"
+      )
+
       OUTPUT=$(dotnet list package --vulnerable --include-transitive)
       echo "${OUTPUT}"
-      VULNERABLE_PROJECTS=($(echo "${OUTPUT}" | awk '/Project `[A-z\.]+` has the following vulnerable packages/{ print $2}'))
-      for i in "${VULNERABLE_PROJECTS[@]}"
-      do
-          echo "##vso[task.logissue type=error]${i} has vulnerable dependencies" >&2
+
+      # Filter out suppressed advisories, then fail if any advisory URLs remain
+      FILTERED_OUTPUT="${OUTPUT}"
+      for advisory in "${SUPPRESSED_ADVISORIES[@]}"; do
+        FILTERED_OUTPUT=$(echo "${FILTERED_OUTPUT}" | grep -v "${advisory}")
       done
-      if [ -n "${VULNERABLE_PROJECTS}" ]; then
-        exit 1;
+
+      REMAINING=$(echo "${FILTERED_OUTPUT}" | grep "https://github.com/advisories/" || true)
+      if [ -n "${REMAINING}" ]; then
+        echo "##vso[task.logissue type=error]Unsuppressed vulnerable dependencies found" >&2
+        echo "${REMAINING}" >&2
+        exit 1
       fi
     workingDirectory: 'Source/Agv.IntegrationTest'

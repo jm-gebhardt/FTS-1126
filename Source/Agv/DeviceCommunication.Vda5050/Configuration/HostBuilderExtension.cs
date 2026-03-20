@@ -1,7 +1,7 @@
-﻿using AutoMapper.Internal;
-using Gebhardt.Acc.Common.Configurations;
+﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
@@ -94,7 +94,7 @@ public static class HostBuilderExtension
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
                 });
-                services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+                services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
                 //Repositories
                 services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();

@@ -1,5 +1,5 @@
-﻿using AutoMapper.Internal;
-using CommandLine;
+﻿using CommandLine;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.DeviceCommunication.Common.Repositories;
 using Gebhardt.Acc.DeviceCommunication.SimAgv;
@@ -27,7 +27,7 @@ try
         services.AddSingleton<IAgvRepository, AgvRepository>();
         services.AddSingleton(TimeProvider.System);
 
-        services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+        services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
     });
 
     var host = hostBuilder.Build();

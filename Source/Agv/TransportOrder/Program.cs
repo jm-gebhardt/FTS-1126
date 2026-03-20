@@ -38,7 +38,7 @@ try
     using (var scope = host.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+        dbContext.SetCommandTimeOut();
         await dbContext.Database.MigrateAsync();
     }
 

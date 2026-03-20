@@ -1,5 +1,4 @@
-﻿using AutoMapper.Internal;
-using Gebhardt.Acc.Common.Extensions;
+﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Common.WebApi.Swagger;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Controllers;
@@ -49,7 +48,7 @@ public static class WebHostBuilderExtension
 
             webHostBuilder.ConfigureServices((context, services) =>
             {
-                services.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+                services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddControllers()
                     .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
