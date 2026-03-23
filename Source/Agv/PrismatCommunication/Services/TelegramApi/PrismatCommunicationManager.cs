@@ -64,11 +64,11 @@ public class PrismatCommunicationManager : BackgroundService
     private async Task StartAndConnectSendingChannel()
     {
         await _toPrismatServer.TryInitializeAsync();
-        _logger.LogInformation("Starting sender for prismat communication");
-        _sender.Start();
         _prismatQueue.ItemDequeued += _queuePersistenceService.OnItemDequeued;
         _prismatQueue.ItemEnqueued += _queuePersistenceService.OnItemEnqueued;
         await _queuePersistenceService.ReloadQueue();
+        _logger.LogInformation("Starting sender for prismat communication");
+        _sender.Start();
     }
 
     private async Task StopAsync()

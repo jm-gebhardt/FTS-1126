@@ -109,7 +109,12 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
             }
             catch (InvalidOperationException)
             {
-                _logger.LogDebug("Could not remove telegram {Message} ", storedTelegram.Message);
+                _logger.LogWarning("Could not remove telegram {Message} ", storedTelegram.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete telegram {Message} — re-queuing for retry", storedTelegram.Message);
+                _telegramsToDelete.Enqueue(storedTelegram); // put it back so the next trigger retries
             }
         }
     }
@@ -120,11 +125,11 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_telegramsToDelete.Count == 1)
+        if (_telegramsToDelete.Count <= 1)
         {
             return;
         }
-        while (_telegramsToDelete.Count != 1)
+        while (_telegramsToDelete.Count > 1)
         {
             await DeleteTelegram();
         }
