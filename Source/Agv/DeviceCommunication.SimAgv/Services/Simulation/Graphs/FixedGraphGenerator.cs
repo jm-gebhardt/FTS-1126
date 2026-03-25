@@ -19,7 +19,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private const string Park3 = "Park-3";
     private const string Park4 = "Park-4";
     private const string Park5 = "Park-5";
-    private const string Park6 = "Park-6";
+    private const string Maintenance1 = "Maintenance-1";
     private const string Charge0 = "Charger-0";
     private const string Charge1 = "Charger-1";
     private const string Charge2 = "Charger-2";
@@ -91,7 +91,7 @@ public class FixedGraphGenerator : GraphGeneratorBase
             new(Park3.ToGuid(), Park3) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 34.375f, Z = 0f, Theta = West, TimeStamp = timeStamp },
             new(Park4.ToGuid(), Park4) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 34.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
             new(Park5.ToGuid(), Park5) { Type = AgvGraph.NodeType.Park, X = 19.375f, Y = 29.375f, Z = 0f, Theta = West, TimeStamp = timeStamp },
-            new(Park6.ToGuid(), Park6) { Type = AgvGraph.NodeType.Park, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
+            new(Maintenance1.ToGuid(), Maintenance1) { Type = AgvGraph.NodeType.Maintenance, X = 31.875f, Y = 29.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
 
             new(Charge0.ToGuid(), Charge0) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 44.375f, Z = 0f, Theta = North, TimeStamp = timeStamp },
             new(Charge1.ToGuid(), Charge1) { Type = AgvGraph.NodeType.Charge, X = 46.875f, Y = 39.375f, Z = 0f, Theta = East, TimeStamp = timeStamp },
@@ -142,8 +142,8 @@ public class FixedGraphGenerator : GraphGeneratorBase
             CreateDirect(Park4, Way0028, nodes),
             CreateDirect(Way0030, Park5, nodes),
             CreateDirect(Park5, Way0030, nodes),
-            CreateDirect(Way0030, Park6, nodes),
-            CreateDirect(Park6, Way0030, nodes),
+            CreateDirect(Way0030, Maintenance1, nodes),
+            CreateDirect(Maintenance1, Way0030, nodes),
             CreateDirect(Way0009, Way0010, nodes),
             CreateDirect(Way0010, Way0011, nodes),
             CreateDirect(Way0010, Way0015, nodes),
