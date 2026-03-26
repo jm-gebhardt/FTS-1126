@@ -1,6 +1,8 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+     <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
+    <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
@@ -11,7 +13,7 @@
     <PackageVersion Include="AutoMapper" Version="[14.0.0]" />
     <PackageVersion Include="AutoMapper.Extensions" Version="2.1.0" />
     <!-- ====================================== -->
-    <PackageVersion Include="Azure.Identity" Version="1.17.1" />
+    <PackageVersion Include="Azure.Identity" Version="1.19.0" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Only update together, check which opentelemetry version corresponds to the Gebhart.Core.Observability packages -->
@@ -20,14 +22,14 @@
     <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.0.0-beta.9" />
     <!-- ====================================== -->
     <!-- Do not update to v9+ (commercial license required). Stay on v8.x (open source) -->
-    <PackageVersion Include="MassTransit" Version="8.5.7" />
-    <PackageVersion Include="MassTransit.Abstractions" Version="8.5.7" />
+    <PackageVersion Include="MassTransit" Version="8.5.8" />
+    <PackageVersion Include="MassTransit.Abstractions" Version="8.5.8" />
     <PackageVersion Include="MassTransit.Prometheus" Version="8.1.3" />
-    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.7" />
-    <PackageVersion Include="MassTransit.Quartz" Version="8.5.7" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.7" />
+    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.8" />
+    <PackageVersion Include="MassTransit.Quartz" Version="8.5.8" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.8" />
     <!-- ====================================== -->
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
@@ -35,17 +37,17 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.5.1" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.15.1" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.15.1" />
-    <PackageVersion Include="Quartz" Version="3.15.1" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.16.1" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.16.1" />
+    <PackageVersion Include="Quartz" Version="3.16.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="RestSharp" Version="113.1.0" />
-    <PackageVersion Include="SkiaSharp" Version="3.119.1" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.1" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.2" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
@@ -57,14 +59,14 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
     <PackageVersion Include="SignalRSwaggerGen" Version="4.9.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Filters" Version="10.0.1" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageVersion Include="MSTest.TestAdapter" Version="4.0.2" />
-    <PackageVersion Include="MSTest.TestFramework" Version="4.0.2" />
-    <PackageVersion Include="MSTest" Version="4.0.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="4.1.0" />
+    <PackageVersion Include="MSTest.TestFramework" Version="4.1.0" />
+    <PackageVersion Include="MSTest" Version="4.1.0" />
     <PackageVersion Include="moq" Version="4.20.72" />
     <PackageVersion Include="tinyspline" Version="0.6.0.1" />
     <PackageVersion Include="ILogger.Moq" Version="2.0.0" />
@@ -79,8 +81,8 @@
     <PackageVersion Include="NSwag.Annotations" Version="14.6.3" />
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.6.3" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.6.3" />
-    <PackageVersion Include="MQTTnet" Version="5.0.1.1416" />
-    <PackageVersion Include="Polly" Version="8.6.5" />
+    <PackageVersion Include="MQTTnet" Version="5.1.0.1559" />
+    <PackageVersion Include="Polly" Version="8.6.6" />
     <!-- ====================================== -->
   </ItemGroup>
 </Project>
