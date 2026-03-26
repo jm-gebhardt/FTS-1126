@@ -13,31 +13,31 @@ pool:
   vmImage: 'ubuntu-latest'
 
 jobs:
-- job:
+- job: DependencyCheck
   timeoutInMinutes: 0
   steps:
-  - task: dependabot@2
+  - checkout: self
+    persistCredentials: true
+    clean: true
+    fetchDepth: 0
+
+  - task: NuGetAuthenticate@1
+    displayName: 'NuGet Authenticate'
+
+  - task: UseDotNet@2
+    displayName: 'Install .NET SDK'
     inputs:
-      experiments: 'allow-refresh-group-with-all-dependencies=false,nuget-native-updater=true'
-    env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      packageType: 'sdk'
+      version: '10.0.x'
+      performMultiLevelLookup: true
 
-  - bash: |
-      # Make script executable and run it
-      chmod +x pipelines/scripts/dependabot-postprocess.sh
-      ./pipelines/scripts/dependabot-postprocess.sh
-    displayName: 'Post-process Dependabot PR'
-    condition: succeeded()
+  - task: Bash@3
+    displayName: 'Update dependencies'
+    inputs:
+      filePath: $(Build.SourcesDirectory)/pipelines/scripts/update_dependencies.sh
     env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-  # Workaround for Dependabot SDK-managed package bug (dependabot-core#12544):
-  # Dependabot misclassifies packages like EF Core as SDK-managed and skips them.
-  # This step checks NuGet directly and creates PRs for those packages.
-  - bash: |
-      chmod +x pipelines/scripts/nuget-update-check.sh
-      ./pipelines/scripts/nuget-update-check.sh
-    displayName: 'Check SDK-managed packages for updates'
-    condition: always()
-    env:
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_ARTIFACTS_TOKEN: $(System.AccessToken)
+      SOURCE_DIR: $(Build.SourcesDirectory)/Source
+      EXCLUDED_DEPENDENCIES: 'OpenTelemetry.Resources.Container AutoMapper Vdma.Lif Sarif.Sdk'
+      INCLUDED_DEPENDENCIES: 'Gebhardt.Core'
+      REVIEWER_IDS: 'd57dc9ca-b7fe-401f-b7f7-c2ec2fcb5b3d a1963800-1848-4394-a6ed-7d0f733b4359 42f4ca0f-010d-6b7d-9420-a358bd5d6ed2 c01aac72-8af7-4b1d-8393-c787d77add86'
