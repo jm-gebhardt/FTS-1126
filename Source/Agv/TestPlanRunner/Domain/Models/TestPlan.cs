@@ -4,7 +4,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using JetBrains.Annotations;
 using YamlDotNet.Serialization;
 
-namespace Gebhardt.Acc.TestPlanRunner.Domain;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
 /// <summary>
 /// Represents a test plan for AGV execution.

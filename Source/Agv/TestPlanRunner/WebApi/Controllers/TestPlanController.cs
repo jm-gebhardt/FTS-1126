@@ -1,12 +1,12 @@
 using AutoMapper;
-using Gebhardt.Acc.TestPlanRunner.Domain;
-using Gebhardt.Acc.TestPlanRunner.Dtos;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TestPlanRunner.Messages.Requests;
 using Gebhardt.Acc.TestPlanRunner.Messages.Responses;
+using Gebhardt.Acc.TestPlanRunner.WebApi.Dtos;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gebhardt.Acc.TestPlanRunner.Controllers;
+namespace Gebhardt.Acc.TestPlanRunner.WebApi.Controllers;
 
 /// <summary>
 /// Controller for managing test plans.

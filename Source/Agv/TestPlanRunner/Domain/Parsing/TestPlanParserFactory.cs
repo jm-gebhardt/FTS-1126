@@ -1,7 +1,7 @@
-﻿using Gebhardt.Acc.TestPlanRunner.Domain;
+﻿using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 
 /// <summary>
 /// Factory for creating test plan parsers based on file extension.

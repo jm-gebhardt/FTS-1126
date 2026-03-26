@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Dtos;
+namespace Gebhardt.Acc.TestPlanRunner.WebApi.Dtos;
 
 /// <summary>
 /// Dto for a test plan.

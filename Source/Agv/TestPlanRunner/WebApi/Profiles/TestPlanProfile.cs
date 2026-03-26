@@ -1,10 +1,10 @@
-using AutoMapper;
-using Gebhardt.Acc.TestPlanRunner.Domain;
-using Gebhardt.Acc.TestPlanRunner.Dtos;
-using JetBrains.Annotations;
 using System.Collections.ObjectModel;
+using AutoMapper;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
+using Gebhardt.Acc.TestPlanRunner.WebApi.Dtos;
+using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Profiles;
+namespace Gebhardt.Acc.TestPlanRunner.WebApi.Profiles;
 
 file sealed class NullIfEmptyConverter : IValueConverter<Collection<string>?, Collection<string>?>
 {

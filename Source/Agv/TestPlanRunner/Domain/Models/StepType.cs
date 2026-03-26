@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Domain;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
 /// <summary>
 /// The type of the test plan step.

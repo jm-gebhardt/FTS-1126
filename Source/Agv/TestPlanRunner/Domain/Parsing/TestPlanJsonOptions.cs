@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Gebhardt.Acc.TestPlanRunner.Domain;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Services;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 
 /// <summary>
 /// Provides JSON serialization options for test plans. To only serialize relevant and non null values for readability of the JSON content.

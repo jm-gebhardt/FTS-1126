@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.TestPlanRunner.Domain;
+﻿using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
-namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 
 /// <summary>
 /// Factory for creating the appropriate parser.

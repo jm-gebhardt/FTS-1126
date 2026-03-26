@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Domain;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
 /// <summary>
 /// Represents a single step in a test plan.

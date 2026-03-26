@@ -1,4 +1,4 @@
-using Gebhardt.Acc.TestPlanRunner.Domain;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
 namespace Gebhardt.Acc.TestPlanRunner.Messages.Responses;
 

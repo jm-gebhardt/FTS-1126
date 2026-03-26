@@ -1,7 +1,7 @@
-using Gebhardt.Acc.TestPlanRunner.Domain;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Dtos;
+namespace Gebhardt.Acc.TestPlanRunner.WebApi.Dtos;
 
 /// <summary>
 /// Dto for a single step in a test plan.

@@ -1,5 +1,5 @@
-using Gebhardt.Acc.TestPlanRunner.Domain;
 using Gebhardt.Acc.TestPlanRunner.Domain.Exceptions;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TestPlanRunner.Messages.Requests;
 using Gebhardt.Acc.TestPlanRunner.Messages.Responses;
 using JetBrains.Annotations;

@@ -1,9 +1,9 @@
-﻿using Gebhardt.Acc.TestPlanRunner.Domain;
+﻿using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using JetBrains.Annotations;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 
 /// <summary>
 /// Parser for YAML test plan files.

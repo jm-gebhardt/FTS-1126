@@ -3,7 +3,7 @@ using System.Text.Json;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.WebApi;
 
-namespace Gebhardt.Acc.TestPlanRunner.Middleware;
+namespace Gebhardt.Acc.TestPlanRunner.WebApi.Middleware;
 
 /// <summary>
 /// Exception handler middleware.

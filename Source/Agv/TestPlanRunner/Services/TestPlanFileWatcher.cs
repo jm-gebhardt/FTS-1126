@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TestPlanRunner.Configuration;
-using Gebhardt.Acc.TestPlanRunner.Domain;
-using Gebhardt.Acc.TestPlanRunner.Services.Parsing;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
+using Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services;

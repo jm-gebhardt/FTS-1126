@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Dictionaries;
-using Gebhardt.Acc.TestPlanRunner.Domain;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
-namespace Gebhardt.Acc.TestPlanRunner.Providers;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Providers;
 
 /// <summary>
 /// Implementation of <see cref="ITestPlanDictionaryProvider"/>.

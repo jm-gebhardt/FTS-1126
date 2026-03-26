@@ -1,4 +1,5 @@
 using FluentValidation;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
 namespace Gebhardt.Acc.TestPlanRunner.Domain.Validators;
 

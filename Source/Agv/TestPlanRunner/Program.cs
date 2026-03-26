@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Logging;
-using Gebhardt.Acc.TestPlanRunner;
+using Gebhardt.Acc.TestPlanRunner.Configuration;
 
 var initialLogger = InitialLogger.Create<Program>();
 

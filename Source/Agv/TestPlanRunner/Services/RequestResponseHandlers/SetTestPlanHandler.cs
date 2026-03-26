@@ -1,7 +1,8 @@
 using System.Text.Json;
 using FluentValidation;
 using Gebhardt.Acc.TestPlanRunner.Configuration;
-using Gebhardt.Acc.TestPlanRunner.Domain;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
+using Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 using Gebhardt.Acc.TestPlanRunner.Messages.Requests;
 using Gebhardt.Acc.TestPlanRunner.Messages.Responses;
 using JetBrains.Annotations;

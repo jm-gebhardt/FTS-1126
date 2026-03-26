@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TestPlanRunner.Domain;
+﻿using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services;

@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using Gebhardt.Acc.TestPlanRunner.Domain;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Services.Parsing;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 
 /// <summary>
 /// Parser for JSON test plan files.

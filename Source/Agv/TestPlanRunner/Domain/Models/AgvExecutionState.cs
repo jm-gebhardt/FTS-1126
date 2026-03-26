@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TestPlanRunner.Domain;
+namespace Gebhardt.Acc.TestPlanRunner.Domain.Models;
 
 /// <summary>
 /// Represents the execution state of a test plan for a specific AGV.

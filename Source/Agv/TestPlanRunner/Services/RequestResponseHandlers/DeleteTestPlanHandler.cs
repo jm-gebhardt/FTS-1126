@@ -1,8 +1,8 @@
 using Gebhardt.Acc.TestPlanRunner.Configuration;
 using Gebhardt.Acc.TestPlanRunner.Domain.Exceptions;
+using Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 using Gebhardt.Acc.TestPlanRunner.Messages.Requests;
 using Gebhardt.Acc.TestPlanRunner.Messages.Responses;
-using Gebhardt.Acc.TestPlanRunner.Services.Parsing;
 using JetBrains.Annotations;
 using MassTransit;
 

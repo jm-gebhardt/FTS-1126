@@ -1,6 +1,6 @@
 using Gebhardt.Acc.Common.WebApi.Swagger;
 
-namespace Gebhardt.Acc.TestPlanRunner.Swagger;
+namespace Gebhardt.Acc.TestPlanRunner.WebApi.Swagger;
 
 /// <summary>
 /// Api Group for TestPlanRunner.
