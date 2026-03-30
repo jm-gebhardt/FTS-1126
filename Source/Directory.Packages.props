@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-     <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
+    <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
     <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -38,9 +38,9 @@
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.5.1" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.5" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.16.1" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.16.1" />
-    <PackageVersion Include="Quartz" Version="3.16.1" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.17.0" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.17.0" />
+    <PackageVersion Include="Quartz" Version="3.17.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
