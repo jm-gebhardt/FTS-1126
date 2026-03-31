@@ -86,7 +86,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
         }
         try
         {
-            var agv = await _agvRepository.GetAgvAsync(_stateParser.CorrelationId);
+            var agv = await _agvRepository.GetRequiredAgvAsync(_stateParser.CorrelationId);
             if (agv.CurrentOrder == null)
             {
                 _logger.LogInformation("Not sending order state, agv {AgvCorrelationId} has no current order", _stateParser.CorrelationId);

@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using JetBrains.Annotations;
+using BlockingType = Gebhardt.Acc.Common.Domain.Models.BlockingType;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
 
@@ -20,7 +20,7 @@ public record AgvEdgeAction
     /// </summary>
     /// <returns></returns>
     public Guid AgvCorrelationId { get; set; }
-    
+
     /// <summary>
     /// The blocking type of the action.
     /// </summary>
@@ -41,4 +41,3 @@ public record AgvEdgeAction
     /// </summary>
     public ICollection<OrderActionParameter> Parameters { get; set; } = [];
 }
-

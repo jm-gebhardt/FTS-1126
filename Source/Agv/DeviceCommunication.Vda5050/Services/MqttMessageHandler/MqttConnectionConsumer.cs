@@ -49,7 +49,7 @@ public class MqttConnectionConsumer(ILogger<MqttConnectionConsumer> logger, IAgv
     {
         try
         {
-            return await agvRepository.GetAgvAsync(agvCorrelationId);
+            return await agvRepository.GetRequiredAgvAsync(agvCorrelationId);
         }
         catch (AgvNotFoundException)
         {

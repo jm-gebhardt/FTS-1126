@@ -24,7 +24,7 @@ public class InstantActionsCommandHandlerTestFixture : MassTransitConsumerTestFi
 
     public InstantActionsCommandHandlerTestFixture AddAgv(Agv agv)
     {
-        _agvRepository.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
+        _agvRepository.Setup(x => x.GetRequiredAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
         return this;
     }
 }

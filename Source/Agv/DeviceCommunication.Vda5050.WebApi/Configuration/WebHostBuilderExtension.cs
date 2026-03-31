@@ -51,6 +51,7 @@ public static class WebHostBuilderExtension
                 services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddControllers()
+                    .AddApplicationPart(executingAssembly)
                     .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
                 var config = context.Configuration.GetSection("KEYCLOAK");

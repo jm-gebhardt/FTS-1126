@@ -15,12 +15,17 @@ public static class AuthorizationPolicies
         public const string ResourceAccess = "resource_access";
     }
 
+    /// <summary>
+    /// Policy name for allowing full access to lif endpoints.
+    /// </summary>
+    public const string LifFullAccess = "MapFullAccess";
+
     [PublicAPI]
     private record Policy(string PolicyName, string ClaimContent, string ClaimType);
 
     private static readonly IReadOnlyList<Policy> _policies =
     [
-      //  new(QueueFullAccess, "fm-queues-full", ClaimTypes.ResourceAccess)
+        new(LifFullAccess, "fm-lif-full", ClaimTypes.ResourceAccess)
     ];
 
     private static void AddNewPolicy(this AuthorizationOptions options, Policy newPolicy)

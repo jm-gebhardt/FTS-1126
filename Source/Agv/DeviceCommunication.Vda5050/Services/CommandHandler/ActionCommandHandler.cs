@@ -29,9 +29,17 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
         var agvCorrelationId = context.Message.CorrelationId;
 
         logger.LogInformation("Received {Message} for agv {agvCorrelationId}, order {ActionCorrelationId}", nameof(StartActionCommand), agvCorrelationId, action.CorrelationId);
-        var order = await orderBuilder.Build(agvCorrelationId, action);
 
         var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
+
+        if (agv == null)
+        {
+            logger.LogDebug("No Agv found for starting action for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
+            return;
+        }
+        
+        var order = await orderBuilder.Build(agvCorrelationId, action);
+        
         agv.CurrentOrder = action.CorrelationId;
         agv.CurrentFleetManagerActionId = action.CorrelationId;
         await agvRepository.AddOrUpdateAsync(agv);
@@ -48,10 +56,16 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
         var agvCorrelationId = context.Message.CorrelationId;
         logger.LogInformation("Received {Message} for agv {agvCorrelationId}, updated order {ActionCorrelationId}", nameof(UpdateActionCommand), agvCorrelationId, action.CorrelationId);
 
+        var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
+
+        if (agv == null)
+        {
+            logger.LogDebug("No Agv found for updating action for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
+            return;
+        }
+        
         var order = await orderBuilder.Build(agvCorrelationId, action);
 
-        var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
-        
         if (agv.CurrentOrder == null)
         {
             agv.CurrentOrder = action.CorrelationId;
@@ -76,9 +90,9 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
                 Id = Guid.Empty,
                 Variables = new Dictionary<string, string>
                 {
-                    { LogLabels.OriginalActionId, agv.CurrentOrder!.Value.ToString()},
-                    { LogLabels.ActionId ,  action.CorrelationId.ToString()},
-                    { LogLabels.Reason, "Agv currently executes different order"}
+                    { LogLabels.OriginalActionId, agv.CurrentOrder!.Value.ToString() },
+                    { LogLabels.ActionId, action.CorrelationId.ToString() },
+                    { LogLabels.Reason, "Agv currently executes different order" }
                 }
             };
 
@@ -92,22 +106,36 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<ResendAction> context)
-    { 
+    {
         (var agvCorrelationId, string serialNumber, var action) = context.Message;
-       logger.LogInformation("Resent order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}", action.CorrelationId, agvCorrelationId, action.Target.Node?.Name);
-       var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
-       if (agv.CurrentOrder != action.CorrelationId)
-       {
-           logger.LogWarning("Action requested to resend {MessageActionCorrelationId} not current action {CurrentActionCorrelationId} of agv {AgvCorrelationId}/{AgvSerialNumber}, sending current action", action.CorrelationId, agv.CorrelationId, serialNumber, agv.CurrentOrder);
-       }
-       await context.Publish(new OrderResendRequested(agv.CurrentOrder ?? action.CorrelationId));
+        logger.LogInformation("Resent order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}", action.CorrelationId, agvCorrelationId, action.Target.Node?.Name);
+
+        var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
+
+        if (agv == null)
+        {
+            logger.LogDebug("No Agv found for resending action for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
+            return;
+        }
+        if (agv.CurrentOrder != action.CorrelationId)
+        {
+            logger.LogWarning("Action requested to resend {MessageActionCorrelationId} not current action {CurrentActionCorrelationId} of agv {AgvCorrelationId}/{AgvSerialNumber}, sending current action", action.CorrelationId, agv.CorrelationId, serialNumber, agv.CurrentOrder);
+        }
+        await context.Publish(new OrderResendRequested(agv.CurrentOrder ?? action.CorrelationId));
     }
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AbortAndStartActionCommand> context)
     {
         (var agvCorrelationId, string serialNumber, var action, Guid? abortedActionCorrelationId) = context.Message;
+
         var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
+
+        if (agv == null)
+        {
+            logger.LogDebug("No Agv found for abort and start action for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
+            return;
+        }
         var order = await orderBuilder.Build(agvCorrelationId, action);
 
         logger.LogInformation("Received {Message} for agv {AgvCorrelationId}/{AgvSerialNumber}, aborted order {AbortedActionCorrelationId}, updated order {ActionCorrelationId}", nameof(AbortAndStartActionCommand), agvCorrelationId, serialNumber, abortedActionCorrelationId, action.CorrelationId);

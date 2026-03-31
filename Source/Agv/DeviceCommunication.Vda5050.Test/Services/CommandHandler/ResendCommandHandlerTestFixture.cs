@@ -10,10 +10,16 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.CommandHandler;
 public class ResendCommandHandlerTestFixture : MassTransitConsumerTestFixture<ResendCommandHandler>
 {
     private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
+    private readonly Mock<IAgvRepository> _agvRepository = new();
 
+    /// <inheritdoc cref="ResendCommandHandlerTestFixture"/>
     public ResendCommandHandlerTestFixture()
     {
-        AddServices(sc => sc.AddTransient(_ => _agvDataRepository.Object));
+        AddServices(sc =>
+        {
+            sc.AddTransient(_ => _agvDataRepository.Object);
+            sc.AddTransient(_ => _agvRepository.Object);
+        });
         Build();
     }
 

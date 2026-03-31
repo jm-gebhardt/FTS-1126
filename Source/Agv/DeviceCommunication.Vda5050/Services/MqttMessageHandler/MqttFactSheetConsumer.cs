@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
 using JetBrains.Annotations;
@@ -16,7 +17,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.MqttMessageHandler;
 /// Provides handler for <see cref="MqttFactsheet"/>
 /// </summary>
 [UsedImplicitly]
-public class MqttFactSheetConsumer:
+public class MqttFactSheetConsumer :
     IConsumer<MqttFactsheet>
 {
     private readonly FactsheetParser _parser;
@@ -42,7 +43,7 @@ public class MqttFactSheetConsumer:
     {
         try
         {
-            var agv = await _agvRepository.GetAgvAsync(context.Message.SerialNumber.ToGuid());
+            var agv = await _agvRepository.GetRequiredAgvAsync(context.Message.SerialNumber.ToGuid());
             _parser.Agv = agv;
         }
         catch (AgvNotFoundException)
@@ -59,6 +60,7 @@ public class MqttFactSheetConsumer:
             await PublishInstantActions(context);
         }
         await context.Publish(new AgvDataReceived(_parser.CorrelationId, _parser.SerialNumber, _parser.AgvData));
+        await context.Publish(new AgvAddedOrUpdated(_parser.CorrelationId, _parser.SerialNumber));
     }
 
     private async Task PublishInstantActions(ConsumeContext<MqttFactsheet> context)

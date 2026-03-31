@@ -21,6 +21,7 @@ public static class RabbitMqConfigurationExtension
             configurator.ConfigureMessageTopology<MqttInstantActions>();
             configurator.ConfigureMessageTopology<MqttState>();
             configurator.ConfigureMessageTopology<MqttConnection>();
+            configurator.ConfigureMessageTopology<MqttFactsheet>();
             configurator.ConfigureMessageTopology<MqttVisualization>();
             configurator.ConfigureMessageTopology<MqttOrder>();
             return configurator;

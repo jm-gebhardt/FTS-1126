@@ -28,7 +28,7 @@ IConsumer<StartInstantAction>
         var actionCorrelationId = context.Message.CorrelationId;
         string agvSerialNumber = context.Message.AgvSerialNumber;
 
-        var agv = await agvRepository.GetAgvAsync(agvSerialNumber.ToGuid());
+        var agv = await agvRepository.GetRequiredAgvAsync(agvSerialNumber.ToGuid());
         string routingKey = agv.GetRoutingKey(Vda5050Specifications.Subtopics.InstantActions);
         logger.LogInformation("Received StartInstantAction: {ActionType}/{CorrelationId} for AGV:{AgvSerialNumber}, sending to {RoutingKey} ", actionType, actionCorrelationId, agvSerialNumber, routingKey);
 

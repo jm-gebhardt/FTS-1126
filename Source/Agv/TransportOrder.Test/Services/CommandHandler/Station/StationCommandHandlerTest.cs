@@ -81,31 +81,6 @@ public class StationCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_MapSaved_NoRelatedAgvs_DoesNotAddStations()
-    {
-        var fixture = new StationCommandHandlerTestFixture()
-            .WithAgvsRelatedToNodes([]);
-
-        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Common.Domain.Models.Graphs.Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
-
-        await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
-        fixture.VerifyStationsAdded(Times.Never());
-    }
-
-    [TestMethod]
-    public async Task Consume_MapSaved_ValidData_AddsStations()
-    {
-        var fixture = new StationCommandHandlerTestFixture()
-            .WithAgvsRelatedToNodes([Guid.NewGuid()])
-            .WithAgvsGraph();
-
-        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Common.Domain.Models.Graphs.Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
-
-        await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
-        fixture.VerifyStationsAdded(Times.Once());
-    }
-
-    [TestMethod]
     public async Task Consume_UpdateStationJamState_ValidData_PublishesJamStateChanged()
     {
         const string station = "station";

@@ -1,6 +1,8 @@
-﻿using Gebhardt.Acc.Common.Configurations;
+﻿using FluentValidation;
+using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
+using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
@@ -8,6 +10,7 @@ using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Sagas;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Filters;
@@ -50,7 +53,7 @@ public static class HostBuilderExtension
                             configurator.AddMqttConsumers();
                             configurator.AddConsumers();
                             configurator.AddSagaStateMachine<OrderExecutionStateMachine, OrderExecutionSaga>()
-                                .InMemoryRepository(); 
+                                .InMemoryRepository();
                         }
                         ,
                         // ReSharper disable once UnusedParameter.Local
@@ -99,13 +102,20 @@ public static class HostBuilderExtension
                 //Repositories
                 services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
                 services.AddTransient<IAgvActionRepository, EfAgvActionRepository>();
-                services.AddTransient<IAgvGraphRepository, EfAgvGraphRepository>();
+                services.AddTransient<IGraphLayoutRepository, EfGraphLayoutRepository>();
                 services.AddTransient<IAgvRepository, EfAgvRepository>();
-                
+
+                //Services
+                services.AddSingleton(TimeProvider.System);
+                services.AddTransient<ILifGraphConverter, LifGraphConverter>();
+                services.AddTransient<IAgvGraphProvider, AgvGraphProvider>();
+                services.AddTransient<INurbsEdgeBuilder, TinySplineEdgeBuilder>();
+                services.AddValidatorsFromAssemblyContaining<ILifGraphConverter>();
+
                 //Caches
                 services.AddSingleton<IAgvCacheProvider, AgvCache>();
                 services.AddSingleton<IOrderActionStatusCacheProvider, OrderActionStatusCache>();
-                
+
                 //Filter
                 services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
                 services.AddSingleton<ISignificanceChecker<MqttState>, MqttStateSignificanceChecker>();

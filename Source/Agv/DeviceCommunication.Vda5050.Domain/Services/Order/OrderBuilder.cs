@@ -7,6 +7,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
@@ -24,14 +25,14 @@ public class OrderBuilder(
     ILogger<OrderBuilder> logger,
     IAgvRepository agvRepository,
     IAgvActionRepository agvActionRepository,
-    IAgvGraphRepository agvGraphRepository,
+    IAgvGraphProvider agvGraphProvider,
     OrderActionBuilderRegistry orderActionBuilder) : IOrderBuilder
 {
     ///<inheritdoc/>
     public async Task<Models.Orders.Order> Build(Guid agvCorrelationId, Common.Messages.ActionGroups.AgvAction action)
     {
-        var agvGraph = await agvGraphRepository.GetAgvGraphAsync(agvCorrelationId);
-        var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
+        var agvGraph = await agvGraphProvider.GetRequiredAgvGraphAsync(agvCorrelationId);
+        var agv = await agvRepository.GetRequiredAgvAsync(agvCorrelationId);
         
         ICollection<OrderNode> nodes = await BuildNodes(agv, agvGraph.Nodes, action);
         ICollection<OrderEdge> edges = await BuildEdges(agv, agvGraph.Edges, action);

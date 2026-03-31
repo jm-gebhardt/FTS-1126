@@ -9,12 +9,24 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 public interface IAgvRepository
 {
     /// <summary>
+    /// Get an agv by its correlation id if available.
+    /// </summary>
+    /// <param name="correlationId"></param>
+    /// <returns>The agv or null if none found.</returns>
+    Task<Agv?> GetAgvAsync(Guid correlationId);
+
+    /// <summary>
     /// Get an agv by its correlation id.
     /// </summary>
     /// <param name="correlationId"></param>
     /// <returns>The agv.</returns>
     /// <exception cref="AgvNotFoundException"></exception>
-    Task<Agv> GetAgvAsync(Guid correlationId);
+    Task<Agv> GetRequiredAgvAsync(Guid correlationId);
+
+    /// <summary>
+    /// Get all agvs.
+    /// </summary>
+    Task<IReadOnlyCollection<Agv>> GetAllAsync();
 
     /// <summary>
     /// Add or update an agv.

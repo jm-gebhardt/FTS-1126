@@ -22,14 +22,13 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// </remarks>
 /// <inheritdoc cref="StationCommandHandler"/>>
 [UsedImplicitly]
-public class StationCommandHandler(INodeRepository nodeRepository,
+public class StationCommandHandler(
+    INodeRepository nodeRepository,
     IStationRepository stationRepository,
-    IGraphRepository graphRepository,
     ILogger<StationCommandHandler> logger,
     ILoggingService loggingService) :
     IConsumer<LockStation>,
     IConsumer<UnlockStation>,
-    IConsumer<Common.Messages.Maps.MapSaved>,
     IConsumer<UpdateStationJamState>,
     IConsumer<GetLockedStations>,
     IConsumer<StationConfigurationReceived>,
@@ -105,30 +104,13 @@ public class StationCommandHandler(INodeRepository nodeRepository,
     }
 
     /// <summary>
-    /// Handles the <see cref="Common.Messages.Maps.MapSaved"/> message.
-    /// </summary>
-    public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
-    {
-        var agvMap = context.Message.Map;
-        ICollection<Guid> agvIds = await graphRepository.GetAgvIdsRelatedToNodesAsync(agvMap.Nodes);
-        if (agvIds.Count == 0)
-        {
-            logger.LogDebug("No agvs assigned to map, do not update stations");
-            return;
-        }
-        var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
-        await stationRepository.AddStations(agvGraph);
-        logger.LogDebug("Stations updated");
-    }
-
-    /// <summary>
     /// Handles the <see cref="UpdateStationJamState"/> message.
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateStationJamState> context)
     {
         var now = DateTime.UtcNow;
         var station = await stationRepository.GetStation(context.Message.CorrelationId);
-        
+
         //publish first to transfer old and new state
         await context.Publish(new JamStateChanged(station.Id, context.Message.HasPalletJam, station.PalletJamChangedDate, station.HasPalletJam, now));
         station.HasPalletJam = context.Message.HasPalletJam;

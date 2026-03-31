@@ -13,27 +13,27 @@ public record Map : CorrelatedBy<Guid>, IGraph
     public Guid CorrelationId { get; init; }
 
     /// <summary>
-    /// The human-readable unique ID if the requested map
+    /// The human-readable unique ID if the requested map.
     /// </summary>
     public string MapId { get; init; }
 
     /// <summary>
-    /// Timestamp of last modification
+    /// Timestamp of the last modification.
     /// </summary>
     public DateTime ModificationDate { get; init; }
 
     /// <summary>
-    /// The Base64 encoded image data as string
+    /// The Base64 encoded image data as string.
     /// </summary>
     public string ImageData { get; init; }
 
     /// <summary>
-    /// The Width of the map [px]
+    /// The Width of the map [px].
     /// </summary>
     public int Width { get; init; }
 
     /// <summary>
-    /// The Height of the map [px]
+    /// The Height of the map [px].
     /// </summary>
     public int Height { get; init; }
 
@@ -63,12 +63,12 @@ public record Map : CorrelatedBy<Guid>, IGraph
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <param name="correlationId">Map correlation ID</param>
-    /// <param name="mapId">The human-readable unique ID if the requested map</param>
-    /// <param name="modificationDate">Timestamp of last modification.</param>
-    /// <param name="imageData">The base64 encoded image data as string</param>
-    /// <param name="width">The width of the map [px]</param>
-    /// <param name="height">The height of the map [px]</param>
+    /// <param name="correlationId">Map correlation ID.</param>
+    /// <param name="mapId">The human-readable unique ID if the requested map.</param>
+    /// <param name="modificationDate">Timestamp of the last modification.</param>
+    /// <param name="imageData">The base64 encoded image data as string (optional).</param>
+    /// <param name="width">The width of the map [px].</param>
+    /// <param name="height">The height of the map [px].</param>
     /// <param name="resolution">Resolution of the Image in [m/px].</param>
     /// <param name="xOffset">Distance from the left bound to the origin of the graph coordinates.</param>
     /// <param name="yOffset">Distance from the top bound to the origin of the graph coordinates.</param>

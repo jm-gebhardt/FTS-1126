@@ -8,10 +8,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.Repositories;
 
 /// <inheritdoc cref="IAgvRepository"/>
-public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbContext> dbContextFactory, IAgvCacheProvider agvCache): IAgvRepository
+public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbContext> dbContextFactory, IAgvCacheProvider agvCache) : IAgvRepository
 {
-    /// <inheritdoc cref="IAgvRepository"/>
-    public async Task<Agv> GetAgvAsync(Guid correlationId)
+    /// <inheritdoc />
+    public async Task<Agv?> GetAgvAsync(Guid correlationId)
     {
         if (agvCache.ConcurrentDict.TryGetValue(correlationId, out var agv))
         {
@@ -19,12 +19,18 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
         }
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<Agv> dbSet = context.Set<Agv>();
-        agv = dbSet.SingleOrDefault(a => a.CorrelationId == correlationId);
-        if (agv == null)
+        agv = await dbSet.SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
+        if (agv != null)
         {
-            throw new AgvNotFoundException(correlationId);
+            agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv);
         }
         return agv;
+    }
+
+    /// <inheritdoc />
+    public async Task<Agv> GetRequiredAgvAsync(Guid correlationId)
+    {
+        return await GetAgvAsync(correlationId) ?? throw new AgvNotFoundException(correlationId);
     }
 
     /// <inheritdoc cref="IAgvRepository"/>
@@ -42,21 +48,36 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     }
 
     /// <inheritdoc cref="IAgvRepository"/>
+    public async Task<IReadOnlyCollection<Agv>> GetAllAsync()
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        DbSet<Agv> dbSet = context.Set<Agv>();
+        List<Agv> agvs = await dbSet.ToListAsync();
+        foreach (var agv in agvs)
+        {
+            agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv);
+        }
+        return agvs;
+    }
+
+    /// <inheritdoc cref="IAgvRepository"/>
     public async Task AddOrUpdateAsync(Agv agv)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<Agv> dbSet = context.Set<Agv>();
-        if (agvCache.ConcurrentDict.ContainsKey(agv.CorrelationId))
+        bool existsInCache = agvCache.ConcurrentDict.ContainsKey(agv.CorrelationId);
+        bool existsInDatabase = existsInCache || await dbSet.AnyAsync(a => a.CorrelationId == agv.CorrelationId);
+
+        if (existsInDatabase)
         {
-            agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
             dbSet.Update(agv);
-            await context.SaveChangesAsync();
-            return;
         }
-        if (agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv))
+        else
         {
             dbSet.Add(agv);
-            await context.SaveChangesAsync();
         }
+
+        await context.SaveChangesAsync();
+        agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
     }
 }

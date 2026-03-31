@@ -13,7 +13,6 @@ public class ActionEventHandlerTestFixture: MassTransitConsumerTestFixture<Actio
    
     public ActionEventHandlerTestFixture()
     {
-        _agvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>())).Verifiable();
         AddServices(sc => sc.AddTransient(_ => _agvRepository.Object));
         Build();
     }
@@ -22,10 +21,5 @@ public class ActionEventHandlerTestFixture: MassTransitConsumerTestFixture<Actio
     {
         _agvRepository.Setup(x => x.GetAgvAsync(agv.CorrelationId)).ReturnsAsync(agv);
         return this;
-    }
-
-    public void VerifyAgvUpdated()
-    {
-        _agvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>()), Times.Once);
     }
 }

@@ -14,20 +14,23 @@ public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050D
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<AgvAction> dbSet = context.Set<AgvAction>();
         List<AgvAction> existingActionsForAgv = await dbSet.Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
-        List<AgvAction> handledActions = [];
+
+        Dictionary<string, AgvAction> pendingActionsByType = actions
+            .GroupBy(action => action.ActionType)
+            .ToDictionary(group => group.Key, group => group.Last());
+
         foreach (var existingAction in existingActionsForAgv)
         {
-            var action = actions.SingleOrDefault(a => a.ActionType == existingAction.ActionType && a.AgvSerialNumber == existingAction.AgvSerialNumber);
-            if (action == null)
+            if (!pendingActionsByType.Remove(existingAction.ActionType, out var action))
             {
                 context.Remove(existingAction);
                 continue;
             }
-            context.Update(action);
-            handledActions.Add(action);
+
+            context.Entry(existingAction).CurrentValues.SetValues(action);
         }
 
-        IEnumerable<AgvAction> newActions = actions.Except(handledActions);
+        IEnumerable<AgvAction> newActions = pendingActionsByType.Values;
         await context.AddRangeAsync(newActions);
         await context.SaveChangesAsync();
     }

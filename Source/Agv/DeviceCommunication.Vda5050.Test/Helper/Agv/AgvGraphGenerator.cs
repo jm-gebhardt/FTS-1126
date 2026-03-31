@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
 /// </summary>
 public static class AgvGraphGenerator
 {
-    public static AgvGraph GenerateFromNodeIds(string[] nodeIds, Dictionary<string, ICollection<AgvNodeAction>> nodeActions, Guid? agvCorrelationId=null)
+    public static AgvGraph GenerateFromNodeIds(string[] nodeIds, Dictionary<string, ICollection<AgvNodeAction>> nodeActions, Guid? agvCorrelationId = null)
     {
         List<Node> nodes = [];
         List<Edge> edges = [];
@@ -18,7 +18,7 @@ public static class AgvGraphGenerator
         foreach (var nodeId in nodeIds.Select((value, index) => new { value, index }))
         {
             nodeActions.TryGetValue(nodeId.value, out ICollection<AgvNodeAction>? actions);
-            var node = GenerateNode(nodeId.value,actions: actions );
+            var node = GenerateNode(nodeId.value, actions: actions);
             nodes.Add(node);
             if (nodeId.index > 0)
             {
@@ -29,7 +29,7 @@ public static class AgvGraphGenerator
         return new AgvGraph(agvCorrelationId ?? Guid.NewGuid(), nodes, edges);
     }
 
-    public static Edge GenerateEdge(string startNodeId="start", string endNodeId="end", ICollection<AgvEdgeAction>?actions=null)
+    public static Edge GenerateEdge(string startNodeId = "start", string endNodeId = "end", ICollection<AgvEdgeAction>? actions = null)
     {
         return new Edge
         {
@@ -49,19 +49,19 @@ public static class AgvGraphGenerator
         };
     }
 
-    public static Node GenerateNode(string nodeId="node", string mapId="map", ICollection<AgvNodeAction>? actions = null)
+    public static Node GenerateNode(string nodeId = "node", string mapId = "map", ICollection<AgvNodeAction>? actions = null)
     {
         return new Node
         {
             Id = nodeId.ToGuid(),
             NodeId = nodeId,
-            Position = new NodePosition(1,1),
+            Position = new NodePosition(1, 1),
             MapId = mapId,
             AgvActions = actions ?? []
         };
     }
 
-    public static AgvNodeAction GenerateNodeAction(string actionType="type", Guid? agvCorrelationId=null, RequirementType requirementType=RequirementType.Required, BlockingType blockingType=BlockingType.NONE, ICollection<OrderActionParameter>? parameters=null)
+    public static AgvNodeAction GenerateNodeAction(string actionType = "type", Guid? agvCorrelationId = null, RequirementType requirementType = RequirementType.Required, BlockingType blockingType = BlockingType.NONE, ICollection<OrderActionParameter>? parameters = null)
     {
         return new AgvNodeAction()
         {

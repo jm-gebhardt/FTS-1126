@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Agv;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
 using Shouldly;
@@ -42,34 +43,28 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionCompletedByAgv_ValidData_RemovesOrderReferencesFromAgv()
+    public async Task Consume_ActionCompletedByAgv_ValidData_PublishesClearAgvCurrentOrder()
     {
-        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
-        agv.CurrentOrder.ShouldNotBeNull();
-        agv.CurrentFleetManagerActionId.ShouldNotBeNull();
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid());
         var fixture = new ActionEventHandlerTestFixture()
             .AddAgv(agv);
 
         await fixture.PublishMessageAsync(new ActionCompletedByAgv(agv.CurrentOrder!.Value, agv.CorrelationId));
 
-        fixture.VerifyAgvUpdated();
-        agv.CurrentOrder.ShouldBeNull();
-        agv.CurrentFleetManagerActionId.ShouldBeNull();
+        var published = await fixture.GetFirstPublishedMessageAsync<ClearAgvCurrentOrder>();
+        published.AgvCorrelationId.ShouldBe(agv.CorrelationId);
     }
 
     [TestMethod]
-    public async Task Consume_ActionAbortedByAgv_ValidData_RemovesOrderReferencesFromAgv()
+    public async Task Consume_ActionAbortedByAgv_ValidData_PublishesClearAgvCurrentOrder()
     {
-        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
-        agv.CurrentOrder.ShouldNotBeNull();
-        agv.CurrentFleetManagerActionId.ShouldNotBeNull();
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid());
         var fixture = new ActionEventHandlerTestFixture()
             .AddAgv(agv);
 
         await fixture.PublishMessageAsync(new ActionAbortedByAgv(agv.CurrentOrder!.Value, agv.CorrelationId));
 
-        fixture.VerifyAgvUpdated();
-        agv.CurrentOrder.ShouldBeNull();
-        agv.CurrentFleetManagerActionId.ShouldBeNull();
+        var published = await fixture.GetFirstPublishedMessageAsync<ClearAgvCurrentOrder>();
+        published.AgvCorrelationId.ShouldBe(agv.CorrelationId);
     }
 }

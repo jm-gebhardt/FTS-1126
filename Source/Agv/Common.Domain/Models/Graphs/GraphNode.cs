@@ -153,24 +153,9 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
         {
             return false;
         }
-        if (Type is NodeType type)
+        if (!TypesEqual(other))
         {
-            if (type != (NodeType) other.Type)
-            {
-                return false;
-            }
-        }
-        else
-        {
-            var types = (ICollection<NodeType>) Type;
-            var otherTypes = (ICollection<NodeType>) other.Type;
-            foreach (var (thisType, otherType) in types.Zip(otherTypes))
-            {
-                if (thisType != otherType)
-                {
-                    return false;
-                }
-            }
+            return false;
         }
 
         if (!X.Equals(other.X))
@@ -214,6 +199,22 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
     public override int GetHashCode()
     {
         return HashCode.Combine(Id, Name, Type, X, Y, Z, Theta);
+    }
+
+    private ICollection<NodeType> AsTypeCollection() =>
+        Type is NodeType single ? [single] : (ICollection<NodeType>)Type;
+
+    private bool TypesEqual(GraphNode other)
+    {
+        ICollection<NodeType> thisTypes = AsTypeCollection();
+        ICollection<NodeType> otherTypes = other.AsTypeCollection();
+
+        if (Type is NodeType || other.Type is NodeType)
+        {
+            return thisTypes.SequenceEqual(otherTypes);
+        }
+
+        return thisTypes.Zip(otherTypes).All(pair => pair.First == pair.Second);
     }
 
     /// <summary>

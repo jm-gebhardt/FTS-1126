@@ -30,10 +30,12 @@
       <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
       <PackageReference Include="CommandLineParser" />
       <PackageReference Include="Swashbuckle.AspNetCore" />
+      <PackageReference Include="Vdma.Lif" />
   </ItemGroup>
   <ItemGroup>
       <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
       <ProjectReference Include="..\Common\Common.csproj" />
+      <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj" />
       <ProjectReference Include="..\DeviceCommunication.Vda5050.Domain\DeviceCommunication.Vda5050.Domain.csproj" />
       <ProjectReference Include="..\DeviceCommunication.Vda5050.Messages\DeviceCommunication.Vda5050.Messages.csproj" />
       <ProjectReference Include="..\DeviceCommunication.Vda5050.Persistence.Ef\DeviceCommunication.Vda5050.Persistence.Ef.csproj" />
@@ -43,5 +45,8 @@
       <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
           <_Parameter1>Gebhardt.Acc.$(MSBuildProjectName)Test</_Parameter1>
       </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Services\EventHandler\AgvAddedEventHandler.cs" />
   </ItemGroup>
 </Project>
