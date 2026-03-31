@@ -63,4 +63,15 @@ public class StationConfiguration
     {
         return Stations.SelectMany(s => s.OutputLanes).Distinct().ToList();
     }
+
+    /// <summary>
+    /// Get all station labels used (lanes and names).
+    /// </summary>
+    public HashSet<string> GetLabels()
+    {
+        ICollection<string> sources = GetKnownSources();
+        ICollection<string> targets = GetKnownTargets();
+        List<string> names = Stations.Select(s => s.Name).ToList();
+        return [..names, ..sources, ..targets];
+    }
 }

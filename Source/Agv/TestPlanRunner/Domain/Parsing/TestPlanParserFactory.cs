@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TestPlanRunner.Domain.Models;
+﻿using FluentValidation;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
@@ -11,6 +12,7 @@ public class TestPlanParserFactory : ITestPlanParserFactory
 {
     private readonly ILogger<TestPlanParserFactory> _logger;
     private readonly Dictionary<string, ITestPlanParser> _parsers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly IValidator<TestPlan> _validator;
 
     /// <inheritdoc />
     public IEnumerable<string> SupportedExtensions => _parsers.Keys;
@@ -19,9 +21,11 @@ public class TestPlanParserFactory : ITestPlanParserFactory
     public TestPlanParserFactory(
         ILogger<TestPlanParserFactory> logger,
         JsonTestPlanParser jsonParser,
-        YamlTestPlanParser yamlParser)
+        YamlTestPlanParser yamlParser,
+        IValidator<TestPlan> validator)
     {
         _logger = logger;
+        _validator = validator;
 
         RegisterParser(jsonParser);
         RegisterParser(yamlParser);
@@ -66,8 +70,10 @@ public class TestPlanParserFactory : ITestPlanParserFactory
             string testPlanName = Path.GetFileNameWithoutExtension(filePath);
             testPlan = testPlan with { Name = testPlanName, LastWriteTime = lastWriteTime };
 
-            if (!ValidateTestPlan(testPlan, filePath))
+            var validationResult = await _validator.ValidateAsync(testPlan, cancellationToken);
+            if (!validationResult.IsValid)
             {
+                validationResult.Errors.ForEach(e => _logger.LogError(e.ErrorMessage));
                 return null;
             }
 
@@ -84,76 +90,5 @@ public class TestPlanParserFactory : ITestPlanParserFactory
             _logger.LogError(ex, "Error parsing test plan file: {FilePath}", filePath);
             return null;
         }
-    }
-
-    private bool ValidateTestPlan(TestPlan testPlan, string filePath)
-    {
-        if (string.IsNullOrWhiteSpace(testPlan.Name))
-        {
-            _logger.LogError("Test plan must have a name: {FilePath}", filePath);
-            return false;
-        }
-
-        if (testPlan.Steps.Count == 0)
-        {
-            _logger.LogError("Test plan must have at least one step: {FilePath}", filePath);
-            return false;
-        }
-
-        for (int i = 0; i < testPlan.Steps.Count; i++)
-        {
-            var step = testPlan.Steps[i];
-
-            if (step.StepType == StepType.HostOrder)
-            {
-                if (string.IsNullOrWhiteSpace(step.Source))
-                {
-                    _logger.LogError("HostOrder step {StepIndex} must have a source: {FilePath}", i, filePath);
-                    return false;
-                }
-                if (string.IsNullOrWhiteSpace(step.Destination))
-                {
-                    _logger.LogError("HostOrder step {StepIndex} must have a destination: {FilePath}", i, filePath);
-                    return false;
-                }
-                if (!string.IsNullOrWhiteSpace(step.TargetNode))
-                {
-                    _logger.LogError("HostOrder step {StepIndex} must not have a target node: {FilePath}", i, filePath);
-                    return false;
-                }
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(step.TargetNode))
-                {
-                    _logger.LogError("Step {StepIndex} must have a target node: {FilePath}", i, filePath);
-                    return false;
-                }
-                if (!string.IsNullOrWhiteSpace(step.Source))
-                {
-                    _logger.LogError("HostOrder step {StepIndex} must not have a source: {FilePath}", i, filePath);
-                    return false;
-                }
-                if (!string.IsNullOrWhiteSpace(step.Destination))
-                {
-                    _logger.LogError("HostOrder step {StepIndex} must not have a destination: {FilePath}", i, filePath);
-                    return false;
-                }
-            }
-
-            if (step.WaitTimeSeconds < 0)
-            {
-                _logger.LogError("Step {StepIndex} wait time must be >= 0: {FilePath}", i, filePath);
-                return false;
-            }
-        }
-
-        if (testPlan.Iterations < 0)
-        {
-            _logger.LogError("Test plan iterations must be >= 0: {FilePath}", filePath);
-            return false;
-        }
-
-        return true;
     }
 }

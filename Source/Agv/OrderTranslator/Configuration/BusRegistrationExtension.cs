@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.OrderTranslator.Messages;
 using Gebhardt.Acc.OrderTranslator.Services.CommandHandler;
 using Gebhardt.Acc.OrderTranslator.Services.EventHandler;
+using Gebhardt.Acc.OrderTranslator.Services.RequestResponseHandlers;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -45,6 +46,7 @@ public static class BusRegistrationExtension
             partitioner.PartitionMessageById<CreateOrUpdateStation, StationCommandHandler>(c);
         });
         cfg.AddConsumer<StationEventHandler>();
+        cfg.AddConsumer<StationRequestHandler>();
         return cfg;
     }
 }

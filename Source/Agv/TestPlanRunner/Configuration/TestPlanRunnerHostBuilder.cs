@@ -56,7 +56,8 @@ public static class TestPlanRunnerHostBuilder
                 services.AddDbContextFactory<TransportOrderDbContext>(builder =>
                 {
                     string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
-                    builder.UseSqlServer(connectionString);
+                    builder.UseSqlServer(connectionString,
+                        options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
                 });
 
                 // Parsers
@@ -65,17 +66,18 @@ public static class TestPlanRunnerHostBuilder
                 services.AddSingleton<ITestPlanParserFactory, TestPlanParserFactory>();
 
                 // Validators
-                services.AddScoped<IValidator<TestPlan>, TestPlanValidator>();
+                services.AddSingleton<IValidator<TestPlan>, TestPlanValidator>();
 
                 // Services
+                services.AddSingleton<IStationProvider, StationProvider>();
                 services.AddSingleton<IAgvExecutionStateProvider, AgvExecutionStateProvider>();
                 services.AddSingleton<ITestPlanDictionaryProvider, TestPlanDictionaryProvider>();
                 services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
                 services.AddSingleton(typeof(IConcurrentDictionaryProvider<>), typeof(ConcurrentDictionaryProvider<>));
                 services.AddSingleton(typeof(IKeyedSemaphoreProvider<>), typeof(KeyedSemaphoreProvider<>));
-                services.AddTransient<IAgvRepository, AgvRepository>();
+                services.AddSingleton<IAgvRepository, AgvRepository>(); // captive (ITestPlanManager is singleton)
                 services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
-                services.AddTransient<IAgvRouteRetrievalService, AgvRouteRetrievalService>();
+                services.AddSingleton<IAgvRouteRetrievalService, AgvRouteRetrievalService>();// captive (ITestStepCancellationEvaluator is singleton)
                 services.AddSingleton<ITestPlanManager, TestPlanManager>();
                 services.AddSingleton<ITestStepCancellationEvaluator, TestStepCancellationEvaluator>();
                 services.AddSingleton<TestPlanFileWatcher>();

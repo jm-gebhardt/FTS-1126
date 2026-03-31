@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+      <IsPackable>false</IsPackable>
+      <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="AutoMapper" />
+        <PackageReference Include="MassTransit.Prometheus" />
+        <PackageReference Include="MassTransit.EntityFrameworkCore" />
+        <PackageReference Include="MassTransit" />
+        <PackageReference Include="Microsoft.Data.SqlClient" />
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="moq" />
+        <PackageReference Include="coverlet.collector">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="MSTest.TestAdapter" />
+        <PackageReference Include="MSTest.TestFramework" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
+        <ProjectReference Include="..\TestPlanRunner\TestPlanRunner.csproj" />
+    </ItemGroup>
+</Project>

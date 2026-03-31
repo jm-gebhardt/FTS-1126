@@ -60,6 +60,7 @@ public class TestPlanManager : ITestPlanManager
     public async Task ApplyTestPlanAsync(TestPlan testPlan)
     {
         _logger.LogInformation("Applying test plan: {TestPlanName}", testPlan.Name);
+
         await _bus.Publish(new StationConfigurationUpdateRequested());
         // Quick & dirty: give a bit time until configuration is reloaded
         await Task.Delay(1000);

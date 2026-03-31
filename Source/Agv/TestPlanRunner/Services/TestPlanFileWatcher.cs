@@ -1,8 +1,11 @@
-﻿using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Messages.Stations.Requests;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TestPlanRunner.Configuration;
 using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
+using Gebhardt.Acc.TestPlanRunner.Domain.Providers;
 using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.Acc.TestPlanRunner.Services;
 
@@ -19,6 +22,8 @@ public class TestPlanFileWatcher : IPollable
 
     private readonly Dictionary<string, DateTime> _fileLastWriteTimes = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _knownFiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly IBus _bus;
+    private readonly IStationProvider _stationProvider;
 
     /// <inheritdoc />
     public int PollingInterval => _configuration.PollingIntervalMs;
@@ -28,12 +33,16 @@ public class TestPlanFileWatcher : IPollable
         ILogger<TestPlanFileWatcher> logger,
         ITestPlanParserFactory parserFactory,
         ITestPlanManager testPlanManager,
-        TestPlanRunnerConfiguration configuration)
+        TestPlanRunnerConfiguration configuration,
+        IBus bus,
+        IStationProvider stationProvider)
     {
         _logger = logger;
         _parserFactory = parserFactory;
         _testPlanManager = testPlanManager;
         _configuration = configuration;
+        _bus = bus;
+        _stationProvider = stationProvider;
     }
 
     private static IEnumerable<string> GetSupportedFiles(string directoryPath, IEnumerable<string> extensions)
@@ -91,6 +100,13 @@ public class TestPlanFileWatcher : IPollable
         }
     }
 
+    private async Task UpdateStations(CancellationToken cancellationToken)
+    {
+        IRequestClient<GetStationLabels>? requestClient = _bus.CreateRequestClient<GetStationLabels>(timeout: TimeSpan.FromSeconds(30));
+        Response<GotStationLabels> response = await requestClient.GetResponse<GotStationLabels>(new GetStationLabels(), cancellationToken);
+        _stationProvider.Update(response.Message.Labels);
+    }
+
     private async Task ProcessFileAsync(string filePath, CancellationToken cancellationToken)
     {
         try
@@ -108,6 +124,8 @@ public class TestPlanFileWatcher : IPollable
                 // File did not change
                 return;
             }
+
+            await UpdateStations(cancellationToken);
 
             var testPlan = await _parserFactory.TryParseAsync(filePath, cancellationToken);
             if (testPlan == null)
