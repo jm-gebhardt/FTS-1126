@@ -79,6 +79,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddHostedService<InMemoryCacheInitializer>();
         services.AddHostedService<AgvPositionPersistenceService>();
         services.AddHostedService<FactoryTimeZoneInitializer>();
+        services.AddHostedService<Housekeeping>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
         // -  database
@@ -181,6 +182,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IAgvDb, AgvDb>();
         services.AddTransient<IAgvInstantActionDefinitionRepository, EfAgvInstantActionDefinitionRepository>();
         services.AddTransient<IOwnedFilterRepository, OwnedFilterRepository>();
+        services.AddTransient<IHousekeepingConfigurationRepository, EfHousekeepingConfigurationRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

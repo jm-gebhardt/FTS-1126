@@ -24,6 +24,7 @@ public class EfHousekeepingRepository(StatisticsDbContext context, ILogger<EfHou
         await connection.OpenAsync();
 
         await using var command = new SqlCommand("EXEC [dbo].[CompressAgvStatistics]", connection);
+        command.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
         await command.ExecuteNonQueryAsync();
     }
 }

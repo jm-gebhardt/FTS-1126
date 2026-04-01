@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.System;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.System.Monitoring;
 using Microsoft.AspNetCore.Authorization;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Housekeeping;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers;
 
@@ -25,8 +27,8 @@ public class SystemController(
     IRequestClient<UpdateFactoryTimeZone> updateFactoryTimeClient,
     IRequestClient<UpdateHostOrderGeneration> updateHostOrderGenerationClient,
     IRequestClient<RequestHostOrderGeneration> requestHostOrderGenerationClient,
-    IRequestClient<GetCertificateExpirations> getCertificateExpirationClient
-) : Controller
+    IRequestClient<GetCertificateExpirations> getCertificateExpirationClient,
+    IRequestClient<UpdateHousekeepingConfiguration> updateHousekeepingConfigurationClient) : Controller
 {
     /// <summary>
     /// Get system time in ISO 8601 format.
@@ -130,5 +132,18 @@ public class SystemController(
 
         var dto = mapper.Map<IEnumerable<CertificateExpirationDto>>(response.Message.Certificates);
         return Ok(dto);
+    }
+
+    /// <summary>
+    /// Updates the agv error housekeeping configuration.
+    /// </summary>
+    /// <param name="outdatedValue">The value for the outdated time (x days ago).</param>
+    /// <param name="outdatedInterval">The interval for the outdated time (days/weeks..).</param>
+    [HttpPost]
+    [Route("/system/housekeepingConfiguration")]
+    public async Task<ActionResult> UpdateHousekeepingInterval([FromQuery] int outdatedValue, [FromQuery] HousekeepingInterval outdatedInterval)
+    {
+        await updateHousekeepingConfigurationClient.GetResponse<Success>(new UpdateHousekeepingConfiguration(outdatedValue, outdatedInterval));
+        return Ok();
     }
 }

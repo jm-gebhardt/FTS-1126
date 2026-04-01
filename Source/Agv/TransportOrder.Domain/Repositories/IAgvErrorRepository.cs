@@ -53,4 +53,10 @@ public interface IAgvErrorRepository
     /// Load db agv error information into the cache.
     /// </summary>
     Task LoadInMemoryCache();
+
+    /// <summary>
+    /// Delete errors older than given time.
+    /// </summary>
+    /// <param name="outDatedTime">The time an error gets outdated.</param>
+    Task DeleteOutdatedErrors(DateTime outDatedTime);
 }

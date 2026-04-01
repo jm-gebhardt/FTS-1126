@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using Quartz;
 
 namespace Gebhardt.Acc.TransportOrder;
 
@@ -16,6 +17,9 @@ namespace Gebhardt.Acc.TransportOrder;
 /// </summary>
 public static class TransportOrderHostBuilder
 {
+    private const string QuartzSchedulerName = "HousekeepingTransportOrder";
+    private const string QuartzSchedulerId = "AUTO";
+
     /// <summary>
     /// Creates the host builder.
     /// </summary>
@@ -27,7 +31,17 @@ public static class TransportOrderHostBuilder
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
             .AddMassTransit(initialLogger)
-            .AddTransportOrderCore(options);
+            .AddTransportOrderCore(options)
+            .ConfigureServices((_, services) =>
+            {
+                services.AddQuartz(q =>
+                {
+                    q.SchedulerId = QuartzSchedulerId;
+                    q.SchedulerName = QuartzSchedulerName;
+                    q.UseTimeZoneConverter();
+                });
+                services.AddQuartzHostedService();
+            });
 
         hostBuilder.ConfigureWebHost(host =>
         {

@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
@@ -110,5 +111,16 @@ public class EfAgvErrorRepository : IAgvErrorRepository
         {
             _errorCache.AddOrUpdate(agvCorrelationId, errors);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteOutdatedErrors(DateTime outDatedTime)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // by default command timeout is 30s
+        
+        var outdated = new SqlParameter("OutdatedTime", outDatedTime);
+
+        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE dbo.HouseKeepAgvErrors @OutdatedTime", outdated);
     }
 }

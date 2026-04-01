@@ -15,6 +15,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -366,6 +367,9 @@ public static class CoreBusRegistrationExtensions
 
         configurator.AddRequestClient<GetCertificateExpirations>();
         configurator.AddConsumer<CertificateExpirationRequestHandler>();
+
+        configurator.AddRequestClient<UpdateHousekeepingConfiguration>();
+        configurator.AddConsumer<HousekeepingRequestHandler>();
     }
 
     private static void RegisterMediatorTriggerHandlers(IMediatorRegistrationConfigurator configurator)
