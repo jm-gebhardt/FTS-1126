@@ -13,9 +13,14 @@
 ARG PROJECT
 ARG DOTNET_VERSION=10.0
 
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-alpine AS build-env
 ARG PROJECT
+ARG TARGETARCH
 WORKDIR /app
+
+# Map Docker TARGETARCH (amd64/arm64) to .NET RID for Alpine
+RUN if [ "$TARGETARCH" = "arm64" ]; then echo "linux-musl-arm64" > /tmp/rid; \
+    else echo "linux-musl-x64" > /tmp/rid; fi
 
 # Copy centralized package management files
 COPY Directory.Packages.props ./
@@ -33,21 +38,22 @@ RUN --mount=type=secret,id=nuget_pat \
             --store-password-in-clear-text \
             --configfile ./Agv/NuGet.Config; \
     fi && \
-    dotnet restore Agv/${PROJECT}/${PROJECT}.csproj
+    dotnet restore -r $(cat /tmp/rid) Agv/${PROJECT}/${PROJECT}.csproj
 
-# Build/publish
-RUN dotnet publish -c Release -o out --no-restore Agv/${PROJECT}/${PROJECT}.csproj
+# Build/publish (target Alpine RID to avoid bundling native assets for other platforms)
+RUN dotnet publish -c Release -o out --no-restore -r $(cat /tmp/rid) --self-contained false Agv/${PROJECT}/${PROJECT}.csproj
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-alpine
+
+# Install ICU libraries for full globalization support (required by Microsoft.Data.SqlClient)
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 ARG PROJECT
 ENV PROJECT=${PROJECT}
 WORKDIR /app
 
-RUN apt update &&  \
-    apt install -y wget && \
-    rm -rf /var/lib/apt/lists/*
 EXPOSE 80/tcp
 HEALTHCHECK --interval=1m --timeout=10s \
     CMD wget --spider -q --tries=1 -O- http://localhost:80/metrics || exit 1
