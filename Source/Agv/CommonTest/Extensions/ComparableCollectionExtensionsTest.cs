@@ -25,7 +25,7 @@ public class ComparableCollectionExtensionsTest
     public void Median_ComparableWithoutArithmeticOperators_ThrowsInvalidOperationException()
     {
         List<NotSupportedComparable> data = [new(ActionType.Drop), new(ActionType.Charge)];
-        Should.Throw<InvalidOperationException>(() => data.Median());
+        Should.Throw<InvalidOperationException>(data.Median);
     }
 
     /// <summary>

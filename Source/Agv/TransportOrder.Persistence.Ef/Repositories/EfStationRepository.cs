@@ -228,7 +228,7 @@ public class EfStationRepository(
     /// <inheritdoc cref="IStationRepository"/>
     public async Task Update(Station station)
     {
-        var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync();
         context.Update(station);
         await context.SaveChangesAsync();
     }

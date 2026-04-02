@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.TelegramCommunication;
+using Gebhardt.Acc.Common.Testing.Time;
 using Gebhardt.Acc.ConveyorTelegramApi.Processors;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,7 @@ public sealed class TelegramProcessorFactoryTestFixture : FixtureBase
 
         AddServices(s =>
         {
-            s.AddSingleton(_ => new JamStateProcessor(new Mock<ILogger<JamStateProcessor>>().Object, TestConfigurationProvider.GetConfiguration(), busMock.Object));
+            s.AddSingleton(_ => new JamStateProcessor(new Mock<ILogger<JamStateProcessor>>().Object, TestConfigurationProvider.GetConfiguration(), new FakeTimeProvider(), busMock.Object));
             s.AddSingleton(_ => new LifeProcessor(new Mock<ILogger<LifeProcessor>>().Object, TestConfigurationProvider.GetConfiguration()));
             s.AddSingleton(_ => new Mock<ILogger<TelegramProcessorFactory>>().Object);
             s.AddSingleton<TelegramProcessorFactory>();

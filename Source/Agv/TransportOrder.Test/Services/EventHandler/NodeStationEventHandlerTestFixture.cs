@@ -7,11 +7,11 @@ using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 
-public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<StationEventHandler>
+public class NodeStationEventHandlerTestFixture: MassTransitConsumerTestFixture<NodeStationEventHandler>
 {
     private readonly Mock<IAgvDb> _agvDbMock = new();
 
-    public StationEventHandlerTestFixture()
+    public NodeStationEventHandlerTestFixture()
     {
         AddServices(s =>
         {
@@ -20,7 +20,7 @@ public class StationEventHandlerTestFixture: MassTransitConsumerTestFixture<Stat
         Build();
     }
 
-    public StationEventHandlerTestFixture WithChargingAgvs(ICollection<Agv> agvs)
+    public NodeStationEventHandlerTestFixture WithChargingAgvs(ICollection<Agv> agvs)
     {
         _agvDbMock.Setup(x => x.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
         return this;

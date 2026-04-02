@@ -1,13 +1,18 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Graphs;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
+using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -19,18 +24,19 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 
 /// <summary>
-/// Provides handlers for node-related commands.
+/// Provides handlers for node and station related commands.
 /// </summary>
 [UsedImplicitly]
-public class NodeCommandHandler(
+public class NodeStationCommandHandler(
     INodeRepository nodeRepository,
     IStationRepository stationRepository,
+    IGraphRepository graphRepository,
     IActionGroupRepository actionGroupRepository,
     IMapRepository mapRepository,
     TimeProvider timeProvider,
     IAgvDb agvDb,
-    ILogger<NodeCommandHandler> logger
-) :
+    ILogger<NodeStationCommandHandler> logger,
+    ILoggingService loggingService) :
     IConsumer<FreeNode>,
     IConsumer<UpdateNodeOccupancy>,
     IConsumer<ClearNodesFromAgv>,
@@ -39,11 +45,16 @@ public class NodeCommandHandler(
     IConsumer<FreeStationOccupancy>,
     IConsumer<OccupyStation>,
     IConsumer<UnblockStation>,
-    IConsumer<ReserveStation>
+    IConsumer<ReserveStation>,
+    IConsumer<LockStation>,
+    IConsumer<UnlockStation>,
+    IConsumer<UpdateStationJamState>,
+    IConsumer<GetLockedStations>,
+    IConsumer<StationConfigurationReceived>,
+    IConsumer<UpdateStationAdditionalInfo>,
+    IConsumer<Common.Messages.Maps.MapSaved>
 {
-    /// <summary>
-    /// Handles the <see cref="FreeNode"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<FreeNode> context)
     {
         var nodeId = context.Message.NodeId;
@@ -73,9 +84,7 @@ public class NodeCommandHandler(
         await context.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 
-    /// <summary>
-    /// Handles the <see cref="ClearNodesFromAgv"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ClearNodesFromAgv> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
@@ -96,9 +105,7 @@ public class NodeCommandHandler(
         await Task.WhenAll(tasks);
     }
 
-    /// <summary>
-    /// Handles the <see cref="UpdateNodeOccupancy"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateNodeOccupancy> context)
     {
         (var agvCorrelationId, Guid? oldLastNodeId, Guid? newLastNodeId) = context.Message;
@@ -208,9 +215,7 @@ public class NodeCommandHandler(
         await context.Publish(new NodeStateChanged(new NodeLock(node, NodeLockState.Free, false, null, dateModified), node.Name, stationId, user, lockReason, lockDescription));
     }
 
-    /// <summary>
-    /// Handles the <see cref="SetNodeApproachingProperties"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<SetNodeApproachingProperties> context)
     {
         (var mapId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
@@ -229,9 +234,7 @@ public class NodeCommandHandler(
         await context.Publish(new NodeApproachingPropertiesUpdated(mapId, node, pickLiftHeight, dropLiftHeight, dockingDirection));
     }
 
-    /// <summary>
-    /// Handles the <see cref="InitializeNodeApproachingProperties"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<InitializeNodeApproachingProperties> context)
     {
         (var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
@@ -249,9 +252,7 @@ public class NodeCommandHandler(
         await context.Publish(new NodeApproachingPropertiesUpdated(mapId, node, pickLiftHeight, dropLiftHeight, dockingDirection));
     }
 
-    /// <summary>
-    /// Handles the <see cref="FreeStationOccupancy"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<FreeStationOccupancy> context)
     {
         var nodeId = context.Message.NodeId;
@@ -270,9 +271,7 @@ public class NodeCommandHandler(
         await PublishNodeStateChange(context, node);
     }
 
-    /// <summary>
-    /// Handles the <see cref="UnblockStation"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<UnblockStation> context)
     {
         var stationId = context.Message.StationId;
@@ -294,9 +293,7 @@ public class NodeCommandHandler(
         await PublishNodeStateChange(context, node);
     }
 
-    /// <summary>
-    /// Handles the <see cref="OccupyStation"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<OccupyStation> context)
     {
         var agv = context.Message.AgvCorrelationId;
@@ -307,9 +304,7 @@ public class NodeCommandHandler(
         await PublishNodeStateChange(context, node);
     }
 
-    /// <summary>
-    /// Handles the <see cref="ReserveStation"/> command.
-    /// </summary>
+    /// <inheritdoc />
     public async Task Consume(ConsumeContext<ReserveStation> context)
     {
         (var station, var agv, bool ignoreStateLocked) = context.Message;
@@ -318,5 +313,130 @@ public class NodeCommandHandler(
         node.Reserve(agv, true, ignoreLocked: ignoreStateLocked);
         await nodeRepository.UpdateLock(node, ignoreLocked: ignoreStateLocked);
         await PublishNodeStateChange(context, node);
+    }
+    
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<LockStation> context)
+    {
+        (var id, string user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
+
+        var station = await stationRepository.GetStation(id);
+        var node = await nodeRepository.GetNodeAsync(id);
+        bool lockResult = node.Lock();
+        if (!lockResult)
+        {
+            logger.LogError("Lock of station {StationName} failed ", station.Name);
+            return;
+        }
+
+        station.NodeLock = node.Lock;
+        await nodeRepository.UpdateLock(node);
+
+        station.Lock(user, reason, lockDescription, lockOrderHandling);
+
+        await stationRepository.Update(station);
+
+        await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationLocked, id, "Station Locked",
+             $"User {user} locked station because {reason}",
+             new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
+        await context.Publish(new StationLocked(station.Name));
+
+        if (node.Lock != null)
+        {
+            await context.Publish(new NodeStateChanged(node.Lock, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UnlockStation> context)
+    {
+        (var id, string user) = context.Message;
+
+        var station = await stationRepository.GetStation(id);
+        var node = await nodeRepository.GetNodeAsync(id);
+        bool unlockResult = node.Unlock();
+
+        if (!unlockResult)
+        {
+            logger.LogError("Unlock of station {StationName} failed ", station.Name);
+            return;
+        }
+
+        await nodeRepository.UpdateLock(node);
+
+        station.Unlock();
+        station.NodeLock = node.Lock;
+        await stationRepository.Update(station);
+
+        if (node.Lock != null)
+        {
+            await context.Publish(new NodeStateChanged(node.Lock, node.Name, station.Id, user, station.LockReason, station.LockDescription));
+        }
+
+        await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationUnlocked, id, "Station Unlocked",
+              $"User {user} unlocked station",
+              new Dictionary<string, object?> { { LogLabels.User, user } });
+
+        await context.Publish(new StationUnlocked(node));
+    }
+    
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UpdateStationJamState> context)
+    {
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        var station = await stationRepository.GetStation(context.Message.CorrelationId);
+        
+        //publish first to transfer old and new state
+        await context.Publish(new JamStateChanged(station.Id, context.Message.HasPalletJam, station.PalletJamChangedDate, station.HasPalletJam, now));
+        station.HasPalletJam = context.Message.HasPalletJam;
+        station.PalletJamChangedDate = now;
+        await stationRepository.Update(station);
+        logger.LogInformation("Jam state of station {StationName} ({StationId}) updated to {JamState}", station.Name, station.Id, station.HasPalletJam);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<GetLockedStations> context)
+    {
+        ICollection<Station> stations = await stationRepository.GetStations();
+
+        await context.RespondAsync(new GotLockedStations(stations.Where(s => s.IsLocked).Select(s => s.Name).ToList()));
+    }
+    
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<StationConfigurationReceived> context)
+    {
+        var (stationId, stationConfiguration) = context.Message;
+
+        var station = await stationRepository.GetStation(stationId);
+        station.Configure(stationConfiguration);
+        await stationRepository.Update(station);
+
+        logger.LogInformation("Configured station {Station}", station.Name);
+    }
+    
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UpdateStationAdditionalInfo> context)
+    {
+        (var stationId, Dictionary<string, object?> additionalInformation) = context.Message;
+        var station = await stationRepository.GetStation(stationId);
+        station.UpdateAdditionalInfo(additionalInformation);
+        await stationRepository.Update(station);
+
+        logger.LogInformation("Updated additional information of station {Station}", station.Name);
+    }
+    
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
+    {
+            var agvMap = context.Message.Map;
+            ICollection<Guid> agvIds = await graphRepository.GetAgvIdsRelatedToNodesAsync(agvMap.Nodes);
+            if (agvIds.Count == 0)
+            {
+                logger.LogDebug("No agvs assigned to map, do not update stations");
+                return;
+            }
+            var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
+            await stationRepository.AddStations(agvGraph);
+            logger.LogDebug("Stations updated");
     }
 }

@@ -122,10 +122,12 @@ public class PriorityAwareTargetSelector(
             }
             if (_useJamState)
             {
-                logger.LogInformation("Considering jam state for station {Target}", station.Id);
+                logger.LogInformation("Considering jam state for station {StationName} ({Target}), HasPalletJam={HasPalletJam}, LastChanged={PalletJamChangedDate}",
+                    station.Name, station.Id, station.HasPalletJam, station.PalletJamChangedDate);
                 if (station.HasPalletJam)
                 {
-                    logger.LogInformation("Station {Target} not available due to pallet jam", station.Id);
+                    logger.LogInformation("Station {StationName} ({Target}) not available due to pallet jam (since {PalletJamChangedDate})",
+                        station.Name, station.Id, station.PalletJamChangedDate);
                     continue;
                 }
             }

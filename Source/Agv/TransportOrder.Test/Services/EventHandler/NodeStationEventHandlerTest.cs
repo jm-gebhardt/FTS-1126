@@ -8,12 +8,12 @@ using Gebhardt.Acc.TransportOrder.Test.Helper;
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 
 [TestClass]
-public class StationEventHandlerTest
+public class NodeStationEventHandlerTest
 {
     [TestMethod]
     public async Task Consume_StationUnlocked_NoChargingAgvs_PublishesTryReactivateParkingAgvs()
     {
-        var fixture = new StationEventHandlerTestFixture();
+        var fixture = new NodeStationEventHandlerTestFixture();
 
         await fixture.PublishMessageAsync(new StationUnlocked("station".ToGraphNode()));
 
@@ -24,7 +24,7 @@ public class StationEventHandlerTest
     [TestMethod]
     public async Task Consume_StationUnlocked_ChargingAgvs_PublishesTryReactivateChargingAgvs()
     {
-        var fixture = new StationEventHandlerTestFixture()
+        var fixture = new NodeStationEventHandlerTestFixture()
             .WithChargingAgvs([AgvGenerator.GenerateChargingAgv()]);
 
         await fixture.PublishMessageAsync(new StationUnlocked("station".ToGraphNode()));
@@ -36,7 +36,7 @@ public class StationEventHandlerTest
     [TestMethod]
     public async Task Consume_JamStateUpdated_ValidData_PublishesUpdateStationJamState()
     {
-        var fixture = new StationEventHandlerTestFixture();
+        var fixture = new NodeStationEventHandlerTestFixture();
 
         await fixture.PublishMessageAsync(new JamStateUpdated("station".ToGuid(), true));
 
@@ -46,7 +46,7 @@ public class StationEventHandlerTest
     [TestMethod]
     public async Task Consume_StationConfigured_ValidData_PublishesUpdateStationAdditionalInfo()
     {
-        var fixture = new StationEventHandlerTestFixture();
+        var fixture = new NodeStationEventHandlerTestFixture();
 
         await fixture.PublishMessageAsync(new StationConfigured("station".ToGuid(), new Dictionary<string, object?>()));
 

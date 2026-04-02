@@ -246,7 +246,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier2", ControlPoints = new List<MqttControlPoint> { new(), new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        Should.Throw<MqttGraphParsingException>(() => parser.Parse());
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
     }
 
     [TestMethod]
@@ -284,7 +284,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier3", ControlPoints = new List<MqttControlPoint> { new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        Should.Throw<MqttGraphParsingException>(() => parser.Parse());
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
     }
 
     [TestMethod]
@@ -351,7 +351,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Bezier5", ControlPoints = new List<MqttControlPoint> { new() } }
         };
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        Should.Throw<MqttGraphParsingException>(() => parser.Parse());
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
     }
 
     [TestMethod]
@@ -418,7 +418,7 @@ public class GraphParserTest
             new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 1, EdgeType = "Polypath" }
         };
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        Should.Throw<MqttGraphParsingException>(() => parser.Parse());
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
     }
 
     [TestMethod]

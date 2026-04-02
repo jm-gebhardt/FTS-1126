@@ -202,20 +202,10 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddRequestClient<GetGraph>();
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
 
-        busRegistrationConfigurator.AddConsumer<StationEventHandler>();
+        busRegistrationConfigurator.AddConsumer<NodeStationEventHandler>();
         busRegistrationConfigurator.AddConsumer<QueueEventHandler>();
-
-        busRegistrationConfigurator.AddConsumer<StationCommandHandler>(c =>
-        {
-            var partitioner = c.CreatePartitioner(PartitionCount);
-            partitioner.PartitionMessageById<LockStation, StationCommandHandler>(c);
-            partitioner.PartitionMessageById<UnlockStation, StationCommandHandler>(c);
-            partitioner.PartitionMessageById<UpdateStationJamState, StationCommandHandler>(c);
-            partitioner.PartitionMessageById<StationConfigurationReceived, StationCommandHandler>(c);
-            partitioner.PartitionMessageById<UpdateStationAdditionalInfo, StationCommandHandler>(c);
-        });
-
-        busRegistrationConfigurator.AddConsumer<NodeCommandHandler>(c =>
+        
+        busRegistrationConfigurator.AddConsumer<NodeStationCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<SetNodeApproachingProperties>(x =>
@@ -231,6 +221,10 @@ public static class CoreBusRegistrationExtensions
                 });
             });
             var nodePartitioner = c.CreatePartitioner(PartitionCount);
+            c.Message<FreeNode>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
+             c.Message<UpdateNodeOccupancy>(x =>
+                 x.UsePartitioner(nodePartitioner, p => p.Message.OldLastNodeId.GetValueOrDefault()));
             c.Message<FreeStationOccupancy>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
             c.Message<OccupyStation>(x =>
@@ -239,6 +233,11 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
             c.Message<Common.Messages.Stations.UnblockStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.StationId));
+            nodePartitioner.PartitionMessageById<LockStation, NodeStationCommandHandler>(c);
+            nodePartitioner.PartitionMessageById<UnlockStation, NodeStationCommandHandler>(c);
+            nodePartitioner.PartitionMessageById<UpdateStationJamState, NodeStationCommandHandler>(c);
+            nodePartitioner.PartitionMessageById<StationConfigurationReceived, NodeStationCommandHandler>(c);
+            nodePartitioner.PartitionMessageById<UpdateStationAdditionalInfo, NodeStationCommandHandler>(c);
         });
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 

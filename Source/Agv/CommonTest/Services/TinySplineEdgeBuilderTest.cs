@@ -449,7 +449,7 @@ public class TinySplineEdgeBuilderTest
             ]
         };
 
-        Should.Throw<NurbsParsingException>(() => nurbs.ControlPointsAsHomogeneousList());
+        Should.Throw<NurbsParsingException>(nurbs.ControlPointsAsHomogeneousList);
     }
 
     [TestMethod]

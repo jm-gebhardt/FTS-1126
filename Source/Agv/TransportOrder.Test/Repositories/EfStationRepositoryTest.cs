@@ -26,7 +26,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
@@ -59,7 +59,7 @@ public class EfStationRepositoryTest
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateGraphWithAdditionalStationType(agvId);
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
@@ -93,7 +93,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).OrderBy(n => n.Name).Skip(1).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).OrderBy(n => n.Name).Skip(1).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
@@ -128,7 +128,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(n => mapper.Map<GraphNode>(n)).ToList();
+        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);

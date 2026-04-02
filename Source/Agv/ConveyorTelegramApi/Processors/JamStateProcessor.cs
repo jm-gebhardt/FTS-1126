@@ -13,7 +13,12 @@ namespace Gebhardt.Acc.ConveyorTelegramApi.Processors;
 /// Provides a processor for the <see cref="JamState"/> telegram
 /// </summary>
 [UsedImplicitly]
-public class JamStateProcessor(ILogger<JamStateProcessor> logger, [FromKeyedServices(ServiceKeyProvider.FromWeStation)] TelegramCommunicationConfiguration configuration, IBus bus) : InboundTelegramProcessorBase<JamState>(configuration)
+public class JamStateProcessor(
+    ILogger<JamStateProcessor> logger,
+    [FromKeyedServices(ServiceKeyProvider.FromWeStation)]
+    TelegramCommunicationConfiguration configuration,
+    TimeProvider timeProvider,
+    IBus bus) : InboundTelegramProcessorBase<JamState>(configuration)
 {
     /// <summary>
     /// Current telegram
@@ -46,7 +51,7 @@ public class JamStateProcessor(ILogger<JamStateProcessor> logger, [FromKeyedServ
         logger.LogInformation("Processing telegram {JamState}", jamState);
 
         CurrentTelegram = jamState;
-        bus.Publish(new JamStateReceived(jamState.Pos, jamState.State, DateTime.UtcNow));
+        bus.Publish(new JamStateReceived(jamState.Pos, jamState.State, timeProvider.GetUtcNow().UtcDateTime));
         ShouldReceive = false;
     }
 

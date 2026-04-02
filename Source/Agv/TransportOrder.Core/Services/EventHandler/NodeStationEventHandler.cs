@@ -10,10 +10,10 @@ using MassTransit;
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
-/// provides handlers for station-related events.
+/// provides handlers for node and station related events.
 /// </summary>
 [UsedImplicitly]
-public class StationEventHandler(IAgvDb agvDb) :
+public class NodeStationEventHandler(IAgvDb agvDb) :
     IConsumer<StationUnlocked>,
     IConsumer<JamStateUpdated>,
     IConsumer<StationConfigured>
