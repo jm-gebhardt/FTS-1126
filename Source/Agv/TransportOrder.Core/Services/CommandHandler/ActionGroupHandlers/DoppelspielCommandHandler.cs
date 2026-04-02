@@ -85,6 +85,11 @@ public class DoppelspielCommandHandler(
             actionGroup.ConsiderForDoppelspiel();
         }
 
+        if (!await agvLimitGuard.IsWithinLimitAsync(actionGroup))
+        {
+            return;
+        }
+
         bool delayOrder = false;
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
@@ -109,11 +114,6 @@ public class DoppelspielCommandHandler(
         });
 
         if (delayOrder)
-        {
-            return;
-        }
-
-        if (!await agvLimitGuard.IsWithinLimitAsync(actionGroup))
         {
             return;
         }

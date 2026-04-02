@@ -81,6 +81,28 @@ public class DoppelspielCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_ActionGroupCreated_DoppelspielDrop_AgvStationLimitationViolated_DoesNotPublishQueueActionGroup()
+    {
+        var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
+        var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
+        var dropActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true, assignedAgv: Guid.NewGuid(), canRunDoppelspiel: true);
+        var doppelspielDropAction = dropActionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+            .WithDropAction(dropActionGroup)
+            .WithStationGroupLimit(false)
+            .AddActionGroup(actionGroup);
+
+        var actionGroupCreated = new ActionGroupCreated(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, null);
+
+        await fixture.PublishMessageAsync(actionGroupCreated);
+
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+        doppelspielDropAction.IsRegisteredForDoppelspiel.ShouldBeFalse();
+        pickAction.IsRegisteredForDoppelspiel.ShouldBeFalse();
+        actionGroup.AssignedAgv.ShouldBeNull();
+    }
+
+    [TestMethod]
     public async Task Consume_ActionGroupCreated_DoppelspielDrop_DoesNotPublishQueueActionGroup()
     {
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
