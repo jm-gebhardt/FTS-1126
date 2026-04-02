@@ -48,7 +48,7 @@ public class PrometheusMetricCollectionServiceTest
 
         await fixture.Service.CollectTravelDistance(actionGroup, agvId, null);
         double expectedRouteLength = graph.GetRouteLength([AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node, AgvGraphGenerator.Prk1Node]);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBe(expectedRouteLength);
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvId.ToString()).Value.ShouldBe(expectedRouteLength);
     }
 
     [TestMethod]
@@ -71,7 +71,7 @@ public class PrometheusMetricCollectionServiceTest
             .AddGraph(graph);
 
         await fixture.Service.CollectTravelDistance(actionGroup, agvId, AgvGraphGenerator.Way1Node.Id);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBe(graph.GetRouteLength([AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node]));
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvId.ToString()).Value.ShouldBe(graph.GetRouteLength([AgvGraphGenerator.Src1Node, AgvGraphGenerator.Way1Node]));
     }
 
     [TestMethod]
@@ -113,11 +113,11 @@ public class PrometheusMetricCollectionServiceTest
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
         PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvId.ToString()).Value.ShouldBe(1);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
-        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
-        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime + (actionGroup.Actions.Count - 1) * idleTimeBetweenActions);
-        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateBusyGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
+        PrometheusMetricCollector.AgvStateBusyCargoCounter.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
+        PrometheusMetricCollector.AgvStateIdleCounter.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime + (actionGroup.Actions.Count - 1) * idleTimeBetweenActions);
+        PrometheusMetricCollector.AgvStateChargingCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateBusyCounter.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
     }
 
     [DataRow(ActionState.Completed)]
@@ -158,11 +158,11 @@ public class PrometheusMetricCollectionServiceTest
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
         PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
-        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime + (actionGroup.Actions.Count - 1) * idleTimeBetweenActions);
-        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionGroup.Actions.Count(a => a.ActionType == ActionType.Charge) * actionDuration);
-        PrometheusMetricCollector.AgvStateBusyGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionGroup.Actions.Count(a => a.ActionType == ActionType.Move) * actionDuration);
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
+        PrometheusMetricCollector.AgvStateBusyCargoCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateIdleCounter.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime + (actionGroup.Actions.Count - 1) * idleTimeBetweenActions);
+        PrometheusMetricCollector.AgvStateChargingCounter.WithLabels(agvId.ToString()).Value.ShouldBe(actionGroup.Actions.Count(a => a.ActionType == ActionType.Charge) * actionDuration);
+        PrometheusMetricCollector.AgvStateBusyCounter.WithLabels(agvId.ToString()).Value.ShouldBe(actionGroup.Actions.Count(a => a.ActionType == ActionType.Move) * actionDuration);
     }
 
     [TestMethod]
@@ -185,9 +185,9 @@ public class PrometheusMetricCollectionServiceTest
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
         PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateBusyCargoCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateIdleCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateChargingCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
     }
 
     [TestMethod]
@@ -228,11 +228,11 @@ public class PrometheusMetricCollectionServiceTest
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
         PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
-        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime);
-        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateBusyGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
+        PrometheusMetricCollector.AgvStateBusyCargoCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateIdleCounter.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime);
+        PrometheusMetricCollector.AgvStateChargingCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateBusyCounter.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
     }
 
     [TestMethod]
@@ -274,11 +274,11 @@ public class PrometheusMetricCollectionServiceTest
         await fixture.Service.CollectOrderCompletionMetrics(actionGroup);
 
         PrometheusMetricCollector.AgvCompletedOrdersCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
-        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime);
-        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvId.ToString()).Value.ShouldBe(0);
-        PrometheusMetricCollector.AgvStateBusyGauge.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
+        PrometheusMetricCollector.AgvStateBusyCargoCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateIdleCounter.WithLabels(agvId.ToString()).Value.ShouldBe(idleTime);
+        PrometheusMetricCollector.AgvStateChargingCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
+        PrometheusMetricCollector.AgvStateBusyCounter.WithLabels(agvId.ToString()).Value.ShouldBe(actionDuration);
     }
 
     [TestMethod]
@@ -334,6 +334,33 @@ public class PrometheusMetricCollectionServiceTest
 
         PrometheusMetricCollector.StationJamStateCounter.WithLabels(station.ToString()).Value.ShouldBe(0);
         PrometheusMetricCollector.StationJamStateDurationGauge.WithLabels(station.ToString()).Value.ShouldBe(duration);
+    }
+
+    [TestMethod]
+    public void CollectOfflineDuration_AgvGoesOfflineThenOnline_CounterIncremented()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var agvId = Guid.NewGuid();
+
+        fixture.Service.CollectOfflineDuration(agvId, false);
+        PrometheusMetricCollector.AgvOfflineSince.ContainsKey(agvId).ShouldBeTrue();
+
+        Thread.Sleep(100);
+        fixture.Service.CollectOfflineDuration(agvId, true);
+
+        PrometheusMetricCollector.AgvStateOfflineCounter.WithLabels(agvId.ToString()).Value.ShouldBeGreaterThan(0);
+        PrometheusMetricCollector.AgvOfflineSince.ContainsKey(agvId).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void CollectOfflineDuration_AgvComesOnlineWithoutPriorOffline_NoIncrement()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var agvId = Guid.NewGuid();
+
+        fixture.Service.CollectOfflineDuration(agvId, true);
+
+        PrometheusMetricCollector.AgvStateOfflineCounter.WithLabels(agvId.ToString()).Value.ShouldBe(0);
     }
 
     [DataRow(ActionType.Charge, 0, 0, 1)]

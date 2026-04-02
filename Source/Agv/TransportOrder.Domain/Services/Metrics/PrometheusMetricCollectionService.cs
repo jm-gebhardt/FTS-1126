@@ -35,7 +35,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         double durationSeconds = actions
             .Where(action => action.Duration != null)
             .Sum(action => action.Duration!.Value.TotalSeconds);
-        PrometheusMetricCollector.AgvStateBusyCargoGauge.WithLabels(agvCorrelationId.ToString()).Set(durationSeconds);
+        PrometheusMetricCollector.AgvStateBusyCargoCounter.WithLabels(agvCorrelationId.ToString()).Inc(durationSeconds);
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         double durationSeconds = moveActions
             .Where(moveAction => moveAction.Duration != null)
             .Sum(moveAction => moveAction.Duration!.Value.TotalSeconds);
-        PrometheusMetricCollector.AgvStateBusyGauge.WithLabels(agvCorrelationId.ToString()).Set(durationSeconds);
+        PrometheusMetricCollector.AgvStateBusyCounter.WithLabels(agvCorrelationId.ToString()).Inc(durationSeconds);
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         }
 
         double durationSeconds = duration.Value.TotalSeconds + GetIdleDurationInBetweenActions(currentActionGroup);
-        PrometheusMetricCollector.AgvStateIdleGauge.WithLabels(agvCorrelationId.ToString()).Set(durationSeconds);
+        PrometheusMetricCollector.AgvStateIdleCounter.WithLabels(agvCorrelationId.ToString()).Inc(durationSeconds);
     }
 
     /// <summary>
@@ -130,7 +130,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             return;
         }
-        PrometheusMetricCollector.AgvStateChargingGauge.WithLabels(agvCorrelationId.ToString()).Set(chargeAction.Duration.Value.TotalSeconds);
+        PrometheusMetricCollector.AgvStateChargingCounter.WithLabels(agvCorrelationId.ToString()).Inc(chargeAction.Duration.Value.TotalSeconds);
     }
 
     private void CollectOrdersCount(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId)
@@ -153,7 +153,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     {
         var graph = await agvDb.Graphs.GetAgvGraphAsync(agvCorrelationId);
         double travelDistance = actionGroup.Actions.Sum(action => graph.GetRouteLength(action.Edges, lastNodeId));
-        PrometheusMetricCollector.AgvTravelDistanceGauge.WithLabels(agvCorrelationId.ToString()).Set(travelDistance);
+        PrometheusMetricCollector.AgvTravelDistanceCounter.WithLabels(agvCorrelationId.ToString()).Inc(travelDistance);
     }
 
     /// <inheritdoc cref="IMetricCollectionService"/>>
@@ -163,7 +163,27 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             return;
         }
-        PrometheusMetricCollector.BatteryChargeGauge.WithLabels(agvStatus.CorrelationId.ToString()).Set(agvStatus.BatteryCharge);
+        var agvId = agvStatus.CorrelationId.ToString();
+        PrometheusMetricCollector.BatteryChargeGauge.WithLabels(agvId).Set(agvStatus.BatteryCharge);
+        // Ensure offline counter label exists at 0 so Prometheus has a baseline before any offline event.
+        // Without this, increase() can't detect the first offline→online transition.
+        PrometheusMetricCollector.AgvStateOfflineCounter.WithLabels(agvId);
+    }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public void CollectOfflineDuration(Guid agvCorrelationId, bool isNowOnline)
+    {
+        if (!isNowOnline)
+        {
+            PrometheusMetricCollector.AgvOfflineSince[agvCorrelationId] = DateTime.UtcNow;
+            return;
+        }
+
+        if (PrometheusMetricCollector.AgvOfflineSince.TryRemove(agvCorrelationId, out var offlineSince))
+        {
+            var duration = (DateTime.UtcNow - offlineSince).TotalSeconds;
+            PrometheusMetricCollector.AgvStateOfflineCounter.WithLabels(agvCorrelationId.ToString()).Inc(duration);
+        }
     }
 
     /// <inheritdoc cref="IMetricCollectionService"/>>

@@ -29,7 +29,8 @@ public class MetricsCollectionEventHandler(IMetricCollectionService metricCollec
     IConsumer<SaveActionGroupAbortion>,
     IConsumer<AgvStatusReceived>,
     IConsumer<AgvErrorChanged>,
-    IConsumer<JamStateChanged>
+    IConsumer<JamStateChanged>,
+    IConsumer<AgvOnlineChanged>
 {
     /// <summary>
     /// Handles the <see cref="ActionAbortedByAgv"/> event.
@@ -132,6 +133,15 @@ public class MetricsCollectionEventHandler(IMetricCollectionService metricCollec
     {
         (var stationId, bool currentJamState, var lastChangedDate, bool previousJamState, var currentChangeDate) = context.Message;
         metricCollectionService.CollectJamStateMetrics(stationId, lastChangedDate, previousJamState, currentChangeDate, currentJamState);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Handles the <see cref="AgvOnlineChanged"/> event.
+    /// </summary>
+    public Task Consume(ConsumeContext<AgvOnlineChanged> context)
+    {
+        metricCollectionService.CollectOfflineDuration(context.Message.CorrelationId, context.Message.IsNowOnline);
         return Task.CompletedTask;
     }
 

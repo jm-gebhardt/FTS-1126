@@ -16,29 +16,34 @@ internal static class MetricNameConfiguration
     internal const string AgvCompletedOrdersCountMetric = "ACC_AGV_COMPLETED_ORDERS_COUNT";
 
     /// <summary>
-    /// Metric name for <see cref="PrometheusMetricCollector.AgvTravelDistanceGauge"/>.
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvTravelDistanceCounter"/>.
     /// </summary>
-    internal const string AgvTravelDistance = "ACC_AGV_TRAVEL_DISTANCE";
+    internal const string AgvTravelDistance = "ACC_AGV_TRAVEL_DISTANCE_METERS_TOTAL";
 
     /// <summary>
-    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateBusyGauge"/>.
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateBusyCounter"/>.
     /// </summary>
-    internal const string AgvStateBusy = "ACC_AGV_STATE_BUSY_DURATION";
+    internal const string AgvStateBusy = "ACC_AGV_STATE_BUSY_SECONDS_TOTAL";
 
     /// <summary>
-    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateBusyCargoGauge"/>.
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateBusyCargoCounter"/>.
     /// </summary>
-    internal const string AgvStateBusyCargo = "ACC_AGV_STATE_BUSY_CARGO_DURATION";
+    internal const string AgvStateBusyCargo = "ACC_AGV_STATE_BUSY_CARGO_SECONDS_TOTAL";
 
     /// <summary>
-    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateChargingGauge"/>.
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateChargingCounter"/>.
     /// </summary>
-    internal const string AgvStateCharging = "ACC_AGV_STATE_CHARGING_DURATION";
+    internal const string AgvStateCharging = "ACC_AGV_STATE_CHARGING_SECONDS_TOTAL";
 
     /// <summary>
-    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateIdleGauge"/>.
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateIdleCounter"/>.
     /// </summary>
-    internal const string AgvStateIdle = "ACC_AGV_STATE_IDLE_DURATION";
+    internal const string AgvStateIdle = "ACC_AGV_STATE_IDLE_SECONDS_TOTAL";
+
+    /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvStateOfflineCounter"/>.
+    /// </summary>
+    internal const string AgvStateOffline = "ACC_AGV_STATE_OFFLINE_SECONDS_TOTAL";
 
     /// <summary>
     /// Metric name for <see cref="PrometheusMetricCollector.AgvSafetyFieldViolationCounter"/>.

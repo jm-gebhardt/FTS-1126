@@ -1,4 +1,5 @@
-﻿using Prometheus;
+﻿using System.Collections.Concurrent;
+using Prometheus;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 
@@ -24,44 +25,57 @@ public static class PrometheusMetricCollector
     });
 
     /// <summary>
-    /// The agv travel distance gauge metric.
+    /// The accumulated agv travel distance counter metric.
     /// </summary>
-    public static readonly Gauge AgvTravelDistanceGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvTravelDistance, "Agv travel distance [m]", new GaugeConfiguration
+    public static readonly Counter AgvTravelDistanceCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvTravelDistance, "Accumulated agv travel distance in meters", new CounterConfiguration
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
 
     /// <summary>
-    /// The agv busy (w/o cargo) state duration gauge metric.
+    /// The accumulated agv busy (w/o cargo) state duration counter metric.
     /// </summary>
-    public static readonly Gauge AgvStateBusyGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvStateBusy, "Agv busy state (w/o cargo) duration [s]", new GaugeConfiguration
+    public static readonly Counter AgvStateBusyCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvStateBusy, "Accumulated agv busy state (w/o cargo) duration in seconds", new CounterConfiguration
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
 
     /// <summary>
-    /// The agv busy (with cargo) state duration gauge metric.
+    /// The accumulated agv busy (with cargo) state duration counter metric.
     /// </summary>
-    public static readonly Gauge AgvStateBusyCargoGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvStateBusyCargo, "Agv busy state (with cargo) duration [s]", new GaugeConfiguration
+    public static readonly Counter AgvStateBusyCargoCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvStateBusyCargo, "Accumulated agv busy state (with cargo) duration in seconds", new CounterConfiguration
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
 
     /// <summary>
-    /// The agv busy (with cargo) state duration gauge metric.
+    /// The accumulated agv charging state duration counter metric.
     /// </summary>
-    public static readonly Gauge AgvStateChargingGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvStateCharging, "Agv charging state duration [s]", new GaugeConfiguration
+    public static readonly Counter AgvStateChargingCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvStateCharging, "Accumulated agv charging state duration in seconds", new CounterConfiguration
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
 
     /// <summary>
-    /// The agv idle state duration gauge metric.
+    /// The accumulated agv idle state duration counter metric.
     /// </summary>
-    public static readonly Gauge AgvStateIdleGauge = Prometheus.Metrics.CreateGauge(MetricNameConfiguration.AgvStateIdle, "Agv idle state duration [s]", new GaugeConfiguration
+    public static readonly Counter AgvStateIdleCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvStateIdle, "Accumulated agv idle state duration in seconds", new CounterConfiguration
     {
         LabelNames = [MetricLabelConfiguration.Id]
     });
+
+    /// <summary>
+    /// The accumulated agv offline state duration counter metric.
+    /// </summary>
+    public static readonly Counter AgvStateOfflineCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvStateOffline, "Accumulated agv offline state duration in seconds", new CounterConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id]
+    });
+
+    /// <summary>
+    /// Tracks when each AGV went offline for duration calculation.
+    /// </summary>
+    public static readonly ConcurrentDictionary<Guid, DateTime> AgvOfflineSince = new();
 
     /// <summary>
     /// The safety field violation by agv counter.

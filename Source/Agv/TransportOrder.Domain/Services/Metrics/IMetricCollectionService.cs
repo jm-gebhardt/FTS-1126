@@ -41,6 +41,13 @@ public interface IMetricCollectionService
     void CollectJamStateMetrics(Guid stationId, DateTime lastChangedDate, bool previousHasPalletJam, DateTime currentChangedDate, bool currentHasPalletJam);
 
     /// <summary>
+    /// Collect agv offline duration metrics.
+    /// </summary>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    /// <param name="isNowOnline">Whether the agv is now online.</param>
+    void CollectOfflineDuration(Guid agvCorrelationId, bool isNowOnline);
+
+    /// <summary>
     /// Collect station order completion metrics.
     /// </summary>
     /// <param name="actionType">The type of the completed action.</param>
