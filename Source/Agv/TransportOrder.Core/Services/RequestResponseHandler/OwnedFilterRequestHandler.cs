@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Filter;
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Filter;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.OwnedFilter;
 using JetBrains.Annotations;
@@ -10,12 +12,20 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Handles owned filter related requests
 /// </summary>
 [UsedImplicitly]
-public class OwnedFilterRequestHandler(IOwnedFilterRepository ownedFilterRepository) : 
+public class OwnedFilterRequestHandler(IOwnedFilterRepository ownedFilterRepository) :
     IConsumer<GetOwnedFilters>,
     IConsumer<AddOwnedFilter>,
     IConsumer<UpdateOwnedFilter>,
     IConsumer<DeleteOwnedFilter>
 {
+    private static void ValidateResourceName(string name, int threshold)
+    {
+        if (name.Length > threshold)
+        {
+            throw new ResourceNameTooLongException(name, threshold);
+        }
+    }
+
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetOwnedFilters> context)
     {
@@ -31,6 +41,7 @@ public class OwnedFilterRequestHandler(IOwnedFilterRepository ownedFilterReposit
     {
         (string owner, var filter, string name) = context.Message;
 
+        ValidateResourceName(name, DbStringLimits.Description);
         var ownedFilterCorrelationId = await ownedFilterRepository.AddOwnedResource(filter, owner, name);
 
         await context.RespondAsync(new AddedOwnedFilter(ownedFilterCorrelationId));
@@ -41,6 +52,7 @@ public class OwnedFilterRequestHandler(IOwnedFilterRepository ownedFilterReposit
     {
         (string owner, var filter, var ownedFilterCorrelationId, string name) = context.Message;
 
+        ValidateResourceName(name, DbStringLimits.Description);
         bool result = await ownedFilterRepository.UpdateOwnedResource(filter, owner, ownedFilterCorrelationId, name);
 
         await context.RespondAsync(new OwnedFilterModificationResult(result));

@@ -49,8 +49,9 @@ public class FilterController(
     /// Adds a new filter for the user.
     /// </summary>
     /// <param name="filter">The filter to add.</param>
-    /// <param name="name">The name of the filter.</param>
+    /// <param name="name">The name of the filter (max 400 characters).</param>
     /// <response code="200">The guid of the filter</response>
+    /// <response code="400">Bad request</response>
     /// <response code="401">Unauthorized</response>
     [HttpPost]
     [Route("/filter/add")]
@@ -72,8 +73,9 @@ public class FilterController(
     /// </summary>
     /// <param name="correlationId">The id of the filter.</param>
     /// <param name="filter">The new filter to save.</param>
-    /// <param name="name">The name of the filter.</param>
+    /// <param name="name">The name of the filter (max 400 characters).</param>
     /// <response code="200">Ok</response>
+    /// <response code="400">Bad request</response>
     /// <response code="401">Unauthorized</response>
     [HttpPost]
     [Route("/filter/{correlationId:guid}/update")]
