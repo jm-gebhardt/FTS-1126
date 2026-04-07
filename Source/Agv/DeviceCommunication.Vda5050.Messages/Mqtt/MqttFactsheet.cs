@@ -90,7 +90,7 @@ public record MqttTypeSpecification
     public string SeriesName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Free text human readable description of the AGV type series.
+    /// Free text human-readable description of the AGV type series.
     /// </summary>
     public string? SeriesDescription { get; set; }
 
@@ -582,11 +582,13 @@ public record MqttAgvGeometry
     /// <summary>
     /// List of AGV envelope curves in 2D.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     public ICollection<MqttEnvelope2d>? Envelopes2d { get; set; }
 
     /// <summary>
     /// List of AGV envelope curves in 3D.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     public ICollection<MqttEnvelope3d>? Envelopes3d { get; set; }
 }
 
@@ -680,6 +682,7 @@ public record MqttWheelPosition
 /// AGV envelope curve in 2D (polygon).
 /// </summary>
 [PublicAPI]
+// ReSharper disable once InconsistentNaming
 public record MqttEnvelope2d
 {
     /// <summary>
@@ -715,6 +718,7 @@ public record MqttPolygonPoint
 /// AGV envelope curve in 3D.
 /// </summary>
 [PublicAPI]
+// ReSharper disable once InconsistentNaming
 public record MqttEnvelope3d
 {
     /// <summary>

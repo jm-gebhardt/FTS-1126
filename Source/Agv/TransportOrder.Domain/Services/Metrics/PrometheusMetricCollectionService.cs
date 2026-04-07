@@ -163,7 +163,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             return;
         }
-        var agvId = agvStatus.CorrelationId.ToString();
+        string agvId = agvStatus.CorrelationId.ToString();
         PrometheusMetricCollector.BatteryChargeGauge.WithLabels(agvId).Set(agvStatus.BatteryCharge);
         // Ensure offline counter label exists at 0 so Prometheus has a baseline before any offline event.
         // Without this, increase() can't detect the first offline→online transition.
@@ -181,7 +181,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
 
         if (PrometheusMetricCollector.AgvOfflineSince.TryRemove(agvCorrelationId, out var offlineSince))
         {
-            var duration = (DateTime.UtcNow - offlineSince).TotalSeconds;
+            double duration = (DateTime.UtcNow - offlineSince).TotalSeconds;
             PrometheusMetricCollector.AgvStateOfflineCounter.WithLabels(agvCorrelationId.ToString()).Inc(duration);
         }
     }
