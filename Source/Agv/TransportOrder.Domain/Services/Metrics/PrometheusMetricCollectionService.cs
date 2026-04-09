@@ -64,22 +64,20 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         // executed the action group and dates are written to the db.
         IReadOnlyList<Models.ActionGroup.ActionGroup> latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(
             states: [ActionGroupState.Completed, ActionGroupState.Aborted],
-            toDate: currentActionGroup.CompletedDate?.AddMilliseconds(-1),
             assignedAgvCorrelationId: agvCorrelationId,
-            maxItems: 2, 
-            sortBy: SortBy.CompletedDate, 
+            maxItems: 5,
+            sortBy: SortBy.CompletedDate,
             sortDescending: true);
-        if (latestActionGroups.Count < 1)
-        {
-            return;
-        }
-        var priorActionGroup = latestActionGroups.FirstOrDefault(a => a.CorrelationId != currentActionGroup.CorrelationId);
+        // Filter by CompletedDate in code because the repository toDate filter uses CreatedDate.
+        var priorActionGroup = latestActionGroups.FirstOrDefault(a =>
+            a.CorrelationId != currentActionGroup.CorrelationId &&
+            a.CompletedDate < currentActionGroup.StartedDate);
         if (priorActionGroup == null)
         {
             return;
         }
         TimeSpan? duration = currentActionGroup.StartedDate - priorActionGroup.CompletedDate;
-        if (duration == null)
+        if (duration is not { TotalSeconds: > 0 })
         {
             return;
         }
@@ -96,7 +94,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     private double GetIdleDurationInBetweenActions(Models.ActionGroup.ActionGroup actionGroup)
     {
         var duration = TimeSpan.Zero;
-        List<AgvAction> actions = actionGroup.Actions.OrderBy(a => a.CompletedDate).ToList();
+        List<AgvAction> actions = actionGroup.Actions.OrderBy(a => a.Sequence).ToList();
         for (int i = 0; i < actions.Count - 1; i++)
         {
             var currentAction = actions[i];
@@ -107,7 +105,10 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
                 continue;
             }
             var difference = nextAction.StartedDate.Value - currentAction.CompletedDate.Value;
-            duration += difference;
+            if (difference > TimeSpan.Zero)
+            {
+                duration += difference;
+            }
         }
 
         return duration.TotalSeconds;
