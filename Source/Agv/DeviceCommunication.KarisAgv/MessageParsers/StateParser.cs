@@ -106,7 +106,7 @@ public class StateParser(ILogger logger, IMapper mapper)
             throw new ArgumentNullException(nameof(MqttLoad.LoadId), "LoadId must be set! This was the assumption at the time of implementation.");
         }
 
-        foreach (var (load, index) in loads.Select((load, index) => (load, index)))
+        foreach ((var load, int index) in loads.Select((load, index) => (load, index)))
         {
             if (string.Equals(load.LoadId, Unknown, StringComparison.InvariantCultureIgnoreCase))
             {

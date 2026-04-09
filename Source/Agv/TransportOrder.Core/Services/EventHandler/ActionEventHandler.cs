@@ -143,7 +143,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
-        var (agvCorrelationId, targetNode, reservedOnly) = context.Message;
+        (Guid? agvCorrelationId, var targetNode, bool reservedOnly) = context.Message;
         if (agvCorrelationId != null)
         {
             var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);

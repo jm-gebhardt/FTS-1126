@@ -175,7 +175,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<TriggerActionCompletion> context)
     {
-        var (correlationId, actionCorrelationId, user) = context.Message;
+        (var correlationId, var actionCorrelationId, string user) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
         if (actionGroup.Actions.All(a => a.CorrelationId != actionCorrelationId))
         {

@@ -38,7 +38,7 @@ public class NodeChangedConsumer :
     /// </summary>
     public async Task Consume(ConsumeContext<NodeStateChanged> context)
     {
-        var (nodeLock, nodeName, stationId, modifyingUser, lockReason, lockDescription) = context.Message;
+        (var nodeLock, string nodeName, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription) = context.Message;
 
        if (stationId != null && !nodeLock.IsLocked)
         {

@@ -913,7 +913,7 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CancelActionGroup> context)
     {
-        var (actionGroupId, cancelReason, user) = context.Message;
+        (var actionGroupId, var cancelReason, string? user) = context.Message;
         var actionGroup = await _actionGroupRepository.GetActionGroupAsync(actionGroupId);
 
         if (actionGroup == null)

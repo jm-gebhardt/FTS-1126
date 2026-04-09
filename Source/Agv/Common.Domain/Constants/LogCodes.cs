@@ -116,4 +116,6 @@ public static class LogCodes
     public const int SystemTriggerDefaultConfigurationUpdated = 515;
     public const int SystemTriggerMarkedForDeletion = 516;
     public const int SystemQueueFillQuantityUpdated = 517;
+    public const int SystemBackgroundAddedOrUpdated = 518;
+    public const int SystemBackgroundDeleted= 519;
 }

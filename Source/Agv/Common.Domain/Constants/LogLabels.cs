@@ -30,5 +30,6 @@ public static class LogLabels
     public const string OriginalActionId = "OriginalActionId";
     public const string StationName = "StationName";
     public const string OriginalActionType = "OriginalActionType";
+    public const string BackgroundName = "BackgroundName";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

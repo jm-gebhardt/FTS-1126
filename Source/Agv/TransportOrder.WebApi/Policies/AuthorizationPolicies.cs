@@ -8,6 +8,11 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Policies;
 public static class AuthorizationPolicies
 {
     /// <summary>
+    /// Policy name for allowing editing background scenes.
+    /// </summary>
+    public const string BackGroundEdit = "BackgroundEdit";
+
+    /// <summary>
     /// Policy name for allowing full access to trigger endpoints.
     /// </summary>
     public const string TriggersFullAccess = "TriggersFullAccess";
@@ -52,6 +57,7 @@ public static class AuthorizationPolicies
     private static readonly IReadOnlyList<Policy> _policies =
     [
         new(TriggersFullAccess, "fm-triggers-full", ClaimTypes.ResourceAccess),
+        new(BackGroundEdit, "fm-background-edit", ClaimTypes.ResourceAccess),
         new(RestrictedAreasFullAccess, "fm-restrictedAreas-full", ClaimTypes.ResourceAccess),
         new(MapFullAccess, "fm-map-full", ClaimTypes.ResourceAccess),
         new(NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess),

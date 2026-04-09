@@ -28,6 +28,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.BackgroundEditor;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
@@ -43,6 +44,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
+using DeleteBackground = Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image.DeleteBackground;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RemoveAgvFromZone = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZone;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -338,6 +340,8 @@ public static class CoreBusRegistrationExtensions
 
         RegisterMediatorRestrictedAreaHandlers(configurator);
 
+        RegisterMediatorBackgroundEditorHandlers(configurator);
+
         RegisterMediatorLogRequestHandlers(configurator);
 
         RegisterMediatorOwnedResourceHandlers(configurator);
@@ -553,6 +557,20 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<DeleteQueue>();
         configurator.AddRequestClient<RemoveAgvFromQueue>();
         configurator.AddRequestClient<AdjustAgvFillQuantity>();
+    }
+
+    private static void RegisterMediatorBackgroundEditorHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<BackgroundEditorRequestHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<AddOrUpdateBackground, BackgroundEditorRequestHandler>(c);
+            partitioner.PartitionMessageById<DeleteBackgroundScene, BackgroundEditorRequestHandler>(c);
+        });
+        configurator.AddRequestClient<AddOrUpdateBackground>();
+        configurator.AddRequestClient<GetBackground>();
+        configurator.AddRequestClient<GetBackgrounds>();
+        configurator.AddRequestClient<DeleteBackgroundScene>();
     }
 
     private static void RegisterMediatorRestrictedAreaHandlers(IMediatorRegistrationConfigurator configurator)

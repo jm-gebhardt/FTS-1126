@@ -17,5 +17,8 @@
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Models\BackgroundEditor\" />
+    </ItemGroup>
 
 </Project>

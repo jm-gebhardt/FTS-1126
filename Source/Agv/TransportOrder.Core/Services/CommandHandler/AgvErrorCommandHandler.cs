@@ -177,7 +177,7 @@ public class AgvErrorCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ResolveSystemAgvError> context)
     {
-        var (correlationId, errors) = context.Message;
+        (var correlationId, List<AgvError> errors) = context.Message;
 
         await HandleErrorChangesAsync(context, [], errors, correlationId, null);
     }

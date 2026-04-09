@@ -32,6 +32,7 @@
         <Compile Remove="Configurations\**" />
         <EmbeddedResource Remove="Configurations\**" />
         <Folder Remove="Configurations\**" />
+        <Folder Include="DataAccess\Configuration\BackgroundEditor\" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />

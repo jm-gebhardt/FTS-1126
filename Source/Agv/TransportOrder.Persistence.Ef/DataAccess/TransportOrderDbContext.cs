@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.BackgroundEditor;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.LogEntry;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.OwnedResource;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.RestrictedArea;
@@ -57,5 +58,13 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new LogEntryEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OwnedFilterEntityConfiguration());
         modelBuilder.ApplyConfiguration(new HousekeepingConfigurationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new OwnedFilterEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BackgroundEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BackgroundColorEntryEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BackgroundObjectEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new LineObjectEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new PolylineObjectEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BackgroundObjectPointEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new BackgroundLayerEntityConfiguration());
     }
 }

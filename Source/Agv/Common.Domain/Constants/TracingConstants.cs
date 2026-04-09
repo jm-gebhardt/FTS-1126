@@ -13,5 +13,8 @@ public static class TracingConstants
 
     // Tag Names - AGV
     public const string TagAgvCorrelationId = "agv.correlation_id";
+
+    // Tag Names 
+    public const string TagBackgroundId = "background.id";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

@@ -189,7 +189,7 @@ public class Station
             AdditionalInfo = infos;
             return;
         }
-        foreach (var (key, value) in infos)
+        foreach ((string key, object? value) in infos)
         {
             if(AdditionalInfo.ContainsKey(key))
             {

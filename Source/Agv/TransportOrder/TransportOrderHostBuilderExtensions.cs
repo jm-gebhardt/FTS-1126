@@ -164,6 +164,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IWaitingPointActionRepository, EfWaitingPointActionRepository>();
 
         services.AddTransient<IMapRepository, EfMapRepository>();
+        services.AddTransient<IBackgroundEditorRepository, EfBackgroundEditorRepository>();
 
         services.AddTransient<IGraphRepository, EfGraphRepository>();
         services.AddTransient<INodeRepository, GraphNodeRepository>();

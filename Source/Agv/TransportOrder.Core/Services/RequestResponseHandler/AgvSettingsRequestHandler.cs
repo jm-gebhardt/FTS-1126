@@ -97,7 +97,7 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateAgvSettings> context)
     {
-        var (correlationId, settings, user) = context.Message;
+        (var correlationId, var settings, string user) = context.Message;
         await UpdateAgvSetting(correlationId, settings);
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
         await context.RespondAsync(new Success());
