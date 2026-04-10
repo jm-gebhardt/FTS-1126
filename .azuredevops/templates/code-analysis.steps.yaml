@@ -1,18 +1,18 @@
 steps:
   - powershell: |
-      echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
-      dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
-      dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
-      dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.0
-      dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
-      dotnet run $(ResharperDirectory)/check-suggestions.cs
-      # Check logs.txt
-      $logContent = Get-Content ./resharper-logs.txt
-      if ($logContent -ne $null -and $logContent.Length -gt 0) {
-          Get-Content ./resharper-logs.txt
-          exit 1
-      }
-      else {
-          Write-Host "No suggestions found by ReSharper."
-      }
+        echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
+        dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
+        dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
+        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.0.1
+        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
+        dotnet run $(ResharperDirectory)/check-suggestions.cs
+        # Check logs.txt
+        $logContent = Get-Content ./resharper-logs.txt
+        if ($logContent -ne $null -and $logContent.Length -gt 0) {
+            Get-Content ./resharper-logs.txt
+            exit 1
+        }
+        else {
+            Write-Host "No suggestions found by ReSharper."
+        }
     displayName: 'Run ReSharper Command Line Tools and Fail if ReSharper found suggestions'

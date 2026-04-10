@@ -2,25 +2,24 @@ trigger:
   batch: true
   branches:
     include:
-      - master
+    - master
 
 variables:
 - name: 'SourceDirectory'
   value: 'Source/Agv'
 - name: 'ResharperDirectory'
-  value: 'Source/Resharper'  
+  value: 'Source/Resharper'
 - name: 'Build.Target'
   value: 'CompileAgv.sln'
 - name: 'Build.Configuration'
   value: 'Release'
-- name:  System.Debug
+- name: System.Debug
   value: false
 
-
 stages:
-  ################################################
-  # Build
-  ################################################
+################################################
+# Build
+################################################
 - stage: Build
   jobs:
   ################################################
@@ -30,44 +29,44 @@ stages:
     pool:
       vmImage: windows-latest
     steps:
-      - script: git config --system core.longpaths true
-      - checkout: self
-      - task: UseDotNet@2
-        displayName: 'Install .NET 10 SDK'
-        inputs:
-          packageType: 'sdk'
-          version: '10.0.x'
-          performMultiLevelLookup: true
-      - task: DotNetCoreCLI@2
-        displayName: 'Restoring based on NuGetBackupFeed.config'
-        inputs:
-          command: 'restore'
-          projects: '$(SourceDirectory)/$(Build.Target)'
-          feedsToUse: 'config'
-          nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
-      - task: DotNetCoreCLI@2
-        displayName: 'Build Target ($(Build.Target))'
-        inputs:
-          command: build
-          projects: '$(SourceDirectory)/$(Build.Target)'
-          arguments: '--configuration $(Build.Configuration)'
-      - powershell: |
-          echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
-          dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
-          dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
-          dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.0
-          dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
-          dotnet run $(ResharperDirectory)/check-suggestions.cs
-          # Check logs.txt
-          $logContent = Get-Content ./resharper-logs.txt
-          if ($logContent -ne $null -and $logContent.Length -gt 0) {
-              Get-Content ./resharper-logs.txt
-              exit 1
-          }
-          else {
-              Write-Host "No suggestions found by ReSharper."
-          }
-        displayName: 'Run ReSharper Command Line Tools and Fail if ReSharper found suggestions'
+    - script: git config --system core.longpaths true
+    - checkout: self
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
+        performMultiLevelLookup: true
+    - task: DotNetCoreCLI@2
+      displayName: 'Restoring based on NuGetBackupFeed.config'
+      inputs:
+        command: 'restore'
+        projects: '$(SourceDirectory)/$(Build.Target)'
+        feedsToUse: 'config'
+        nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Target ($(Build.Target))'
+      inputs:
+        command: build
+        projects: '$(SourceDirectory)/$(Build.Target)'
+        arguments: '--configuration $(Build.Configuration)'
+    - powershell: |
+        echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
+        dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
+        dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
+        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.0.1
+        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
+        dotnet run $(ResharperDirectory)/check-suggestions.cs
+        # Check logs.txt
+        $logContent = Get-Content ./resharper-logs.txt
+        if ($logContent -ne $null -and $logContent.Length -gt 0) {
+            Get-Content ./resharper-logs.txt
+            exit 1
+        }
+        else {
+            Write-Host "No suggestions found by ReSharper."
+        }
+      displayName: 'Run ReSharper Command Line Tools and Fail if ReSharper found suggestions'
 
   ################################################
   # Run Unit Tests
@@ -76,35 +75,35 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - task: UseDotNet@2
-        displayName: 'Install .NET 10 SDK'
-        inputs:
-          packageType: 'sdk'
-          version: '10.0.x'
-          performMultiLevelLookup: true
-      - task: DotNetCoreCLI@2
-        displayName: 'Restoring based on NuGetBackupFeed.config'
-        inputs:
-          command: 'restore'
-          projects: '$(SourceDirectory)/$(Build.Target)'
-          feedsToUse: 'config'
-          nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
-      - task: DotNetCoreCLI@2
-        displayName: 'Run All tests'
-        inputs:
-          command: 'test'
-          projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
-          publishTestResults: true
-          arguments: '--configuration $(Build.Configuration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
-      - task: CopyFiles@2
-        displayName: 'Copy coverage report'
-        inputs:
-          SourceFolder: '$(Agent.TempDirectory)'
-          contents: '**/coverage.cobertura.xml'
-          targetFolder: '$(Build.ArtifactStagingDirectory)'
-      - publish: '$(Build.ArtifactStagingDirectory)'
-        displayName: 'Publish coverage report'
-        artifact: coverageReports
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.0.x'
+        performMultiLevelLookup: true
+    - task: DotNetCoreCLI@2
+      displayName: 'Restoring based on NuGetBackupFeed.config'
+      inputs:
+        command: 'restore'
+        projects: '$(SourceDirectory)/$(Build.Target)'
+        feedsToUse: 'config'
+        nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
+    - task: DotNetCoreCLI@2
+      displayName: 'Run All tests'
+      inputs:
+        command: 'test'
+        projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
+        publishTestResults: true
+        arguments: '--configuration $(Build.Configuration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+    - task: CopyFiles@2
+      displayName: 'Copy coverage report'
+      inputs:
+        SourceFolder: '$(Agent.TempDirectory)'
+        contents: '**/coverage.cobertura.xml'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - publish: '$(Build.ArtifactStagingDirectory)'
+      displayName: 'Publish coverage report'
+      artifact: coverageReports
   ################################################
   # Coverage Report
   ################################################  
@@ -114,18 +113,17 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-      - download: current
-        artifact: coverageReports
-      - task: PublishCodeCoverageResults@2
-        displayName: 'Publish code coverage report'
-        inputs:
-          codeCoverageTool: 'Cobertura'
-          summaryFileLocation: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
-      - task: BuildQualityChecks@10
-        displayName: 'Check build quality'
-        inputs:
-          checkCoverage: true
-          coverageType: lines
-          coverageThreshold: 70
-          coverageFailOption: fixed
-  
+    - download: current
+      artifact: coverageReports
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish code coverage report'
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
+    - task: BuildQualityChecks@10
+      displayName: 'Check build quality'
+      inputs:
+        checkCoverage: true
+        coverageType: lines
+        coverageThreshold: 70
+        coverageFailOption: fixed
