@@ -7,7 +7,6 @@ using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
@@ -59,7 +58,6 @@ public class NodeStationCommandHandler(
     {
         var nodeId = context.Message.NodeId;
         bool reservedOnly = context.Message.ReservedOnly;
-        var station = await stationRepository.GetStation(nodeId);
         var node = await nodeRepository.GetNodeAsync(nodeId);
         if (node.Lock == null)
         {
@@ -74,14 +72,8 @@ public class NodeStationCommandHandler(
         }
 
         node.Free();
-        station.NodeLock = node.Lock;
         await nodeRepository.UpdateLock(node);
-        await stationRepository.Update(station);
-        if (node.Lock == null)
-        {
-            return;
-        }
-        await context.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        await PublishNodeStateChange(context, node);
     }
 
     /// <inheritdoc />
@@ -188,17 +180,20 @@ public class NodeStationCommandHandler(
         string? lockReason;
         string? lockDescription;
 
-        try
+        var station = await stationRepository.GetRequiredStationBaseInformation(node.Id);
+        if (station != null)
         {
-            var station = await stationRepository.GetStation(node.Id);
             stationId = station.Id;
             user = station.LockedBy;
             lockReason = station.LockReason;
             lockDescription = station.LockDescription;
-            station.NodeLock = node.Lock;
-            await stationRepository.Update(station);
+            if (station.NodeLock == null && node.Lock != null)
+            {
+                station.NodeLock = node.Lock;
+                await stationRepository.Update(station);
+            }
         }
-        catch (NodeNotFoundException)
+        else
         {
             stationId = null;
             user = null;
@@ -314,7 +309,7 @@ public class NodeStationCommandHandler(
         await nodeRepository.UpdateLock(node, ignoreLocked: ignoreStateLocked);
         await PublishNodeStateChange(context, node);
     }
-    
+
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<LockStation> context)
     {
@@ -337,8 +332,8 @@ public class NodeStationCommandHandler(
         await stationRepository.Update(station);
 
         await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationLocked, id, "Station Locked",
-             $"User {user} locked station because {reason}",
-             new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
+            $"User {user} locked station because {reason}",
+            new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Reason, reason } });
         await context.Publish(new StationLocked(station.Name));
 
         if (node.Lock != null)
@@ -374,18 +369,18 @@ public class NodeStationCommandHandler(
         }
 
         await loggingService.LogStation(logger, LogLevel.Information, LogCodes.StationUnlocked, id, "Station Unlocked",
-              $"User {user} unlocked station",
-              new Dictionary<string, object?> { { LogLabels.User, user } });
+            $"User {user} unlocked station",
+            new Dictionary<string, object?> { { LogLabels.User, user } });
 
         await context.Publish(new StationUnlocked(node));
     }
-    
+
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateStationJamState> context)
     {
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var station = await stationRepository.GetStation(context.Message.CorrelationId);
-        
+
         //publish first to transfer old and new state
         await context.Publish(new JamStateChanged(station.Id, context.Message.HasPalletJam, station.PalletJamChangedDate, station.HasPalletJam, now));
         station.HasPalletJam = context.Message.HasPalletJam;
@@ -401,7 +396,7 @@ public class NodeStationCommandHandler(
 
         await context.RespondAsync(new GotLockedStations(stations.Where(s => s.IsLocked).Select(s => s.Name).ToList()));
     }
-    
+
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<StationConfigurationReceived> context)
     {
@@ -413,7 +408,7 @@ public class NodeStationCommandHandler(
 
         logger.LogInformation("Configured station {Station}", station.Name);
     }
-    
+
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateStationAdditionalInfo> context)
     {
@@ -424,19 +419,19 @@ public class NodeStationCommandHandler(
 
         logger.LogInformation("Updated additional information of station {Station}", station.Name);
     }
-    
+
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
     {
-            var agvMap = context.Message.Map;
-            ICollection<Guid> agvIds = await graphRepository.GetAgvIdsRelatedToNodesAsync(agvMap.Nodes);
-            if (agvIds.Count == 0)
-            {
-                logger.LogDebug("No agvs assigned to map, do not update stations");
-                return;
-            }
-            var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
-            await stationRepository.AddStations(agvGraph);
-            logger.LogDebug("Stations updated");
+        var agvMap = context.Message.Map;
+        ICollection<Guid> agvIds = await graphRepository.GetAgvIdsRelatedToNodesAsync(agvMap.Nodes);
+        if (agvIds.Count == 0)
+        {
+            logger.LogDebug("No agvs assigned to map, do not update stations");
+            return;
+        }
+        var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
+        await stationRepository.AddStations(agvGraph);
+        logger.LogDebug("Stations updated");
     }
 }

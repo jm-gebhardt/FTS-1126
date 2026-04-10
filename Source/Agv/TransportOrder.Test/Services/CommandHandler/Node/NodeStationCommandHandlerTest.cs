@@ -28,7 +28,6 @@ public class NodeStationCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<FreeNode>();
         fixture.VerifyNodeLockUpdated(Times.Once());
-        fixture.VerifyStationUpdated(Times.Once());
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -45,7 +44,6 @@ public class NodeStationCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<FreeNode>();
         fixture.VerifyNodeLockUpdated(Times.Never());
-        fixture.VerifyStationUpdated(Times.Never());
         await fixture.ShouldNotHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -60,7 +58,6 @@ public class NodeStationCommandHandlerTest
 
         await fixture.ShouldHaveConsumedAsync<FreeNode>();
         fixture.VerifyNodeLockUpdated(Times.Once());
-        fixture.VerifyStationUpdated(Times.Once());
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
 
@@ -397,7 +394,7 @@ public class NodeStationCommandHandlerTest
         fixture.VerifyNodeLockUpdated(Times.Once());
         await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
     }
-    
+
     [TestMethod]
     public async Task Consume_LockStation_ValidData_NodeStateUpdated()
     {
@@ -500,11 +497,11 @@ public class NodeStationCommandHandlerTest
         var fixture = new NodeStationCommandHandlerTestFixture()
             .WithStation(station);
 
-        await fixture.PublishMessageAsync(new UpdateStationAdditionalInfo(station.ToGuid(), new Dictionary<string, object?>{{"NeedsCargoReporting", true}}));
+        await fixture.PublishMessageAsync(new UpdateStationAdditionalInfo(station.ToGuid(), new Dictionary<string, object?> { { "NeedsCargoReporting", true } }));
 
         fixture.VerifyStationUpdated(Times.Once());
     }
-    
+
     [TestMethod]
     public async Task Consume_MapSaved_NoRelatedAgvs_DoesNotAddStations()
     {
