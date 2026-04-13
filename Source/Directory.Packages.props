@@ -13,7 +13,7 @@
     <PackageVersion Include="AutoMapper" Version="[14.0.0]" />
     <PackageVersion Include="AutoMapper.Extensions" Version="2.1.0" />
     <!-- ====================================== -->
-    <PackageVersion Include="Azure.Identity" Version="1.20.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Only update together, check which opentelemetry version corresponds to the Gebhart.Core.Observability packages -->
@@ -39,10 +39,10 @@
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.5.1" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.5" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.17.1" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.17.1" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.17.1" />
-    <PackageVersion Include="Quartz" Version="3.17.1" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.18.0" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.18.0" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.18.0" />
+    <PackageVersion Include="Quartz" Version="3.18.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
