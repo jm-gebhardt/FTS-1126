@@ -13,14 +13,13 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 [UsedImplicitly]
 public class LifGraphConverter(
     INurbsEdgeBuilder nurbsEdgeBuilder,
-    TimeProvider timeProvider,
     ILogger<LifGraphConverter> logger) : ILifGraphConverter
 {
     /// <inheritdoc />
     public CommonAgvGraph ConvertToCommonAgvGraph(DomainAgvGraph domainGraph)
     {
         List<GraphNode> commonNodes = domainGraph.Nodes
-            .Select(n => n.ToCommonGraphNode(timeProvider.GetUtcNow().UtcDateTime))
+            .Select(n => n.ToCommonGraphNode())
             .ToList();
 
         ApplyStationNodeTypes(domainGraph, commonNodes);
@@ -61,6 +60,7 @@ public class LifGraphConverter(
                     ?? throw new InvalidOperationException($"No NURBS trajectory found for edge '{domainEdge.EdgeId}'");
 
         var graphEdge = nurbsEdgeBuilder.BuildFromNurbs(nurbs, fromNodeId, toNodeId, edgeId);
+        graphEdge.TimeStamp = domainEdge.Timestamp;
         logger.LogDebug("Built edge {EdgeId} from NURBS with degree {Degree}", edgeId, nurbs.Degree);
         return graphEdge;
     }

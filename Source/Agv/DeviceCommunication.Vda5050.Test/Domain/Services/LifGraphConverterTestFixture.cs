@@ -16,7 +16,6 @@ internal class LifGraphConverterTestFixture : FixtureBase
     {
         Converter = new LifGraphConverter(
             NurbsEdgeBuilder.Object,
-            TimeProvider,
             Mock.Of<ILogger<LifGraphConverter>>());
     }
 }

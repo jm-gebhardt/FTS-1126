@@ -49,15 +49,15 @@ public static class LifMappingExtensions
     /// <summary>
     /// Converts a domain <see cref="DomainNode"/> to a <see cref="GraphNode"/>.
     /// </summary>
-    public static GraphNode ToCommonGraphNode(this DomainNode domainNode, DateTime timeStamp)
+    public static GraphNode ToCommonGraphNode(this DomainNode domainNode)
     {
-        return new GraphNode(id: domainNode.Id, name: domainNode.NodeId)
+        return new GraphNode(id: domainNode.Id, name: domainNode.Name)
         {
             X = (float)domainNode.Position.X,
             Y = (float)domainNode.Position.Y,
             Theta = domainNode.Theta,
             Z = 0,
-            TimeStamp = timeStamp
+            TimeStamp = domainNode.Timestamp
         };
     }
 

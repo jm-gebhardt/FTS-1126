@@ -10,6 +10,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using IAgvRepository = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories.IAgvRepository;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.MqttMessageHandler;
 
@@ -51,6 +52,11 @@ public class MqttFactSheetConsumer :
             _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to fact sheet parsing", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid());
         }
         _parser.Parse(context.Message);
+        string? routingKey = context.RoutingKey();
+        if (routingKey != null)
+        {
+            _parser.Agv!.SetCommunicationSpecification(routingKey);
+        }
         _logger.LogInformation("New fact sheet received for agv {AgvSerialNumber}/{AgvCorrelationId}", _parser.SerialNumber, _parser.SerialNumber);
         await _agvDataRepository.AddOrUpdateAsync(_parser.AgvData);
         await _agvRepository.AddOrUpdateAsync(_parser.Agv!);

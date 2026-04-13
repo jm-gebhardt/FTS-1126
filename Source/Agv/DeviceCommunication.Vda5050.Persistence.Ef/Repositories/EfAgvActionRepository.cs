@@ -39,6 +39,7 @@ public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050D
     public async Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber && a.ActionScopes.Contains(scope)).ToListAsync();
+        List<AgvAction> actions = await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
+        return actions.Where(a => a.ActionScopes.Contains(scope)).ToList();
     }
 }

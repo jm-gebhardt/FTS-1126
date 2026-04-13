@@ -75,6 +75,11 @@ public record Edge
     /// Optional: no limit if not set.
     /// </summary>
     public double? MinHeight { get; set; }
+
+    /// <summary>
+    /// The time the node was created.
+    /// </summary>
+    public DateTime Timestamp { get; init; }
 }
 
 /// <summary>

@@ -19,7 +19,6 @@ public class AgvGraphReceivedEventHandlerTest
             fixture.AgvGraphReceived);
 
         agvGraphChanged.CorrelationId.ShouldBe(fixture.AgvGraphReceived.Graph.AgvCorrelationId);
-        fixture.VerifyStationsAdded(Times.Once());
     }
 
     [TestMethod]

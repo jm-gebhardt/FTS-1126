@@ -19,8 +19,10 @@ public class NodeEntityConfiguration : IEntityTypeConfiguration<Node>
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.NodeId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.MapId).HasMaxLength(DbStringLimits.NodeName);
+        builder.Property(e => e.Timestamp);
         builder.OwnsOne(e => e.Position);
         builder.OwnsMany(e => e.AgvActions, actionBuilder =>
         {

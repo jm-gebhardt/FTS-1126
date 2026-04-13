@@ -19,12 +19,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
         }
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<Agv> dbSet = context.Set<Agv>();
-        agv = await dbSet.SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
-        if (agv != null)
-        {
-            agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv);
-        }
-        return agv;
+        return await dbSet.SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
     }
 
     /// <inheritdoc />
@@ -52,12 +47,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<Agv> dbSet = context.Set<Agv>();
-        List<Agv> agvs = await dbSet.ToListAsync();
-        foreach (var agv in agvs)
-        {
-            agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv);
-        }
-        return agvs;
+        return await dbSet.ToListAsync();
     }
 
     /// <inheritdoc cref="IAgvRepository"/>
@@ -65,19 +55,28 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<Agv> dbSet = context.Set<Agv>();
-        bool existsInCache = agvCache.ConcurrentDict.ContainsKey(agv.CorrelationId);
-        bool existsInDatabase = existsInCache || await dbSet.AnyAsync(a => a.CorrelationId == agv.CorrelationId);
-
-        if (existsInDatabase)
+        if (agvCache.ConcurrentDict.ContainsKey(agv.CorrelationId))
         {
+            agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
             dbSet.Update(agv);
+            await context.SaveChangesAsync();
+            return;
         }
-        else
+        if (agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv))
         {
             dbSet.Add(agv);
+            await context.SaveChangesAsync();
         }
+    }
 
-        await context.SaveChangesAsync();
-        agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
+    /// <inheritdoc cref="IAgvRepository"/>
+    public async Task InitializeCacheAsync()
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        List<Agv> agvs = await context.Set<Agv>().ToListAsync();
+        foreach (var agv in agvs)
+        {
+            agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
+        }
     }
 }

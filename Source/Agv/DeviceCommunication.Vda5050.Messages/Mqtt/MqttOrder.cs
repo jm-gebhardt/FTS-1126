@@ -2,6 +2,8 @@ using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using MassTransit;
 
+// ReSharper disable InconsistentNaming
+
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 
 /// <summary>
@@ -212,7 +214,7 @@ public record MqttOrderEdge
 
     /// <summary>
     /// Defines whether orientation is interpreted relative to the global map coordinate system or tangential to the edge.
-    /// If not defined, the default value is <see cref="MqttOrientationType.Tangential"/>.
+    /// If not defined, the default value is <see cref="MqttOrientationType.TANGENTIAL"/>.
     /// </summary>
     public MqttOrientationType? OrientationType { get; set; }
 
@@ -287,10 +289,10 @@ public record MqttCorridor
 public enum MqttCorridorRefPoint
 {
     /// <summary>Boundaries are valid for the kinematic center of the vehicle.</summary>
-    KinematicCenter,
+    KINEMATICCENTER,
 
     /// <summary>Boundaries are valid for the contour of the vehicle.</summary>
-    Contour
+    CONTOUR
 }
 
 /// <summary>
@@ -300,10 +302,10 @@ public enum MqttCorridorRefPoint
 public enum MqttOrientationType
 {
     /// <summary>Orientation is relative to the global project-specific map coordinate system.</summary>
-    Global,
+    GLOBAL,
 
     /// <summary>Orientation is tangential to the edge. 0.0 = forwards, π = backwards.</summary>
-    Tangential
+    TANGENTIAL
 }
 
 /// <summary>

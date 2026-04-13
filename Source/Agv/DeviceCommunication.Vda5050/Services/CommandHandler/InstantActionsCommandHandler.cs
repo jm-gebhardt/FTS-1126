@@ -46,7 +46,7 @@ IConsumer<StartInstantAction>
                 {
                     ActionType = actionType,
                     ActionId = actionCorrelationId.ToString(),
-                    Parameters = parameters,
+                    ActionParameters = parameters?.Select(p => new MqttActionParameter {Key = p.Key, Value = p.Value}).ToList(),
                     BlockingType = context.Message.BlockingType ?? BlockingType.NONE
                 }
             ]

@@ -35,6 +35,11 @@ public record GraphLayout
     public DateTime StoredAt { get; init; }
 
     /// <summary>
+    /// Timestamp when this layout version was exported.
+    /// </summary>
+    public DateTime ExportedAt { get; init; }
+
+    /// <summary>
     /// The nodes in this layout.
     /// </summary>
     public ICollection<GraphLayoutNode> Nodes { get; init; } = [];

@@ -48,9 +48,8 @@ public class Graph : IGraph
         foreach (var node in graph.Nodes)
         {
             var existing = Nodes.SingleOrDefault(n => n.Id == node.Id);
-
-            if (existing?.Equals(node) == true ||
-                (existing != null && existing.TimeStamp >= node.TimeStamp))
+            bool existingNodeIsNewer = existing != null && existing.TimeStamp >= node.TimeStamp;
+            if (existing?.Equals(node) == true || existingNodeIsNewer)
             {
                 continue;
             }

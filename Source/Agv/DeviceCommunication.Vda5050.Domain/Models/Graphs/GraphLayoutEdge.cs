@@ -29,6 +29,11 @@ public record GraphLayoutEdge
     public string EndNodeId { get; init; } = string.Empty;
 
     /// <summary>
+    /// The time the node was created.
+    /// </summary>
+    public DateTime Timestamp { get; init; }
+
+    /// <summary>
     /// Vehicle-type-specific properties for this edge.
     /// </summary>
     public ICollection<EdgeVehicleTypeProperty> VehicleTypeProperties { get; init; } = [];

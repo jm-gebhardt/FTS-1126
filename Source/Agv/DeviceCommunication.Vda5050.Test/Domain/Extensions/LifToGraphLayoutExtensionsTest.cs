@@ -16,6 +16,7 @@ public class LifToGraphLayoutExtensionsTest
     [TestMethod]
     public void ToGraphLayouts_MapsAllLayouts()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var lif = new LifLayoutCollection
         {
             Layouts =
@@ -25,7 +26,7 @@ public class LifToGraphLayoutExtensionsTest
             ]
         };
 
-        ICollection<GraphLayout> result = lif.ToGraphLayouts(_storedAt);
+        ICollection<GraphLayout> result = lif.ToGraphLayouts(_storedAt, timestamp);
 
         result.Count.ShouldBe(2);
         result.ShouldContain(l => l.LayoutId == "L1");
@@ -35,12 +36,13 @@ public class LifToGraphLayoutExtensionsTest
     [TestMethod]
     public void ToGraphLayouts_SetsStoredAtOnAll()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var lif = new LifLayoutCollection
         {
             Layouts = [LifGenerator.GenerateLayout(nodes: [LifGenerator.GenerateNode("n1")])]
         };
 
-        ICollection<GraphLayout> result = lif.ToGraphLayouts(_storedAt);
+        ICollection<GraphLayout> result = lif.ToGraphLayouts(_storedAt, timestamp);
 
         result.Single().StoredAt.ShouldBe(_storedAt);
     }
@@ -48,29 +50,34 @@ public class LifToGraphLayoutExtensionsTest
     [TestMethod]
     public void ToGraphLayoutNode_DeterministicGuid()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var lifNode = LifGenerator.GenerateNode("test-node-id");
 
-        var result = lifNode.ToGraphLayoutNode();
+        var result = lifNode.ToGraphLayoutNode(timestamp);
 
         result.Id.ShouldBe("test-node-id".ToGuid());
+        result.Timestamp.ShouldBe(timestamp);
     }
 
     [TestMethod]
     public void ToGraphLayoutNode_MapsPositionAndMapId()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var lifNode = LifGenerator.GenerateNode("n1", x: 5.5, y: 10.2);
 
-        var result = lifNode.ToGraphLayoutNode();
+        var result = lifNode.ToGraphLayoutNode(timestamp);
 
         result.PositionX.ShouldBe(5.5);
         result.PositionY.ShouldBe(10.2);
         result.MapId.ShouldBe("map");
         result.NodeName.ShouldBe("n1");
+        result.Timestamp.ShouldBe(timestamp);
     }
 
     [TestMethod]
     public void ToGraphLayoutNode_MapsVehicleTypeProperties()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var lifNode = LifGenerator.GenerateNode("n1", vehicleTypeProps:
         [
             new VehicleTypeNodeProperty
@@ -81,9 +88,10 @@ public class LifToGraphLayoutExtensionsTest
             }
         ]);
 
-        var result = lifNode.ToGraphLayoutNode();
+        var result = lifNode.ToGraphLayoutNode(timestamp);
 
         result.VehicleTypeProperties.Count.ShouldBe(1);
+        result.Timestamp.ShouldBe(timestamp);
         var prop = result.VehicleTypeProperties.Single();
         prop.VehicleTypeId.ShouldBe("Maker.Series1");
         prop.Theta.ShouldBe(1.5);
@@ -95,11 +103,13 @@ public class LifToGraphLayoutExtensionsTest
     [TestMethod]
     public void ToGraphLayoutEdge_DeterministicGuid()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var lifEdge = LifGenerator.GenerateEdge("test-edge-id", "n1", "n2");
 
-        var result = lifEdge.ToGraphLayoutEdge();
+        var result = lifEdge.ToGraphLayoutEdge(timestamp);
 
         result.Id.ShouldBe("test-edge-id".ToGuid());
+        result.Timestamp.ShouldBe(timestamp);
     }
 
     [TestMethod]
@@ -107,7 +117,7 @@ public class LifToGraphLayoutExtensionsTest
     {
         var lifEdge = LifGenerator.GenerateEdge("e1", "start", "end");
 
-        var result = lifEdge.ToGraphLayoutEdge();
+        var result = lifEdge.ToGraphLayoutEdge(DateTime.UtcNow);
 
         result.StartNodeId.ShouldBe("start");
         result.EndNodeId.ShouldBe("end");
@@ -134,7 +144,7 @@ public class LifToGraphLayoutExtensionsTest
             }
         ]);
 
-        var result = lifEdge.ToGraphLayoutEdge();
+        var result = lifEdge.ToGraphLayoutEdge(DateTime.UtcNow);
 
         var prop = result.VehicleTypeProperties.Single();
         prop.Trajectory.ShouldNotBeNull();
@@ -173,7 +183,7 @@ public class LifToGraphLayoutExtensionsTest
             edges: [LifGenerator.GenerateEdge("e1", "n1", "n2")],
             stations: [new Station { StationId = "s1", InteractionNodeIds = [] }]);
 
-        var result = layout.ToGraphLayout(_storedAt);
+        var result = layout.ToGraphLayout(_storedAt, DateTime.UtcNow);
 
         result.Nodes.Count.ShouldBe(2);
         result.Edges.Count.ShouldBe(1);

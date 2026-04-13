@@ -27,14 +27,14 @@ public class EfStationRepository(
     private const double Padding = 0.2;
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public Task AddStations(AgvGraph agvGraph)
+    public Task AddStations(IGraph graph)
     {
         return semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
             (double maxWidth, double maxLength) stationSize = await GetLargestAgvDimensionAsync(context);
 
-            List<GraphNode> nodeStations = agvGraph.Nodes
+            List<GraphNode> nodeStations = graph.Nodes
                 .Where(efNode => efNode.IsStation())
                 .ToList();
 
@@ -52,6 +52,9 @@ public class EfStationRepository(
             foreach (var station in existingStations)
             {
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
+                var node = nodeStations.First(n => n.Id == station.Id);
+                station.PrimaryType = node.GetPrimaryType();
+                station.AdditionalTypes = node.GetAdditionalTypes();
                 if (station.MapId == null)
                 {
                     station.SetMap(map?.CorrelationId);

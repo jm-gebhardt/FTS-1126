@@ -85,6 +85,8 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
     {
         _stationRepository.Setup(x => x.GetStation(station.Id)).ReturnsAsync(station);
         _stationRepository.Setup(x => x.GetStation(station.Name.ToGuid())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStations()).ReturnsAsync([station]);
         return WithNodeLock(station.NodeLock);
     }
 

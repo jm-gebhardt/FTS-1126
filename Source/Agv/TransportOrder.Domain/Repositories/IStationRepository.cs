@@ -9,11 +9,11 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
 public interface IStationRepository
 {
     /// <summary>
-    /// Add all stations for an agv graph.
+    /// Add all stations for a graph.
     /// </summary>
-    /// <param name="agvGraph">The agv graph.</param>
+    /// <param name="graph">The graph.</param>
     /// <returns></returns>
-    Task AddStations(AgvGraph agvGraph);
+    Task AddStations(IGraph graph);
 
     /// <summary>
     /// Get a single station by Id.

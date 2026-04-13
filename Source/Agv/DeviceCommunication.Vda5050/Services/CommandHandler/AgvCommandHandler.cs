@@ -21,11 +21,10 @@ public class AgvCommandHandler(ILogger<AgvCommandHandler> logger, IAgvRepository
 
         if (agv == null)
         {
-            logger.LogDebug("No Agv found for claring agv current order for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
+            logger.LogDebug("No Agv found for clearing agv current order for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
             return;
         }
-        agv.CurrentOrder = null;
-        agv.CurrentFleetManagerActionId = null;
+        agv.ClearOrder();
         await agvRepository.AddOrUpdateAsync(agv);
         logger.LogDebug("Cleared current order reference for AGV {AgvCorrelationId}", agvCorrelationId);
     }

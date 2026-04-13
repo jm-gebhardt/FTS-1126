@@ -44,6 +44,11 @@ public record GraphLayoutNode
     public float Theta { get; init; }
 
     /// <summary>
+    /// The time the node was created.
+    /// </summary>
+    public DateTime Timestamp { get; init; }
+
+    /// <summary>
     /// Vehicle-type-specific properties for this node.
     /// </summary>
     public ICollection<NodeVehicleTypeProperty> VehicleTypeProperties { get; init; } = [];

@@ -69,6 +69,7 @@ public class GraphLayoutNodeEntityConfiguration : IEntityTypeConfiguration<Graph
     {
         builder.ToTable(TablePrefix + nameof(GraphLayoutNode));
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.Timestamp);
         builder.Property(e => e.NodeId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.NodeName).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.MapId).HasMaxLength(DbStringLimits.NodeName);
@@ -114,6 +115,7 @@ public class GraphLayoutEdgeEntityConfiguration : IEntityTypeConfiguration<Graph
     {
         builder.ToTable(TablePrefix + nameof(GraphLayoutEdge));
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.Timestamp);
         builder.Property(e => e.EdgeId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.StartNodeId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.EndNodeId).HasMaxLength(DbStringLimits.NodeName);

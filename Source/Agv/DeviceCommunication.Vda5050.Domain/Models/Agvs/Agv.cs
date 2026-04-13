@@ -80,4 +80,13 @@ public class Agv
     {
         return $"{InterfaceName}.{ProtocolMajorVersion}.{Manufacturer}.{SerialNumber}.{topic}";
     }
+
+    /// <summary>
+    /// Clears the agv order.
+    /// </summary>
+    public void ClearOrder()
+    {
+        CurrentOrder = null;
+        CurrentFleetManagerActionId = null;
+    }
 }

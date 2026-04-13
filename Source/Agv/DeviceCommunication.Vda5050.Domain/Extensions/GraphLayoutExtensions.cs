@@ -101,10 +101,12 @@ public static class GraphLayoutExtensions
             return new Node
             {
                 Id = layoutNode.Id,
-                NodeId = layoutNode.NodeName ?? layoutNode.NodeId,
+                NodeId = layoutNode.NodeId,
+                Name = layoutNode.NodeName ?? string.Empty,
                 Position = new NodePosition(layoutNode.PositionX, layoutNode.PositionY),
                 MapId = layoutNode.MapId ?? layoutId,
                 Theta = layoutNode.Theta,
+                Timestamp = layoutNode.Timestamp,
                 AgvActions = vehicleProps.Actions.Select(a => new AgvNodeAction
                 {
                     ActionType = a.ActionType,
@@ -143,6 +145,7 @@ public static class GraphLayoutExtensions
                 EdgeId = layoutEdge.EdgeId,
                 StartNodeId = layoutEdge.StartNodeId,
                 EndNodeId = layoutEdge.EndNodeId,
+                Timestamp = layoutEdge.Timestamp,
                 AgvOrientation = vehicleProps.VehicleOrientation,
                 OrientationType = vehicleProps.OrientationType,
                 RotationAllowed = vehicleProps.RotationAllowed,

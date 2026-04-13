@@ -37,7 +37,7 @@ public class LifRequestHandler(
             throw new ValidationException(validationResult.Errors);
         }
 
-        ICollection<GraphLayout> layouts = lifLayoutCollection.ToGraphLayouts(timeProvider.GetUtcNow().UtcDateTime);
+        ICollection<GraphLayout> layouts = lifLayoutCollection.ToGraphLayouts(timeProvider.GetUtcNow().UtcDateTime, lifLayoutCollection.MetaInformation.ExportTimestamp.DateTime);
 
         logger.LogInformation("LIF converted to {LayoutCount} graph layouts, sending StoreGraphLayouts request", layouts.Count);
         await storeGraphLayoutsClient.GetResponse<GraphLayoutStored>(new StoreGraphLayouts(layouts),

@@ -19,6 +19,11 @@ public record Node
     public string NodeId { get; set; } = string.Empty;
 
     /// <summary>
+    /// The node display name for this fleet.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
     /// The position of the node.
     /// </summary>
     public NodePosition Position { get; set; } = null!;
@@ -32,6 +37,11 @@ public record Node
     /// The Theta coordinate of the node.
     /// </summary>
     public float Theta { get; init; }
+
+    /// <summary>
+    /// The time the node was created.
+    /// </summary>
+    public DateTime Timestamp { get; init; }
 
     /// <summary>
     /// The actions agvs can run on this node.

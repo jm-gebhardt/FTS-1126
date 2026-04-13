@@ -265,16 +265,18 @@ public class LifMappingExtensionsTest
     [TestMethod]
     public void ToCommonGraphNode_MapsPositionAndName()
     {
+        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
         var domainNode = new DomainNode
         {
             Id = Guid.NewGuid(),
-            NodeId = "node-1",
+            NodeId = "a1b3",
+            Name = "node-1",
             Position = new DomainNodePosition(5.5, 10.2),
-            AgvActions = []
+            AgvActions = [],
+            Timestamp = timestamp
         };
-        var timestamp = new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
 
-        var result = domainNode.ToCommonGraphNode(timestamp);
+        var result = domainNode.ToCommonGraphNode();
 
         result.Id.ShouldBe(domainNode.Id);
         result.Name.ShouldBe("node-1");

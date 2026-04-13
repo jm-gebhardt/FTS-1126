@@ -19,11 +19,12 @@ public static class LifToGraphLayoutExtensions
         /// Converts a <see cref="LifLayoutCollection"/> into a collection of <see cref="GraphLayout"/> domain models.
         /// </summary>
         /// <param name="storedAt">Timestamp applied to every resulting layout.</param>
+        /// <param name="exportedAt">Timestamp when the LIF was exported.</param>
         /// <returns>One <see cref="GraphLayout"/> per LIF layout.</returns>
-        public ICollection<GraphLayout> ToGraphLayouts(DateTime storedAt)
+        public ICollection<GraphLayout> ToGraphLayouts(DateTime storedAt, DateTime exportedAt)
         {
             return lifLayoutCollection.Layouts
-                .Select(layout => layout.ToGraphLayout(storedAt))
+                .Select(layout => layout.ToGraphLayout(storedAt, exportedAt))
                 .ToList();
         }
     }
@@ -34,7 +35,8 @@ public static class LifToGraphLayoutExtensions
         /// Converts a single LIF <see cref="Layout"/> into a <see cref="GraphLayout"/> domain model.
         /// </summary>
         /// <param name="storedAt">Timestamp applied to the resulting layout.</param>
-        public GraphLayout ToGraphLayout(DateTime storedAt)
+        /// <param name="exportedAt">Timestamp when the LIF was exported.</param>
+        public GraphLayout ToGraphLayout(DateTime storedAt, DateTime exportedAt)
         {
             List<GraphLayoutNode> nodes = lifLayout.Nodes
                 .Select(n =>
@@ -43,12 +45,12 @@ public static class LifToGraphLayoutExtensions
                         .Where(s => s.InteractionNodeIds.Contains(n.NodeId))
                         .Select(s => s.StationPosition?.Theta)
                         .FirstOrDefault(t => t.HasValue) ?? 0);
-                    return n.ToGraphLayoutNode(theta);
+                    return n.ToGraphLayoutNode(exportedAt, theta);
                 })
                 .ToList();
 
             List<GraphLayoutEdge> edges = lifLayout.Edges
-                .Select(e => e.ToGraphLayoutEdge())
+                .Select(e => e.ToGraphLayoutEdge(exportedAt))
                 .ToList();
 
             List<GraphLayoutStation> stations = lifLayout.Stations
@@ -74,7 +76,7 @@ public static class LifToGraphLayoutExtensions
         /// <summary>
         /// Converts a LIF <see cref="LifNode"/> into a <see cref="GraphLayoutNode"/>.
         /// </summary>
-        public GraphLayoutNode ToGraphLayoutNode(float theta = 0)
+        public GraphLayoutNode ToGraphLayoutNode(DateTime exportedTime, float theta = 0)
         {
             return new GraphLayoutNode
             {
@@ -85,6 +87,7 @@ public static class LifToGraphLayoutExtensions
                 PositionX = lifNode.NodePosition.X,
                 PositionY = lifNode.NodePosition.Y,
                 Theta = theta,
+                Timestamp = exportedTime,
                 VehicleTypeProperties = lifNode.VehicleTypeNodeProperties
                     .Select(vp => vp.ToNodeVehicleTypeProperty())
                     .ToList()
@@ -132,7 +135,7 @@ public static class LifToGraphLayoutExtensions
         /// <summary>
         /// Converts a LIF <see cref="LifEdge"/> into a <see cref="GraphLayoutEdge"/>.
         /// </summary>
-        public GraphLayoutEdge ToGraphLayoutEdge()
+        public GraphLayoutEdge ToGraphLayoutEdge(DateTime exportedAt)
         {
             return new GraphLayoutEdge
             {
@@ -140,6 +143,7 @@ public static class LifToGraphLayoutExtensions
                 EdgeId = lifEdge.EdgeId,
                 StartNodeId = lifEdge.StartNodeId,
                 EndNodeId = lifEdge.EndNodeId,
+                Timestamp = exportedAt,
                 VehicleTypeProperties = lifEdge.VehicleTypeEdgeProperties
                     .Select(vp => vp.ToEdgeVehicleTypeProperty())
                     .ToList()

@@ -40,7 +40,7 @@ public class GraphCommandHandler : IConsumer<UpdateGraphRequest>
         {
             await context.Publish(new SaveMaps(context.Message.Maps));
         }
-
+       
         _logger.LogInformation("Graph {CorrelationId} updated", context.Message.CorrelationId);
         await context.Publish(new GraphUpdated(context.Message.CorrelationId, graph, context.Message.Maps), context.CancellationToken);
         await context.RespondAsync(new Success());

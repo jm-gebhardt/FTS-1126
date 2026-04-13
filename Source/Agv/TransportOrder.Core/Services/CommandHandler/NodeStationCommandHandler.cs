@@ -29,7 +29,6 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 public class NodeStationCommandHandler(
     INodeRepository nodeRepository,
     IStationRepository stationRepository,
-    IGraphRepository graphRepository,
     IActionGroupRepository actionGroupRepository,
     IMapRepository mapRepository,
     TimeProvider timeProvider,
@@ -51,7 +50,8 @@ public class NodeStationCommandHandler(
     IConsumer<GetLockedStations>,
     IConsumer<StationConfigurationReceived>,
     IConsumer<UpdateStationAdditionalInfo>,
-    IConsumer<Common.Messages.Maps.MapSaved>
+    IConsumer<Common.Messages.Maps.MapSaved>,
+    IConsumer<GraphUpdated>
 {
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<FreeNode> context)
@@ -423,15 +423,19 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
     {
-        var agvMap = context.Message.Map;
-        ICollection<Guid> agvIds = await graphRepository.GetAgvIdsRelatedToNodesAsync(agvMap.Nodes);
-        if (agvIds.Count == 0)
-        {
-            logger.LogDebug("No agvs assigned to map, do not update stations");
-            return;
-        }
-        var agvGraph = await graphRepository.GetAgvGraphAsync(agvIds.First());
-        await stationRepository.AddStations(agvGraph);
-        logger.LogDebug("Stations updated");
+            var agvMap = context.Message.Map;
+            ICollection<Station> stations = await stationRepository.GetStations();
+            HashSet<Guid> nodeIds = agvMap.Nodes.Select(n => n.Id).ToHashSet();
+            foreach (var station in stations.Where(s => nodeIds.Contains(s.Id)))
+            {
+                station.SetMap(agvMap.CorrelationId);
+                await stationRepository.Update(station);
+            }
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<GraphUpdated> context)
+    {
+        await stationRepository.AddStations(context.Message.Graph);
     }
 }

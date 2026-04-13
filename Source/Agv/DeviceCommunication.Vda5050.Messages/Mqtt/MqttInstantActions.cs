@@ -68,7 +68,7 @@ public record MqttInstantAction
     /// <summary>
     /// Parameter values of the instant action. If not defined, the action has no parameters.
     /// </summary>
-    public Dictionary<string, object>? Parameters { get; set; }
+    public ICollection<MqttActionParameter>? ActionParameters { get; set; }
 
     /// <summary>
     /// The blocking type to be used.

@@ -17,6 +17,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.BackgroundServices;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.StateMachines;
 using MassTransit;
 using MassTransit.Configuration;
@@ -106,6 +107,7 @@ public static class HostBuilderExtension
                 services.AddTransient<IAgvRepository, EfAgvRepository>();
 
                 //Services
+                services.AddHostedService<InitializationProvider>();
                 services.AddSingleton(TimeProvider.System);
                 services.AddTransient<ILifGraphConverter, LifGraphConverter>();
                 services.AddTransient<IAgvGraphProvider, AgvGraphProvider>();

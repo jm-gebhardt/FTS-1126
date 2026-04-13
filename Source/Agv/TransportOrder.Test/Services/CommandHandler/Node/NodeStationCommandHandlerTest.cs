@@ -515,15 +515,17 @@ public class NodeStationCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_MapSaved_ValidData_AddsStations()
+    public async Task Consume_MapSaved_ValidData_StationsUpdated()
     {
+        const string station = "station";
         var fixture = new NodeStationCommandHandlerTestFixture()
             .WithAgvsRelatedToNodes([Guid.NewGuid()])
-            .WithAgvsGraph();
+            .WithAgvsGraph()
+            .WithStation(station);
 
-        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Common.Domain.Models.Graphs.Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0)));
+        await fixture.TestHarness.Bus.Publish(new Common.Messages.Maps.MapSaved(new Common.Domain.Models.Graphs.Map(Guid.NewGuid(), "mapId", DateTime.UtcNow, "image", 1, 1, 23, 0, 0){Nodes = [station.ToGraphNode()] }));
 
         await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
-        fixture.VerifyStationsAdded(Times.Once());
+        fixture.VerifyStationUpdated(Times.AtLeastOnce());
     }
 }

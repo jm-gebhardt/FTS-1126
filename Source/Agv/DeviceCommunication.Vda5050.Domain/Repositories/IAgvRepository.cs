@@ -41,4 +41,9 @@ public interface IAgvRepository
     /// <returns>An agv.</returns>
     /// <exception cref="AgvNotFoundException"></exception>
     Task<Agv> GetAgvByCurrentOrderAsync(Guid orderId);
+
+    /// <summary>
+    /// Initialize the agv cache.
+    /// </summary>
+    Task InitializeCacheAsync();
 }

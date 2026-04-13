@@ -20,6 +20,7 @@ public class EdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
     {
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
+        builder.Property(e => e.Timestamp);
         builder.Property(e => e.EdgeId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.StartNodeId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.EndNodeId).HasMaxLength(DbStringLimits.NodeName);
