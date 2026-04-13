@@ -33,6 +33,7 @@ public class ExceptionHandlerMiddlewareTest
     public static IEnumerable<object[]> GetExceptionTestData()
     {
         // BadRequest
+        yield return [() => new ResourceNameTooLongException(null!), HttpStatusCode.BadRequest];
         yield return [() => new NotInCorrectStateException(null!), HttpStatusCode.BadRequest];
         yield return [() => new ActionGroupStateInvalidException(Mock.Of<ActionGroup>()), HttpStatusCode.BadRequest];
         yield return [() => new InvalidNodeTypeException(null!, null!, null!), HttpStatusCode.BadRequest];

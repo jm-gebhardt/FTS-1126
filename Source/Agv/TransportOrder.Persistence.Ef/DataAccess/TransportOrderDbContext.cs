@@ -66,5 +66,6 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new PolylineObjectEntityConfiguration());
         modelBuilder.ApplyConfiguration(new BackgroundObjectPointEntityConfiguration());
         modelBuilder.ApplyConfiguration(new BackgroundLayerEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new OwnedFilterTemplateEntityConfiguration());
     }
 }

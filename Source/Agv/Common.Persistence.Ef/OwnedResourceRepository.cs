@@ -20,6 +20,16 @@ public class OwnedResourceRepository<T, TOwnedResource, TDbContext>(IDbContextFa
     }
 
     /// <inheritdoc/>
+    public async Task<ICollection<TOwnedResource>> GetAllResources()
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        List<TOwnedResource> result = await context.Set<TOwnedResource>().ToListAsync();
+
+        return result;
+    }
+
+    /// <inheritdoc/>
     public async Task<Guid> AddOwnedResource(T resource, string owner, string name)
     {
         IOwnedResource<T> ownedResource = new TOwnedResource { Resource = resource, Owner = owner, ResourceCorrelationId = Guid.NewGuid(), ResourceName = name };
@@ -60,6 +70,26 @@ public class OwnedResourceRepository<T, TOwnedResource, TDbContext>(IDbContextFa
         await using var context = await contextFactory.CreateDbContextAsync();
         try {
             var resource = await context.Set<TOwnedResource>().SingleAsync(f => f.Owner == owner && f.ResourceCorrelationId == ownedResourceId);
+
+            context.Remove(resource);
+
+            int result = await context.SaveChangesAsync();
+
+            return result > 0;
+        }
+        catch (InvalidOperationException)
+        {
+            throw new OwnedResourceNotFoundException(typeof(T).Name);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> DeleteResource(Guid ownedResourceId)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+        try
+        {
+            var resource = await context.Set<TOwnedResource>().SingleAsync(f => f.ResourceCorrelationId == ownedResourceId);
 
             context.Remove(resource);
 

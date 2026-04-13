@@ -184,6 +184,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IAgvInstantActionDefinitionRepository, EfAgvInstantActionDefinitionRepository>();
         services.AddTransient<IOwnedFilterRepository, OwnedFilterRepository>();
         services.AddTransient<IHousekeepingConfigurationRepository, EfHousekeepingConfigurationRepository>();
+        services.AddTransient<IOwnedFilterTemplateRepository, OwnedFilterTemplateRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

@@ -29,6 +29,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.BackgroundEditor;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
@@ -590,5 +591,11 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<AddOwnedFilter>();
         configurator.AddRequestClient<UpdateOwnedFilter>();
         configurator.AddRequestClient<DeleteOwnedFilter>();
+
+        configurator.AddConsumer<FilterTemplateRequestHandler>();
+        configurator.AddRequestClient<GetFilterTemplates>();
+        configurator.AddRequestClient<AddFilterTemplate>();
+        configurator.AddRequestClient<UpdateFilterTemplate>();
+        configurator.AddRequestClient<DeleteFilterTemplate>();
     }
 }

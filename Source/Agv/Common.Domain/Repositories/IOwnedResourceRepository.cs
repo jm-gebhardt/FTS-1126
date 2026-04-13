@@ -18,6 +18,11 @@ public interface IOwnedResourceRepository<in T, TOwnedResource> where TOwnedReso
     Task<ICollection<TOwnedResource>> GetResourcesForOwner(string owner);
 
     /// <summary>
+    /// Gets all owned <typeparamref name="T"/> for the independent of the owner.
+    /// </summary>
+    Task<ICollection<TOwnedResource>> GetAllResources();
+
+    /// <summary>
     /// Adds an owned <typeparamref name="T"/> for the owner.
     /// </summary>
     /// <param name="resource">The <typeparamref name="T"/> to add.</param>
@@ -37,7 +42,13 @@ public interface IOwnedResourceRepository<in T, TOwnedResource> where TOwnedReso
     /// <summary>
     /// Deletes an owned <typeparamref name="T"/>.
     /// </summary>
-    /// <param name="owner"></param>
-    /// <param name="ownedResourceId"></param>
+    /// <param name="owner">The user to delete for.</param>
+    /// <param name="ownedResourceId">The id of the owned resource.</param>
     Task<bool> DeleteOwnedResource(string owner, Guid ownedResourceId);
+
+    /// <summary>
+    /// Deletes an owned <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="ownedResourceId">The id of the owned resource.</param>
+    Task<bool> DeleteResource(Guid ownedResourceId);
 }
