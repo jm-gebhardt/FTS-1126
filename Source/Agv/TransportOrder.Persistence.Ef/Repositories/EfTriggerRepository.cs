@@ -58,6 +58,8 @@ public class EfTriggerRepository : ITriggerRepository
             .Where(t => t.IsDeleted == whereDeleted)
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
+            .ThenInclude(l => l.Node)
+            .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .AsNoTracking()
             .ToListAsync();
@@ -110,6 +112,8 @@ public class EfTriggerRepository : ITriggerRepository
         var trigger = await query
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
+            .ThenInclude(l => l.Node)
+            .Include(t => t.Locations)
             .ThenInclude(t => t.Polygon.OrderBy(p => p.Index))
             .SingleOrDefaultAsync(t => t.Id == triggerId);
         if (trigger == null)
@@ -158,6 +162,8 @@ public class EfTriggerRepository : ITriggerRepository
             return;
         }
 
+        List<Location> locationsToAdd = [];
+
         if (updateLocations && !triggerToUpdate.Locations.Equals(trigger.Locations))
         {
             if (triggerToUpdate.Locations.Count > trigger.Locations.Count)
@@ -184,8 +190,8 @@ public class EfTriggerRepository : ITriggerRepository
                     {
                         await context.Set<TriggerPolygonPoint>().AddRangeAsync(location.Polygon);
                     }
-                    AddTriggerLocationToDictionary(trigger, location);
                     await context.Set<Location>().AddAsync(location);
+                    locationsToAdd.Add(location);
                 }
             }
             else if (triggerToUpdate.Locations.Count > 0 && triggerToUpdate.Locations.Count == trigger.Locations.Count)
@@ -202,12 +208,9 @@ public class EfTriggerRepository : ITriggerRepository
                         RemoveTriggerFromLocationDictionary(oldLocation);
                     }
 
-                    foreach (var location in newLocations)
-                    {
-                        AddTriggerLocationToDictionary(trigger, location);
-                    }
                     context.Set<Location>().RemoveRange(triggerToUpdate.Locations);
                     await context.Set<Location>().AddRangeAsync(trigger.Locations);
+                    locationsToAdd.AddRange(newLocations);
                 }
             }
         }
@@ -222,6 +225,11 @@ public class EfTriggerRepository : ITriggerRepository
         }
 
         await context.SaveChangesAsync();
+
+        foreach (var location in locationsToAdd)
+        {
+            AddTriggerLocationToDictionary(trigger, location);
+        }
     }
 
     private void RemoveTriggerFromLocationDictionary(Location location)
