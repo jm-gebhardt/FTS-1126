@@ -76,13 +76,30 @@ public class MapController : Controller
     /// If no custom background is set, the handler will return the base default image.
     /// </remarks>
     /// <response code="200">PNG bytes returned.</response>
-    /// <response code="404">Map or no background is available.</response>
+    /// <response code="404">Map or background is not available.</response>
     [HttpGet]
     [Route("/map/{correlationId:guid}/background.png")]
     [Produces("image/png")]
     public async Task<ActionResult> GetBackgroundImage(Guid correlationId)
     {
         Response<GotBackgroundImage> response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId));
+
+        return File(response.Message.Image, "image/png");
+    }
+
+    /// <summary>
+    /// Retrieves the PNG bytes of the current base background image for the map.
+    /// This is either the lidar image of the agv, or any other default base image.
+    /// </summary>
+    /// <param name="correlationId">Correlation‑Id of the map.</param>
+    /// <response code="200">PNG bytes returned.</response>
+    /// <response code="404">Map or background is not available.</response>
+    [HttpGet]
+    [Route("/map/{correlationId:guid}/baseBackground.png")]
+    [Produces("image/png")]
+    public async Task<ActionResult> GetBaseBackgroundImage(Guid correlationId)
+    {
+        Response<GotBackgroundImage> response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId, GetBaseImage:true));
 
         return File(response.Message.Image, "image/png");
     }

@@ -51,6 +51,20 @@ public class EfMapRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetBackgroundImageAsync_ShouldReturnBaseMapImage_WhenMapIsFound()
+    {
+        var fixture = new EfMapRepositoryTestFixture();
+
+        var map1 = MapGenerator.Generate(withCustomImage: true);
+
+        fixture.Add(map1);
+
+        byte[] backgroundImage = await fixture.Repository.GetBackgroundImageAsync(map1.CorrelationId, getBaseImage: true);
+
+        backgroundImage.ShouldBe(map1.BaseBackground!.Image);
+    }
+
+    [TestMethod]
     public async Task GetMapAsync_ShouldContainMapAgv_WhenMapIsFound()
     {
         var fixture = new EfMapRepositoryTestFixture();

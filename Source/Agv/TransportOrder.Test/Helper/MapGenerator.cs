@@ -18,7 +18,9 @@ public static class MapGenerator
         DateTime modificationDate = default,
         ICollection<GraphNode>? nodes = null,
         ICollection<GraphEdge>? edges = null,
-        ICollection<MapAgv>? mapAgvs = null
+        ICollection<MapAgv>? mapAgvs = null,
+        byte[]? customImage = null,
+        bool withCustomImage = false
     )
     {
         if (correlationId == Guid.Empty)
@@ -32,7 +34,8 @@ public static class MapGenerator
         {
             Nodes = nodes ?? new List<GraphNode>(),
             Edges = edges ?? new List<GraphEdge>(),
-            MapAgvs = mapAgvs ?? new List<MapAgv>()
+            MapAgvs = mapAgvs ?? new List<MapAgv>(),
+            CustomBackground = withCustomImage ? MapBackgroundGenerator.Generate(customImage, correlationId, width, height, resolution, xOffset, yOffset) : null
         };
     }
 

@@ -48,6 +48,34 @@ public class MapControllerTest
     }
 
     [TestMethod]
+    public async Task GetBaseBackgroundImage_ShouldSendProperCommandToMediator_WhereCorrelationIdIsValid()
+    {
+        var mapBackground = MapBackgroundGenerator.Generate();
+        Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
+
+        MapControllerTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapControllerTestFixture<GetBackgroundImage, MapRequestHandler>()
+            .AddMapRepositoryMock(mapBackground)
+            .Build();
+
+        var mapController = fixture.Controller;
+        var response = await mapController.GetBaseBackgroundImage(correlationId);
+
+        var result = response as FileContentResult;
+        byte[] resultValue = result!.FileContents;
+
+        resultValue.ShouldNotBeEmpty();
+        resultValue.ShouldBeEquivalentTo(mapBackground.Image);
+       
+        var harness = fixture.MediatorTestHarness;
+
+        (await harness.Consumed.Any<GetBackgroundImage>()).ShouldBeTrue();
+        (await harness.Consumed.Any<GotBackgroundImage>()).ShouldBeTrue();
+
+        (await harness.Published.Any<GetBackgroundImage>()).ShouldBeTrue();
+        (await harness.Published.Any<GotBackgroundImage>()).ShouldBeTrue();
+    }
+
+    [TestMethod]
     public async Task GetNodeStatesForMap_ValidData_RespondsNodeStates()
     {
         var nodeStates = new List<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)>

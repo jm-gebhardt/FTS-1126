@@ -101,12 +101,12 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         if (mapBackground != null)
         {
             MapRepositoryMock.Setup(x => x.GetMapAsync(mapBackground.CorrelationId)).ReturnsAsync(MapGenerator.Generate());
-            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>())).ReturnsAsync(mapBackground.Image);
+            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>(), It.IsAny<bool>())).ReturnsAsync(mapBackground.Image);
         }
         else
         {
             MapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ThrowsAsync(new MapNotFoundException("Map not found"));
-            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>())).ThrowsAsync(new MapNotFoundException("Map not found"));
+            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>(), It.IsAny<bool>())).ThrowsAsync(new MapNotFoundException("Map not found"));
         }
         AddServices(sc => sc.AddTransient(_ => MapRepositoryMock.Object));
 

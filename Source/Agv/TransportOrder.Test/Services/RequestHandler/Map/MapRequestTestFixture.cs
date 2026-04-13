@@ -102,7 +102,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         background ??= MapBackgroundGenerator.Generate();
         MapRepositoryMock
-            .Setup(r => r.GetBackgroundImageAsync(background.CorrelationId))
+            .Setup(r => r.GetBackgroundImageAsync(background.CorrelationId, It.IsAny<bool>()))
             .ReturnsAsync(background.Image);
 
         return this;

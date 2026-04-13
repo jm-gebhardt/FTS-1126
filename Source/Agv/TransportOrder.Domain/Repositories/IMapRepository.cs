@@ -18,8 +18,9 @@ public interface IMapRepository
     /// Retrieves the background image for the given correlationId.
     /// </summary>
     /// <param name="correlationId">Unique identifier for the map background.</param>
+    /// <param name="getBaseImage">If true, get the base map background image.</param>
     /// <returns>The custom background image (if there is any), or the base background</returns>
-    Task<byte[]> GetBackgroundImageAsync(Guid correlationId);
+    Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false);
 
     /// <summary>
     /// Sets (or overwrites) the custom background for a map.

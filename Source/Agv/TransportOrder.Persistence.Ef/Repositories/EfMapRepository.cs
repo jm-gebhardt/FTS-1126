@@ -105,12 +105,17 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> GetBackgroundImageAsync(Guid correlationId)
+    public async Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var map = await context.Set<Map>()
             .AsNoTracking()
             .SingleOrDefaultAsync(m => m.CorrelationId == correlationId);
+        
+        if (getBaseImage)
+        {
+            return map?.BaseBackground?.Image ?? throw new MapNotFoundException(correlationId);
+        }
 
         var mapBackground = map?.CustomBackground ?? map?.BaseBackground;
         if (mapBackground == null)

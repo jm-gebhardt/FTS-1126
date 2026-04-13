@@ -61,9 +61,9 @@ public class MapRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetBackgroundImage> context)
     {
-        var correlationId = context.Message.CorrelationId;
+        (var correlationId, bool getBaseImage) = context.Message;
 
-        byte[]? image = await _mapRepository.GetBackgroundImageAsync(correlationId);
+        byte[]? image = await _mapRepository.GetBackgroundImageAsync(correlationId, getBaseImage);
         if (image == null || image.Length == 0)
         {
             throw new MapNotFoundException(correlationId);
