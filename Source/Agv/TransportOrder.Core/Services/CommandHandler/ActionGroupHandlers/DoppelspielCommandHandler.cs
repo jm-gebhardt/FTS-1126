@@ -560,9 +560,12 @@ public class DoppelspielCommandHandler(
             {
                 // If it is a manual action force reservation for locked station
                 bool ignoreLocked = (await actionGroupRepository.GetActionGroupAsync(action.ParentId))!.IsManual;
-                logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, reserve target station {TargetStation}",
-                    nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, action.Nodes.FirstOrDefault()?.Name, action.Target.Node.Name);
-                await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId, ignoreLocked));
+                if (station.NodeLock == null || !station.NodeLock.IsOccupiedByAgv(agvCorrelationId))
+                {
+                    logger.LogInformation("{Message}: Agv {AgvCorrelationId} started {ActionType} action {ActionCorrelationId} at station {Station}, reserve target station {TargetStation}",
+                        nameof(StartActionCommand), agvCorrelationId, action.ActionType.ToString(), action.CorrelationId, action.Nodes.FirstOrDefault()?.Name, action.Target.Node.Name);
+                    await context.Publish(new ReserveStation(action.Target.Node, agvCorrelationId, ignoreLocked));
+                }
             }
         }
         catch (NodeNotFoundException)
