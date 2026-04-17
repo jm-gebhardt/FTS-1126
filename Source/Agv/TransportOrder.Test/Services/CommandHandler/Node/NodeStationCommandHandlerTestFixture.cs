@@ -5,10 +5,12 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -28,6 +30,8 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
     private readonly Mock<ILoggingService> _loggingService = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
 
+    public IStationOnlineRepository StationOnlineRepository { get; } = new StationOnlineRepository(new StationOnlineDictionaryProvider());
+
     public NodeStationCommandHandlerTestFixture()
     {
         Build();
@@ -45,6 +49,7 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
         collection.AddTransient(_ => _agvDb.Object);
         collection.AddTransient(_ => _loggingService.Object);
         collection.AddTransient(_ => _logEntryRepository.Object);
+        collection.AddSingleton(_ => StationOnlineRepository);
 
         _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).ReturnsAsync(true).Verifiable();
         _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Returns(Task.CompletedTask).Verifiable();

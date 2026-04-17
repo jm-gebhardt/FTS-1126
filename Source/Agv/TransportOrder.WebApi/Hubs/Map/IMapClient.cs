@@ -42,4 +42,11 @@ public interface IMapClient
     /// <param name="logEntry">The new log entry.</param>
     [SignalRMethod("StationLogCreated")]
     Task StationLogCreated(LogEntryCreatedDto logEntry);
+
+    /// <summary>
+    /// Station online state changed.
+    /// </summary>
+    /// <param name="dto">The station online state change data.</param>
+    [SignalRMethod("StationIsOnlineChanged")]
+    Task StationIsOnlineChanged(StationIsOnlineChangedDto dto);
 }

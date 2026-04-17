@@ -528,4 +528,30 @@ public class NodeStationCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<Common.Messages.Maps.MapSaved>();
         fixture.VerifyStationUpdated(Times.AtLeastOnce());
     }
+
+    [TestMethod]
+    public async Task Consume_UpdateStationIsOnline_False_UpdatesMemoryAndPublishesEvent()
+    {
+        var stationId = "PS01".ToGuid();
+        var fixture = new NodeStationCommandHandlerTestFixture()
+            .WithAnyStation();
+
+        await fixture.PublishMessageAsync(new UpdateStationIsOnline(stationId, false));
+
+        fixture.StationOnlineRepository.Get(stationId).ShouldBe(false);
+        await fixture.ShouldHavePublishedAsync<StationIsOnlineChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateStationIsOnline_True_UpdatesMemoryAndPublishesEvent()
+    {
+        var stationId = "PS01".ToGuid();
+        var fixture = new NodeStationCommandHandlerTestFixture()
+            .WithAnyStation();
+
+        await fixture.PublishMessageAsync(new UpdateStationIsOnline(stationId, true));
+
+        fixture.StationOnlineRepository.Get(stationId).ShouldBe(true);
+        await fixture.ShouldHavePublishedAsync<StationIsOnlineChanged>();
+    }
 }

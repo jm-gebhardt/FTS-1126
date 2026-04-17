@@ -1,16 +1,19 @@
 Stations:
 - Name: "PS01"
   HasJamState: True
+  PlcConnections: ["FROMWESTATION", "APLWESTATION"]
 - Name: "PS02"
   HasJamState: True
+  PlcConnections: ["FROMWESTATION", "APLWESTATION"]
 - Name: "PS03"
   HasJamState: True
+  PlcConnections: ["FROMWESTATION", "APLWESTATION"]
 - Name: "APL1"
   HasJamState: False
+  PlcConnections: ["AGVCARGOSTATE"]
 - Name: "AP02"
   HasJamState: False
 - Name: "AP03"
   HasJamState: False
 - Name: "AP04"
   HasJamState: False
-

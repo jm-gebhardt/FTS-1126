@@ -10,7 +10,12 @@ namespace Gebhardt.Acc.ConveyorTelegramApiServer.Services;
 /// <summary>
 /// Provides a communication manager
 /// </summary>
-public class AgvAplCargoStateCommunicationManager(ILogger<AgvAplCargoStateCommunicationManager> logger, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] Receiver<ConveyorTelegram> receiver, [FromKeyedServices(ServiceKeyProvider.AgvCargoState)] Server server) : BackgroundService
+public class AgvAplCargoStateCommunicationManager(
+    ILogger<AgvAplCargoStateCommunicationManager> logger,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    Receiver<ConveyorTelegram> receiver,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    Server server) : BackgroundService
 {
     /// <inheritdoc cref="AgvAplCargoStateCommunicationManager"/>>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

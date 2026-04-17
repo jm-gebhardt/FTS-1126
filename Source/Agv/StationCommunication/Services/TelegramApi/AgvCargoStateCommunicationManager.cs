@@ -1,15 +1,17 @@
 ﻿using Gebhardt.Acc.Common.TelegramCommunication.Communication;
+using Gebhardt.Acc.Common.TelegramCommunication.Configuration;
 using Gebhardt.Acc.ConveyorTelegramApi.Telegrams;
 using Gebhardt.Acc.StationCommunication.Domain.Configuration;
+using Gebhardt.Acc.StationCommunication.Domain.Repositories;
 using JetBrains.Annotations;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.StationCommunication.Services.TelegramApi;
 
 /// <summary>
-/// Provides a communication manager
+/// Manages the PLC connection for the AgvCargoState (sender) channel.
 /// </summary>
 [UsedImplicitly]
 public class AgvCargoStateCommunicationManager(
@@ -17,44 +19,10 @@ public class AgvCargoStateCommunicationManager(
     [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
     Sender<ConveyorTelegram> sender,
     [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
-    Client client) : BackgroundService
-{
-    private const int ConnectionDelayMs = 10000;
-
-    /// <inheritdoc cref="AgvCargoStateCommunicationManager"/>>
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await Connect(stoppingToken);
-        Start();
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await Task.Delay(1000, stoppingToken);
-        }
-
-        await StopAsync();
-    }
-
-    private async Task Connect(CancellationToken stoppingToken)
-    {
-        bool initialized = false;
-        while (!initialized)
-        {
-            logger.LogInformation("Trying to connect to {Server} telegram server", ServiceKeyProvider.AgvCargoState);
-            initialized = await client.TryInitializeAsync();
-            await Task.Delay(ConnectionDelayMs, stoppingToken);
-        }
-    }
-
-    private void Start()
-    {
-        logger.LogInformation("Starting sender for conveyor communication for {Server}", ServiceKeyProvider.AgvCargoState);
-        sender.Start();
-    }
-
-    private async Task StopAsync()
-    {
-        logger.LogInformation("Stopping sender for conveyor communication for {Server}", ServiceKeyProvider.AgvCargoState);
-        await sender.StopAsync();
-        client.Disconnect();
-    }
-}
+    Client client,
+    [FromKeyedServices(ServiceKeyProvider.AgvCargoState)]
+    TelegramCommunicationConfiguration configuration,
+    IPlcConnectionRepository connectionRepository,
+    IBus bus)
+    : PlcCommunicationManagerBase<Sender<ConveyorTelegram>, ConveyorTelegram>(
+        ServiceKeyProvider.AgvCargoState, sender, client, configuration, connectionRepository, bus, logger);

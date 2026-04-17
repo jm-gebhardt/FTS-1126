@@ -19,6 +19,12 @@ public class Station
     /// </summary>
     public bool HasJamState { get; set; }
 
+    /// <summary>
+    /// Channel keys this station's reachability depends on.
+    /// Empty means the station is not monitored.
+    /// </summary>
+    public ICollection<string> PlcConnections { get; set; } = [];
+
     /// <inheritdoc cref="Station"/>
     public Station(string name, bool hasJamState)
     {

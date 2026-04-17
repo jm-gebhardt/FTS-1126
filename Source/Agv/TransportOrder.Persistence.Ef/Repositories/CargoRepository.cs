@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <summary>
-/// Registry for Cargo
+/// Repository for Cargo
 /// </summary>
 public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory, IAgvRepository agvRepository, IConcurrentDictionaryProvider<Guid, List<Cargo>> agvCargos)
     : ICargoRepository

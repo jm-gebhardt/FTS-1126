@@ -40,6 +40,7 @@ public static class BusRegistrationExtension
             });
             cfg.AddConsumer<StationCommandHandler>(c => c.ConcurrentMessageLimit = 1);
             cfg.AddConsumer<StationEventHandler>();
+            cfg.AddConsumer<StationOnlineStateCommandHandler>();
         }
     }
 }

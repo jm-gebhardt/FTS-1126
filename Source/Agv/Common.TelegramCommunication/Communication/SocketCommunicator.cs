@@ -23,6 +23,32 @@ public abstract class SocketCommunicator<TTelegramType>
     private readonly SemaphoreSlim _reconnectSemaphore = new(1, 1);
 
     /// <summary>
+    /// True, if the socket is currently connected. Setting this property fires
+    /// <see cref="ConnectionStateChanged"/> invoked when the value actually changes.
+    /// </summary>
+    private bool IsConnected
+    {
+        get;
+        set
+        {
+            if (field == value)
+            {
+                return;
+            }
+
+            field = value;
+            ConnectionStateChanged?.Invoke(value);
+        }
+    }
+
+    /// <summary>
+    /// Invoked when the socket connection state changes.
+    /// The bool parameter indicates whether the socket is now connected.
+    /// Only fires on actual state transitions.
+    /// </summary>
+    public Action<bool>? ConnectionStateChanged { get; set; }
+
+    /// <summary>
     /// The name of the communication task
     /// </summary>
     protected string Name { get; }
@@ -133,6 +159,7 @@ public abstract class SocketCommunicator<TTelegramType>
             }
 
             DisconnectSocket();
+            IsConnected = false;
             TelegramProcessor.ResetCounter();
         }
         catch (Exception ex)
@@ -162,22 +189,22 @@ public abstract class SocketCommunicator<TTelegramType>
 
             DisconnectSocket();
 
-            bool connected = false;
+            IsConnected = false;
             int attempts = 0;
 
-            while (!connected && attempts < MaxReconnectAttempts)
+            while (!IsConnected && attempts < MaxReconnectAttempts)
             {
                 attempts++;
                 Logger.LogInformation("Trying to connect socket for {Name} (attempt {Attempt}/{MaxAttempts})", Name, attempts, MaxReconnectAttempts);
-                connected = await Socket.TryInitializeAsync();
+                IsConnected = await Socket.TryInitializeAsync();
 
-                if (!connected && attempts < MaxReconnectAttempts)
+                if (!IsConnected && attempts < MaxReconnectAttempts)
                 {
                     await Task.Delay(ConnectionWaitingTime);
                 }
             }
 
-            if (connected)
+            if (IsConnected)
             {
                 Logger.LogInformation("Successfully connected socket for {Name}", Name);
             }
@@ -202,6 +229,8 @@ public abstract class SocketCommunicator<TTelegramType>
     {
         Thread.CurrentThread.Name ??= Name;
         Logger.LogInformation("Started communication-task for {Name}", Name);
+
+        IsConnected = true;
 
         while (_isRunning && !cancellationToken.IsCancellationRequested)
         {
@@ -245,6 +274,7 @@ public abstract class SocketCommunicator<TTelegramType>
             }
         }
 
+        IsConnected = false;
         Logger.LogInformation("Stopped communication-task for {Name}", Name);
     }
 }

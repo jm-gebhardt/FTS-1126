@@ -41,5 +41,6 @@ public class StationEntityConfiguration : IEntityTypeConfiguration<Station>
             .OnDelete(DeleteBehavior.Restrict);
         builder.Ignore(e => e.Agvs);
         builder.Ignore(e => e.IsLocked);
+        builder.Ignore(e => e.IsOnline);
     }
 }

@@ -12,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
@@ -34,7 +35,8 @@ public class NodeStationCommandHandler(
     TimeProvider timeProvider,
     IAgvDb agvDb,
     ILogger<NodeStationCommandHandler> logger,
-    ILoggingService loggingService) :
+    ILoggingService loggingService,
+    IStationOnlineRepository stationOnlineRepository) :
     IConsumer<FreeNode>,
     IConsumer<UpdateNodeOccupancy>,
     IConsumer<ClearNodesFromAgv>,
@@ -51,7 +53,8 @@ public class NodeStationCommandHandler(
     IConsumer<StationConfigurationReceived>,
     IConsumer<UpdateStationAdditionalInfo>,
     IConsumer<Common.Messages.Maps.MapSaved>,
-    IConsumer<GraphUpdated>
+    IConsumer<GraphUpdated>,
+    IConsumer<UpdateStationIsOnline>
 {
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<FreeNode> context)
@@ -437,5 +440,22 @@ public class NodeStationCommandHandler(
     public async Task Consume(ConsumeContext<GraphUpdated> context)
     {
         await stationRepository.AddStations(context.Message.Graph);
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<UpdateStationIsOnline> context)
+    {
+        var (stationId, isOnline) = (context.Message.CorrelationId, context.Message.IsOnline);
+        stationOnlineRepository.Update(stationId, isOnline);
+
+        await context.Publish(new StationIsOnlineChanged(stationId, isOnline));
+
+        await loggingService.LogStation(
+            logger,
+            isOnline ? LogLevel.Information : LogLevel.Warning,
+            isOnline ? LogCodes.StationCameOnline : LogCodes.StationWentOffline,
+            stationId,
+            isOnline ? "Station online" : "Station offline",
+            isOnline ? "Station PLC connection restored" : "Station PLC connection lost");
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.ConveyorTelegramApi.Services;
 using Gebhardt.Acc.StationCommunication.CmdOptions;
@@ -7,6 +8,7 @@ using Gebhardt.Acc.StationCommunication.Domain.Repositories;
 using Gebhardt.Acc.StationCommunication.Domain.Services;
 using Gebhardt.Acc.StationCommunication.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.StationCommunication.Persistence.Ef.Repositories;
+using Gebhardt.Acc.StationCommunication.Services;
 using Gebhardt.Acc.StationCommunication.Services.BackgroundServices;
 using Gebhardt.Acc.StationCommunication.SimulationMode;
 using MassTransit;
@@ -73,6 +75,10 @@ public static class HostBuilderExtension
                 services.AddTransient<IStationRepository, EfStationRepository>();
                 services.AddSingleton<IOrderRepository, EfOrderRepository>();
                 services.TryAddStationConfiguration();
+                services.AddSingleton<IConcurrentDictionaryProvider<string, bool>, ConcurrentDictionaryProvider<string, bool>>();
+                services.AddSingleton<IConcurrentDictionaryProvider<Guid, bool>, ConcurrentDictionaryProvider<Guid, bool>>();
+                services.AddSingleton<IPlcConnectionRepository, PlcConnectionRepository>();
+                services.AddSingleton<ActiveChannelKeyProvider>();
                 services.AddDbContextFactory<StationCommunicationDbContext>(builder =>
                 {
                     string? connectionString = context.Configuration.GetConnectionString(StationCommunicationDbContext.ConfigSectionName);
@@ -85,6 +91,7 @@ public static class HostBuilderExtension
                 if (simulateOptions != null)
                 {
                     services.AddSingleton<IConveyorCommunicator, SimulationConveyorCommunicator>();
+                    services.AddHostedService<SimulationStationOnlinePublisher>();
                 }
                 else
                 {

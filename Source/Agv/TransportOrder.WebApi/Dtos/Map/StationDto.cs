@@ -105,6 +105,12 @@ public record StationDto
     public Dictionary<string, object?>? AdditionalInfo { get; set; }
 
     /// <summary>
+    /// True if the station's connection is healthy.
+    /// Null if the station is not monitored.
+    /// </summary>
+    public bool? IsOnline { get; set; }
+
+    /// <summary>
     /// ctor called by AutoMapper.
     /// </summary>
     private StationDto()

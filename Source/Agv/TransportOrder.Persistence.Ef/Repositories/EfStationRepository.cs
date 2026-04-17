@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,8 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 public class EfStationRepository(
     IDbContextFactory<TransportOrderDbContext> dbContextFactory,
     ISemaphoreProvider<IGraphRepositorySemaphore> semaphoreProvider,
-    IMapper mapper
+    IMapper mapper,
+    IStationOnlineRepository stationOnlineRepository
 ) : IStationRepository
 {
     // additional padding for the stations
@@ -140,6 +142,8 @@ public class EfStationRepository(
             .Select(a => a.AssignedAgv.GetValueOrDefault())
             .ToListAsync();
 
+        station.IsOnline = stationOnlineRepository.Get(station.Id);
+
         return station;
     }
 
@@ -170,7 +174,7 @@ public class EfStationRepository(
             )
             .GroupJoin(
                 context.Set<GraphNode>().AsNoTracking(),
-                x => x.nl != null ? x.nl.NodeId : (Guid?) null,
+                x => x.nl != null ? x.nl.NodeId : (Guid?)null,
                 g => g.Id,
                 (x, graphNodes) => new { x.s, x.nl, graphNodes }
             )
@@ -206,6 +210,7 @@ public class EfStationRepository(
                 new NodeLock(mapper.Map<GraphNode>(r.GraphNode), r.NodeLock.NodeState, r.NodeLock.IsLocked, r.NodeLock.AgvCorrelationId, r.NodeLock.ModifiedDate);
 
             station.Agvs = r.Agvs;
+            station.IsOnline = stationOnlineRepository.Get(station.Id);
             return station;
         }).ToList();
 
@@ -222,6 +227,11 @@ public class EfStationRepository(
         List<Station> stations = await context.Set<Station>()
             .Where(s => ids.Contains(s.Id))
             .ToListAsync();
+
+        foreach (var station in stations)
+        {
+            station.IsOnline = stationOnlineRepository.Get(station.Id);
+        }
 
         return stations
             .OrderBy(s => idsList.IndexOf(s.Id))

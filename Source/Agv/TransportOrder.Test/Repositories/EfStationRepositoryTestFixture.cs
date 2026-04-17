@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -16,11 +18,13 @@ public class EfStationRepositoryTestFixture : ActionGroupRepositoryTestFixture
     private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
     private readonly List<(NodeLock Lock, string Name, bool AddNode)> _nodeLocks = [];
 
+    private readonly IStationOnlineRepository _stationOnlineRepository = new StationOnlineRepository(new StationOnlineDictionaryProvider());
+
     public EfStationRepository Repository { get; }
 
     public EfStationRepositoryTestFixture()
     {
-        Repository = new EfStationRepository(ContextFactory, _semaphoreProvider, Mapper);
+        Repository = new EfStationRepository(ContextFactory, _semaphoreProvider, Mapper, _stationOnlineRepository);
     }
 
     protected override IEnumerable<Profile> GetProfiles()

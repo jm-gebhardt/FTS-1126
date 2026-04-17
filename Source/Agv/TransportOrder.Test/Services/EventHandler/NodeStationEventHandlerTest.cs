@@ -52,4 +52,26 @@ public class NodeStationEventHandlerTest
 
         await fixture.ShouldHavePublishedAsync<UpdateStationAdditionalInfo>();
     }
+
+    [TestMethod]
+    public async Task Consume_StationIsOnlineChanged_False_PublishesUpdateStationIsOnline()
+    {
+        var fixture = new NodeStationEventHandlerTestFixture();
+        var stationId = "PS01".ToGuid();
+
+        await fixture.PublishMessageAsync(new StationIsOnlineChanged(stationId, false));
+
+        await fixture.ShouldHavePublishedAsync<UpdateStationIsOnline>();
+    }
+
+    [TestMethod]
+    public async Task Consume_StationIsOnlineChanged_True_PublishesUpdateStationIsOnline()
+    {
+        var fixture = new NodeStationEventHandlerTestFixture();
+        var stationId = "PS01".ToGuid();
+
+        await fixture.PublishMessageAsync(new StationIsOnlineChanged(stationId, true));
+
+        await fixture.ShouldHavePublishedAsync<UpdateStationIsOnline>();
+    }
 }

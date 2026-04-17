@@ -47,4 +47,11 @@ public interface IMapPublisher
     /// <param name="correlationId">The station id.</param>
     /// <param name="logEntry">The last station log entry.</param>
     Task SendLogEntryCreated(Guid correlationId, LogEntry logEntry);
+
+    /// <summary>
+    /// Publishes a station online state change.
+    /// </summary>
+    /// <param name="stationId">The id of the station.</param>
+    /// <param name="isOnline">True if the station is now online.</param>
+    Task SendStationIsOnlineChanged(Guid stationId, bool isOnline);
 }

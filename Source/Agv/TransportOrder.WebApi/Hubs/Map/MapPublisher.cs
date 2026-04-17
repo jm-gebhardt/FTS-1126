@@ -70,4 +70,12 @@ public class MapPublisher : IMapPublisher
         _hubBroadcaster.Broadcast(c => c.StationLogCreated(dto));
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc />
+    public Task SendStationIsOnlineChanged(Guid stationId, bool isOnline)
+    {
+        var dto = new StationIsOnlineChangedDto(stationId, isOnline);
+        _hubBroadcaster.Broadcast(c => c.StationIsOnlineChanged(dto));
+        return Task.CompletedTask;
+    }
 }

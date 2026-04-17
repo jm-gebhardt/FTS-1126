@@ -103,7 +103,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<LeaveQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<GoOffline, AgvCommandHandler>(c);
-           
+
             partitioner.PartitionMessageById<AcceptAgvCommand, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetMaintenanceMode, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetUserMode, AgvCommandHandler>(c);
@@ -207,7 +207,7 @@ public static class CoreBusRegistrationExtensions
 
         busRegistrationConfigurator.AddConsumer<NodeStationEventHandler>();
         busRegistrationConfigurator.AddConsumer<QueueEventHandler>();
-        
+
         busRegistrationConfigurator.AddConsumer<NodeStationCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
@@ -226,8 +226,8 @@ public static class CoreBusRegistrationExtensions
             var nodePartitioner = c.CreatePartitioner(PartitionCount);
             c.Message<FreeNode>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
-             c.Message<UpdateNodeOccupancy>(x =>
-                 x.UsePartitioner(nodePartitioner, p => p.Message.OldLastNodeId.GetValueOrDefault()));
+            c.Message<UpdateNodeOccupancy>(x =>
+                x.UsePartitioner(nodePartitioner, p => p.Message.OldLastNodeId.GetValueOrDefault()));
             c.Message<FreeStationOccupancy>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
             c.Message<OccupyStation>(x =>
@@ -239,6 +239,7 @@ public static class CoreBusRegistrationExtensions
             nodePartitioner.PartitionMessageById<LockStation, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<UnlockStation, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<UpdateStationJamState, NodeStationCommandHandler>(c);
+            nodePartitioner.PartitionMessageById<UpdateStationIsOnline, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<StationConfigurationReceived, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<UpdateStationAdditionalInfo, NodeStationCommandHandler>(c);
         });

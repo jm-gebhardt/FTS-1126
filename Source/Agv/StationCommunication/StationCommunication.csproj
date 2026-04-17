@@ -42,8 +42,8 @@
         <ProjectReference Include="..\StationCommunication.Persistence.Ef\StationCommunication.Persistence.Ef.csproj" />
     </ItemGroup>
     <ItemGroup>
-    <None Update="Configuration\stationconfiguration.yml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <None Update="Configuration\station-configuration.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     </ItemGroup>
     <ItemGroup>

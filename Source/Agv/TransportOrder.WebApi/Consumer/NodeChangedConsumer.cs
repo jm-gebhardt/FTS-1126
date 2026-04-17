@@ -16,7 +16,8 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 public class NodeChangedConsumer :
     IConsumer<NodeStateChanged>,
     IConsumer<NodeApproachingPropertiesUpdated>,
-    IConsumer<JamStateChanged>
+    IConsumer<JamStateChanged>,
+    IConsumer<StationIsOnlineChanged>
 {
     private readonly ILogger<NodeChangedConsumer> _logger;
     private readonly IMapPublisher _mapPublisher;
@@ -68,5 +69,13 @@ public class NodeChangedConsumer :
     public Task Consume(ConsumeContext<JamStateChanged> context)
     {
         return _mapPublisher.SendJamStateUpdate(context.Message.CorrelationId, context.Message.HasPalletJam);
+    }
+
+    /// <summary>
+    /// Handles the <see cref="StationIsOnlineChanged"/> event.
+    /// </summary>
+    public Task Consume(ConsumeContext<StationIsOnlineChanged> context)
+    {
+        return _mapPublisher.SendStationIsOnlineChanged(context.Message.CorrelationId, context.Message.IsOnline);
     }
 }

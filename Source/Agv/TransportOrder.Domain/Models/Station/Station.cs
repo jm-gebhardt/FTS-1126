@@ -106,6 +106,12 @@ public class Station
     /// </summary>
     public Dictionary<string,object?>? AdditionalInfo { get; set; }
 
+    /// <summary>
+    /// True if the station's connection is healthy.
+    /// Null if the station is not monitored.
+    /// </summary>
+    public bool? IsOnline { get; set; }
+
     /// <inheritdoc cref="Station"/>>
     public Station(string name, AgvGraph.NodeType primaryType, ICollection<AgvGraph.NodeType> additionalTypes)
     {

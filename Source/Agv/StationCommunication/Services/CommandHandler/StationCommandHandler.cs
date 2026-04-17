@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.StationCommunication.Domain.Models;
+using Gebhardt.Acc.StationCommunication.Domain.Repositories;
 using Gebhardt.Acc.StationCommunication.Messages.JamState;
 using Gebhardt.Acc.StationCommunication.Messages.Stations;
 using JetBrains.Annotations;
@@ -16,7 +17,9 @@ namespace Gebhardt.Acc.StationCommunication.Services.CommandHandler;
 [UsedImplicitly]
 public class StationCommandHandler(
     ILogger<StationCommandHandler> logger,
-    StationConfiguration configuration) :
+    StationConfiguration configuration,
+    IPlcConnectionRepository connectionRepository,
+    ActiveChannelKeyProvider activeChannelKeyProvider) :
     IConsumer<ReloadStationConfiguration>
 {
     /// <inheritdoc/>>
@@ -24,6 +27,7 @@ public class StationCommandHandler(
     {
         logger.LogInformation("Loading station configuration");
         configuration.Reload();
+        connectionRepository.Initialize(configuration.Stations, activeChannelKeyProvider.GetActiveChannelKeys());
 
         List<string> stationNames = configuration.Stations.Where(s => s.HasJamState).Select(s => s.Name).ToList();
         logger.LogInformation("Requesting jam state for stations {Stations}", string.Join(", ", stationNames));

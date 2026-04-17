@@ -37,4 +37,26 @@ public class NodeStateChangedConsumerTest
 
         fixture.PublisherMock.Verify(h => h.SendJamStateUpdate(stationId, hasPalletJam), Times.Once);
     }
+
+    [TestMethod]
+    public async Task Consume_StationIsOnlineChanged_False_CallsMapPublisherWithFalse()
+    {
+        var fixture = new ConsumerHubTestFixture<NodeChangedConsumer, IMapPublisher>();
+        var stationId = Guid.NewGuid();
+
+        await fixture.PublishMessageAsync(new StationIsOnlineChanged(stationId, false));
+
+        fixture.PublisherMock.Verify(h => h.SendStationIsOnlineChanged(stationId, false), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_StationIsOnlineChanged_True_CallsMapPublisherWithTrue()
+    {
+        var fixture = new ConsumerHubTestFixture<NodeChangedConsumer, IMapPublisher>();
+        var stationId = Guid.NewGuid();
+
+        await fixture.PublishMessageAsync(new StationIsOnlineChanged(stationId, true));
+
+        fixture.PublisherMock.Verify(h => h.SendStationIsOnlineChanged(stationId, true), Times.Once);
+    }
 }

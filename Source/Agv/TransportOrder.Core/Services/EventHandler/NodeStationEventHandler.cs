@@ -16,7 +16,8 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 public class NodeStationEventHandler(IAgvDb agvDb) :
     IConsumer<StationUnlocked>,
     IConsumer<JamStateUpdated>,
-    IConsumer<StationConfigured>
+    IConsumer<StationConfigured>,
+    IConsumer<StationIsOnlineChanged>
 {
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<StationUnlocked> context)
@@ -44,5 +45,11 @@ public class NodeStationEventHandler(IAgvDb agvDb) :
     public async Task Consume(ConsumeContext<StationConfigured> context)
     {
         await context.Publish(new UpdateStationAdditionalInfo(context.Message.Id, context.Message.StationProperties));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<StationIsOnlineChanged> context)
+    {
+        await context.Publish(new UpdateStationIsOnline(context.Message.StationId, context.Message.IsOnline));
     }
 }

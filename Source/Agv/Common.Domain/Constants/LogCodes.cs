@@ -96,6 +96,8 @@ public static class LogCodes
     public const int StationUnblocked = 409;
     public const int StationOperatorInteraction = 410;
     public const int StationJamStateRequested = 411;
+    public const int StationWentOffline = 412;
+    public const int StationCameOnline = 413;
 
     //System
     public const int SystemOperatorInteraction = 500;
