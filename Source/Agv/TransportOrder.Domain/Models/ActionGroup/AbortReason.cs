@@ -36,7 +36,12 @@ public enum AbortReason : byte
     /// <summary>
     /// A test plan has changed (added/updated/deleted).
     /// </summary>
-    TestPlanChange = 5
+    TestPlanChange = 5,
+
+    /// <summary>
+    /// A graph change removed nodes used by this action.
+    /// </summary>
+    GraphChanged = 6
 }
 
 /// <summary>
@@ -58,6 +63,7 @@ public static class AbortReasonExtensions
             AbortReason.External => Reasons.ActionGroupAbortedByExternal,
             AbortReason.LockedStation => Reasons.LockedStation,
             AbortReason.TestPlanChange => Reasons.ActionGroupAbortedByTestPlanChange,
+            AbortReason.GraphChanged => Reasons.ActionGroupAbortedDueToGraphChange,
             _ => null
         };
         return template != null ? new Reason(template) : null;

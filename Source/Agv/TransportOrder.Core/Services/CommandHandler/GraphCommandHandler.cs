@@ -1,9 +1,13 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Events;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -14,16 +18,20 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Consumer for <see cref="UpdateGraphRequest"/>.
 /// </summary>
 [UsedImplicitly]
-public class GraphCommandHandler : IConsumer<UpdateGraphRequest>
+public class GraphCommandHandler : 
+    IConsumer<UpdateGraphRequest>,
+    IConsumer<AgvGraphChanged>
 {
     private readonly IGraphRepository _graphRepository;
     private readonly ILogger<GraphCommandHandler> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="GraphCommandHandler"/>
-    public GraphCommandHandler(IGraphRepository graphRepository, ILogger<GraphCommandHandler> logger)
+    public GraphCommandHandler(IGraphRepository graphRepository, ILogger<GraphCommandHandler> logger, ILoggingService loggingService)
     {
         _graphRepository = graphRepository;
         _logger = logger;
+        _loggingService = loggingService;
     }
 
     /// <inheritdoc />
@@ -44,5 +52,16 @@ public class GraphCommandHandler : IConsumer<UpdateGraphRequest>
         _logger.LogInformation("Graph {CorrelationId} updated", context.Message.CorrelationId);
         await context.Publish(new GraphUpdated(context.Message.CorrelationId, graph, context.Message.Maps), context.CancellationToken);
         await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AgvGraphChanged> context)
+    {
+        if(!await _graphRepository.ConsolidateGraphAsync())
+        {
+           await _loggingService.LogAgv(_logger, LogLevel.Error, LogCodes.AgvConsolidatingGlobalGraph, context.Message.CorrelationId, string.Empty, "AGV Graph Consolidation Failed", "AGV Graph Consolidation Failed");
+           return;
+        }
+        await context.Publish(new GlobalGraphConsolidated());
     }
 }

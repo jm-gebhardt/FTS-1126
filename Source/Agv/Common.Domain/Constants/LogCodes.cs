@@ -50,6 +50,7 @@ public static class LogCodes
     public const int AgvOperatorInteraction = 329;
     public const int AgvRemoveFromQueue = 336;
     public const int AgvSentInstantActionStatusChanged = 337;
+    public const int AgvConsolidatingGlobalGraph = 338;
 
     // Order
     public const int OrderCreated = 100;

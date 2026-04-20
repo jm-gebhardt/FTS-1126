@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -21,7 +22,8 @@ public class GraphCommandHandlerTestFixture : MassTransitConsumerTestFixture<Gra
     {
         base.AddServices(collection);
         collection.AddSingleton(Mock.Of<ILogger<GraphCommandHandler>>());
-        collection.AddSingleton(GraphRepository.Object);
+         collection.AddSingleton(GraphRepository.Object);
+        collection.AddTransient(_ => new Mock<ILoggingService>().Object);
         GraphRepository.Setup(x => x.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
         return this;
     }

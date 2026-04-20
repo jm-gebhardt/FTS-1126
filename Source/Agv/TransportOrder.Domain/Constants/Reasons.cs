@@ -44,6 +44,7 @@ public static class Reasons
     public const string ActionGroupMustHaveTargetOrSource = "ActionGroup must have a source or target";
 
     public const string ActionGroupAbortedByTestPlanChange = "ActionGroup aborted due to test plan change (added/updated/deleted)";
+    public const string ActionGroupAbortedDueToGraphChange = "ActionGroup aborted because a graph update removed nodes used by this action";
 
     public const string ActionFailedForUnknownReason = "Action failed for unknown reason";
     public const string ActionFailedWrongTargetType = "Action target station has wrong type";

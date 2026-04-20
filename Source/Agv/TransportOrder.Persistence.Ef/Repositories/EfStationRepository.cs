@@ -64,15 +64,15 @@ public class EfStationRepository(
                 context.Update(station).CurrentValues.SetValues(station);
             }
 
-            IEnumerable<Station> newStations = newNodes.ToList().Select(n =>
+            List<Station> newStations = newNodes.ToList().Select(n =>
             {
                 var station = new Station(n.Name, n.GetPrimaryType(), n.GetAdditionalTypes());
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
                 station.SetMap(map?.CorrelationId);
                 return station;
-            });
+            }).ToList();
 
-            context.AddRange(newStations.ToList());
+            context.AddRange(newStations);
 
             await context.SaveChangesAsync();
         });

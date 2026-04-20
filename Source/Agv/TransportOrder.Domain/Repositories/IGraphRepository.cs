@@ -153,4 +153,9 @@ public interface IGraphRepository
     /// </summary>
     /// <param name="node">The updated node.</param>
     Task UpdateNode(GraphNode node);
+
+    /// <summary>
+    /// Consolidate graph, i.e. remove unused nodes and edges.
+    /// </summary>
+    Task<bool> ConsolidateGraphAsync();
 }

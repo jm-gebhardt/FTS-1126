@@ -4,7 +4,7 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Shouldly;
 
-namespace Gebhardt.Acc.TransportOrder.Test.Helper;
+namespace Gebhardt.Acc.TransportOrder.Test.Domain;
 
 [TestClass]
 public class GraphProfileTest

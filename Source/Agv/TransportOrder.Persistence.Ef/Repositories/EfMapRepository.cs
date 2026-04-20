@@ -218,33 +218,75 @@ public class EfMapRepository : IMapRepository
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-            if (!await CheckGraphSaved(map, context))
-            {
-                _logger.LogWarning("Not all nodes or edges exist yet, so we cannot store the Map yet");
-                return false;
-            }
-
             if (!await CheckAgvsSaved(map, context))
             {
                 _logger.LogWarning("Not all Agvs exist yet, so we cannot store the Map yet");
                 return false;
             }
 
+            // AgvGraph is the ground truth for node/edge existence.
+            // If no AgvGraph has been defined yet the system is in startup, and we cannot
+            // determine which nodes are valid - fall back to the retry path so that
+            // GraphMissing triggers the graph resend from the external system.
+            bool anyAgvGraphDefined = await context.Set<AgvGraph>().AnyAsync();
+            if (!anyAgvGraphDefined)
+            {
+                if (!await CheckGraphSaved(map, context))
+                {
+                    _logger.LogWarning("No AgvGraph defined yet; not all nodes/edges exist, cannot store Map yet");
+                    return false;
+                }
+            }
+
+            // Once an AgvGraph is established, nodes not referenced by any AgvGraph may have
+            // been consolidated away. Filter the map's collections to only those that still
+            // exists in the global graph so that a saving the map does not re-introduce nodes
+            // that were previously deliberately removed.
+            List<Guid> nodeIds = map.Nodes.Select(n => n.Id).ToList();
+            List<Guid> edgeIds = map.Edges.Select(e => e.Id).ToList();
+
+            HashSet<Guid> existingNodeIds = (await context.Set<GraphNode>()
+                .Where(n => nodeIds.Contains(n.Id))
+                .Select(n => n.Id)
+                .ToListAsync())
+                .ToHashSet();
+
+            HashSet<Guid> existingEdgeIds = (await context.Set<GraphEdge>()
+                .Where(e => edgeIds.Contains(e.Id))
+                .Select(e => e.Id)
+                .ToListAsync())
+                .ToHashSet();
+
+            if (existingNodeIds.Count < map.Nodes.Count || existingEdgeIds.Count < map.Edges.Count)
+            {
+                _logger.LogInformation(
+                    "Map {MapName}: {RemovedNodes} node(s) and {RemovedEdges} edge(s) are no longer referenced by any AgvGraph and will be excluded",
+                    map.MapName,
+                    map.Nodes.Count - existingNodeIds.Count,
+                    map.Edges.Count - existingEdgeIds.Count);
+            }
+
+            var effectiveMap = map with
+            {
+                Nodes = map.Nodes.Where(n => existingNodeIds.Contains(n.Id)).ToList(),
+                Edges = map.Edges.Where(e => existingEdgeIds.Contains(e.Id)).ToList()
+            };
+
             var existingMap = await context.Set<Map>()
                 .Include(m => m.MapAgvs)
                 .Include(m => m.Edges)
                 .Include(m => m.Nodes)
-                .SingleOrDefaultAsync(g => g.CorrelationId == map.CorrelationId);
+                .SingleOrDefaultAsync(g => g.CorrelationId == effectiveMap.CorrelationId);
 
             if (existingMap == null)
             {
-                context.AttachRange(map.Edges);
-                context.AttachRange(map.Nodes);
-                context.Add(map);
+                context.AttachRange(effectiveMap.Edges);
+                context.AttachRange(effectiveMap.Nodes);
+                context.Add(effectiveMap);
             }
             else
             {
-                UpdateMap(existingMap, map, context);
+                UpdateMap(existingMap, effectiveMap, context);
             }
 
             int stateEntries = await context.SaveChangesAsync();

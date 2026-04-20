@@ -1,5 +1,7 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -8,7 +10,10 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
+using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
@@ -23,10 +28,6 @@ public class EfGraphRepository : IGraphRepository
     private readonly ILogger<EfGraphRepository> _logger;
 
     /// <inheritdoc cref="EfGraphRepository" />
-    /// <param name="dbContextFactory"></param>
-    /// <param name="mapper"></param>
-    /// <param name="logger"></param>
-    /// <param name="semaphoreProvider"></param>
     public EfGraphRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory,
         IMapper mapper,
         ISemaphoreProvider<IGraphRepositorySemaphore> semaphoreProvider,
@@ -96,7 +97,7 @@ public class EfGraphRepository : IGraphRepository
         Func<GraphNode, bool>? filter = predicate?.Compile();
 
         IEnumerable<GraphNode> agvNodes = graph.Nodes.Where(n => filter?.Invoke(n) ?? true);
-       
+
         return await GetNodesByIdsAsync(agvNodes.Select(a => a.Id).ToList());
     }
 
@@ -487,5 +488,122 @@ public class EfGraphRepository : IGraphRepository
             context.Update(efNode);
             await context.SaveChangesAsync();
         });
+    }
+
+    private const string GraphConsolidationSavePoint = "BeforeGraphConsolidation";
+
+    /// <inheritdoc />
+    public async Task<bool> ConsolidateGraphAsync()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            if (transaction.SupportsSavepoints)
+            {
+                await transaction.CreateSavepointAsync(GraphConsolidationSavePoint);
+            }
+            List<AgvGraph> agvGraphs = await QueryAgvGraphWithChildren(context).ToListAsync();
+            HashSet<Guid> usedNodes = agvGraphs.SelectMany(g => g.Nodes.Select(n => n.Id)).ToHashSet();
+            HashSet<Guid> usedEdges = agvGraphs.SelectMany(g => g.Edges.Select(n => n.Id)).ToHashSet();
+
+            await RemoveStaleMapReferencesAsync(context, usedNodes, usedEdges);
+            await AbortAndCleanActionsWithStaleNodesAsync(context, usedNodes);
+            await context.SaveChangesAsync();
+
+            IQueryable<GraphNode> unusedNodes = context.Set<GraphNode>().Where(n => !usedNodes.Contains(n.Id));
+            IQueryable<GraphEdge> unusedEdges = context.Set<GraphEdge>().Where(e => !usedEdges.Contains(e.Id));
+            IQueryable<Station> unusedStations = context.Set<Station>().Where(s => !usedNodes.Contains(s.Id));
+            IQueryable<NodeLock> unusedNodeLocks = context.Set<NodeLock>().Where(n => !usedNodes.Contains(n.NodeId));
+
+            context.Set<GraphNode>().RemoveRange(unusedNodes);
+            context.Set<GraphEdge>().RemoveRange(unusedEdges);
+            context.Set<Station>().RemoveRange(unusedStations);
+            context.Set<NodeLock>().RemoveRange(unusedNodeLocks);
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            _logger.LogError("Consolidating global graph failed, roll back transaction");
+            if (transaction.SupportsSavepoints)
+            {
+                await transaction.RollbackToSavepointAsync(GraphConsolidationSavePoint);
+                return false;
+            }
+            await transaction.RollbackAsync();
+            return false;
+        }
+    }
+
+    private static async Task RemoveStaleMapReferencesAsync(
+        TransportOrderDbContext context,
+        HashSet<Guid> usedNodes,
+        HashSet<Guid> usedEdges)
+    {
+        List<Map> mapsWithStaleRefs = await context.Set<Map>()
+            .Where(m => m.Nodes.Any(n => !usedNodes.Contains(n.Id))
+                        || m.Edges.Any(e => !usedEdges.Contains(e.Id)))
+            .Include(m => m.Nodes.Where(n => !usedNodes.Contains(n.Id)))
+            .Include(m => m.Edges.Where(e => !usedEdges.Contains(e.Id)))
+            .ToListAsync();
+
+        foreach (var map in mapsWithStaleRefs)
+        {
+            foreach (var node in map.Nodes.ToList())
+            {
+                map.Nodes.Remove(node);
+            }
+            foreach (var edge in map.Edges.ToList())
+            {
+                map.Edges.Remove(edge);
+            }
+        }
+    }
+
+    private async Task AbortAndCleanActionsWithStaleNodesAsync(
+        TransportOrderDbContext context,
+        HashSet<Guid> usedNodes)
+    {
+        var terminalStates = new[] { ActionState.Completed, ActionState.Aborted, ActionState.Canceled, ActionState.Invalid };
+        var abortReason = new Reason(Reasons.ActionGroupAbortedDueToGraphChange);
+        var now = DateTimeOffset.UtcNow;
+
+        List<ActionGroup> affectedGroups = await context.Set<ActionGroup>()
+            .Where(g => g.Actions.Any(a =>
+                a.AgvActionNodes.Any(n => !usedNodes.Contains(n.NodeId)) ||
+                (a.Target.NodeId != null && !usedNodes.Contains(a.Target.NodeId.Value))))
+            .ToListAsync();
+
+        foreach (var group in affectedGroups)
+        {
+            foreach (var action in group.Actions)
+            {
+                bool hasStalePathNodes = action.AgvActionNodes.Any(n => !usedNodes.Contains(n.NodeId));
+                bool hasStaleTarget = action.Target.NodeId != null && !usedNodes.Contains(action.Target.NodeId.Value);
+                if (!hasStalePathNodes && !hasStaleTarget)
+                {
+                    continue;
+                }
+
+                if (!terminalStates.Contains(action.State))
+                {
+                    _logger.LogWarning(
+                        "Aborting action {ActionId} in group {GroupId} because graph consolidation removed nodes used by this action",
+                        action.CorrelationId, group.CorrelationId);
+                    group.AbortAction(action.CorrelationId, [abortReason], now);
+                }
+
+                action.AgvActionNodes.Clear();
+
+                if (hasStaleTarget)
+                {
+                    action.Target.Node = null;
+                    action.Target.NodeId = null;
+                }
+            }
+        }
     }
 }
