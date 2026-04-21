@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.TelegramCommunication.Communication;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi;
+using Gebhardt.Acc.PrismatCommunication.TelegramApi.Processors;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ public class PrismatCommunicationManager : BackgroundService
     private readonly Server _toPrismatServer;
     private readonly TelegramQueuePersistenceService _queuePersistenceService;
     private readonly ObservableConcurrentQueue<PrismatTelegram> _prismatQueue;
+    private readonly ToPrismatTelegramProcessor _toPrismatProcessor;
 
     /// <inheritdoc cref="PrismatCommunicationManager"/>>
     public PrismatCommunicationManager(ILogger<PrismatCommunicationManager> logger,
@@ -31,7 +33,8 @@ public class PrismatCommunicationManager : BackgroundService
         [FromKeyedServices(ServiceKeyProvider.ToPrismat)]
         Server toPrismatServer,
         TelegramQueuePersistenceService queuePersistenceService,
-        ObservableConcurrentQueue<PrismatTelegram> prismatQueue)
+        ObservableConcurrentQueue<PrismatTelegram> prismatQueue,
+        ToPrismatTelegramProcessor toPrismatProcessor)
     {
         _logger = logger;
         _receiver = receiver;
@@ -40,6 +43,7 @@ public class PrismatCommunicationManager : BackgroundService
         _toPrismatServer = toPrismatServer;
         _queuePersistenceService = queuePersistenceService;
         _prismatQueue = prismatQueue;
+        _toPrismatProcessor = toPrismatProcessor;
     }
 
     /// <inheritdoc cref="PrismatCommunicationManager"/>>
@@ -64,8 +68,28 @@ public class PrismatCommunicationManager : BackgroundService
     private async Task StartAndConnectSendingChannel()
     {
         await _toPrismatServer.TryInitializeAsync();
-        _prismatQueue.ItemDequeued += _queuePersistenceService.OnItemDequeued;
-        _prismatQueue.ItemEnqueued += _queuePersistenceService.OnItemEnqueued;
+        _toPrismatProcessor.TelegramAcknowledged += async (_, item) =>
+        {
+            try
+            {
+                await _queuePersistenceService.OnTelegramAcknowledged(item);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete telegram from persistence");
+            }
+        };
+        _prismatQueue.ItemEnqueued += async (_, item) =>
+        {
+            try
+            {
+                await _queuePersistenceService.OnTelegramEnqueued(item);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to persist telegram");
+            }
+        };
         await _queuePersistenceService.ReloadQueue();
         _logger.LogInformation("Starting sender for prismat communication");
         _sender.Start();

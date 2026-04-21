@@ -9,7 +9,7 @@ using Moq;
 
 namespace Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 
-public sealed class TelegramQueuePersistenceServiceTestFixture: FixtureBase
+public sealed class TelegramQueuePersistenceServiceTestFixture : FixtureBase
 {
     public readonly ObservableConcurrentQueue<PrismatTelegram> Queue;
     public readonly TelegramQueuePersistenceService Service;
@@ -26,11 +26,11 @@ public sealed class TelegramQueuePersistenceServiceTestFixture: FixtureBase
             s.AddTransient(_ => new Mock<ILogger<TelegramQueuePersistenceService>>().Object);
         });
         Build();
-        
+
         Repository = _repositoryTestFixture.Repository;
         Queue = Provider.GetRequiredService<ObservableConcurrentQueue<PrismatTelegram>>();
         Service = Provider.GetRequiredService<TelegramQueuePersistenceService>();
-        Queue.ItemDequeued += Service.OnItemDequeued;
-        Queue.ItemEnqueued += Service.OnItemEnqueued;
+        Queue.ItemDequeued += async (_, item) => await Service.OnTelegramAcknowledged(item);
+        Queue.ItemEnqueued += async (_, item) => await Service.OnTelegramEnqueued(item);
     }
 }

@@ -31,6 +31,11 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     public PrismatTelegram? CurrentTelegram { get; private set; }
 
     /// <summary>
+    /// Raised after a telegram has been successfully acknowledged by the receiver.
+    /// </summary>
+    public event EventHandler<PrismatTelegram>? TelegramAcknowledged;
+
+    /// <summary>
     /// Timestamp when last telegram was send.
     /// </summary>
     public DateTimeOffset LastTelegramSend { get; private set; }
@@ -128,7 +133,7 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
     /// <inheritdoc cref="TelegramProcessorBase{PrismatTelegram}"/>>
     public override bool ShouldReceiveTelegram()
     {
-        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int) (_timeProvider.GetUtcNow() - AwaitAcknowledgementStart).TotalMilliseconds;
+        _acknowledgementWaitTime = MaxAcknowledgementWaitTime - (int)(_timeProvider.GetUtcNow() - AwaitAcknowledgementStart).TotalMilliseconds;
         return ReceiveAcknowledgement && _acknowledgementWaitTime > 0;
     }
 
@@ -142,7 +147,9 @@ public class ToPrismatTelegramProcessor : TelegramProcessorBase<PrismatTelegram>
         {
             ReceiveAcknowledgement = false;
             SequenceCounter.Increase();
+            var acknowledgedTelegram = CurrentTelegram;
             CurrentTelegram = null;
+            TelegramAcknowledged?.Invoke(this, acknowledgedTelegram);
         }
     }
 

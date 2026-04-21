@@ -11,12 +11,14 @@ namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 /// <summary>
 /// Persists the telegram queue.
 /// </summary>
-public class TelegramQueuePersistenceService: IAsyncDisposable
+public class TelegramQueuePersistenceService : IAsyncDisposable
 {
     private readonly ILogger<TelegramQueuePersistenceService> _logger;
     private readonly ObservableConcurrentQueue<PrismatTelegram> _telegramQueue;
     private readonly IServiceProvider _serviceProvider;
     private readonly ConcurrentQueue<Telegram> _telegramsToDelete = new();
+    private readonly ConcurrentDictionary<Guid, byte> _storedTelegramIds = new();
+    private volatile bool _isReloading;
 
     /// <inheritdoc cref="TelegramQueuePersistenceService"/>>
     public TelegramQueuePersistenceService(ObservableConcurrentQueue<PrismatTelegram> telegramQueue, IServiceProvider serviceProvider, ILogger<TelegramQueuePersistenceService> logger)
@@ -36,36 +38,43 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
         var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
 
         ICollection<Telegram> telegrams = await telegramRepository.GetAll();
+        _isReloading = true;
         foreach (var telegram in telegrams.OrderBy(t => t.QueuedDate))
         {
+            _storedTelegramIds.TryAdd(telegram.Id, 0);
             var prismatTelegram = telegram.ToPrismatTelegram();
             _telegramQueue.Enqueue(prismatTelegram);
         }
+        _isReloading = false;
     }
 
     /// <summary>
     /// Store telegram and delete next telegram that was listed for deletion.
     /// </summary>
-    public void OnItemEnqueued(object? sender, PrismatTelegram telegram)
+    public async Task OnTelegramEnqueued(PrismatTelegram telegram)
     {
-        string? message = telegram.ToString();
-        if (message == null || telegram.Func == nameof(Life))
+        if (telegram.ToString() == null || telegram.Func == nameof(Life))
         {
-            _ = DeleteTelegram();
+            await DeleteTelegrams();
             return;
         }
         _logger.LogDebug("Persisting telegram {Telegram}", telegram.ToString());
-        _ = StoreTelegram(message, telegram);
-        _ = DeleteTelegram();
+        await StoreTelegram(telegram);
+        await DeleteTelegrams();
     }
 
-    private async Task StoreTelegram(string message, PrismatTelegram telegram)
+    private async Task StoreTelegram(PrismatTelegram telegram)
     {
+        if (_isReloading)
+        {
+            return;
+        }
+
         using var scope = _serviceProvider.CreateScope();
 
         var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
 
-        var storedTelegram = new Telegram(message, telegram.Func);
+        var storedTelegram = new Telegram(telegram.ToStringWithoutSeq(), telegram.Func);
         try
         {
             await telegramRepository.GetByIdAsync(storedTelegram.Id);
@@ -74,64 +83,70 @@ public class TelegramQueuePersistenceService: IAsyncDisposable
         {
             await telegramRepository.AddAsync(storedTelegram);
         }
+        _storedTelegramIds.TryAdd(storedTelegram.Id, 0);
     }
 
     /// <summary>
-    /// List telegram for deletion.
+    /// Delete telegram from repo after it has been acknowledged by the receiver.
     /// </summary>
-    public void OnItemDequeued(object? sender, object telegram)
+    public async Task OnTelegramAcknowledged(PrismatTelegram prismatTelegram)
     {
-        var prismatTelegram = (PrismatTelegram)telegram;
-        string? message = prismatTelegram.ToString();
-        if (message == null  || prismatTelegram.Func == nameof(Life))
+        if (prismatTelegram.ToString() == null || prismatTelegram.Func == nameof(Life))
         {
             return;
         }
-        _logger.LogDebug("List telegram {Telegram} for deletion", telegram.ToString());
+        _logger.LogDebug("Deleting acknowledged telegram {Telegram}", prismatTelegram.ToString());
 
-        var storedTelegram = new Telegram(message, prismatTelegram.Func);
+        var storedTelegram = new Telegram(prismatTelegram.ToStringWithoutSeq(), prismatTelegram.Func);
         _telegramsToDelete.Enqueue(storedTelegram);
+        await DeleteTelegrams();
     }
 
-    private async Task DeleteTelegram()
+    private async Task DeleteTelegrams()
     {
         using var scope = _serviceProvider.CreateScope();
 
         var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
 
-        if (_telegramsToDelete.TryDequeue(out var storedTelegram))
+        while (_telegramsToDelete.TryDequeue(out var storedTelegram))
         {
+            if (!_storedTelegramIds.ContainsKey(storedTelegram.Id))
+            {
+                // Store has not completed yet. Put it back and stop.
+                _telegramsToDelete.Enqueue(storedTelegram);
+                break;
+            }
+
             try
             {
                 _logger.LogDebug("Try deleting telegram {Telegram}", storedTelegram.Id);
                 storedTelegram = await telegramRepository.GetByIdAsync(storedTelegram.Id);
                 await telegramRepository.RemoveAsync(storedTelegram);
+                _storedTelegramIds.TryRemove(storedTelegram.Id, out _);
             }
             catch (InvalidOperationException)
             {
-                _logger.LogWarning("Could not remove telegram {Message} ", storedTelegram.Message);
+                _logger.LogWarning("Could not remove telegram {Message}, not found in DB", storedTelegram.Message);
+                _storedTelegramIds.TryRemove(storedTelegram.Id, out _);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to delete telegram {Message} — re-queuing for retry", storedTelegram.Message);
-                _telegramsToDelete.Enqueue(storedTelegram); // put it back so the next trigger retries
+                _telegramsToDelete.Enqueue(storedTelegram);
+                break;
             }
         }
     }
 
     /// <summary>
-    /// Delete all remaining telegrams that were listed for deletion, but one
-    /// in case restart of the service is shortly after dequeuing.
+    /// Delete all remaining telegrams that were listed for deletion.
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_telegramsToDelete.Count <= 1)
+        if (_telegramsToDelete.IsEmpty)
         {
             return;
         }
-        while (_telegramsToDelete.Count > 1)
-        {
-            await DeleteTelegram();
-        }
+        await DeleteTelegrams();
     }
 }

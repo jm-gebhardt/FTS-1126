@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 
 namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
@@ -68,6 +68,6 @@ public class PrismatTelegram : TelegramBase
     /// <inheritdoc cref="TelegramBase"/>>
     public override string CreateAcknowledgement()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Rec.PadRight(8, '.')}/{nameof(Rec)}:{Send.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(SeqWidth, '0')}/{nameof(Send)}:{Rec.PadRight(8, '.')}/{nameof(Rec)}:{Send.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
     }
 }

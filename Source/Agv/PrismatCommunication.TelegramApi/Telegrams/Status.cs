@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
+using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 
 namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 
@@ -89,7 +89,7 @@ public class Status : PrismatTelegram
     /// </summary>
     public override string ToString()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{nameof(Pos)}:{Pos.PadRight(10, '.')}/{nameof(State)}:{State.ToString().PadRight(4, '.')}/{nameof(Err).ToUpper()}:{Err.ToString().PadLeft(4, '0')}/{nameof(Info)}:{Info.PadRight(50, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(SeqWidth, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{nameof(Pos)}:{Pos.PadRight(10, '.')}/{nameof(State)}:{State.ToString().PadRight(4, '.')}/{nameof(Err).ToUpper()}:{Err.ToString().PadLeft(4, '0')}/{nameof(Info)}:{Info.PadRight(50, '.')}/{EndSymbol}";
     }
 }
 

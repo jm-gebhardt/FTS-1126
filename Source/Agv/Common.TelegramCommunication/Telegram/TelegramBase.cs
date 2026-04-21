@@ -8,6 +8,11 @@ namespace Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 public abstract class TelegramBase
 {
     /// <summary>
+    /// The total width of the sequence number when serialized.
+    /// </summary>
+    protected const int SeqWidth = 3;
+
+    /// <summary>
     /// The length of the telegram
     /// </summary>
     [PublicAPI]
@@ -61,12 +66,21 @@ public abstract class TelegramBase
     }
 
     /// <summary>
+    /// Returns the string representation of the telegram without the volatile Seq field.
+    /// </summary>
+    public string ToStringWithoutSeq()
+    {
+        string seqPrefix = $"/{nameof(Seq)}:{Seq.ToString().PadLeft(SeqWidth, '0')}/";
+        return ToString()!.Replace(seqPrefix, "/");
+    }
+
+    /// <summary>
     /// Creates an acknowledgement to the message
     /// </summary>
     /// <returns></returns>
     [PublicAPI]
     public virtual string CreateAcknowledgement()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Rec.PadRight(8, '.')}/{nameof(Rec)}:{Send.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(SeqWidth, '0')}/{nameof(Send)}:{Rec.PadRight(8, '.')}/{nameof(Rec)}:{Send.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
     }
 }

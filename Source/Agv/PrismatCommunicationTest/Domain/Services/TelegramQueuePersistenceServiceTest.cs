@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.Common.Testing.TelegramCommunication;
+﻿using Gebhardt.Acc.Common.Testing.TelegramCommunication;
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.Telegram;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
@@ -11,7 +10,7 @@ namespace Gebhardt.Acc.PrismatCommunicationTest.Domain.Services;
 public class TelegramQueuePersistenceServiceTest
 {
     [TestMethod]
-    public async Task OnItemEnqueued_ValidData_TelegramStored()
+    public async Task OnTelegramEnqueued_ValidData_TelegramStored()
     {
         var fixture = new TelegramQueuePersistenceServiceTestFixture();
 
@@ -25,12 +24,12 @@ public class TelegramQueuePersistenceServiceTest
 
         var telegram = storedTelegrams.Single();
         telegram.Function.ShouldBe(arrival.Func);
-        telegram.Message.ShouldBe(TestTelegram.Arrival);
-        telegram.Id.ShouldBe(TestTelegram.Arrival.ToGuid());
+        telegram.Message.ShouldBe(arrival.ToStringWithoutSeq());
+        telegram.Id.ShouldBe(new Telegram(arrival.ToStringWithoutSeq(), arrival.Func).Id);
     }
 
     [TestMethod]
-    public async Task OnItemDequeued_TelegramListedForRemoval_RemovedOnNextEnqueue()
+    public async Task OnTelegramAcknowledged_TelegramDequeued_RemovedImmediately()
     {
         var fixture = new TelegramQueuePersistenceServiceTestFixture();
 
@@ -43,9 +42,25 @@ public class TelegramQueuePersistenceServiceTest
         fixture.Queue.TryDequeue(out var dequeuedTelegram);
 
         dequeuedTelegram.Func.ShouldBe(arrival.Func);
+        (await fixture.Repository.GetAll()).Count.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task OnTelegramAcknowledged_SeqChangedAfterEnqueue_TelegramStillDeletedImmediately()
+    {
+        var fixture = new TelegramQueuePersistenceServiceTestFixture();
+
+        var arrival = new Arrival(DateTime.UtcNow, "pos", "hu");
+        arrival.Load(TestTelegram.Arrival);
+
+        fixture.Queue.Enqueue(arrival);
         (await fixture.Repository.GetAll()).Count.ShouldBe(1);
 
-        fixture.Queue.Enqueue(new Life(DateTime.UtcNow));
+        // Simulate what ToPrismatTelegramProcessor does, assigning a new Seq after dequeue
+        arrival.Seq = 477;
+        fixture.Queue.TryDequeue(out var dequeuedTelegram);
+
+        dequeuedTelegram.Func.ShouldBe(arrival.Func);
         (await fixture.Repository.GetAll()).Count.ShouldBe(0);
     }
 

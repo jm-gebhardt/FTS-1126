@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
+using Gebhardt.Acc.Common.TelegramCommunication.Telegram;
 
 namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 
@@ -91,6 +91,6 @@ public class TordError : PrismatTelegram
     /// </summary>
     public override string ToString()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/HU:{Hu.PadRight(20, '.')}/{nameof(Err)}:{Err.ToString().PadLeft(4, '0')}/{nameof(Src)}:{Src.PadRight(10, '.')}/{nameof(Dest)}:{Dest.PadRight(10, '.')}/{nameof(Info)}:{Info.PadRight(50, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(SeqWidth, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/HU:{Hu.PadRight(20, '.')}/{nameof(Err)}:{Err.ToString().PadLeft(4, '0')}/{nameof(Src)}:{Src.PadRight(10, '.')}/{nameof(Dest)}:{Dest.PadRight(10, '.')}/{nameof(Info)}:{Info.PadRight(50, '.')}/{EndSymbol}";
     }
 }

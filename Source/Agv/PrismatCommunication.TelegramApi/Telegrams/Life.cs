@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
+namespace Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
 
 /// <summary>
 /// The Life telegram
@@ -19,6 +19,6 @@ public class Life : PrismatTelegram
     /// </summary>
     public override string ToString()
     {
-        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(3, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
+        return $"/{nameof(Seq)}:{Seq.ToString().PadLeft(SeqWidth, '0')}/{nameof(Send)}:{Send.PadRight(8, '.')}/{nameof(Rec)}:{Rec.PadRight(8, '.')}/{nameof(Time)}:{ConvertTime()}/{nameof(Func)}:{Func.PadRight(20, '.')}/{EndSymbol}";
     }
 }
