@@ -38,8 +38,8 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new ActionGroupStateInvalidException(Mock.Of<ActionGroup>()), HttpStatusCode.BadRequest];
         yield return [() => new InvalidNodeTypeException(null!, null!, null!), HttpStatusCode.BadRequest];
         yield return [() => new ActionGroupInvalidException(Array.Empty<string>()), HttpStatusCode.BadRequest];
-        yield return [() => new NodeNotFoundException(null!), HttpStatusCode.BadRequest];
-        yield return [() => new BadRequestException(null!), HttpStatusCode.BadRequest];
+        yield return [() => new NodeNotFoundException(null!), HttpStatusCode.NotFound];
+        yield return [() => new ValidationException(null!), HttpStatusCode.BadRequest];
         yield return [() => new InvalidPolygonLengthException(), HttpStatusCode.BadRequest];
         yield return [() => new AgvNotAssignedToActionGroupException(string.Empty), HttpStatusCode.BadRequest];
         yield return [() => new AgvNotAssignedToActionGroupException(Guid.Empty, Guid.Empty), HttpStatusCode.BadRequest];

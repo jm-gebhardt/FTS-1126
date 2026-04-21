@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
@@ -95,7 +96,14 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
 
         if (nodeId != null)
         {
-            await graphRepository.ThrowIfNodeNotExistsAsync(nodeId);
+            try
+            {
+                await graphRepository.ThrowIfNodeNotExistsAsync(nodeId);
+            }
+            catch (NodeNotFoundException ex)
+            {
+                throw new ValidationException(ex.Message);
+            }
         }
 
         if (edgeId != null && !await graphRepository.EdgeExistsAsync(edgeId.Value))

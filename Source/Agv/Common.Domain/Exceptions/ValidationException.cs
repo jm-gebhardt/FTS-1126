@@ -3,13 +3,13 @@
 /// <summary>
 /// Represents errors that occur when the request to an e.g. request handler was not valid
 /// </summary>
-public class BadRequestException : Exception
+public class ValidationException : Exception
 {
     /// <summary>
-    /// <inheritdoc cref="BadRequestException"/>
+    /// <inheritdoc cref="ValidationException"/>
     /// </summary>
     /// <param name="reason"></param>
-    public BadRequestException(string reason) : base(reason)
+    public ValidationException(string reason) : base(reason)
     {
     }
 }

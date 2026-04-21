@@ -15,7 +15,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
         var statusCode = exception switch
         {
             NotInCorrectStateException => HttpStatusCode.BadRequest,
-            BadRequestException => HttpStatusCode.BadRequest,
+            ValidationException => HttpStatusCode.BadRequest,
             NodeNotAvailableException => HttpStatusCode.Conflict,
             NoNodesAvailableException => HttpStatusCode.Conflict,
             NotFoundException => HttpStatusCode.NotFound,

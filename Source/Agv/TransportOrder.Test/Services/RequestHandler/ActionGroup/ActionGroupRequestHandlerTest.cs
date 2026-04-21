@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
@@ -439,7 +440,7 @@ public class ActionGroupRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_TriggerSetTarget_UnknownTargetNode_ThrowsNodeNotFoundException()
+    public async Task Consume_TriggerSetTarget_UnknownTargetNode_ThrowsValidationException()
     {
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(pickActionState: ActionState.Created);
 
@@ -449,7 +450,7 @@ public class ActionGroupRequestHandlerTest
                 .AddDefaultGraph()
                 .BuildAsync();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
+        await MediatorShould.ThrowRequestExceptionAsync<ValidationException>(async () =>
             await fixture.GetResponseAsync<Success>(new TriggerSetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.IsIncomplete).CorrelationId, "unknown".ToGuid(), "user")));
     }
 

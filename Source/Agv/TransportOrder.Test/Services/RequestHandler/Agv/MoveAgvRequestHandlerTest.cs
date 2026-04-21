@@ -31,7 +31,7 @@ public class MoveAgvRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_MoveAgv_TargetNodeDoesNotExist_ThrowsNodeNotFoundException()
+    public async Task Consume_MoveAgv_TargetNodeDoesNotExist_ThrowsBadRequestFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
 
@@ -40,7 +40,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode([null])
             .BuildAsync();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<MoveAgv>(
+        await MediatorShould.ThrowRequestExceptionAsync<ValidationException>(async () => await fixture.GetResponseAsync<MoveAgv>(
             new MoveAgv(agv.CorrelationId, "unknown target".ToGuid(), ActionGroupCreator.TransportOrderWebApi, "user")));
     }
 
@@ -144,7 +144,7 @@ public class MoveAgvRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ChargeAgv_ChargerDoesNotExist_ThrowsNodeNotFoundException()
+    public async Task Consume_ChargeAgv_ChargerDoesNotExist_ThrowsValidationException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
 
@@ -153,7 +153,7 @@ public class MoveAgvRequestHandlerTest
             .WithNode([null])
             .BuildAsync();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
+        await MediatorShould.ThrowRequestExceptionAsync<ValidationException>(async () => await fixture.GetResponseAsync<ChargeAgv>(
             new ChargeAgv(agv.CorrelationId, "unknown charger".ToGuid(), "user")));
     }
 

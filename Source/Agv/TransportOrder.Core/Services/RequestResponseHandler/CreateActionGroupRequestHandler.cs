@@ -1,5 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
@@ -149,8 +150,14 @@ public class CreateActionGroupRequestHandler :
             IEnumerable<Guid?> nodeIdsToFetch = nodeIdArray;
             nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => nodeIdsToFetch.Contains(node.Id))).ToList();
         }
-
-        return (sourceNodeId != null ? nodes.SelectById(sourceNodeId.Value) : null, targetNodeId != null ? nodes.SelectById(targetNodeId.Value) : null);
+        try
+        {
+            return (sourceNodeId != null ? nodes.SelectById(sourceNodeId.Value) : null, targetNodeId != null ? nodes.SelectById(targetNodeId.Value) : null);
+        }
+        catch (NodeNotFoundException ex)
+        {
+            throw new ValidationException(ex.Message);
+        }
     }
 
     private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, ActionGroupCreator creator)

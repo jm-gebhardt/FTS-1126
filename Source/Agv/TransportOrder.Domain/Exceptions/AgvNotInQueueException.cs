@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 /// <summary>
 /// The AGV is not registered in the specified queue.
 /// </summary>
-public class AgvNotInQueueException : BadRequestException
+public class AgvNotInQueueException : ValidationException
 {
     /// <inheritdoc cref="AgvNotInQueueException"/>>
     public AgvNotInQueueException(Guid agvCorrelationId, Guid? queueId)

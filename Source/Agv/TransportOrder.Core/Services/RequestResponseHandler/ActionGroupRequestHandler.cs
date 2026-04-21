@@ -105,7 +105,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         string query = context.Message.Query.Trim();
         if (query.Length < 3)
         {
-            throw new BadRequestException("Query must be at least 3 characters.");
+            throw new ValidationException("Query must be at least 3 characters.");
         }
 
         int maxItems = Math.Clamp(context.Message.Limit, 1, 100);
@@ -232,7 +232,15 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
             throw new ActionGroupStateInvalidException($"Action {action.CorrelationId} already completed");
         }
 
-        var targetNode = await _graphRepository.GetNodeAsync(targetNodeId);
+        GraphNode? targetNode;
+        try
+        {
+            targetNode = await _graphRepository.GetNodeAsync(targetNodeId);
+        }
+        catch (NodeNotFoundException ex)
+        {
+            throw new ValidationException(ex.Message);
+        }
 
         if (action.ActionType == ActionType.Pick && !targetNode.IsPickStation())
         {

@@ -52,7 +52,7 @@ public class RouteRequestHandler : IConsumer<GetRoute>
         }
         catch (NodeNotFoundException e)
         {
-            throw new BadRequestException(e.Message);
+            throw new ValidationException(e.Message);
         }
         await context.RespondAsync(new GotRoute(route));
     }

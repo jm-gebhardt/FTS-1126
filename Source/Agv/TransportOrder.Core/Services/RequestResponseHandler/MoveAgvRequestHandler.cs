@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using System.Globalization;
 using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Microsoft.Extensions.Logging;
@@ -79,7 +80,15 @@ public class MoveAgvRequestHandler :
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
+        GraphNode? targetNode;
+        try
+        {
+            targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
+        }
+        catch (NodeNotFoundException ex)
+        {
+            throw new ValidationException(ex.Message);
+        }
 
         if (targetNode.NeedsReservation())
         {
@@ -120,7 +129,16 @@ public class MoveAgvRequestHandler :
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        var node = await _agvDb.Graphs.GetNodeAsync(chargerId);
+        GraphNode? node;
+
+        try
+        {
+            node = await _agvDb.Graphs.GetNodeAsync(chargerId);
+        }
+        catch (NodeNotFoundException ex)
+        {
+            throw new ValidationException(ex.Message);
+        }
 
         if (!node.IsCharger())
         {

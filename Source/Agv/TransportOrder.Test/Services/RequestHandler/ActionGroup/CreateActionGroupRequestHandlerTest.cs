@@ -47,14 +47,14 @@ public class CreateActionGroupRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreatePickDropActionGroup_SourceNodeNotFound_ThrowsNodeNotFoundException()
+    public async Task Consume_CreatePickDropActionGroup_SourceNodeNotFound_ThrowsValidationException()
     {
         var targetNode = NodeGenerator.GenerateNode(nodeName: "a known target");
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([targetNode])
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
+        await MediatorShould.ThrowRequestExceptionAsync<ValidationException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
                 new CreatePickDropActionGroup("an unknown source".ToGuid(), targetNode.Id, false, false, null, null, null, null, ActionGroupCreator.TransportOrderWebApi, "user")));
     }
@@ -74,7 +74,7 @@ public class CreateActionGroupRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_CreatePickDropActionGroup_TargetNodeNotFound_ThrowsNodeNotFoundException()
+    public async Task Consume_CreatePickDropActionGroup_TargetNodeNotFound_ThrowsValidationException()
     {
         var sourceNode = NodeGenerator.GenerateNode(nodeName: "a known source", nodeType: AgvGraph.NodeType.Pick);
         var targetNode = NodeGenerator.GenerateNode(nodeName: "a known target", nodeType: AgvGraph.NodeType.Drop);
@@ -82,7 +82,7 @@ public class CreateActionGroupRequestHandlerTest
             .WithNodes([sourceNode, targetNode])
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
+        await MediatorShould.ThrowRequestExceptionAsync<ValidationException>(async () =>
             await fixture.GetResponseAsync<ActionGroupCreated>(
                 new CreatePickDropActionGroup(sourceNode.Id, "an unknown target".ToGuid(), false, false, null, null, null, null, ActionGroupCreator.TransportOrderWebApi, "user")));
     }

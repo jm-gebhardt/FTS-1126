@@ -38,7 +38,7 @@ public abstract class BaseExceptionHandlerMiddleware(ILogger<BaseExceptionHandle
     {
         var statusCode = exception switch
         {
-            BadRequestException => HttpStatusCode.BadRequest,
+            ValidationException => HttpStatusCode.BadRequest,
             NotFoundException => HttpStatusCode.NotFound,
             _ => HttpStatusCode.InternalServerError
         };

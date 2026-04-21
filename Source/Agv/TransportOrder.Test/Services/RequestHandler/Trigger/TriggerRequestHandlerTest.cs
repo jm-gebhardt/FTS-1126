@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.Common.Testing.Extensions;
@@ -295,7 +296,7 @@ public class TriggerRequestHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AssignTriggerToLocation_NodeUnknown_ThrowsNodeNotFoundException_DoesNotRequestAddTriggerLocation()
+    public async Task Consume_AssignTriggerToLocation_NodeUnknown_ThrowsValidationException_DoesNotRequestAddTriggerLocation()
     {
         var trigger = TriggerGenerator.CreateTrigger();
         TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
@@ -304,7 +305,7 @@ public class TriggerRequestHandlerTest
             .WithMapExists(true)
             .Build();
 
-        await MediatorShould.ThrowRequestExceptionAsync<NodeNotFoundException>(async () =>
+        await MediatorShould.ThrowRequestExceptionAsync<ValidationException>(async () =>
             await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id,
                 "unknown node".ToGraphNode(),
                 null,
