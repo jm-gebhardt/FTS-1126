@@ -210,12 +210,13 @@ public static class CoreBusRegistrationExtensions
 
         busRegistrationConfigurator.AddConsumer<NodeStationCommandHandler>(c =>
         {
-            var partitioner = c.CreatePartitioner(PartitionCount);
+            var nodePartitioner = c.CreatePartitioner(PartitionCount);
+
             c.Message<SetNodeApproachingProperties>(x =>
-                x.UsePartitioner(partitioner, p => p.Message.NodeId));
+                x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
             c.Message<InitializeNodeApproachingProperties>(x =>
             {
-                x.UsePartitioner(partitioner, p => p.Message.NodeId);
+                x.UsePartitioner(nodePartitioner, p => p.Message.NodeId);
 
                 x.UseMessageRetry(r =>
                 {
@@ -223,7 +224,6 @@ public static class CoreBusRegistrationExtensions
                     r.Handle<NodeNotFoundException>();
                 });
             });
-            var nodePartitioner = c.CreatePartitioner(PartitionCount);
             c.Message<FreeNode>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
             c.Message<UpdateNodeOccupancy>(x =>
@@ -241,8 +241,18 @@ public static class CoreBusRegistrationExtensions
             nodePartitioner.PartitionMessageById<UpdateStationJamState, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<UpdateStationIsOnline, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<StationConfigurationReceived, NodeStationCommandHandler>(c);
-            nodePartitioner.PartitionMessageById<UpdateStationAdditionalInfo, NodeStationCommandHandler>(c);
+            c.Message<UpdateStationAdditionalInfo>(x =>
+            {
+                x.UsePartitioner(nodePartitioner, p => p.Message.CorrelationId);
+
+                x.UseMessageRetry(r =>
+                {   
+                    r.Interval(6, TimeSpan.FromSeconds(7));
+                    r.Handle<NodeNotFoundException>();
+                });
+            });
         });
+
         busRegistrationConfigurator.AddConsumer<MapCommandHandler>();
 
         busRegistrationConfigurator.AddConsumer<RestrictedAreaCommandHandler>(c =>
