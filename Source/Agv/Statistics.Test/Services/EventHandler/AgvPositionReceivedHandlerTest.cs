@@ -71,7 +71,7 @@ public class AgvPositionReceivedHandlerTest
         var map = MapGenerator.GenerateMap();
         const string agvSerialNumber = "agv";
         var agvCorrelationId = agvSerialNumber.ToGuid();
-        var gridCell = new GridCell(5, 6, 5, 6, 6, 7, grid);
+        var gridCell = GridCellGenerator.GenerateGridCell(xIndex: 5, yIndex: 6, xMin: 5, xMax: 6, yMin: 6, yMax: 7, grid: grid);
         MockDbConsumerTestFixture<AgvPositionReceivedHandler> fixture = new AgvPositionReceivedHandlerTestFixture()
             .ShouldActReturns(true)
             .WithLastEntryTime(agvCorrelationId, gridCell, DateTime.UtcNow)

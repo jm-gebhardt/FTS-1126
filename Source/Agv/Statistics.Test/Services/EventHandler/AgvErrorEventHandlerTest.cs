@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Extensions;
@@ -18,7 +17,7 @@ public class AgvErrorEventHandlerTest
     public async Task HandleWithGridIds_PublishesAddError()
     {
         var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(), new AgvPosition(true, 1, 1, 0, 0), "agv");
-        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, GridGenerator.GenerateGrid());
+        var gridCell = GridCellGenerator.GenerateGridCell();
         GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
 
         await fixture.Handler.HandleTestMessageDirectly(msg, [gridCell]);
@@ -29,5 +28,17 @@ public class AgvErrorEventHandlerTest
                 x.GridCellIds.Count == 1 &&
                 x.GridCellIds[0] == gridCell.CellId),
             CancellationToken.None), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task HandleWithGridIds_InformationLevel_DoesNotPublishAddError()
+    {
+        var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(errorLevel: ErrorLevel.Information), new AgvPosition(true, 1, 1, 0, 0), "agv");
+        var gridCell = GridCellGenerator.GenerateGridCell();
+        GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
+
+        await fixture.Handler.HandleTestMessageDirectly(msg, [gridCell]);
+
+        fixture.PublishEndpointMock.Verify(p => p.Publish(It.IsAny<AddError>(), CancellationToken.None), Times.Never);
     }
 }

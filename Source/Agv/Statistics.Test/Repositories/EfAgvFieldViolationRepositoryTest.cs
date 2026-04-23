@@ -20,7 +20,7 @@ public class EfAgvFieldViolationRepositoryTest
     {
         _grid = GridGenerator.GenerateGrid();
         _map = MapGenerator.GenerateMap(1, 1, 2, 2, null, _grid.GridId);
-        _gridCell = new GridCell(1, 1, 1m, 2m, 1m, 2m, _grid);
+        _gridCell = GridCellGenerator.GenerateGridCell(grid: _grid);
         _mapGridCell = new MapGridCell(_map, _gridCell);
         _agvCorrelationId = "agv".ToGuid();
     }

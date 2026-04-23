@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Messages.Commands;
@@ -26,6 +27,11 @@ public class AgvErrorEventHandler : GridCellAttachedHandlerBase<AgvErrorReceived
     /// <inheritdoc />
     protected override Task HandleAsync(AgvErrorReceived message, List<GridCell> gridCells)
     {
+        if (message.Error.ErrorLevel == ErrorLevel.Information)
+        {
+            return Task.CompletedTask;
+        }
+
         return PublishEndpoint.Publish(new AddError(message.Error, gridCells.Select(g => g.CellId).ToList()));
     }
 }

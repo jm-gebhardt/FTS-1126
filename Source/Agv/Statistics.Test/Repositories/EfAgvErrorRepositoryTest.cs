@@ -22,7 +22,7 @@ public class EfAgvErrorRepositoryTest
     {
         _grid = GridGenerator.GenerateGrid();
         _map = MapGenerator.GenerateMap(1, 1, 12, 12, null, _grid.GridId);
-        _gridCell = new GridCell(1, 1, 1, 1, 2, 2, _grid);
+        _gridCell = GridCellGenerator.GenerateGridCell(xMin: 1, xMax: 1, yMin: 2, yMax: 2, grid: _grid);
         _mapGridCell = new MapGridCell(_map, _gridCell);
     }
 

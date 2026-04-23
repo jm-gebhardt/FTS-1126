@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Extensions;
@@ -18,7 +17,7 @@ public class WifiMetricsEventHandlerTest
     public async Task HandleWithGridIds_PublishesAddWifiMetrics()
     {
         var msg = new AgvWifiMetricsReceived(Guid.NewGuid(), "agv", new AgvPosition(true, 1, 1, 0, 0), WifiMetricsGenerator.GenerateWifiMetrics());
-        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, GridGenerator.GenerateGrid());
+        var gridCell = GridCellGenerator.GenerateGridCell();
         GridPositionAttachedHandlerTestFixture<WifiMetricsEventHandler, AgvWifiMetricsReceived> fixture = new WifiMetricsEventHandlerTestFixture()
             .FilterReturns(true)
             .Build();
@@ -37,7 +36,7 @@ public class WifiMetricsEventHandlerTest
     public async Task HandleWithGridIds_FilterReturnsFalse_DoesNotPublishAddWifiMetrics()
     {
         var msg = new AgvWifiMetricsReceived(Guid.NewGuid(), "agv", new AgvPosition(true, 1, 1, 0, 0), WifiMetricsGenerator.GenerateWifiMetrics());
-        var gridCell = new GridCell(1, 1, 1, 2, 1, 2, GridGenerator.GenerateGrid());
+        var gridCell = GridCellGenerator.GenerateGridCell();
 
         GridPositionAttachedHandlerTestFixture<WifiMetricsEventHandler, AgvWifiMetricsReceived> fixture = new WifiMetricsEventHandlerTestFixture()
             .FilterReturns(false)
