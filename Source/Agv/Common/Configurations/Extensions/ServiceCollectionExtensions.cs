@@ -8,6 +8,7 @@ using MassTransit;
 using MassTransit.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RabbitMQ.Client.Exceptions;
 
 namespace Gebhardt.Acc.Common.Configurations.Extensions;
 
@@ -64,7 +65,20 @@ public static class ServiceCollectionExtensions
                     {
                         r.Intervals(100, 200, 500);
                         r.Handle<Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException>();
+                        r.Handle<AlreadyClosedException>();
+                        r.Handle<RabbitMqConnectionException>();
+                        r.Handle<BrokerUnreachableException>();
                     });
+
+                    // In case RMQ is down longer than retries, re-deliver
+                    cfg.UseDelayedRedelivery(r =>
+                        {
+                            r.Intervals(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30));
+                            r.Handle<AlreadyClosedException>();
+                            r.Handle<RabbitMqConnectionException>();
+                            r.Handle<BrokerUnreachableException>();
+                        }
+                    );
 
                     cfg.ConfigureEndpoints(context, new DefaultEndpointNameFormatter(includeNamespace: true));
                     cfg.Host(massTransitConfig.Url);
