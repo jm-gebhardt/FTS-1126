@@ -7,6 +7,9 @@
     <ItemGroup>
         <PackageReference Include="Gebhardt.Core.Observability" />
         <PackageReference Include="Gebhardt.Core.Observability.Abstractions" />
+        <PackageReference Include="OpenTelemetry.Resources.Container" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+        <PackageReference Include="OpenTelemetry.Api" />
         <PackageReference Include="MassTransit.Prometheus" />
         <PackageReference Include="MassTransit" />
         <PackageReference Include="FluentValidation" />
