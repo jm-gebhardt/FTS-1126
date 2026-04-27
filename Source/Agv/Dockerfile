@@ -47,7 +47,8 @@ RUN dotnet publish -c Release -o out --no-restore -r $(cat /tmp/rid) --self-cont
 FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-alpine
 
 # Install ICU libraries for full globalization support (required by Microsoft.Data.SqlClient)
-RUN apk add --no-cache icu-libs
+# Install tzdata so TimeZoneInfo.FindSystemTimeZoneById can resolve IANA ids (e.g. Europe/Berlin)
+RUN apk add --no-cache icu-libs tzdata
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 ARG PROJECT
