@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ public abstract class BaseDbContext<TContext> : DbContext
     where TContext : DbContext, IDbContext<TContext>
 {
     private const int CommandTimeOutMin = 5;
-    
+
     /// <inheritdoc />
     protected BaseDbContext(DbContextOptions options) : base(options)
     {
@@ -75,6 +76,55 @@ public abstract class BaseDbContext<TContext> : DbContext
                       END
                       """;
         await Database.ExecuteSqlRawAsync(sql);
+    }
+
+    /// <inheritdoc />
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidateStringLengths();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <inheritdoc />
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ValidateStringLengths();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ValidateStringLengths()
+    {
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified))
+            {
+                continue;
+            }
+
+            foreach (var property in entry.Metadata.GetProperties())
+            {
+                if (property.ClrType != typeof(string))
+                {
+                    continue;
+                }
+
+                int? maxLength = property.GetMaxLength();
+                if (maxLength is null)
+                {
+                    continue;
+                }
+
+                if (entry.CurrentValues[property] is not string value)
+                {
+                    continue;
+                }
+
+                if (value.Length > maxLength.Value)
+                {
+                    throw new StringLengthExceededException(value.Length, maxLength.Value, property.Name, entry.Metadata.DisplayName());
+                }
+            }
+        }
     }
 
     /// <summary>

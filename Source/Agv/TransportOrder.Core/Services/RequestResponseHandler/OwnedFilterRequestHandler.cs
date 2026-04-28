@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Filter;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.OwnedFilter;
@@ -22,7 +22,7 @@ public class OwnedFilterRequestHandler(IOwnedFilterRepository ownedFilterReposit
     {
         if (name.Length > threshold)
         {
-            throw new ResourceNameTooLongException(name, threshold);
+            throw new StringLengthExceededException(name.Length, threshold, nameof(name), nameof(OwnedFilter));
         }
     }
 

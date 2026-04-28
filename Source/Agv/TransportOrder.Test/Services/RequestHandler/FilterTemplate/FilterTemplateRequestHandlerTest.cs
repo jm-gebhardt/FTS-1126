@@ -1,6 +1,6 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Testing.Helpers;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.OwnedFilter;
@@ -32,7 +32,7 @@ public class FilterTemplateRequestHandlerTest
         FilterTemplateRequestHandlerTestFixture<AddFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<AddFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
-        await MediatorShould.ThrowRequestExceptionAsync<ResourceNameTooLongException>(async () =>   await fixture.GetResponseAsync<AddedFilterTemplate>(new AddFilterTemplate("owner", filterTemplate, new string('c', DbStringLimits.Description+1))));
+        await MediatorShould.ThrowRequestExceptionAsync<StringLengthExceededException>(async () => await fixture.GetResponseAsync<AddedFilterTemplate>(new AddFilterTemplate("owner", filterTemplate, new string('c', DbStringLimits.Description + 1))));
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public class FilterTemplateRequestHandlerTest
         FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
-        await MediatorShould.ThrowRequestExceptionAsync<ResourceNameTooLongException>(async () => await fixture.GetResponseAsync<OwnedFilterModificationResult>(new UpdateFilterTemplate("owner", filterTemplate, id, new string('c', DbStringLimits.Description+1))));
+        await MediatorShould.ThrowRequestExceptionAsync<StringLengthExceededException>(async () => await fixture.GetResponseAsync<OwnedFilterModificationResult>(new UpdateFilterTemplate("owner", filterTemplate, id, new string('c', DbStringLimits.Description + 1))));
     }
 
     [TestMethod]

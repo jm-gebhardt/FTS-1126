@@ -25,7 +25,7 @@ public class ExceptionHandlerMiddlewareTest
         var exceptionInstance = exceptionFunc.Invoke();
 
         await exceptionMiddleware.InvokeAsync(defaultContext, _ => throw exceptionInstance);
-        defaultContext.Response.StatusCode.ShouldBe((int) expectedStatusCode);
+        defaultContext.Response.StatusCode.ShouldBe((int)expectedStatusCode);
         defaultContext.Response.ContentType.ShouldBe("application/json");
         defaultContext.Response.Body.ShouldNotBeNull();
     }
@@ -33,7 +33,7 @@ public class ExceptionHandlerMiddlewareTest
     public static IEnumerable<object[]> GetExceptionTestData()
     {
         // BadRequest
-        yield return [() => new ResourceNameTooLongException(null!), HttpStatusCode.BadRequest];
+        yield return [() => new StringLengthExceededException(0, 0, null!), HttpStatusCode.BadRequest];
         yield return [() => new NotInCorrectStateException(null!), HttpStatusCode.BadRequest];
         yield return [() => new ActionGroupStateInvalidException(Mock.Of<ActionGroup>()), HttpStatusCode.BadRequest];
         yield return [() => new InvalidNodeTypeException(null!, null!, null!), HttpStatusCode.BadRequest];

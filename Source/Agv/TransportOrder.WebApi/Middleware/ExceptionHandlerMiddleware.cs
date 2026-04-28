@@ -16,7 +16,6 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
     {
         var statusCode = exception switch
         {
-            ResourceNameTooLongException => HttpStatusCode.BadRequest,
             NotInCorrectStateException => HttpStatusCode.BadRequest,
             ActionGroupStateInvalidException => HttpStatusCode.BadRequest,
             ActionNotAllowedInModeException => HttpStatusCode.BadRequest,

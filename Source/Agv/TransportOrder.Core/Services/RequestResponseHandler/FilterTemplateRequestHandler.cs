@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+﻿using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.FilterTemplate;
@@ -13,10 +13,10 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 /// Handles filter template related requests
 /// </summary>
 [UsedImplicitly]
-public class FilterTemplateRequestHandler(IOwnedFilterTemplateRepository filterTemplateRepository):
+public class FilterTemplateRequestHandler(IOwnedFilterTemplateRepository filterTemplateRepository) :
     IConsumer<AddFilterTemplate>,
     IConsumer<UpdateFilterTemplate>,
-    IConsumer<DeleteFilterTemplate>, 
+    IConsumer<DeleteFilterTemplate>,
     IConsumer<GetFilterTemplates>
 {
     /// <inheritdoc />
@@ -26,7 +26,7 @@ public class FilterTemplateRequestHandler(IOwnedFilterTemplateRepository filterT
 
         if (name.Length > DbStringLimits.Description)
         {
-            throw new ResourceNameTooLongException(filter.Name);
+            throw new StringLengthExceededException(name.Length, DbStringLimits.Description, nameof(name), nameof(FilterTemplate));
         }
 
         var ownedFilterCorrelationId = await filterTemplateRepository.AddOwnedResource(filter, owner, name);
@@ -41,7 +41,7 @@ public class FilterTemplateRequestHandler(IOwnedFilterTemplateRepository filterT
 
         if (name.Length > DbStringLimits.Description)
         {
-            throw new ResourceNameTooLongException(filter.Name);
+            throw new StringLengthExceededException(name.Length, DbStringLimits.Description, nameof(name), nameof(FilterTemplate));
         }
 
         bool result = await filterTemplateRepository.UpdateOwnedResource(filter, owner, ownedFilterCorrelationId, name);
