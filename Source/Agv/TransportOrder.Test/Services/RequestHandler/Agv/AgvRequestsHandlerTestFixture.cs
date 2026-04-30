@@ -7,6 +7,7 @@ using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Configurations;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -35,6 +36,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
     private readonly Mock<INodeRepository> _nodeRepositoryMock = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<ITransportOrderNotificationSender> _notSender = new();
 
     public AgvSettingsReadModel AgvSettings => EfAgvSettingsProvider.DefaultSettings;
 
@@ -51,6 +53,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             s.AddTransient(_ => _nodeRepositoryMock.Object);
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
+            s.AddSingleton<ITransportOrderNotificationSender>(_ => _notSender.Object);
             if (bus != null)
             {
                 var descriptor = new ServiceDescriptor(typeof(IBus), _ => bus, ServiceLifetime.Singleton);

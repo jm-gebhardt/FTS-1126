@@ -7,6 +7,9 @@ namespace Gebhardt.Acc.Common.Extensions;
 /// </summary>
 public static class ObjectExtension
 {
+    ///<summary>
+    /// Provides extension methods for objects
+    ///</summary>
     extension(object customObject)
     {
         /// <summary>

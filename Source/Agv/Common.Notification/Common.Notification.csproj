@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Gebhardt.Acc.Common.Notification</AssemblyName>
+        <OutputType>Library</OutputType>
+    </PropertyGroup>
+    <Import Project="..\SharedProjectSettings.csproj" />
+    <ItemGroup>
+        <PackageReference Include="Gebhardt.Core.NotificationCenter.Contracts" />
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Gebhardt.Acc.CommonTest" />
+    </ItemGroup>
+</Project>

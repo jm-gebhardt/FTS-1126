@@ -14,6 +14,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />
+        <ProjectReference Include="..\Common.Notification\Common.Notification.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
         <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
     </ItemGroup>

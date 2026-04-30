@@ -9,6 +9,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
@@ -80,6 +81,8 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     private readonly Mock<IRouteService> _routeService = new();
 
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+
+    private readonly Mock<ITransportOrderNotificationSender> _notSender = new();
 
     public string[] AgvSerialNumbers { get; } = { "AGV001", "AGV002", "AGV003" };
 
@@ -387,6 +390,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient(_ => _restrictedAreaRepository.Object);
             sc.AddTransient<ILoggingService, LoggingService>();
+            sc.AddSingleton<ITransportOrderNotificationSender>(_ => _notSender.Object);
         });
         base.Build();
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());

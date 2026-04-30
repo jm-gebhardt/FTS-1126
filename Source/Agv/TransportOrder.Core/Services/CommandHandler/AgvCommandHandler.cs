@@ -34,6 +34,8 @@ using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.Queue;
+using Gebhardt.Acc.Common.Notification.Models;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Utilities;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
@@ -106,6 +108,7 @@ public class AgvCommandHandler :
     private readonly ISemaphoreProvider<IQueueingSemaphore> _queueSemaphoreProvider;
     private readonly ILoggingService _loggingService;
     private readonly TimeProvider _timeProvider;
+    private readonly ITransportOrderNotificationSender _notificationSender;
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public AgvCommandHandler(ISemaphoreProvider<IAgvsSemaphore> agvsSemaphore,
@@ -122,7 +125,8 @@ public class AgvCommandHandler :
         IQueueRepository queueRepository,
         ILogger<AgvCommandHandler> logger,
         ILoggingService loggingService,
-        TimeProvider timeProvider
+        TimeProvider timeProvider,
+        ITransportOrderNotificationSender notificationSender
     )
     {
         _logger = logger;
@@ -140,6 +144,7 @@ public class AgvCommandHandler :
         _queueRepository = queueRepository;
         _loggingService = loggingService;
         _timeProvider = timeProvider;
+        _notificationSender = notificationSender;
     }
 
     /// <summary>
@@ -509,6 +514,13 @@ public class AgvCommandHandler :
         if (agv.IsOnline != wasOnline)
         {
             await UpdateOfflineErrors(context, agv);
+
+            await _notificationSender.SendAgvNotification(
+                $"Agv went {(agv.IsOnline ? "online" : "offline")}",
+                $"Agv {{agv}} went {(agv.IsOnline ? "online" : "offline")}",
+                new Dictionary<string, string> { { "agvId", agv.SerialNumber } },
+                [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
+            );
         }
 
         if (zoneIdsChanged)
@@ -867,6 +879,14 @@ public class AgvCommandHandler :
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
+
+        await _notificationSender.SendAgvNotification(
+            "Agv set to user mode",
+            "Agv {agv} was set to mode {mode} by user {user}.",
+            new Dictionary<string, string> { { "agv", agv.SerialNumber }, 
+                { "user", initiatingUser ?? "" }, {"mode", agv.Mode.PendingType.ToString() ?? "" } },
+            [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]);
+
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvModeChangePending, agv.CorrelationId, null, "AGV Mode Change Pending",
             $"AGV {agv.SerialNumber} is pending mode change to {agv.Mode.PendingType.ToString()}",
             new Dictionary<string, object?>
@@ -898,6 +918,14 @@ public class AgvCommandHandler :
         agv.SetNormalMode(initiatingUser);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
+
+        await _notificationSender.SendAgvNotification(
+            "Agv set to user mode",
+            "Agv {agv} was set to mode {mode} by user {user}.",
+            new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", initiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } }, 
+            [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
+        );
+
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvModeChanged, agv.CorrelationId, null, "AGV Mode Changed",
             $"AGV {agv.SerialNumber} set to mode '{agv.Mode.Type.ToString()}'",
             new Dictionary<string, object?>
@@ -938,6 +966,14 @@ public class AgvCommandHandler :
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
         await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
+
+        await _notificationSender.SendAgvNotification(
+            "Agv set to user mode",
+            "Agv {agv} was set to mode {mode} by user {user}.", 
+            new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", initiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } },
+            [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
+        );
+
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvModeChangePending, agv.CorrelationId, null, "AGV Mode Change Pending",
             $"AGV {agv.SerialNumber} is pending mode change to {agv.Mode.PendingType.ToString()}",
             new Dictionary<string, object?>
@@ -969,6 +1005,14 @@ public class AgvCommandHandler :
         }
         await context.RespondAsync(new LockAgvResult(agv.CorrelationId));
         await context.Publish(new AgvModeChangePending(agvCorrelationId, agv.Mode));
+
+        await _notificationSender.SendAgvNotification(
+            "Agv set to user mode",
+            "Agv {agv} was set to mode {mode} by user {user}.", 
+            new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", agv.Mode.InitiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } },
+            [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
+        );
+
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvModeChangePending, agv.CorrelationId, null, "AGV Mode Change Pending",
             $"AGV {agv.SerialNumber} is pending mode change to locked mode",
             new Dictionary<string, object?>
@@ -1474,6 +1518,13 @@ public class AgvCommandHandler :
 
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvDiscovered, correlationId, null, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered",
             new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
+
+        await _notificationSender.SendAgvNotification(
+            "Agv discovered",
+            "Agv {agv} was discovered.",
+            new Dictionary<string, string> { { "agv", agvSerialNumber } }, 
+            [new NotificationLink("Agv", NotificationLinkResource.Agv, correlationId)]
+        );
 
         var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
         var agv = new Agv(correlationId, settingsGroup.Id, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));

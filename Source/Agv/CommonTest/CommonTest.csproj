@@ -26,6 +26,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />
+        <ProjectReference Include="..\Common.Notification\Common.Notification.csproj" />
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>

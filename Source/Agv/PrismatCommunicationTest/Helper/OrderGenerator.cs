@@ -11,6 +11,7 @@ namespace Gebhardt.Acc.PrismatCommunicationTest.Helper;
 /// </summary>
 public static class OrderGenerator
 {
+    [PublicAPI]
     public const string DecisionNode = "Waypoint1";
 
     [PublicAPI]

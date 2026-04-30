@@ -21,6 +21,7 @@
     <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.1.2" />
     <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.15.1-beta.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageVersion Include="Gebhardt.Core.NotificationCenter.Contracts" Version="0.1.91" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <!-- ====================================== -->
     <!-- Do not update to v9+ (commercial license required). Stay on v8.x (open source) -->

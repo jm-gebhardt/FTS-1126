@@ -166,6 +166,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Vda5050
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPlanRunner.Test", "TestPlanRunner.Test\TestPlanRunner.Test.csproj", "{83084EB6-F9CF-4761-A73B-788F771D0711}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Notification", "Common.Notification\Common.Notification.csproj", "{9F9D4B28-CEE0-4916-A956-D9AC22503ECA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -448,6 +450,10 @@ Global
 		{83084EB6-F9CF-4761-A73B-788F771D0711}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83084EB6-F9CF-4761-A73B-788F771D0711}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83084EB6-F9CF-4761-A73B-788F771D0711}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F9D4B28-CEE0-4916-A956-D9AC22503ECA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F9D4B28-CEE0-4916-A956-D9AC22503ECA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F9D4B28-CEE0-4916-A956-D9AC22503ECA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F9D4B28-CEE0-4916-A956-D9AC22503ECA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -523,6 +529,7 @@ Global
 		{22ECC66A-2CCE-4AE3-8A64-4A20436058D0} = {49E5CFD7-5AF0-43F7-A6CF-DB58A76BCEC9}
 		{085F80EE-933C-49AE-A0D4-AB6811855C93} = {49E5CFD7-5AF0-43F7-A6CF-DB58A76BCEC9}
 		{83084EB6-F9CF-4761-A73B-788F771D0711} = {8676F262-A45D-4939-BEDB-E80F0305C42C}
+		{9F9D4B28-CEE0-4916-A956-D9AC22503ECA} = {896EEA92-CFB5-4A39-812A-E47E038AFF65}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8AF26A4-DDC8-432C-9E5A-C27502C1D249}

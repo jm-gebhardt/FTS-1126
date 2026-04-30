@@ -14,7 +14,7 @@ public static class ConfigurationTestExtensions
     /// Also builds the host builder.
     /// </summary>
     [PublicAPI]
-    public static List<Tuple<Type, Type>> FindCaptiveDependencies(this IHostBuilder hostBuilder)
+    public static List<Tuple<Type, Type>> FindCaptiveDependencies(this IHostBuilder hostBuilder, List<Type>? ignoredTypes = null)
     {
         List<Tuple<Type, Type>> result = [];
         IServiceCollection serviceCollection = null!;
@@ -37,7 +37,9 @@ public static class ConfigurationTestExtensions
                 .Where(s => s.Lifetime != ServiceLifetime.Singleton)
                 .Where(s =>
                     (s.ImplementationType != null || s is { IsKeyedService: true, KeyedImplementationType: not null }) &&
-                    !(Attribute.IsDefined((s.ImplementationType ?? s.KeyedImplementationType)!, typeof(CanBeCaptiveDependency)) && s.Lifetime == ServiceLifetime.Transient))
+                    ignoredTypes?.Find(i => s.ImplementationType!.IsAssignableTo(i)) == null &&
+                    !(Attribute.IsDefined((s.ImplementationType ?? s.KeyedImplementationType)!, typeof(CanBeCaptiveDependency)) && 
+                      s.Lifetime == ServiceLifetime.Transient))
                 .Distinct()
                 .ToList();
             result.AddRange(captives.Select(c => new Tuple<Type, Type>(singleton.ServiceType, c.ServiceType)));

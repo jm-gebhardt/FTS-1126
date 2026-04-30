@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.MassTransit;
 using Gebhardt.Acc.Common.Memory;
+using Gebhardt.Acc.Common.Notification;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
@@ -27,6 +28,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Validators;
+using Gebhardt.Acc.TransportOrder.Messages;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -66,6 +68,9 @@ public static class TransportOrderHostBuilderExtensions
             RegisterMiscellaneousServices(services);
 
             services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            services.AddNotifications(new NotificationManagerConfiguration(TransportOrderNotifications.NotificationTypes, MaximumConnectionRetries: 10));
+            services.AddSingleton<ITransportOrderNotificationSender, TransportOrderNotificationSender>();
         });
 
         return hostBuilder;

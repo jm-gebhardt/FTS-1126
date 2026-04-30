@@ -34,6 +34,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Language;
 using System.Linq.Expressions;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
@@ -58,6 +59,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     private readonly Mock<IRouteService> _routeService = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly Mock<ITransportOrderNotificationSender> _toNotificationSender = new();
 
     private static IEnumerable<Profile> Profiles => [new AgvStatusProfile(), new AgvProfile(), new CargoProfile(), new ActionProfile(), new LogEntryProfile()];
 
@@ -93,6 +95,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _routeService.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
+        collection.AddSingleton<ITransportOrderNotificationSender>(_ => _toNotificationSender.Object);
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;

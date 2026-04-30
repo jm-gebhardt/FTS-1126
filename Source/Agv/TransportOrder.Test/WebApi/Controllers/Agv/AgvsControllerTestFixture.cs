@@ -7,6 +7,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
@@ -65,6 +66,8 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     private Mock<IActionGroupRetrievalService> ActionGroupRetrievalService { get; }
 
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+
+    private readonly Mock<ITransportOrderNotificationSender> _notSender = new();
 
     private Mock<IRequestClient<QueueActionGroup>> QueueActionGroupRequestClient { get; set; }
 
@@ -278,6 +281,7 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
             sc.AddTransient(_ => QueueActionGroupRequestClient.Object);
             sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient<ILoggingService, LoggingService>();
+            sc.AddSingleton<ITransportOrderNotificationSender>(_ => _notSender.Object);
         });
 
         base.Build();

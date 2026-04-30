@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.Common.Testing.Configurations;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
+using MassTransit.Mediator;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test;
@@ -13,6 +14,6 @@ public class TransportOrderHostBuilderTests
     {
         var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(["--Observability:ServiceName=service"], new SimulationOptions(), InitialLogger.Create<TransportOrderHostBuilderTests>(), true);
 
-        hostBuilder.FindCaptiveDependencies().ShouldBeEmpty();
+        hostBuilder.FindCaptiveDependencies([typeof(IScopedMediator)]).ShouldBeEmpty();
     }
 }

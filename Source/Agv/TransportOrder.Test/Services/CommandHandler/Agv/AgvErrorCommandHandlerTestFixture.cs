@@ -2,7 +2,9 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
+using Gebhardt.Acc.Common.Notification;
 using Gebhardt.Acc.Common.Testing.Fixtures;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -20,7 +22,9 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
     public readonly Mock<IAgvDb> AgvDbMock = new();
     private readonly List<AgvError> _errors = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
-    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new(); 
+    private readonly Mock<IActionGroupRepository> _actionGroupRepository = new();
+    private readonly Mock<ITransportOrderNotificationSender> _toNotificationSender = new();
+    private readonly Mock<INotificationManager> _notManager = new();
 
     protected override IEnumerable<Profile> GetProfiles() => [new LogEntryProfile()];
 
@@ -43,6 +47,8 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddTransient(_ => _actionGroupRepository.Object);
+        collection.AddSingleton<ITransportOrderNotificationSender>(_ => _toNotificationSender.Object);
+        collection.AddSingleton<INotificationManager>(_ => _notManager.Object);
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }

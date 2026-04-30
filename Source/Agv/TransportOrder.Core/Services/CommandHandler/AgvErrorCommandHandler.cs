@@ -2,6 +2,8 @@ using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Notification.Models;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -26,13 +28,15 @@ public class AgvErrorCommandHandler :
     private readonly IAgvDb _agvDb;
     private readonly ILogger<AgvErrorCommandHandler> _logger;
     private readonly ILoggingService _loggingService;
+    private readonly ITransportOrderNotificationSender _notificationSender;
 
     /// <inheritdoc cref="AgvErrorCommandHandler"/>>
-    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger, ILoggingService loggingService)
+    public AgvErrorCommandHandler(IAgvDb agvDb, ILogger<AgvErrorCommandHandler> logger, ILoggingService loggingService, ITransportOrderNotificationSender notificationSender)
     {
         _agvDb = agvDb;
         _logger = logger;
         _loggingService = loggingService;
+        _notificationSender = notificationSender;
     }
 
     private async Task LogErrors(List<AgvError> errors, Agv agv)
@@ -119,6 +123,16 @@ public class AgvErrorCommandHandler :
         {
             position ??= _agvDb.Positions.GetPosition(correlationId).AgvPosition;
             await publishEndpoint.Publish(new AgvErrorReceived(error, position, agv.SerialNumber));
+
+            await _notificationSender.SendAgvNotification("Agv error received",
+                "Agv {agv} threw error {error}.",
+                new Dictionary<string, string>
+                {
+                    { "agv", agv.SerialNumber }, { "error", error.ErrorTitle ?? error.ErrorCode ?? error.ErrorType }
+                },
+                [
+                    new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)
+                ]);
         }
 
         if (resolvedErrors.Any(e => e.IsPushedManually()))
