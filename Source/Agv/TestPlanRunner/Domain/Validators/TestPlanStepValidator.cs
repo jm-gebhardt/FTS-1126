@@ -25,7 +25,7 @@ public class TestPlanStepValidator : AbstractValidator<TestPlanStep>
         }).Otherwise(() =>
         {
             RuleFor(x => x.TargetNode).NotEmpty().WithMessage(s => $"Step must have a target node ({s.TargetNode})");
-            RuleFor(x => x.TargetNode).Must(x => stationProvider.StationExists(x ?? string.Empty)).WithMessage(s => $"Step target {s.TargetNode} does not exist");
+            RuleFor(x => x.TargetNode).Must(x => stationProvider.StationExists(x ?? string.Empty)).When(step => step.StepType != StepType.Move).WithMessage(s => $"Step target {s.TargetNode} does not exist");
             RuleFor(x => x.Source).Empty().WithMessage("Step must not have a source");
             RuleFor(x => x.Destination).Empty().WithMessage("Step must not have a destination");
             RuleFor(x => x.LeRotation).Empty().WithMessage("Step must not have a le rotation");

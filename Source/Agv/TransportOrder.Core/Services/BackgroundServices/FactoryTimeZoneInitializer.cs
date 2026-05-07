@@ -38,7 +38,7 @@ public class FactoryTimeZoneInitializer(
 
     private TimeZoneInfo ResolveSeedTimeZone()
     {
-        var configured = configuration.GetValue<string>(TimeZoneConfigKey);
+        string? configured = configuration.GetValue<string>(TimeZoneConfigKey);
         if (string.IsNullOrWhiteSpace(configured))
         {
             logger.LogInformation(

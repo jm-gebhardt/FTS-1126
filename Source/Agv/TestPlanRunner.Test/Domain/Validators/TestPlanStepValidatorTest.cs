@@ -87,7 +87,7 @@ public class TestPlanStepValidatorTest
     // Non-HostOrder step tests
 
     [TestMethod]
-    public void Validate_NonHostOrder_TargetNodeEmpty_Invalid()
+    public void Validate_NonHostOrderPick_TargetNodeEmpty_Invalid()
     {
         var fixture = new TestPlanStepValidatorTestFixture();
 
@@ -97,7 +97,17 @@ public class TestPlanStepValidatorTest
     }
 
     [TestMethod]
-    public void Validate_NonHostOrder_TargetNodeNotExists_Invalid()
+    public void Validate_NonHostOrderMove_TargetNodeNotStation_Valid()
+    {
+        var fixture = new TestPlanStepValidatorTestFixture();
+
+        var step = new TestPlanStep { StepType = StepType.Move, TargetNode = "waypoint_node"  };
+
+        fixture.Validator.Validate(step).IsValid.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void Validate_NonHostOrderPick_TargetNodeNotExists_Invalid()
     {
         var fixture = new TestPlanStepValidatorTestFixture();
 
