@@ -73,10 +73,10 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     private readonly GraphNode[] _nodes =
     {
-        new("node00".ToGuid(), "node00") { X = 0f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node10".ToGuid(), "node10") { X = 1f, Y = 0f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node01".ToGuid(), "node01") { X = 0f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint },
-        new("node11".ToGuid(), "node11") { X = 1f, Y = 1f, Z = 0f, Type = AgvGraph.NodeType.WayPoint }
+        new("node00".ToGuid(), "node00") { X = 0f, Y = 0f, Z = 0f, Type = [AgvGraph.NodeType.WayPoint] },
+        new("node10".ToGuid(), "node10") { X = 1f, Y = 0f, Z = 0f, Type = [AgvGraph.NodeType.WayPoint] },
+        new("node01".ToGuid(), "node01") { X = 0f, Y = 1f, Z = 0f, Type = [AgvGraph.NodeType.WayPoint] },
+        new("node11".ToGuid(), "node11") { X = 1f, Y = 1f, Z = 0f, Type = [AgvGraph.NodeType.WayPoint] }
     };
 
     private IRequestClient<GetAgvs>? _getAgvsRequestClient;

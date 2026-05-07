@@ -13,9 +13,9 @@ public class AgvNodeActionExtensionsTest
     {
         ICollection<AgvNodeAction> actions = [new() { ActionType = "pick" }];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        result.ShouldBe(NodeType.Pick);
+        result.ShouldHaveSingleItem().ShouldBe(NodeType.Pick);
     }
 
     [TestMethod]
@@ -23,9 +23,9 @@ public class AgvNodeActionExtensionsTest
     {
         ICollection<AgvNodeAction> actions = [new() { ActionType = "drop" }];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        result.ShouldBe(NodeType.Drop);
+        result.ShouldHaveSingleItem().ShouldBe(NodeType.Drop);
     }
 
     [TestMethod]
@@ -37,9 +37,9 @@ public class AgvNodeActionExtensionsTest
             new() { ActionType = "drop" }
         ];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        result.ShouldBe(NodeType.PickDrop);
+        result.ShouldHaveSingleItem().ShouldBe(NodeType.PickDrop);
     }
 
     [TestMethod]
@@ -47,9 +47,9 @@ public class AgvNodeActionExtensionsTest
     {
         ICollection<AgvNodeAction> actions = [new() { ActionType = "startCharging" }];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        result.ShouldBe(NodeType.Charge);
+        result.ShouldHaveSingleItem().ShouldBe(NodeType.Charge);
     }
 
     [TestMethod]
@@ -61,11 +61,10 @@ public class AgvNodeActionExtensionsTest
             new() { ActionType = "startCharging" }
         ];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        var list = result.ShouldBeOfType<List<NodeType>>();
-        list.ShouldContain(NodeType.Pick);
-        list.ShouldContain(NodeType.Charge);
+        result.ShouldContain(NodeType.Pick);
+        result.ShouldContain(NodeType.Charge);
     }
 
     [TestMethod]
@@ -73,9 +72,9 @@ public class AgvNodeActionExtensionsTest
     {
         ICollection<AgvNodeAction> actions = [];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        result.ShouldBe(NodeType.WayPoint);
+        result.ShouldHaveSingleItem().ShouldBe(NodeType.WayPoint);
     }
 
     [TestMethod]
@@ -83,9 +82,9 @@ public class AgvNodeActionExtensionsTest
     {
         ICollection<AgvNodeAction> actions = [new() { ActionType = "customAction" }];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        result.ShouldBe(NodeType.WayPoint);
+        result.ShouldHaveSingleItem().ShouldBe(NodeType.WayPoint);
     }
 
     [TestMethod]
@@ -98,10 +97,9 @@ public class AgvNodeActionExtensionsTest
             new() { ActionType = "startCharging" }
         ];
 
-        object result = actions.InferNodeType();
+        ICollection<NodeType> result = actions.InferNodeType();
 
-        var list = result.ShouldBeOfType<List<NodeType>>();
-        list.ShouldContain(NodeType.PickDrop);
-        list.ShouldContain(NodeType.Charge);
+        result.ShouldContain(NodeType.PickDrop);
+        result.ShouldContain(NodeType.Charge);
     }
 }

@@ -189,13 +189,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         }
 
         List<GraphNode> graphNodes = nodes.ToList();
-        List<GraphNode> stations = graphNodes.Where(n => n.Type switch
-        {
-            AgvGraph.NodeType.Pick => true,
-            AgvGraph.NodeType.Drop => true,
-            AgvGraph.NodeType.PickDrop => true,
-            _ => false
-        }).ToList();
+        List<GraphNode> stations = graphNodes.Where(n => n.IsPickOrDropStation()).ToList();
 
         List<GraphNode> spawnGraphNodes = graphNodes.Where(n => SpawnNodeIds != null && SpawnNodeIds.Contains(n.Name)).ToList();
         if (SpawnNodeIds is { Length: > 0 } && spawnGraphNodes.Count != SpawnNodeIds.Length)

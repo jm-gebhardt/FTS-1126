@@ -178,7 +178,7 @@ public class CreateActionGroupRequestHandlerTest
     [TestMethod]
     public async Task CreatePickDropActionGroup_OnlyPickOrDrop_NoAssignedAgv_ThrowsAgvNotAssignedToActionGroupException(AgvGraph.NodeType nodeType, string? source, string? target)
     {
-        var node = new GraphNode("a known node".ToGuid(), "a known node") { Type = nodeType };
+        var node = new GraphNode("a known node".ToGuid(), "a known node") { Type = [nodeType] };
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithNodes([node])
             .WithValidationResult(new ValidationResult())
@@ -224,7 +224,7 @@ public class CreateActionGroupRequestHandlerTest
     public async Task CreatePickDropActionGroup_OnlyPickOrDrop_AssignedAgvNotInOrPendingMaintenanceMode_ThrowsActionNotAllowedInModeException(AgvGraph.NodeType nodeType, string? source, string? target)
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        var node = new GraphNode("a known node".ToGuid(), "a known node") { Type = nodeType };
+        var node = new GraphNode("a known node".ToGuid(), "a known node") { Type = [nodeType] };
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithAgvs([agv])
             .WithNodes([node])
@@ -254,7 +254,7 @@ public class CreateActionGroupRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.PrepareMaintenanceMode(null, null);
         agv.SwitchMode();
-        var node = new GraphNode("a known node".ToGuid(), "a known node") { Type = nodeType };
+        var node = new GraphNode("a known node".ToGuid(), "a known node") { Type = [nodeType] };
         var fixture = new CreateActionGroupRequestHandlerTestFixture()
             .WithAgvs([agv])
             .WithNodes([node])

@@ -38,5 +38,10 @@ public enum ComparisonVariant
     /// <summary>
     /// !=
     /// </summary>
-    Neq
+    Neq,
+
+    /// <summary>
+    /// Negated substring match with placeholders.
+    /// </summary>
+    NotLike
 }

@@ -42,33 +42,33 @@ public static class AgvGraphGenerator
     private const string Way4 = "WAY4"; // Waypoint 4
     private const string Dbl1 = "DBL1"; // Station with double type: charge & park
 
-    public static GraphNode Src1Node { get; } = new(Src1.ToGuid(), Src1) { Type = AgvGraph.NodeType.Pick, X = 2f, Y = 2f, Z = 0f };
+    public static GraphNode Src1Node { get; } = new(Src1.ToGuid(), Src1) { Type = [AgvGraph.NodeType.Pick], X = 2f, Y = 2f, Z = 0f };
 
-    public static GraphNode Src2Node { get; } = new(Src2.ToGuid(), Src2) { Type = AgvGraph.NodeType.Pick, X = 3f, Y = 1f, Z = 0f };
+    public static GraphNode Src2Node { get; } = new(Src2.ToGuid(), Src2) { Type = [AgvGraph.NodeType.Pick], X = 3f, Y = 1f, Z = 0f };
 
-    public static GraphNode Src3Node { get; } = new(Src3.ToGuid(), Src3) { Type = AgvGraph.NodeType.Pick, X = 5f, Y = 1f, Z = 0f };
+    public static GraphNode Src3Node { get; } = new(Src3.ToGuid(), Src3) { Type = [AgvGraph.NodeType.Pick], X = 5f, Y = 1f, Z = 0f };
 
-    public static GraphNode Dst1Node { get; } = new(Dst1.ToGuid(), Dst1) { Type = AgvGraph.NodeType.Drop, X = 2f, Y = 5f, Z = 0f };
+    public static GraphNode Dst1Node { get; } = new(Dst1.ToGuid(), Dst1) { Type = [AgvGraph.NodeType.Drop], X = 2f, Y = 5f, Z = 0f };
 
-    public static GraphNode Dst2Node { get; } = new(Dst2.ToGuid(), Dst2) { Type = AgvGraph.NodeType.Drop, X = 3f, Y = 6f, Z = 0f };
+    public static GraphNode Dst2Node { get; } = new(Dst2.ToGuid(), Dst2) { Type = [AgvGraph.NodeType.Drop], X = 3f, Y = 6f, Z = 0f };
 
-    public static GraphNode Dst3Node { get; } = new(Dst3.ToGuid(), Dst3) { Type = AgvGraph.NodeType.Drop, X = 5f, Y = 6f, Z = 0f };
+    public static GraphNode Dst3Node { get; } = new(Dst3.ToGuid(), Dst3) { Type = [AgvGraph.NodeType.Drop], X = 5f, Y = 6f, Z = 0f };
 
-    public static GraphNode Prk1Node { get; } = new(Prk1.ToGuid(), Prk1) { Type = AgvGraph.NodeType.Park, X = 1f, Y = 3f, Z = 0f };
+    public static GraphNode Prk1Node { get; } = new(Prk1.ToGuid(), Prk1) { Type = [AgvGraph.NodeType.Park], X = 1f, Y = 3f, Z = 0f };
 
-    public static GraphNode Prk2Node { get; } = new(Prk2.ToGuid(), Prk2) { Type = AgvGraph.NodeType.Park, X = 5f, Y = 3f, Z = 0f };
+    public static GraphNode Prk2Node { get; } = new(Prk2.ToGuid(), Prk2) { Type = [AgvGraph.NodeType.Park], X = 5f, Y = 3f, Z = 0f };
 
-    public static GraphNode Crg1Node { get; } = new(Crg1.ToGuid(), Crg1) { Type = AgvGraph.NodeType.Charge, X = 1f, Y = 4f, Z = 0f };
+    public static GraphNode Crg1Node { get; } = new(Crg1.ToGuid(), Crg1) { Type = [AgvGraph.NodeType.Charge], X = 1f, Y = 4f, Z = 0f };
 
-    public static GraphNode Crg2Node { get; } = new(Crg2.ToGuid(), Crg2) { Type = AgvGraph.NodeType.Charge, X = 5f, Y = 4f, Z = 0f };
+    public static GraphNode Crg2Node { get; } = new(Crg2.ToGuid(), Crg2) { Type = [AgvGraph.NodeType.Charge], X = 5f, Y = 4f, Z = 0f };
 
-    public static GraphNode Way1Node { get; } = new(Way1.ToGuid(), Way1) { Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 3f, Z = 0f };
+    public static GraphNode Way1Node { get; } = new(Way1.ToGuid(), Way1) { Type = [AgvGraph.NodeType.WayPoint], X = 2f, Y = 3f, Z = 0f };
 
-    public static GraphNode Way2Node { get; } = new(Way2.ToGuid(), Way2) { Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 3f, Z = 0f };
+    public static GraphNode Way2Node { get; } = new(Way2.ToGuid(), Way2) { Type = [AgvGraph.NodeType.WayPoint], X = 3f, Y = 3f, Z = 0f };
 
-    public static GraphNode Way3Node { get; } = new(Way3.ToGuid(), Way3) { Type = AgvGraph.NodeType.WayPoint, X = 2f, Y = 4f, Z = 0f };
+    public static GraphNode Way3Node { get; } = new(Way3.ToGuid(), Way3) { Type = [AgvGraph.NodeType.WayPoint], X = 2f, Y = 4f, Z = 0f };
 
-    public static GraphNode Way4Node { get; } = new(Way4.ToGuid(), Way4) { Type = AgvGraph.NodeType.WayPoint, X = 3f, Y = 4f, Z = 0f };
+    public static GraphNode Way4Node { get; } = new(Way4.ToGuid(), Way4) { Type = [AgvGraph.NodeType.WayPoint], X = 3f, Y = 4f, Z = 0f };
 
     /// <summary>
     /// Returns default nodes

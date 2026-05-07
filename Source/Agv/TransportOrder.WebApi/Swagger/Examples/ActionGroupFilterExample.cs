@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Filter.Api;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Filter.Enums;
@@ -80,6 +81,22 @@ public class ActionGroupFilterExample : IOperationFilter
                 ], LogicalCombinationVariant.Or),
                 nameof(FilteredActionGroupDto.LogEntries),
            CollectionAggregateVariant.Where
+            ),
+            new CollectionFilterDto(
+                new ValueComparisonFilterDto(
+                    nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.Target) + IFilter.AccessLevelSeparator + nameof(FilteredActionTargetDto.Node) + IFilter.AccessLevelSeparator + nameof(FilteredGraphNodeDto.Type),
+                    ComparisonVariant.Like,
+                    nameof(AgvGraph.NodeType.Pick)),
+                nameof(FilteredActionGroupDto.Actions),
+                CollectionAggregateVariant.Any
+            ),
+            new CollectionFilterDto(
+                new ValueComparisonFilterDto(
+                    nameof(FilteredActionGroupDto.Actions) + IFilter.AccessLevelSeparator + nameof(FilteredActionDto.Target) + IFilter.AccessLevelSeparator + nameof(FilteredActionTargetDto.Node) + IFilter.AccessLevelSeparator + nameof(FilteredGraphNodeDto.Type),
+                    ComparisonVariant.Like,
+                    nameof(AgvGraph.NodeType.Drop)),
+                nameof(FilteredActionGroupDto.Actions),
+                CollectionAggregateVariant.Any
             )
         ],
         LogicalCombinationVariant.And

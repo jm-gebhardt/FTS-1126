@@ -38,9 +38,14 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
 
             var inputType = noAccessor ? typeof(TContent) : accessor.Parameters.Select(p => p.Type).First();
 
-            if (Variant == ComparisonVariant.Like)
+            if (Variant is ComparisonVariant.Like or ComparisonVariant.NotLike)
             {
-                return FilterExpressionBuilder.GenerateContainsPredicate(inputType, content, Name, noAccessor ? null : accessor);
+                var containsExpr = FilterExpressionBuilder.GenerateContainsPredicate(inputType, content, Name, noAccessor ? null : accessor);
+                if (Variant == ComparisonVariant.NotLike)
+                {
+                    return Expression.Lambda(Expression.Not(containsExpr.Body), containsExpr.Parameters[0]);
+                }
+                return containsExpr;
             }
 
             bool isNullable = Nullable.GetUnderlyingType(accessor.ReturnType) != null && Nullable.GetUnderlyingType(typeof(TContent)) == null;
@@ -71,7 +76,21 @@ public sealed class ValueComparisonFilter<TContent>(string name, ComparisonVaria
             maxSearch = names.FindIndex(e => e == IFilter.ReadModelFilterLayer) + 1;
         }
 
-        return names[..maxSearch].Select((n, i) => Name.StartsWith(n) ? i : 0).Max();
+        int idx = names[..maxSearch].Select((n, i) => Name.StartsWith(n) ? i : 0).Max();
+
+        // When earlyBreaks is provided but this property has no domain accessor, it can only be
+        // evaluated using PropertyAccessors (read-model layer). If the best match is still an
+        // include (domain) layer, promote to the read-model layer to avoid a missing-accessor error.
+        if (earlyBreaks != null && !earlyBreaks.Contains(Name))
+        {
+            int readModelIdx = names.FindIndex(e => e == IFilter.ReadModelFilterLayer);
+            if (idx < readModelIdx)
+            {
+                return readModelIdx;
+            }
+        }
+
+        return idx;
     }
 }
 

@@ -15,7 +15,7 @@ public static class NodeGenerator
 
     public static GraphNode GenerateChargingNode(string nodeId = "CRG1")
     {
-        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = NodeType.Charge, X = -2f, Y = -2f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = [NodeType.Charge], X = -2f, Y = -2f, Z = 0f };
     }
 
     public static GraphNode GenerateNode(NodeType nodeType = NodeType.WayPoint, float x = 1, float y = 2, float z = 0, float theta = 0f, string nodeName = "Way1", DateTime timeStamp = default)
@@ -24,12 +24,12 @@ public static class NodeGenerator
         {
             timeStamp = DateTime.UtcNow;
         }
-        return new GraphNode(nodeName.ToGuid(), nodeName) { Type = nodeType, X = x, Y = y, Z = z, Theta = theta, TimeStamp = timeStamp, Id = nodeName.ToGuid(), Lock = new NodeLock(){NodeId = nodeName.ToGuid() } };
+        return new GraphNode(nodeName.ToGuid(), nodeName) { Type = [nodeType], X = x, Y = y, Z = z, Theta = theta, TimeStamp = timeStamp, Id = nodeName.ToGuid(), Lock = new NodeLock(){NodeId = nodeName.ToGuid() } };
     }
 
     public static GraphNode GenerateParkingNode(string nodeId = "PRK1")
     {
-        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = NodeType.Park, X = 0f, Y = 0f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = [NodeType.Park], X = 0f, Y = 0f, Z = 0f };
     }
 
     public static GraphNode GenerateNodeWithMultipleTypes(ICollection<NodeType> nodeTypes, string nodeId = "PRK1")
@@ -49,7 +49,7 @@ public static class NodeGenerator
     [UsedImplicitly]
     public static GraphNode GenerateMaintenanceNode(string nodeId = "MNT1")
     {
-        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = NodeType.Park, X = 0f, Y = 0f, Z = 0f };
+        return new GraphNode(nodeId.ToGuid(), nodeId) { Type = [NodeType.Park], X = 0f, Y = 0f, Z = 0f };
     }
 
     public static GraphNode[] GenerateRouteNodes(string destinationNode = "D2")

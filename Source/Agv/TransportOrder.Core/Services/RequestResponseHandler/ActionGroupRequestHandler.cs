@@ -244,11 +244,11 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         if (action.ActionType == ActionType.Pick && !targetNode.IsPickStation())
         {
-            throw new InvalidNodeTypeException(targetNode.Name, targetNode.TypeString(), $"{nameof(AgvGraph.NodeType.Pick)}");
+            throw new InvalidNodeTypeException(targetNode.Name, targetNode.Type.ToString(), $"{nameof(AgvGraph.NodeType.Pick)}");
         }
         if (action.ActionType == ActionType.Drop && !targetNode.IsDropStation())
         {
-            throw new InvalidNodeTypeException(targetNode.Name, targetNode.TypeString(), $"{nameof(AgvGraph.NodeType.Drop)}");
+            throw new InvalidNodeTypeException(targetNode.Name, targetNode.Type.ToString(), $"{nameof(AgvGraph.NodeType.Drop)}");
         }
 
         _logger.LogInformation("Triggering setting target {TargetNode} for action {ActionCorrelationId} of action group {ActionGroupCorrelationId}", targetNode.Name, actionCorrelationId, correlationId);

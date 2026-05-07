@@ -39,7 +39,7 @@ public class EfAgvRepositoryTestFixture : TransportOrderDbFixture
     public async Task AddChargingAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
         await Add(agv);
-        var graphNode = new GraphNode(agv.SerialNumber.ToGuid(), agv.SerialNumber) { Type = AgvGraph.NodeType.Charge };
+        var graphNode = new GraphNode(agv.SerialNumber.ToGuid(), agv.SerialNumber) { Type = [AgvGraph.NodeType.Charge] };
         var node = _mapper.Map<GraphNode>(graphNode);
         await AddAsync(node);
         var nodeLock = new NodeLock(graphNode, NodeLockState.Occupied, false, agv.CorrelationId, DateTime.UtcNow);

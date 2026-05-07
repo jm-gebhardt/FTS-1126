@@ -99,6 +99,18 @@ internal static class TypeInitializerExpressionBuilder
                     }
                     valueExpression = bindingExpression.Body.ReplaceParameter(bindingExpression.Parameters.First(),  valueExpression);
                 }
+                else if (targetMemberType != sourceMemberType)
+                {
+                    if (targetMemberType == typeof(string) && !sourceMemberType.IsAssignableTo(typeof(string)))
+                    {
+                        var toStringMethod = typeof(object).GetMethod(nameof(ToString), Type.EmptyTypes)!;
+                        valueExpression = Expression.Call(valueExpression, toStringMethod);
+                    }
+                    else
+                    {
+                        valueExpression = Expression.Convert(valueExpression, targetMemberType);
+                    }
+                }
             }
             
             memberBindings.Add(Expression.Bind(member, valueExpression));

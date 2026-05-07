@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -139,7 +140,7 @@ public class AgvControllerTest
                 n => n.Y.ShouldBe(agvGraph.Nodes.ElementAt(i).Y),
                 n => n.Z.ShouldBe(agvGraph.Nodes.ElementAt(i).Z),
                 n => n.Theta.ShouldBe(agvGraph.Nodes.ElementAt(i).Theta),
-                x => x.Type.ToString().ShouldBe(agvGraph.Nodes.ElementAt(i).Type.ToString()));
+                x => x.Type.ShouldBe(agvGraph.Nodes.ElementAt(i).GetPrimaryType()));
         }
 
         for (int i = 0; i < graph.Edges.Count; i++)

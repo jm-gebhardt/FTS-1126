@@ -95,7 +95,7 @@ public class ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> : M
 
     public Guid GetExistingNode(AgvGraph.NodeType? nodeType = null)
     {
-        return (Guid)_graph?.Nodes.First(n => nodeType == null || (AgvGraph.NodeType)n.Type == nodeType).Id!;
+        return (Guid)_graph?.Nodes.First(n => nodeType == null || n.Type.Contains(nodeType.Value)).Id!;
     }
 
     public ActionGroupRequestHandlerTestFixture<TRequestClient, TConsumer> WithFakeTriggeredActionCompletion()

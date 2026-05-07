@@ -143,7 +143,7 @@ public class GridGraphGenerator : GraphGeneratorBase
                 string name = $"N{x:000}-{y:000}";
                 GridNodes.Add(new GraphNode(name.ToGuid(), name)
                 {
-                    Type = AgvGraph.NodeType.WayPoint,
+                    Type = [AgvGraph.NodeType.WayPoint],
                     X = x * NodeOffset + OriginXOffset,
                     Y = y * NodeOffset + OriginYOffset,
                     TimeStamp = _timeStamp
@@ -192,7 +192,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             var gridNode = GridNodes[index];
             var sourceNode = new GraphNode(name.ToGuid(), name)
             {
-                Type = AgvGraph.NodeType.Pick,
+                Type = [AgvGraph.NodeType.Pick],
                 X = gridNode.X,
                 Y = gridNode.Y - OriginYOffset / 2,
                 Theta = North,
@@ -219,7 +219,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             var gridNode = GridNodes[GridNodes.Count - index - 1];
             var destinationNode = new GraphNode(name.ToGuid(), name)
             {
-                Type = AgvGraph.NodeType.Drop,
+                Type = [AgvGraph.NodeType.Drop],
                 X = gridNode.X,
                 Y = gridNode.Y + OriginYOffset / 2,
                 Theta = South,
@@ -257,7 +257,7 @@ public class GridGraphGenerator : GraphGeneratorBase
 
         var serviceNode = new GraphNode(name.ToGuid(), name)
         {
-            Type = nodeType,
+            Type = [nodeType],
             X = gridNode.X + OriginXOffset / 2 * side,
             Y = gridNode.Y,
             Theta = side == -1 ? West : East,

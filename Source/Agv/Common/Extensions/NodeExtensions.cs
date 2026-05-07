@@ -31,52 +31,19 @@ public static class NodeExtensions
         /// True if node type is Charge, Drop, Pick, PickDrop or Park.
         /// </summary>
         /// <returns>True if node type represents a station.</returns>
-        public bool IsStation()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return type.IsStation();
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => n.IsStation());
-        }
+        public bool IsStation() => node.Type.Any(n => n.IsStation());
 
         /// <summary>
         /// True if the given node is a pick station.
         /// </summary>
         /// <returns>True if the node is a pick station; otherwise, false.</returns>
-        public bool IsPickStation()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return new[]
-                {
-                    AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop
-                }.Contains(type);
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => new[]
-            {
-                AgvGraph.NodeType.Pick, AgvGraph.NodeType.PickDrop
-            }.Contains(n));
-        }
+        public bool IsPickStation() => node.Type.Any(n => n is AgvGraph.NodeType.Pick or AgvGraph.NodeType.PickDrop);
 
         /// <summary>
         /// True if the given node is a drop station.
         /// </summary>
         /// <returns>True if the node is a drop station; otherwise, false.</returns>
-        public bool IsDropStation()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return new[]
-                {
-                    AgvGraph.NodeType.Drop, AgvGraph.NodeType.PickDrop
-                }.Contains(type);
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => new[]
-            {
-                AgvGraph.NodeType.Drop, AgvGraph.NodeType.PickDrop
-            }.Contains(n));
-        }
+        public bool IsDropStation() => node.Type.Any(n => n is AgvGraph.NodeType.Drop or AgvGraph.NodeType.PickDrop);
 
         /// <summary>
         /// True if the given node is either a pick or drop (or PickDrop) station.
@@ -87,86 +54,35 @@ public static class NodeExtensions
         /// <summary>
         /// True if a nodes needs to be reserved.
         /// </summary>
-        public bool NeedsReservation()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return new[]
-                {
-                    AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park
-                }.Contains(type);
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => new[]
-            {
-                AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park
-            }.Contains(n));
-        }
+        public bool NeedsReservation() => node.Type.Any(n => n is AgvGraph.NodeType.Charge or AgvGraph.NodeType.Park);
 
         /// <summary>
         /// Get the types of the node that need reservation.
         /// </summary>
-        public ICollection<AgvGraph.NodeType> GetReservableNodeTypes()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return node.NeedsReservation()? [type]:[];
-            }
-
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Intersect(new List<AgvGraph.NodeType>()
-            {
-                AgvGraph.NodeType.Charge, AgvGraph.NodeType.Park
-            }).ToList();
-        }
+        public ICollection<AgvGraph.NodeType> GetReservableNodeTypes() =>
+            node.Type.Where(n => n is AgvGraph.NodeType.Charge or AgvGraph.NodeType.Park).ToList();
 
         /// <summary>
         /// True if a nodes is a charge node.
         /// </summary>
-        public bool IsCharger()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return type == AgvGraph.NodeType.Charge;
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => n == AgvGraph.NodeType.Charge);
-        }
+        public bool IsCharger() => node.Type.Any(n => n == AgvGraph.NodeType.Charge);
 
         /// <summary>
         /// True if a nodes is a park node.
         /// </summary>
-        public bool IsParker()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return type == AgvGraph.NodeType.Park;
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Any(n => n == AgvGraph.NodeType.Park);
-        }
+        public bool IsParker() => node.Type.Any(n => n == AgvGraph.NodeType.Park);
 
         /// <summary>
         /// Get the primary type of the node.
         /// </summary>
         /// <returns></returns>
-        public AgvGraph.NodeType GetPrimaryType()
-        {
-            if (node.Type is AgvGraph.NodeType type)
-            {
-                return type;
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).First();
-        }
+        public AgvGraph.NodeType GetPrimaryType() => node.Type.First();
 
         /// <summary>
         /// Get the additional types of the node.
         /// </summary>
         /// <returns></returns>
-        public ICollection<AgvGraph.NodeType> GetAdditionalTypes()
-        {
-            if (node.Type is AgvGraph.NodeType)
-            {
-                return [];
-            }
-            return ((ICollection<AgvGraph.NodeType>)node.Type).Skip(1).ToList();
-        }
+        public ICollection<AgvGraph.NodeType> GetAdditionalTypes() => node.Type.Skip(1).ToList();
     }
 
     /// <summary>

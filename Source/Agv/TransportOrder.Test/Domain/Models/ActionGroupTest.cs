@@ -315,7 +315,7 @@ public class ActionGroupTest
     [TestMethod]
     public void SetTargetForAction_FailedActionWrongTargetType_TargetResetStateStarted()
     {
-        var targetNode = new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Charge };
+        var targetNode = new GraphNode(Guid.NewGuid(), "name") { Type = [AgvGraph.NodeType.Charge] };
         var groupId = Guid.NewGuid();
         var action = new AgvAction { CorrelationId = Guid.NewGuid(), ActionType = ActionType.Drop, State = ActionState.Started, ParentId = groupId, Target = new ActionTarget(targetNode) };
         var actionGroup = new ActionGroup { CorrelationId = groupId, State = ActionGroupState.Started, Actions = [action] };
@@ -1452,7 +1452,7 @@ public class ActionGroupTest
     [TestMethod]
     public void Fail_WrongStationType_ReturnsActionFailedWrongTargetType(ActionType actionType, AgvGraph.NodeType targetNodeType)
     {
-        var targetNode = new GraphNode(Guid.NewGuid(), "name") { Type = targetNodeType };
+        var targetNode = new GraphNode(Guid.NewGuid(), "name") { Type = [targetNodeType] };
         var groupId = Guid.NewGuid();
         var action = new AgvAction() { CorrelationId = Guid.NewGuid(), ActionType = actionType, State = ActionState.Started, ParentId = groupId, Target = new ActionTarget(targetNode) };
         var actionGroup = new ActionGroup() { CorrelationId = groupId, State = ActionGroupState.Started, Actions = [action] };

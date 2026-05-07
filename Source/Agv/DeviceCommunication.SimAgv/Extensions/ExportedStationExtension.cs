@@ -16,17 +16,8 @@ public static class ExportedStationExtension
     /// <returns></returns>
     public static GraphNode ToGraphNode(this ExportedStation station)
     {
-        object type = GetNodeType(station.Function);
-        bool isNodeType = type is AgvGraph.NodeType;
-        if (isNodeType)
-        {
-            return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, -station.Position.Y, 0f, (AgvGraph.NodeType) type, null, null, null)
-            {
-                Theta = (float) Mathematics.ConvertToRadians(90.0f) - station.Position.Theta,
-                TimeStamp = station.TimeStamp
-            };
-        }
-        return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, -station.Position.Y, 0f, (List<AgvGraph.NodeType>) type, null, null, null)
+        ICollection<AgvGraph.NodeType> types = GetNodeTypes(station.Function);
+        return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, -station.Position.Y, 0f, types, null, null, null)
         {
             Theta = (float) Mathematics.ConvertToRadians(90.0f) - station.Position.Theta,
             TimeStamp = station.TimeStamp
@@ -34,16 +25,15 @@ public static class ExportedStationExtension
     }
 
     /// <summary>
-    /// Convert station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/>
+    /// Convert station <see cref="Function"/> to <see cref="AgvGraph.NodeType"/> collection
     /// </summary>
     /// <param name="function"></param>
     /// <returns>The Mqtt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
-    private static object GetNodeType(object function)
+    private static ICollection<AgvGraph.NodeType> GetNodeTypes(object function)
     {
-        bool isFunction = function is Function;
-        if (isFunction)
+        if (function is Function singleFunction)
         {
-            return ParseNodeType((Function) function);
+            return [ParseNodeType(singleFunction)];
         }
         return ((List<Function>) function).Select(ParseNodeType).ToList();
     }

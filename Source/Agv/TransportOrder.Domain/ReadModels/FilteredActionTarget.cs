@@ -15,4 +15,4 @@ public record FilteredAgvPosition(float X, float Y, float Z, float Theta);
 
 /// <inheritdoc cref="GraphNode"/>
 [PublicAPI]
-public record FilteredGraphNode(string Name);
+public record FilteredGraphNode(object Name, object Type);

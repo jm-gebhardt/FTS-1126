@@ -17,11 +17,7 @@ public static class AgvNodeActionExtensions
         /// Infers the common graph <see cref="CommonAgvGraph.NodeType"/> from the action types
         /// defined on a node (e.g. pick, drop).
         /// </summary>
-        /// <returns>
-        /// A single <see cref="CommonAgvGraph.NodeType"/>,
-        /// a <see cref="List{T}"/> of node types when multiple apply.
-        /// </returns>
-        public object InferNodeType()
+        public ICollection<CommonAgvGraph.NodeType> InferNodeType()
         {
             HashSet<string> actionTypes = actions.Select(a => a.ActionType).ToHashSet();
 
@@ -51,10 +47,10 @@ public static class AgvNodeActionExtensions
 
             if (nodeTypes.Count == 0)
             {
-                return CommonAgvGraph.NodeType.WayPoint;
+                return [CommonAgvGraph.NodeType.WayPoint];
             }
 
-            return nodeTypes.Count == 1 ? nodeTypes[0] : nodeTypes;
+            return nodeTypes;
         }
     }
 }

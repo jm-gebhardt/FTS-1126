@@ -21,7 +21,7 @@ public class GraphProfileTest
 
         var graphNodeMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.GraphNode>(graphNode);
 
-        graphNodeMessageContent.Type.ShouldBe(graphNode.GetPrimaryType());
+        graphNodeMessageContent.Type.First().ShouldBe(graphNode.GetPrimaryType());
     }
 
     [TestMethod]
@@ -35,6 +35,6 @@ public class GraphProfileTest
         var graphMessageContent = mapper.Map<TransportOrder.Messages.MessageContent.Graph>(graph);
 
         graphMessageContent.ShouldNotBeNull();
-        graphMessageContent.Nodes.Single(n => n.Id == AgvGraphGenerator.Double1.Id).Type.ShouldBe(graph.Nodes.Single(n => n.Id == AgvGraphGenerator.Double1.Id).GetPrimaryType());
+        graphMessageContent.Nodes.Single(n => n.Id == AgvGraphGenerator.Double1.Id).Type.First().ShouldBe(graph.Nodes.Single(n => n.Id == AgvGraphGenerator.Double1.Id).GetPrimaryType());
     }
 }

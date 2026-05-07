@@ -72,7 +72,7 @@ public class NodeStationCommandHandlerTest
             .WithNodeLocks([oldLastNodeState])
             .WithNodeOccupied()
             .WithStation("old")
-            .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Charge })
+            .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = [AgvGraph.NodeType.Charge] })
             .WithNode(newLastNode)
             .WithQueue(null);
 
@@ -199,7 +199,7 @@ public class NodeStationCommandHandlerTest
             .WithNodeLocks([oldLastNodeState, newLastNodeState])
             .WithAnyStation()
             .WithNodeOccupied()
-            .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = AgvGraph.NodeType.Charge })
+            .WithNode(new GraphNode(Guid.NewGuid(), "name") { Type = [AgvGraph.NodeType.Charge] })
             .WithQueue(null);
 
         await fixture.TestHarness.Bus.Publish(

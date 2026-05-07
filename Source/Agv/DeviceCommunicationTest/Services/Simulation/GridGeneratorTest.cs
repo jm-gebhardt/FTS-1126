@@ -82,11 +82,11 @@ public class GridGeneratorTest
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 1, serviceNodeTypes);
         var graph = generator.Generate(Guid.NewGuid());
 
-        graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(1);
-        graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(1);
+        graph.Nodes.Count(n => n.Type.Contains(AgvGraph.NodeType.Charge)).ShouldBe(1);
+        graph.Nodes.Count(n => n.Type.Contains(AgvGraph.NodeType.Park)).ShouldBe(1);
 
-        graph.Nodes.First(n => (AgvGraph.NodeType) n.Type == serviceNodeTypes.First()).Theta.ShouldBe(West);
-        graph.Nodes.First(n => (AgvGraph.NodeType) n.Type == serviceNodeTypes.Last()).Theta.ShouldBe(East);
+        graph.Nodes.First(n => n.Type.Contains(serviceNodeTypes.First())).Theta.ShouldBe(West);
+        graph.Nodes.First(n => n.Type.Contains(serviceNodeTypes.Last())).Theta.ShouldBe(East);
     }
 
     /// <summary>
@@ -101,8 +101,8 @@ public class GridGeneratorTest
         var generator = new GridGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 2, serviceNodes);
         var graph = generator.Generate(Guid.NewGuid());
 
-        graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Charge).ShouldBe(2);
-        graph.Nodes.Count(n => n.Type is AgvGraph.NodeType.Park).ShouldBe(2);
+        graph.Nodes.Count(n => n.Type.Contains(AgvGraph.NodeType.Charge)).ShouldBe(2);
+        graph.Nodes.Count(n => n.Type.Contains(AgvGraph.NodeType.Park)).ShouldBe(2);
     }
 
     /// <summary>

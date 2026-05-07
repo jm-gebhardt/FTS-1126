@@ -27,12 +27,12 @@ public record GraphNode
     /// <summary>
     /// The type of the node
     /// </summary>
-    public AgvGraph.NodeType Type
+    public ICollection<AgvGraph.NodeType> Type
     {
         get;
         [UsedImplicitly]
         init;
-    }
+    } = [];
 
     /// <summary>
     /// The X coordinate of the node

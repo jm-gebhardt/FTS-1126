@@ -197,12 +197,11 @@ public class StationListParser
     /// </summary>
     /// <param name="function">The function(s) of the station.</param>
     /// <returns>The Mqtt.StationList.Station.function converted/mapped to AgvGraph.NodeType</returns>
-    private static object GetNodeType(object function)
+    private static ICollection<AgvGraph.NodeType> GetNodeType(object function)
     {
-        bool isFunction = function is Function;
-        if (isFunction)
+        if (function is Function singleFunction)
         {
-            return ParseNodeType((Function) function);
+            return [ParseNodeType(singleFunction)];
         }
         return ((List<Function>) function).Select(ParseNodeType).ToList();
     }

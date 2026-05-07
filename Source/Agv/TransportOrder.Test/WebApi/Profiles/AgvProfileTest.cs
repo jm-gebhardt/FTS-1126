@@ -32,7 +32,7 @@ public class AgvProfileTest
         var stateTransitionTimestamp = DateTime.UtcNow;
 
         var actionGroup = new ActionGroupReadModel(correlationId, orderId, correlationId, stateTransitionTimestamp, null, null, TimeSpan.FromHours(99), ActionGroupState.Created, ActionGroupCreator.TransportOrderWebApi, Priority.Default, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>(), false);
-        var agvMessageContent = new TransportOrder.Messages.MessageContent.Agv(correlationId, agvSerialNumber, agvSerialNumber, AgvState.Idle, stateTransitionTimestamp, DateTime.MinValue, true, false, false, true, 50d, false, actionGroup, new List<AgvError>(), new TransportOrder.Messages.MessageContent.GraphNode { Name = lastNodeName, Id = lastNodeName.ToGuid(), Type = AgvGraph.NodeType.WayPoint, X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f }, new AgvMode(ModeType.Normal, correlationId), ["test"], ["station"], 66.9f, 22.5f);
+        var agvMessageContent = new TransportOrder.Messages.MessageContent.Agv(correlationId, agvSerialNumber, agvSerialNumber, AgvState.Idle, stateTransitionTimestamp, DateTime.MinValue, true, false, false, true, 50d, false, actionGroup, new List<AgvError>(), new TransportOrder.Messages.MessageContent.GraphNode { Name = lastNodeName, Id = lastNodeName.ToGuid(), Type = [AgvGraph.NodeType.WayPoint], X = 1.0f, Y = 2.0f, Z = 0.0f, Theta = 0.0f }, new AgvMode(ModeType.Normal, correlationId), ["test"], ["station"], 66.9f, 22.5f);
 
         var mapper = GetMapper();
 

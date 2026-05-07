@@ -22,7 +22,11 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<GraphNode>
         jsonOptions.Converters.Add(new JsonNodeTypeConverter());
         builder.Property(e => e.Type).HasConversion(
             v => JsonSerializer.Serialize(v, jsonOptions),
-            v => JsonSerializer.Deserialize<object>(v, jsonOptions)!);
+            v => JsonSerializer.Deserialize<ICollection<AgvGraph.NodeType>>(v, jsonOptions)!);
+        builder.Property(e => e.TypeString)
+            .UsePropertyAccessMode(PropertyAccessMode.Property)
+            .HasMaxLength(DbStringLimits.Description)
+            .HasComputedColumnSql("CASE WHEN LEFT([Type], 1) = '[' THEN [Type] ELSE JSON_VALUE([Type], '$') END");
         builder.Property(e => e.DockingDirection).HasMaxLength(DbStringLimits.State);
 
         builder.ConfigureAllProperties(except: [nameof(GraphNode.Lock)]);

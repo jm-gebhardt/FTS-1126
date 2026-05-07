@@ -11,23 +11,17 @@ public static class NodeTypeExtension
     /// <summary>
     /// Get the node type that matches the given action type.
     /// </summary>
-    /// <param name="nodeType">The node type object.</param>
+    /// <param name="nodeTypes">The node types.</param>
     /// <param name="actionType">The action type.</param>
     /// <returns>The appropriate node type.</returns>
-    ///<exception cref="InvalidCastException">If object is not of type <see cref="NodeType"/> or a collection of it.</exception>
-    public static NodeType GetTypeForActionType(this object nodeType, ActionType actionType)
+    public static NodeType GetTypeForActionType(this ICollection<NodeType> nodeTypes, ActionType actionType)
     {
-        if (nodeType is NodeType type)
-        {
-            return type;
-        }
-        var availableNodes = (ICollection<NodeType>)nodeType;
         return actionType switch
         {
-            ActionType.Pick => availableNodes.FirstOrDefault(n => n is NodeType.Pick or NodeType.PickDrop),
-            ActionType.Drop => availableNodes.FirstOrDefault(n => n is NodeType.Drop or NodeType.PickDrop),
-            ActionType.Charge => availableNodes.FirstOrDefault(n => n == NodeType.Charge),
-            ActionType.Move => availableNodes.FirstOrDefault(),
+            ActionType.Pick => nodeTypes.FirstOrDefault(n => n is NodeType.Pick or NodeType.PickDrop),
+            ActionType.Drop => nodeTypes.FirstOrDefault(n => n is NodeType.Drop or NodeType.PickDrop),
+            ActionType.Charge => nodeTypes.FirstOrDefault(n => n == NodeType.Charge),
+            ActionType.Move => nodeTypes.FirstOrDefault(),
             _ => NodeType.WayPoint
         };
     }
@@ -49,21 +43,10 @@ public static class NodeTypeExtension
     }
 
     /// <summary>
-    /// True, if the node is of the given type.
+    /// True, if the node types contain the given type.
     /// </summary>
-    /// <param name="type">The node type.</param>
+    /// <param name="nodeTypes">The node types.</param>
     /// <param name="nodeType">The node type to compare to.</param>
-    public static bool IsOfType(this object type, NodeType nodeType)
-    {
-        if (type is NodeType singleType)
-        {
-            return singleType == nodeType;
-        }
-
-        if (type is ICollection<NodeType> multipleTypes)
-        {
-            return multipleTypes.Contains(nodeType);
-        }
-        return false;
-    }
+    public static bool IsOfType(this ICollection<NodeType> nodeTypes, NodeType nodeType) =>
+        nodeTypes.Contains(nodeType);
 }

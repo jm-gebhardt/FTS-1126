@@ -715,9 +715,21 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
             {
                 var accessor = FilterExpressionBuilder.CreatePropertyAccess(typeof(TF), newProperty.PropertyType, newProperty.Name);
 
-                bool canAccessDomainObject = newProperty.PropertyType == oldProperty.PropertyType && !isJoin;
+                var mapsFromAttr = newProperty.GetCustomAttribute<MapsFromPropertyAttribute>();
+                if (mapsFromAttr != null)
+                {
+                    MemberMappings[newProperty.Name] = mapsFromAttr.SourcePropertyName;
+                }
 
-                var domainAccessor = canAccessDomainObject ? FilterExpressionBuilder.CreatePropertyAccess(typeof(T), newProperty.PropertyType, newProperty.Name) : null;
+                string domainPropertyName = mapsFromAttr?.SourcePropertyName ?? newProperty.Name;
+                var sourceDomainProperty = mapsFromAttr != null
+                    ? typeof(T).GetProperty(domainPropertyName, BindingFlags.Public | BindingFlags.Instance)
+                    : oldProperty;
+                bool canAccessDomainObject = sourceDomainProperty?.PropertyType == newProperty.PropertyType && !isJoin;
+
+                var domainAccessor = canAccessDomainObject
+                    ? FilterExpressionBuilder.CreatePropertyAccess(typeof(T), newProperty.PropertyType, domainPropertyName)
+                    : null;
 
                 var newCollectionType = newProperty.PropertyType.GetEnumerableContentType();
 

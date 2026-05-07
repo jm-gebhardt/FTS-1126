@@ -680,6 +680,38 @@ public class ActionGroupRetrievalServiceTest
     }
 
     [TestMethod]
+    public async Task Filter_ByActionTargetNodeType_FiltersActionGroups()
+    {
+        await using var fixture = new ActionGroupRetrievalServiceTestFixture();
+
+        var parkActionGroup = AgvActionGenerator.GenerateParkActionGroup();
+        var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+
+        await fixture.AddRangeAsync(parkActionGroup, pickDropActionGroup);
+        await AddDefaultAgvGraph(fixture, "aGraph".ToGuid());
+
+        var filter = new CollectionFilter(
+            CollectionAggregateVariant.Any,
+            nameof(ActionGroupFilterable.Actions),
+            new CombinationFilter(LogicalCombinationVariant.And,
+            [
+                new ValueComparisonFilter<ActionType>(
+                    nameof(ActionGroupFilterable.Actions) + IFilter.AccessLevelSeparator + nameof(AgvActionFilterable.ActionType),
+                    ComparisonVariant.Equals,
+                    ActionType.Move),
+                new ValueComparisonFilter<string>(
+                    nameof(ActionGroupFilterable.Actions) + IFilter.AccessLevelSeparator + nameof(AgvActionFilterable.Target) + IFilter.AccessLevelSeparator + nameof(ActionTargetFilterable.Node) + IFilter.AccessLevelSeparator + nameof(GraphNodeFilterable.Type),
+                    ComparisonVariant.Like,
+                    "Park")
+            ]));
+
+        PagedResult<FilteredActionGroup> result = await fixture.ActionGroupRetrievalService.Filter(filter, 0, 10, SortDirection.Desc, []);
+
+        result.Items.Count.ShouldBe(1);
+        result.Items.Single().Actions!.Single().Target.Node!.Name.ShouldBe(AgvGraphGenerator.ParkClose.Name);
+    }
+
+    [TestMethod]
     public async Task Filter_ExampleFilter_FiltersActionGroups()
     {
         await using var fixture = new ActionGroupRetrievalServiceTestFixture();

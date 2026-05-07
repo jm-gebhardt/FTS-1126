@@ -143,7 +143,7 @@ public class RoutingPlausibilityCheckerTest
         string name = Guid.NewGuid().ToString();
         return new GraphNode(name.ToGuid(), name)
         {
-            Type = nodeType
+            Type = [nodeType]
         };
     }
 }

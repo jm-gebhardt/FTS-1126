@@ -112,12 +112,12 @@ public class CreateActionGroupRequestHandler :
         var (sourceNode, targetNode) = await TryGetSourceAndTargetNode(sourceNodeId, targetNodeId, agvCorrelationId);
         if (sourceNode != null && !sourceNode.IsPickStation())
         {
-            throw new InvalidNodeTypeException(sourceNode.Name, sourceNode.TypeString(), $"{nameof(AgvGraph.NodeType.Pick)} or {nameof(AgvGraph.NodeType.PickDrop)}");
+            throw new InvalidNodeTypeException(sourceNode.Name, sourceNode.Type.ToString(), $"{nameof(AgvGraph.NodeType.Pick)} or {nameof(AgvGraph.NodeType.PickDrop)}");
         }
 
         if (targetNode != null && !targetNode.IsDropStation())
         {
-            throw new InvalidNodeTypeException(targetNode.Name, targetNode.TypeString(), $"{nameof(AgvGraph.NodeType.Drop)} or {nameof(AgvGraph.NodeType.PickDrop)}");
+            throw new InvalidNodeTypeException(targetNode.Name, targetNode.Type.ToString(), $"{nameof(AgvGraph.NodeType.Drop)} or {nameof(AgvGraph.NodeType.PickDrop)}");
         }
 
         return (sourceNode, targetNode, createPickDropActionGroup.DockFrontPick, createPickDropActionGroup.DockFrontDrop,

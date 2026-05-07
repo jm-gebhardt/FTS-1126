@@ -206,6 +206,20 @@ public class FilterableBinderTests
     }
 
     [TestMethod]
+    public void ToExpressionTree_NotLike_ExcludesMatchingSubstring()
+    {
+        var leaf = new ValueComparisonFilter<string>(nameof(TestValueHolder.StringValue), ComparisonVariant.NotLike, "EAE");
+        Expression<Func<TestValueHolder, string>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, string>(nameof(TestValueHolder.StringValue));
+
+        var accessors = new Dictionary<string, (LambdaExpression, bool)> { { nameof(TestValueHolder.StringValue), (accessor, false) } };
+
+        var result = leaf.ToExpressionTree(accessors);
+
+        result.Compile().DynamicInvoke(new TestValueHolder(10, "EEAEE")).ShouldBe(false);
+        result.Compile().DynamicInvoke(new TestValueHolder(10, "OTHER")).ShouldBe(true);
+    }
+
+    [TestMethod]
     public void ToExpressionTree_ValidCollectionData_CreatesExpressionTree()
     {
         var leaf = new ValueComparisonFilter<int>(nameof(IntHolder.Value), ComparisonVariant.Gt, 0);

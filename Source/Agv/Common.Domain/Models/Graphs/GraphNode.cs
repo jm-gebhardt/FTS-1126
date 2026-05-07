@@ -24,13 +24,13 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
     /// The type of the node
     /// </summary>
     [JsonConverter(typeof(JsonNodeTypeConverter))]
-    public object Type
+    public ICollection<NodeType> Type
     {
         get => _type;
         init => _type = value;
     }
 
-    private object _type = NodeType.WayPoint;
+    private ICollection<NodeType> _type = [NodeType.WayPoint];
 
     /// <summary>
     /// The X coordinate of the node
@@ -104,7 +104,7 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
         Y = y;
         X = x;
         Z = z;
-        Type = nodeType;
+        Type = [nodeType];
         PickLiftHeight = pickLiftHeight;
         DropLiftHeight = dropLiftHeight;
         DockingDirection = dockingDirection;
@@ -123,10 +123,21 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
     }
 
     /// <summary>
+    /// String representation of the node type, used for DB filtering via computed column.
+    /// </summary>
+    public string TypeString
+    {
+        get => field ?? JsonSerializer.Serialize(Type.Select(t => t.ToString()));
+        // ReSharper disable once UnusedMember.Local
+        // ReSharper disable once RedundantAccessorBody
+        private set => field = value;
+    }
+
+    /// <summary>
     /// Update the node type.
     /// </summary>
-    /// <param name="type">The new node type.</param>
-    public void UpdateType(object type) => _type = type;
+    /// <param name="types">The new node type(s).</param>
+    public void UpdateType(ICollection<NodeType> types) => _type = types;
 
     /// <summary>
     /// Update the orientation of a node.
@@ -198,62 +209,34 @@ public class GraphNode : BaseNode, IEquatable<GraphNode>
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, Name, Type, X, Y, Z, Theta);
+        return HashCode.Combine(Id, Name, X, Y, Z, Theta);
     }
 
-    private ICollection<NodeType> AsTypeCollection() =>
-        Type is NodeType single ? [single] : (ICollection<NodeType>)Type;
-
-    private bool TypesEqual(GraphNode other)
-    {
-        ICollection<NodeType> thisTypes = AsTypeCollection();
-        ICollection<NodeType> otherTypes = other.AsTypeCollection();
-
-        if (Type is NodeType || other.Type is NodeType)
-        {
-            return thisTypes.SequenceEqual(otherTypes);
-        }
-
-        return thisTypes.Zip(otherTypes).All(pair => pair.First == pair.Second);
+    private bool TypesEqual(GraphNode other) => Type.SequenceEqual(other.Type);
     }
-
-    /// <summary>
-    /// String representation of the node type.
-    /// </summary>
-    public string TypeString()
-    {
-        if (Type is NodeType type)
-        {
-            return type.ToString();
-        }
-        return string.Join(",", ((ICollection<NodeType>) Type).Select(t => t.ToString()));
-    }
-}
 
 /// <summary>
-/// Json converter for <see cref="NodeType"/>
+/// Json converter for <see cref="NodeType"/> collections. Handles legacy single-value JSON strings/numbers for backward compatibility.
 /// </summary>
-public class JsonNodeTypeConverter : JsonConverter<object>
+public class JsonNodeTypeConverter : JsonConverter<ICollection<NodeType>>
 {
     /// <inheritdoc cref="JsonConverter"/>>
-    public override object Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override ICollection<NodeType> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         switch (reader.TokenType)
         {
             case JsonTokenType.String when Enum.TryParse<NodeType>(reader.GetString(), true, out var nodeType):
-                return nodeType;
+                return [nodeType];
 
             case JsonTokenType.String:
                 throw new JsonException($"Unable to parse '{reader.GetString()}' as NodeType");
 
             case JsonTokenType.Number when reader.TryGetInt32(out int intValue):
-            {
                 if (Enum.IsDefined(typeof(NodeType), intValue))
                 {
-                    return (NodeType) intValue;
+                    return [(NodeType) intValue];
                 }
                 throw new JsonException($"Invalid numeric value {intValue} for NodeType");
-            }
 
             case JsonTokenType.Number:
                 throw new JsonException("Unable to parse number as NodeType");
@@ -263,9 +246,9 @@ public class JsonNodeTypeConverter : JsonConverter<object>
                 var nodeTypes = new List<NodeType>();
                 while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
                 {
-                    if (reader.TokenType == JsonTokenType.String && Enum.TryParse<NodeType>(reader.GetString(), true, out var function))
+                    if (reader.TokenType == JsonTokenType.String && Enum.TryParse<NodeType>(reader.GetString(), true, out var nt))
                     {
-                        nodeTypes.Add(function);
+                        nodeTypes.Add(nt);
                     }
                 }
                 return nodeTypes;
@@ -277,25 +260,8 @@ public class JsonNodeTypeConverter : JsonConverter<object>
     }
 
     /// <inheritdoc cref="JsonConverter"/>>
-    public override void Write(Utf8JsonWriter writer, object value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, ICollection<NodeType> value, JsonSerializerOptions options)
     {
-        switch (value)
-        {
-            case string nodeType:
-                JsonSerializer.Serialize(writer, nodeType, options);
-                break;
-
-            case NodeType nodeType:
-                JsonSerializer.Serialize(writer, nodeType.ToString(), options);
-                break;
-
-            case List<NodeType> nodeTypeList:
-                List<string> nodeTypes = nodeTypeList.Select(n => n.ToString()).ToList();
-                JsonSerializer.Serialize(writer, nodeTypes, options);
-                break;
-
-            default:
-                throw new JsonException($"Unexpected value type {value.GetType()}");
-        }
+        JsonSerializer.Serialize(writer, value.Select(n => n.ToString()).ToList(), options);
     }
 }

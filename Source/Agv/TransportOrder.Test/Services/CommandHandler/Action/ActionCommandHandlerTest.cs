@@ -39,11 +39,11 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
 public class ActionCommandHandlerTest
 {
     private const string ChargeNodeName = "Charge-1";
-    private static readonly GraphNode _chargeNode = new(ChargeNodeName.ToGuid(), ChargeNodeName) { Type = AgvGraph.NodeType.Charge };
+    private static readonly GraphNode _chargeNode = new(ChargeNodeName.ToGuid(), ChargeNodeName) { Type = [AgvGraph.NodeType.Charge] };
     private const string ParkNodeName = "Park-1";
     private static readonly GraphNode _parkNode = ParkNodeName.ToGraphNode();
     private const string StationNodeName = "Station-1";
-    private static readonly GraphNode _stationNode = new(StationNodeName.ToGuid(), StationNodeName) { Type = AgvGraph.NodeType.PickDrop };
+    private static readonly GraphNode _stationNode = new(StationNodeName.ToGuid(), StationNodeName) { Type = [AgvGraph.NodeType.PickDrop] };
 
     [TestMethod]
     public async Task Consume_StartActionOfActionGroup_ValidData_Publishes_StartActionCommandAndActionGroupChanged()
@@ -2562,7 +2562,7 @@ public class ActionCommandHandlerTest
         var warning = AgvErrorGenerator.GenerateAgvError(closestAgv.CorrelationId, errorLevel: ErrorLevel.Warning);
         var route = new Route(42, ["a node".ToGraphNode(), "waypoint".ToGraphNode()], [Guid.NewGuid()]);
         var parkingActionGroup = AgvActionGenerator.GenerateParkActionGroup(actionState: ActionState.Started, assignedAgv: closestAgv.CorrelationId);
-        var startNode = new GraphNode(Guid.NewGuid(), "start") { Type = AgvGraph.NodeType.PickDrop };
+        var startNode = new GraphNode(Guid.NewGuid(), "start") { Type = [AgvGraph.NodeType.PickDrop] };
         parkingActionGroup.Actions.Single().Nodes = [startNode, "waypoint".ToGraphNode()];
         var pickDropActionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()

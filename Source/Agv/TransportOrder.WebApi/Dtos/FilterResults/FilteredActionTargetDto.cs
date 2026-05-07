@@ -40,9 +40,13 @@ public record FilteredAgvPositionDto(float X, float Y, float Z, float Theta)
 
 /// <inheritdoc cref="GraphNode"/>
 [PublicAPI]
-public record FilteredGraphNodeDto(string Name)
+public record FilteredGraphNodeDto(string Name, object Type)
 {
     /// <inheritdoc cref="BaseNode.Name"/>
     [SwaggerFilterableProperty]
     public string Name { get; init; } = Name;
+
+    /// <inheritdoc cref="GraphNode.Type"/>
+    [SwaggerFilterableProperty]
+    public object Type { get; init; } = Type;
 }

@@ -271,7 +271,7 @@ public class GraphParser
         {
             var newNode = new GraphNode(mqttNode.NodeId.ToGuid(), mqttNode.NodeId)
             {
-                Type = AgvGraph.NodeType.WayPoint,
+                Type = [AgvGraph.NodeType.WayPoint],
                 TimeStamp = TimeStamp,
                 X = mqttNode.X,
                 Y = mqttNode.Y,

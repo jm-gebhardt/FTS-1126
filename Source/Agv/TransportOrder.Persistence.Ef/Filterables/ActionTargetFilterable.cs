@@ -54,4 +54,9 @@ public class GraphNodeFilterable : GraphNode, IFilterable<GraphNode, GraphNodeFi
     /// <inheritdoc cref="BaseNode.Name"/>
     [FilterProperty]
     public new string Name { get; init; } = "";
+
+    /// <inheritdoc cref="GraphNode.TypeString"/>
+    [FilterProperty]
+    [MapsFromProperty(nameof(GraphNode.TypeString))]
+    public new string Type { get; init; } = "";
 }

@@ -8,22 +8,6 @@ namespace Gebhardt.Acc.CommonTest.Extensions;
 [TestClass]
 public class NodeTypeExtensionTest
 {
-    [TestMethod]
-    public void GetTypeForActionType_NotNodeType_ThrowsException()
-    {
-        const string notNodeTypeObject = "this is not a node type";
-
-        Should.Throw<InvalidCastException>(() => notNodeTypeObject.GetTypeForActionType(ActionType.Charge));
-    }
-
-    [DataRow(ActionType.Charge)]
-    [DataRow(ActionType.Pick)]
-    [TestMethod]
-    public void GetTypeForActionType_SingleType_ReturnType(ActionType actionType)
-    {
-        AgvGraph.NodeType.Charge.GetTypeForActionType(actionType).ShouldBe(AgvGraph.NodeType.Charge);
-    }
-
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge }, ActionType.Charge, AgvGraph.NodeType.Charge)]
     [DataRow(new[] { AgvGraph.NodeType.Pick, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge }, ActionType.Pick, AgvGraph.NodeType.Pick)]
     [DataRow(new[] { AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge }, ActionType.Pick, AgvGraph.NodeType.PickDrop)]
@@ -42,7 +26,7 @@ public class NodeTypeExtensionTest
     [TestMethod]
     public void IsOfType_SingleType_ReturnsExpectedValue(AgvGraph.NodeType nodeType, AgvGraph.NodeType typeToTest, bool expected)
     {
-        nodeType.IsOfType(typeToTest).ShouldBe(expected);
+        new[] { nodeType }.IsOfType(typeToTest).ShouldBe(expected);
     }
 
     [DataRow(new[] { AgvGraph.NodeType.PickDrop, AgvGraph.NodeType.Park }, AgvGraph.NodeType.Charge, false)]

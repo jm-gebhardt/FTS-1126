@@ -21,10 +21,10 @@ public class AgvGraphProfileTest
     {
         var nodes = new List<GraphNode>
         {
-            new() { Name = "S1", Id = "S1".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-            new() { Name = "D1", Id = "D1".ToGuid(), Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-            new() { Name = "S2", Id = "S2".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-            new() { Name = "D2", Id = "D2".ToGuid(), Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            new() { Name = "S1", Id = "S1".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 0f, Y = -2f, Z = 0f },
+            new() { Name = "D1", Id = "D1".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = 4f, Y = 6f, Z = 0f },
+            new() { Name = "S2", Id = "S2".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 7f, Y = 4f, Z = 0f },
+            new() { Name = "D2", Id = "D2".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = -3f, Y = 0f, Z = 0f }
         };
 
         var agvGraph = new Graph(nodes,
@@ -49,7 +49,7 @@ public class AgvGraphProfileTest
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Name == x.Id &&
-            n.Type.ToString() == x.Type.ToString() &&
+            n.Type.First() == x.Type &&
             Math.Abs(n.X - x.X) < Mathematics.FloatComparator &&
             Math.Abs(n.Y - x.Y) < Mathematics.FloatComparator &&
             Math.Abs(n.Z - x.Z) < Mathematics.FloatComparator));
@@ -67,10 +67,10 @@ public class AgvGraphProfileTest
     {
         var nodes = new List<GraphNode>
         {
-            new() { Name = "S1", Id = "S1".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-            new() { Name = "D1", Id = "D1".ToGuid(), Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-            new() { Name = "S2", Id = "S2".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-            new() { Name = "D2", Id = "D2".ToGuid(), Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            new() { Name = "S1", Id = "S1".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 0f, Y = -2f, Z = 0f },
+            new() { Name = "D1", Id = "D1".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = 4f, Y = 6f, Z = 0f },
+            new() { Name = "S2", Id = "S2".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 7f, Y = 4f, Z = 0f },
+            new() { Name = "D2", Id = "D2".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = -3f, Y = 0f, Z = 0f }
         };
 
         var edge1 = Common.Domain.Models.Graphs.GraphEdge.CreateSlanted("S1".ToGuid(), "D1".ToGuid(), 1f, 90, 15d);
@@ -98,7 +98,7 @@ public class AgvGraphProfileTest
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Name == x.Id &&
-            n.Type.ToString() == x.Type.ToString() &&
+            n.Type.First() == x.Type &&
             Math.Abs(n.X - x.X) < Mathematics.FloatComparator &&
             Math.Abs(n.Y - x.Y) < Mathematics.FloatComparator &&
             Math.Abs(n.Z - x.Z) < Mathematics.FloatComparator));
@@ -118,10 +118,10 @@ public class AgvGraphProfileTest
     {
         var nodes = new List<GraphNode>
         {
-            new() { Name = "S1", Id = "S1".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-            new() { Name = "D1", Id = "D1".ToGuid(), Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-            new() { Name = "S2", Id = "S2".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-            new() { Name = "D2", Id = "D2".ToGuid(), Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            new() { Name = "S1", Id = "S1".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 0f, Y = -2f, Z = 0f },
+            new() { Name = "D1", Id = "D1".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = 4f, Y = 6f, Z = 0f },
+            new() { Name = "S2", Id = "S2".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 7f, Y = 4f, Z = 0f },
+            new() { Name = "D2", Id = "D2".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = -3f, Y = 0f, Z = 0f }
         };
 
         var edge1 = Common.Domain.Models.Graphs.GraphEdge.CreateBezier2("S1".ToGuid(), "D1".ToGuid(), 1f, 20, 15);
@@ -149,7 +149,7 @@ public class AgvGraphProfileTest
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Name == x.Id &&
-            n.Type.ToString() == x.Type.ToString() &&
+            n.Type.First() == x.Type &&
             Math.Abs(n.X - x.X) < Mathematics.FloatComparator &&
             Math.Abs(n.Y - x.Y) < Mathematics.FloatComparator &&
             Math.Abs(n.Z - x.Z) < Mathematics.FloatComparator));
@@ -169,10 +169,10 @@ public class AgvGraphProfileTest
     {
         var nodes = new List<GraphNode>
         {
-            new() { Name = "S1", Id = "S1".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-            new() { Name = "D1", Id = "D1".ToGuid(), Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-            new() { Name = "S2", Id = "S2".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-            new() { Name = "D2", Id = "D2".ToGuid(), Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            new() { Name = "S1", Id = "S1".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 0f, Y = -2f, Z = 0f },
+            new() { Name = "D1", Id = "D1".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = 4f, Y = 6f, Z = 0f },
+            new() { Name = "S2", Id = "S2".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 7f, Y = 4f, Z = 0f },
+            new() { Name = "D2", Id = "D2".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = -3f, Y = 0f, Z = 0f }
         };
 
         var edge1 = Common.Domain.Models.Graphs.GraphEdge.CreateBezier3("S1".ToGuid(), "D1".ToGuid(), 1f, 20, 15, 30, 25);
@@ -200,7 +200,7 @@ public class AgvGraphProfileTest
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Name == x.Id &&
-            n.Type.ToString() == x.Type.ToString() &&
+            n.Type.First() == x.Type &&
             Math.Abs(n.X - x.X) < Mathematics.FloatComparator &&
             Math.Abs(n.Y - x.Y) < Mathematics.FloatComparator &&
             Math.Abs(n.Z - x.Z) < Mathematics.FloatComparator));
@@ -220,10 +220,10 @@ public class AgvGraphProfileTest
     {
         var nodes = new List<GraphNode>
         {
-            new() { Name = "S1", Id = "S1".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-            new() { Name = "D1", Id = "D1".ToGuid(), Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-            new() { Name = "S2", Id = "S2".ToGuid(), Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-            new() { Name = "D2", Id = "D2".ToGuid(), Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+            new() { Name = "S1", Id = "S1".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 0f, Y = -2f, Z = 0f },
+            new() { Name = "D1", Id = "D1".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = 4f, Y = 6f, Z = 0f },
+            new() { Name = "S2", Id = "S2".ToGuid(), Type = [AgvGraph.NodeType.Pick], X = 7f, Y = 4f, Z = 0f },
+            new() { Name = "D2", Id = "D2".ToGuid(), Type = [AgvGraph.NodeType.Drop], X = -3f, Y = 0f, Z = 0f }
         };
 
         var edge1 = Common.Domain.Models.Graphs.GraphEdge.CreateBezier5("S1".ToGuid(), "D1".ToGuid(), 1f, [new EdgeCoefficient(20, 15), new EdgeCoefficient(30, 25), new EdgeCoefficient(40, 35), new EdgeCoefficient(50, 45)]);
@@ -251,7 +251,7 @@ public class AgvGraphProfileTest
 
         graph.Nodes.ShouldAllBe(x => agvGraph.Nodes.Any(n =>
             n.Name == x.Id &&
-            n.Type.ToString() == x.Type.ToString() &&
+            n.Type.First() == x.Type &&
             Math.Abs(n.X - x.X) < Mathematics.FloatComparator &&
             Math.Abs(n.Y - x.Y) < Mathematics.FloatComparator &&
             Math.Abs(n.Z - x.Z) < Mathematics.FloatComparator));

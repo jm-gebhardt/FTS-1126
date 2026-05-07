@@ -45,7 +45,7 @@ public class ChargingPointManagerTest
 
         var bestCharger = await fixture.ChargingPointManager.GetBestChargerAsync(fixture.Agv);
         bestCharger.ShouldNotBeNull();
-        bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
+        bestCharger.Type.First().ShouldBe(AgvGraph.NodeType.Charge);
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(fixture.Agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         VerifyGraphNode(bestCharger, chargingNode);
     }
@@ -83,7 +83,7 @@ public class ChargingPointManagerTest
 
         var bestCharger = await fixture.ChargingPointManager.GetBestChargerAsync(fixture.Agv);
         bestCharger.ShouldNotBeNull();
-        bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
+        bestCharger.Type.First().ShouldBe(AgvGraph.NodeType.Charge);
 
         var correlationId = ChargingPointManagerTestFixture.AgvSerialNumber.ToGuid();
         await fixture.ChargingPointManager.ReserveChargerAsync(bestCharger, correlationId);
@@ -102,7 +102,7 @@ public class ChargingPointManagerTest
 
         var notChargerNode = fixture.AgvGraph.Nodes.FirstOrDefault(node => !node.IsCharger());
         notChargerNode.ShouldNotBeNull();
-        notChargerNode.Type.ShouldNotBe(AgvGraph.NodeType.Charge);
+        notChargerNode.Type.First().ShouldNotBe(AgvGraph.NodeType.Charge);
         fixture.WithNode(notChargerNode);
 
         await fixture.ChargingPointManager.ReserveChargerAsync(notChargerNode, ChargingPointManagerTestFixture.AgvSerialNumber.ToGuid());
@@ -129,7 +129,7 @@ public class ChargingPointManagerTest
         var agvNodeResult = await fixture.ChargingPointManager.ReserveChargerAsync(fixture.Agv);
         agvNodeResult.ShouldNotBeNull();
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(fixture.Agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
-        agvNodeResult.Type.ShouldBe(AgvGraph.NodeType.Charge);
+        agvNodeResult.Type.First().ShouldBe(AgvGraph.NodeType.Charge);
         VerifyGraphNode(agvNodeResult, chargingNode);
     }
 
@@ -208,7 +208,7 @@ public class ChargingPointManagerTest
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         bestCharger.ShouldNotBeNull();
         bestCharger.Name.ShouldBe("Charge-2");
-        bestCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
+        bestCharger.Type.First().ShouldBe(AgvGraph.NodeType.Charge);
     }
 
     [TestMethod]
@@ -233,6 +233,6 @@ public class ChargingPointManagerTest
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         reservedCharger.ShouldNotBeNull();
         reservedCharger.Name.ShouldBe("Charge-2");
-        reservedCharger.Type.ShouldBe(AgvGraph.NodeType.Charge);
+        reservedCharger.Type.First().ShouldBe(AgvGraph.NodeType.Charge);
     }
 }

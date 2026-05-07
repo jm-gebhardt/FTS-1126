@@ -43,7 +43,7 @@ public class LifGraphConverter(
                 continue;
             }
 
-            object nodeType = domainNode.AgvActions.InferNodeType();
+            ICollection<CommonAgvGraph.NodeType> nodeType = domainNode.AgvActions.InferNodeType();
             var commonNode = commonNodes.Single(n => n.Id == domainNode.Id);
             commonNode.UpdateType(nodeType);
             logger.LogDebug("Station type {NodeType} applied to node {NodeId}", nodeType, domainNode.Id);

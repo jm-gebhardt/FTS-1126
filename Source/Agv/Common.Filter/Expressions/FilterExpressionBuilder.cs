@@ -403,7 +403,7 @@ internal static class FilterExpressionBuilder
     /// <param name="accessor">Accessor to get to <typeparamref name="TProperty"/> from <typeparamref name="T"/>.</param>
     private static Expression<Func<T, bool>> CreateIsNullPredicate<T, TProperty>(ComparisonVariant variant, string propertyName, Expression<Func<T, TProperty>>? accessor)
     {
-        bool isEqualityComparison = variant is not (ComparisonVariant.Gt or ComparisonVariant.Lt or ComparisonVariant.Like);
+        bool isEqualityComparison = variant is not (ComparisonVariant.Gt or ComparisonVariant.Lt or ComparisonVariant.Like or ComparisonVariant.NotLike);
         bool needsAccessor = NeedsAccessor<T, TProperty>(propertyName);
         
         // Anything compared to null that is not an equality check will be false (Mimicking the falsiness of NULL in a database context).

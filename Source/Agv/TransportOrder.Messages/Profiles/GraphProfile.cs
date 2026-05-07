@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Extensions;
 using JetBrains.Annotations;
 using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
 
@@ -16,7 +15,7 @@ public class GraphProfile : Profile
     public GraphProfile()
     {
         CreateMap<GraphNode, MessageContent.GraphNode>()
-            .ForMember(n => n.Type, opt => opt.MapFrom(gn => gn.GetPrimaryType()));
+            .ForMember(s => s.Type, opt => opt.MapFrom(t => t.Type));
         CreateMap<IGraph, Graph>()
             .ForMember(n => n.CorrelationId, opt => opt.Ignore())
             .ForMember(nameof(Graph.Edges), opt => opt.MapFrom<GraphGraphEdgeResolver>())

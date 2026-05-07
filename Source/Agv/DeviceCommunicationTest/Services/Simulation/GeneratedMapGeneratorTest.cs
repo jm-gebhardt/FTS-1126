@@ -25,10 +25,10 @@ public class GeneratedMapGeneratorTest
 
         var graph = AgvGraphGenerator.Generate(
             [
-                new GraphNode("S1".ToGuid(), "S1") { Type = AgvGraph.NodeType.Pick, X = 0f, Y = -2f, Z = 0f },
-                new GraphNode("D1".ToGuid(), "D1") { Type = AgvGraph.NodeType.Drop, X = 4f, Y = 6f, Z = 0f },
-                new GraphNode("S2".ToGuid(), "S2") { Type = AgvGraph.NodeType.Pick, X = 7f, Y = 4f, Z = 0f },
-                new GraphNode("D2".ToGuid(), "D2") { Type = AgvGraph.NodeType.Drop, X = -3f, Y = 0f, Z = 0f }
+                new GraphNode("S1".ToGuid(), "S1") { Type = [AgvGraph.NodeType.Pick], X = 0f, Y = -2f, Z = 0f },
+                new GraphNode("D1".ToGuid(), "D1") { Type = [AgvGraph.NodeType.Drop], X = 4f, Y = 6f, Z = 0f },
+                new GraphNode("S2".ToGuid(), "S2") { Type = [AgvGraph.NodeType.Pick], X = 7f, Y = 4f, Z = 0f },
+                new GraphNode("D2".ToGuid(), "D2") { Type = [AgvGraph.NodeType.Drop], X = -3f, Y = 0f, Z = 0f }
             ],
             [
                 GraphEdge.CreateDirect("S1".ToGuid(), "D1".ToGuid(), 8.944f), // Just take the distance

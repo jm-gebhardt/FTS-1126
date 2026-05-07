@@ -41,7 +41,7 @@ public class EfStationRepositoryTest
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
             station.AdditionalTypes.ShouldBeEmpty();
-            station.PrimaryType.ShouldBe(stationNode.Type);
+            station.PrimaryType.ShouldBe(stationNode.Type.First());
             station.Agvs.ShouldBeEmpty();
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
@@ -108,7 +108,7 @@ public class EfStationRepositoryTest
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
             station.AdditionalTypes.ShouldBeEmpty();
-            station.PrimaryType.ShouldBe(stationNode.Type);
+            station.PrimaryType.ShouldBe(stationNode.Type.First());
             station.Agvs.ShouldBeEmpty();
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
@@ -144,7 +144,7 @@ public class EfStationRepositoryTest
             station.Width.ShouldBe(expectedMaxWidth);
             station.NodeLock.ShouldBeNull();
             station.AdditionalTypes.ShouldBeEmpty();
-            station.PrimaryType.ShouldBe(stationNode.Type);
+            station.PrimaryType.ShouldBe(stationNode.Type.First());
             station.Agvs.ShouldBeEmpty();
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
@@ -175,7 +175,7 @@ public class EfStationRepositoryTest
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
             station.AdditionalTypes.ShouldBeEmpty();
-            station.PrimaryType.ShouldBe(stationNode.Type);
+            station.PrimaryType.ShouldBe(stationNode.Type.First());
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
             if (station.Id == nodeLock.NodeId)
@@ -221,7 +221,7 @@ public class EfStationRepositoryTest
             station.Length.ShouldBe(Padding);
             station.Width.ShouldBe(Padding);
             station.AdditionalTypes.ShouldBeEmpty();
-            station.PrimaryType.ShouldBe(stationNode.Type);
+            station.PrimaryType.ShouldBe(stationNode.Type.First());
             station.LockReason.ShouldBeNull();
             station.LockedBy.ShouldBeNull();
             if (station.Id == nodeLock.NodeId)

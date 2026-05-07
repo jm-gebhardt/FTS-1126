@@ -82,12 +82,11 @@ public class EfGraphRepository : IGraphRepository
     public async Task<bool> HasAnyNodeOfTypeAsync(Guid agvCorrelationId, AgvGraph.NodeType nodeType)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        bool exists = await context.Set<AgvGraph>()
-            .Include(g => g.Nodes)
+        string typeFilter = $"\"{nodeType}\"";
+        return await context.Set<AgvGraph>()
             .AsNoTracking()
-            .AnyAsync(g => g.AgvCorrelationId == agvCorrelationId && g.Nodes.Any(n => ((string)n.Type).Contains(nodeType.ToString())));
-
-        return exists;
+            .AnyAsync(g => g.AgvCorrelationId == agvCorrelationId
+                        && g.Nodes.Any(n => n.TypeString.Contains(typeFilter)));
     }
 
     /// <inheritdoc />

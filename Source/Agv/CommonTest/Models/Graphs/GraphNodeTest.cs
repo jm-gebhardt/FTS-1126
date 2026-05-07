@@ -46,8 +46,8 @@ public class GraphNodeTest
     public void Equals_DifferentName_ReturnsFalse()
     {
         var id = Guid.NewGuid();
-        var node1 = new GraphNode(id, "NodeA") { Type = NodeType.WayPoint, X = 1f, Y = 2f, Z = 0f };
-        var node2 = new GraphNode(id, "NodeB") { Type = NodeType.WayPoint, X = 1f, Y = 2f, Z = 0f };
+        var node1 = new GraphNode(id, "NodeA") { Type = [NodeType.WayPoint], X = 1f, Y = 2f, Z = 0f };
+        var node2 = new GraphNode(id, "NodeB") { Type = [NodeType.WayPoint], X = 1f, Y = 2f, Z = 0f };
 
         node1.Equals(node2).ShouldBeFalse();
     }

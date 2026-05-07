@@ -30,6 +30,6 @@ public class StationExtensionTest
         var exportedStation = new ExportedStation(function, "id", new ExportedPosition(1, 1, yaxis), "");
 
         var node = exportedStation.ToGraphNode();
-        node.Type.ShouldBe(nodeType);
+        node.Type.ShouldHaveSingleItem().ShouldBe(nodeType);
     }
 }

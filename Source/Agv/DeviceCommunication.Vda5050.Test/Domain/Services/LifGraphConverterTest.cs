@@ -50,7 +50,7 @@ public class LifGraphConverterTest
 
         var result = fixture.Converter.ConvertToCommonAgvGraph(domainGraph);
 
-        result.Nodes.Single().Type.ShouldBe(CommonAgvGraph.NodeType.Pick);
+        result.Nodes.Single().Type.First().ShouldBe(CommonAgvGraph.NodeType.Pick);
     }
 
     [TestMethod]
