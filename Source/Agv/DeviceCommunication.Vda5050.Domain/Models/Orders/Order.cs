@@ -91,7 +91,7 @@ public class Order
             return false;
         }
         bool isAtTargetNode = Status != null && Status.LastNodeSequenceId == PlannedRoute.Nodes.OrderBy(n => n.SequenceId).Last().SequenceId;
-        bool allActionsFinished = Status!.ActionStates.All(a => a.ActionStatus == VehicleActionStatus.Finished);
+        bool allActionsFinished = Status!.ActionStates.Count == 0 || Status!.ActionStates.All(a => a.ActionStatus == VehicleActionStatus.Finished);
         return isAtTargetNode && allActionsFinished;
     }
 
@@ -103,8 +103,6 @@ public class Order
     /// <returns>True, if the order update was successful, false if there are no more planned steps in the route.</returns>
     public bool TryUpdate(int baseLength, int maxHorizonLength)
     {
-        OrderUpdateId = IsInitialOrder ? -1 : OrderUpdateId;
-
         if (PlannedRoute.IsEmpty)
         {
             return false;
@@ -114,7 +112,8 @@ public class Order
             Route = new Route([], []);
             return false;
         }
-
+        OrderUpdateId = IsInitialOrder ? -1 : OrderUpdateId;
+        OrderUpdateId++;
         var stitchingNode = Base.Nodes.LastOrDefault() ?? PlannedRoute.Nodes.OrderBy(n => n.SequenceId).First();
         if (PlannedRoute.Nodes.Count == 1 && PlannedRoute.Edges.Count == 0)
         {
@@ -122,8 +121,13 @@ public class Order
             Route.Release();
             return true;
         }
+        if (stitchingNode.SequenceId == PlannedRoute.Nodes.OrderBy(n => n.SequenceId).Last().SequenceId)
+        {
+            Route = new Route([], []);
+            return true;
+        }
         var newBase = PlannedRoute.Subsample(stitchingNode.SequenceId, baseLength);
-        OrderUpdateId++;
+       
         newBase.Release();
         var horizonFirstNode = PlannedRoute.Nodes.SingleOrDefault(n => n.SequenceId == newBase.Nodes.Last().SequenceId + 2);
         if (horizonFirstNode == null)
@@ -153,7 +157,9 @@ public class Order
     {
         if (IsCompleted())
         {
-            return Result.Failure(OrderErrors.OrderRouteUpdateOrderCompleted);
+            PlannedRoute = PlannedRoute.Replace(newRoute);
+            TryUpdate(baseLength, maxHorizonLength);
+            return Result.Success();
         }
         var currentStitchingNode = Base.Nodes.LastOrDefault() ?? PlannedRoute.Nodes.OrderBy(n => n.SequenceId).First();
         var newStitchingNode = newRoute.Nodes.SingleOrDefault(n => n.NodeId == currentStitchingNode.NodeId);

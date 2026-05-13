@@ -32,6 +32,7 @@
         <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
         <ProjectReference Include="..\DeviceCommunication.Vda5050.Domain\DeviceCommunication.Vda5050.Domain.csproj" />
         <ProjectReference Include="..\DeviceCommunication.Vda5050.Messages\DeviceCommunication.Vda5050.Messages.csproj" />
+        <ProjectReference Include="..\DeviceCommunication.Vda5050.Simulator\DeviceCommunication.Vda5050.Simulator.csproj" />
         <ProjectReference Include="..\DeviceCommunication.Vda5050.WebApi\DeviceCommunication.Vda5050.WebApi.csproj" />
         <ProjectReference Include="..\DeviceCommunication.Vda5050\DeviceCommunication.Vda5050.csproj" />
     </ItemGroup>

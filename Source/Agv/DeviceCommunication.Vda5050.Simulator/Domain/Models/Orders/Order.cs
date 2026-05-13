@@ -1,0 +1,254 @@
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Services;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
+using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
+
+/// <summary>
+/// An order for the agv.
+/// </summary>
+[PublicAPI]
+public class Order
+{
+    /// <summary>
+    /// Order identification. Used to identify multiple order messages that belong to the same order.
+    /// </summary>
+    public string OrderId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Order update identification. Is unique per orderId.
+    /// If an order update is rejected, this field is to be passed in the rejection message.
+    /// </summary>
+    public int OrderUpdateId { get; set; }
+
+    /// <summary>
+    /// The full route of the order.
+    /// </summary>
+    public Route FullRoute { get; set; } = new([], []);
+
+    /// <summary>
+    /// The current base.
+    /// </summary>
+    public Route Base => FullRoute.GetBase();
+
+    /// <summary>
+    /// The current route (excluding passed nodes and edges).
+    /// </summary>
+
+    public Route CurrentRoute { get; set; } = new([], []);
+
+    /// <summary>
+    /// Contains a list of the current actions and the actions which are yet to be finished.
+    /// </summary>
+    public IList<OrderActionState> PendingActionStates { get; set; } = [];
+
+    /// <summary>
+    /// The current action of the agv
+    /// </summary>
+    public OrderAction? CurrentAction { get; private set; }
+    
+    /// <summary>
+    /// The most recent state of the order.
+    /// </summary>
+    public OrderState? State { get; set; }
+
+    /// <summary>
+    /// The start time of the order.
+    /// </summary>
+    public DateTime? StartTime { get; set; }
+
+    /// <summary>
+    /// The duration of the order.
+    /// </summary>
+    public TimeSpan Duration { get; private set; } = TimeSpan.FromSeconds(0);
+
+    private double _totalPausedSeconds;
+
+    /// <summary>
+    /// Get the current last node
+    /// </summary>
+    /// <param name="lastNodeId">Previous last node id.</param>
+    /// <param name="now">The current time.</param>
+    /// <returns>The current node.</returns>
+    public OrderNode GetLastNode(string? lastNodeId, DateTime now)
+    {
+        List<OrderNode> sortedNodes = Base.Nodes.OrderBy(n => n.SequenceId).ToList();
+        if (lastNodeId == null || StartTime == null)
+        {
+            return sortedNodes.First();
+        }
+        double timePassed = (now - StartTime.Value).TotalSeconds - _totalPausedSeconds;
+        if (CurrentAction != null)
+        {
+            timePassed -= (now - CurrentAction.StartedTime!.Value).TotalSeconds;
+        }
+        timePassed = Math.Max(0, timePassed);
+        foreach (var edge in Base.Edges.OrderBy(e => e.SequenceId))
+        {
+            double edgeTime = edge.EstimatedTravelTime.TotalSeconds;
+            if (timePassed < edgeTime)
+            {
+                return sortedNodes.First(n => n.SequenceId == edge.SequenceId - 1);
+            }
+            timePassed -= edgeTime;
+        }
+        return sortedNodes.Last();
+    }
+
+    /// <summary>
+    /// Get the current edge.
+    /// </summary>
+    /// <param name="lastNodeId">Previous last node id.</param>
+    /// <param name="now">The current time.</param>
+    /// <returns>The current edge.</returns>
+    public OrderEdge? GetCurrentEdge(string? lastNodeId, DateTime now)
+    {
+        var currentNode = GetLastNode(lastNodeId, now);
+        return Base.Edges.FirstOrDefault(e => e.SequenceId == currentNode.SequenceId + 1);
+    }
+
+    /// <summary>
+    /// Proceed with the order.
+    /// </summary>
+    public AgvPosition Proceed(string? lastNodeId, DateTime now)
+    {
+        if (CurrentAction != null)
+        {
+            double timePassed = (now - CurrentAction.StartedTime!.Value).TotalSeconds;
+            if (timePassed >= CurrentAction.Duration.TotalSeconds)
+            {
+                _totalPausedSeconds += CurrentAction.Duration.TotalSeconds;
+                PendingActionStates.First(p => p.ActionId == CurrentAction.ActionId).ActionStatus = VehicleActionStatus.Finished;
+                CurrentAction = null;
+            }
+            else
+            {
+                var current = GetLastNode(lastNodeId, now);
+                return new AgvPosition(){Theta = (float)(current.NodePosition?.Theta ?? 0), X = (float)(current.NodePosition?.X ?? 0), Y = (float)(current.NodePosition?.Y ?? 0), Z =  0 };
+            }
+        }
+        var currentNode = GetLastNode(lastNodeId, now);
+        CurrentRoute.Proceed(currentNode.SequenceId);
+        if (currentNode.NodeId != lastNodeId)
+        {
+        }
+        State = new OrderState()
+        {
+            Errors =
+            [
+            ],
+            LastNodeSequenceId = currentNode.SequenceId,
+            NewBaseRequest = Base.Nodes.OrderBy(n => n.SequenceId)
+                                 .Last()
+                                 .SequenceId ==
+                             currentNode.SequenceId,
+            OrderId = OrderId,
+            OrderUpdateId = OrderUpdateId
+        };
+        if (currentNode.Actions.Count > 0)
+        {
+            var currentAction = PendingActionStates.FirstOrDefault(p => currentNode.ActionIds.Contains(p.ActionId) && p.ActionStatus == VehicleActionStatus.Waiting);
+            if (currentAction != null)
+            {
+                currentAction.ActionStatus = VehicleActionStatus.Running;
+                CurrentAction = currentNode.Actions.First(a => a.ActionId == currentAction.ActionId);
+                CurrentAction.StartedTime = now;
+                State!.ActionStates = PendingActionStates;
+                return new AgvPosition() { Theta = (float)(currentNode.NodePosition?.Theta ?? 0), X = (float)(currentNode.NodePosition?.X ?? 0), Y = (float)(currentNode.NodePosition?.Y ?? 0), Z =  0 };
+            }
+        }
+        var currentEdge = GetCurrentEdge(lastNodeId, now);
+        if (currentEdge == null)
+        {
+            return new AgvPosition() { Theta =(float)(currentNode.NodePosition?.Theta ?? 0), X =(float)(currentNode.NodePosition?.X ?? 0), Y =(float)(currentNode.NodePosition?.Y ?? 0), Z =  0 };
+        }
+        if (CurrentAction == null && currentEdge.Actions.Count > 0)
+        {
+            var currentAction = PendingActionStates.FirstOrDefault(p => currentEdge.ActionIds.Contains(p.ActionId) && p.ActionStatus == VehicleActionStatus.Waiting);
+            if (currentAction != null)
+            {
+                currentAction.ActionStatus = VehicleActionStatus.Running;
+                CurrentAction = currentEdge.Actions.First(a => a.ActionId == currentAction.ActionId);
+                CurrentAction.StartedTime = now;
+                State!.ActionStates = PendingActionStates;
+            }
+        }
+        if (currentEdge.EstimatedTravelTime.TotalSeconds == 0)
+        {
+            return new AgvPosition() { Theta = (float)(currentNode.NodePosition?.Theta ?? 0), X = (float)(currentNode.NodePosition?.X ?? 0), Y = (float)(currentNode.NodePosition?.Y ?? 0), Z =  0 };
+        }
+        double secondsSpendOnCurrentEdge = (now - StartTime!.Value).TotalSeconds - _totalPausedSeconds
+            - Base.Edges.Where(e => e.SequenceId < currentEdge.SequenceId).Sum(e => e.EstimatedTravelTime.TotalSeconds);
+        double travelledFraction = secondsSpendOnCurrentEdge / currentEdge.EstimatedTravelTime.TotalSeconds;
+        if (currentEdge.Trajectory == null)
+        {
+            var endNode = Base.Nodes.FirstOrDefault(n => n.SequenceId == currentEdge.SequenceId + 1);
+            double fraction = Math.Clamp(travelledFraction, 0, 1);
+            float x = (float)((currentNode.NodePosition?.X ?? 0) + fraction * ((endNode?.NodePosition?.X ?? 0) - (currentNode.NodePosition?.X ?? 0)));
+            float y = (float)((currentNode.NodePosition?.Y ?? 0) + fraction * ((endNode?.NodePosition?.Y ?? 0) - (currentNode.NodePosition?.Y ?? 0)));
+            return new AgvPosition() { X = x, Y = y, Theta = (float)(currentNode.NodePosition?.Theta ?? 0), Z = 0, PositionInitialized = true };
+        }
+        return currentEdge.GetPosition(travelledFraction);
+    }
+
+    /// <summary>
+    /// Try finish.
+    /// </summary>
+    public void TryFinish(DateTime now)
+    {
+        State = null;
+        if (CurrentAction != null || PendingActionStates.Any(s => s.ActionStatus is VehicleActionStatus.Waiting or VehicleActionStatus.Running))
+        {
+            return;
+        }
+        double netTravelTime = (now - StartTime!.Value).TotalSeconds - _totalPausedSeconds;
+        if (netTravelTime > Duration.TotalSeconds)
+        {
+            StartTime = null;
+        }
+    }
+
+    /// <summary>
+    /// Prepare order for agv travel.
+    /// </summary>
+    public void PrepareTravel(INurbsEdgeBuilder edgeBuilder, float agvSpeed)
+    {
+        foreach(var edge in Base.Edges)
+        {
+            edge.Prepare(edgeBuilder, agvSpeed);
+            Duration += edge.EstimatedTravelTime;
+        }
+        CurrentRoute = FullRoute;
+    }
+
+    /// <summary>
+    /// True, if the order finished an action of the given type.
+    /// </summary>
+    /// <param name="actionType">Type of the action.</param>
+    public bool HasFinishedActionOfType(string actionType)
+    {
+        return PendingActionStates.Any(a => a.ActionType == actionType && a.ActionStatus == VehicleActionStatus.Finished);
+    }
+
+    /// <summary>
+    /// Get action of given type on given node.
+    /// </summary>
+    public OrderAction? GetActionOnNode(string nodeId, string actionType)
+    {
+        return FullRoute.Nodes.SingleOrDefault(n => n.NodeId == nodeId)?.Actions.SingleOrDefault(a => a.ActionType == actionType);
+    }
+
+    /// <summary>
+    /// Cancel the current order.
+    /// </summary>
+    /// <param name="actionId">The cancelOrder action id.</param>
+    public void Cancel(string actionId)
+    {
+        var currentState = PendingActionStates.SingleOrDefault(a => a.ActionType == CurrentAction?.ActionType);
+        currentState?.ActionStatus = VehicleActionStatus.Failed;
+        PendingActionStates.Add(new OrderActionState(){ActionId = actionId, ActionType = Vda5050Specifications.ActionTypes.CancelOrder, ActionStatus = VehicleActionStatus.Finished});
+        CurrentRoute = new Route([], []);
+    }
+}

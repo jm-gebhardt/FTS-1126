@@ -143,7 +143,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
                     .ThenAsync(PublishOrderActionStatusChange)
                     .If(c => c.Saga.ShouldSendNextOrder, e => e.ThenAsync(PublishOrder))
                     .If(c => c.Saga.OrderStartedRunning, e => e.ThenAsync(PublishOrderStartedEvent).TransitionTo(Running))
-                    .If(c => c.Saga.FinishedOrder, e => e.ThenAsync(PublishOrderFinishedEvent).TransitionTo(Final).Finalize()),
+                    .If(c => c.Saga.IsFinished, e => e.ThenAsync(PublishOrderFinishedEvent).TransitionTo(Final).Finalize()),
                 failed => failed
                     .Then(c => { _logger.LogError("Update of order status {OrderCorrelationId} of agv {AgvCorrelationId} failed: {Reason}", c.Message.CorrelationId, c.Saga.Order.AssignedAgv?.CorrelationId, c.Saga.ErrorReference); })
                     .ThenAsync(PublishOrderFailedEvent)
@@ -255,7 +255,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
     private async Task PublishOrderActionStatusChange(BehaviorContext<OrderExecutionSaga> context)
     {
         _orderActionStatusCache.ConcurrentDict.TryGetValue(context.Saga.CorrelationId, out IList<OrderActionState>? previousOrderActionStatus);
-        if (context.Saga.Order.Status == null || context.Saga.Order.Status.ActionStates.Count != 0)
+        if (context.Saga.Order.Status == null || context.Saga.Order.Status.ActionStates.Count == 0)
         {
             return;
         }
@@ -320,7 +320,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
 
     private async Task PublishOrderFinishedEvent(BehaviorContext<OrderExecutionSaga> context)
     {
-        if (context.Saga.Order.PreviousState == null)
+        if (!context.Saga.IsFinished)
         {
             return;
         }

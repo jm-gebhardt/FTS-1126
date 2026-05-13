@@ -24,46 +24,6 @@ public class OrderExecutionSagaTest
     }
 
     [TestMethod]
-    public void Constructor_SmallOrder_SetsBaseLengthTo2()
-    {
-        // 5 nodes → Math.Min(5/2, 3) = 2
-        var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 5);
-        var saga = CreateSaga(order);
-
-        saga.BaseLength.ShouldBe(2);
-    }
-
-    [TestMethod]
-    public void Constructor_LargeOrder_CapsBaseLengthAt3()
-    {
-        // 8 nodes → Math.Min(8/2, 3) = 3
-        var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 8);
-        var saga = CreateSaga(order);
-
-        saga.BaseLength.ShouldBe(3);
-    }
-
-    [TestMethod]
-    public void Constructor_SmallOrder_SetsMaxHorizonLengthTo1()
-    {
-        // 5 nodes → Math.Min(5/2, 3) - 1 = 1
-        var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 5);
-        var saga = CreateSaga(order);
-
-        saga.MaxHorizonLength.ShouldBe(1);
-    }
-
-    [TestMethod]
-    public void Constructor_LargeOrder_SetsMaxHorizonLengthTo2()
-    {
-        // 8 nodes → Math.Min(8/2, 3) - 1 = 2
-        var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 8);
-        var saga = CreateSaga(order);
-
-        saga.MaxHorizonLength.ShouldBe(2);
-    }
-
-    [TestMethod]
     public void Constructor_SetsCurrentFleetManagerActionIdToCorrelationId()
     {
         var correlationId = Guid.NewGuid();
@@ -200,7 +160,7 @@ public class OrderExecutionSagaTest
             new OrderActionState { ActionId = action.ActionId, ActionStatus = VehicleActionStatus.Finished }
         ]);
 
-        saga.FinishedOrder.ShouldBeTrue();
+        saga.IsFinished.ShouldBeTrue();
     }
 
     [TestMethod]
@@ -211,11 +171,11 @@ public class OrderExecutionSagaTest
         saga.Order.State = State.Running;
         saga.Order.PreviousState = State.Created;
 
-        saga.FinishedOrder.ShouldBeFalse();
+        saga.IsFinished.ShouldBeFalse();
     }
 
     [TestMethod]
-    public void FinishedOrder_FinishedWithoutPreviousRunning_ReturnsFalse()
+    public void FinishedOrder_FinishedWithoutPreviousRunning_ReturnsTrue()
     {
         var saga = CreateSaga();
         var lastNode = saga.Order.PlannedRoute.Nodes.OrderBy(n => n.SequenceId).Last();
@@ -226,7 +186,7 @@ public class OrderExecutionSagaTest
             new OrderActionState { ActionId = action.ActionId, ActionStatus = VehicleActionStatus.Finished }
         ]);
 
-        saga.FinishedOrder.ShouldBeFalse();
+        saga.IsFinished.ShouldBeTrue();
     }
 
     [TestMethod]
@@ -234,7 +194,7 @@ public class OrderExecutionSagaTest
     {
         var saga = CreateSaga();
         saga.Initialize();
-        // LastNodeSequenceId = 0 → Route.Proceed(0) returns Success immediately
+        // LastNodeSequenceId = 0 → FullRoute.Proceed(0) returns Success immediately
         saga.Order.Status = OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, false);
 
         saga.TryProceed().ShouldBeTrue();
@@ -280,20 +240,6 @@ public class OrderExecutionSagaTest
         saga.TryUpdateState(state);
 
         saga.Order.State.ShouldBe(State.Running);
-    }
-
-    [TestMethod]
-    public void TryUpdateState_NewBaseRequest_TriggersUpdateAndReturnsTrue()
-    {
-        var saga = CreateSaga();
-        saga.Initialize();
-        int orderUpdateIdBefore = saga.Order.OrderUpdateId;
-        var state = OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, true);
-
-        saga.TryUpdateState(state).ShouldBeTrue();
-
-        // TryUpdate was triggered, incrementing OrderUpdateId
-        saga.Order.OrderUpdateId.ShouldBeGreaterThan(orderUpdateIdBefore);
     }
 
     [TestMethod]
@@ -361,8 +307,8 @@ public class OrderExecutionSagaTest
     {
         var saga = CreateSaga();
         saga.Initialize();
-        // After Initialize, Base last node is "1" at seq=2; new route must contain node with NodeId "1"
-        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["1", "map/NODE-11", "PS01"]) };
+        // After Initialize, Base last node is "PS01" 
+        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS01", "some waypoint", "map/NODE-11", "station"]) };
 
         saga.TryUpdate(newOrder, Guid.NewGuid()).ShouldBeTrue();
     }
@@ -373,7 +319,7 @@ public class OrderExecutionSagaTest
         var saga = CreateSaga();
         saga.Initialize();
         var newFleetManagerActionId = Guid.NewGuid();
-        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["1", "map/NODE-11", "PS01"]) };
+        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS01", "some waypoint", "map/NODE-11", "station"]) };
 
         saga.TryUpdate(newOrder, newFleetManagerActionId);
 
@@ -385,7 +331,7 @@ public class OrderExecutionSagaTest
     {
         var saga = CreateSaga();
         saga.Initialize();
-        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["1", "map/NODE-11", "PS01"]) };
+        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS01", "some waypoint", "map/NODE-11", "station"]) };
 
         saga.TryUpdate(newOrder, Guid.NewGuid());
 

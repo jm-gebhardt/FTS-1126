@@ -155,6 +155,6 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
         await agvRepository.AddOrUpdateAsync(agv);
         logger.LogInformation("Sent update of transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, agv.CurrentOrder, agv.SerialNumber, action.Target.Node?.Name);
-        await context.Publish(new OrderUpdateRequested(action.CorrelationId, order, abortedActionCorrelationId));
+        await context.Publish(new OrderUpdateRequested(abortedActionCorrelationId!.Value, order, action.CorrelationId ));
     }
 }

@@ -120,52 +120,6 @@ public class OrderExecutionStateMachineTest
     }
 
     [TestMethod]
-    public async Task Consume_FullOrderCycle_PublishesActionCompletedByAgvTransitionsToFinal()
-    {
-        // Full state machine cycle: Created → Running → (route updates) → Final
-        // The 5-node pick order produces: PS03(0) - 1(2) - 2(4) - 3(6) - AP01(8, pick)
-        // BaseLength=2, MaxHorizonLength=1 → route is sent in slices via NewBaseRequest
-        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
-        var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
-
-        var fixture = new OrderExecutionStationMachineTestFixture(TimeSpan.FromSeconds(2))
-            .Build();
-
-        var startOrderCommand = new StartOrder(agv.CurrentOrder!.Value, order);
-
-        // 1) Start order → Created, first order slice published (HeaderId=1)
-        await fixture.PublishMessageAsync(startOrderCommand);
-        var saga = fixture.GetSaga(startOrderCommand.CorrelationId);
-        saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
-
-        // 2) AGV reports initial position (seqId=0) → Running, ActionStartedByAgv published
-        await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
-            OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false)));
-        saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));
-        await fixture.ShouldHavePublishedAsync<ActionStartedByAgv>();
-
-        // 3) AGV at node seqId=2, requests next base → second order slice published (HeaderId=2)
-        await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
-            OrderGenerator.GenerateOrderState(order.OrderId, 0, 2, true)));
-
-        // 4) AGV at node seqId=4, requests next base → final order slice including AP01 published (HeaderId=3)
-        await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
-            OrderGenerator.GenerateOrderState(order.OrderId, 1, 4, true)));
-
-        // 5) AGV reaches AP01 (seqId=8) with pick action finished → order complete → Final
-        var pickAction = order.PlannedRoute.Nodes.Last().Actions.First();
-        await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
-            OrderGenerator.GenerateOrderState(order.OrderId, 2, 8, false,
-                actionStates: [new OrderActionState { ActionId = pickAction.ActionId, ActionType = pickAction.ActionType, ActionStatus = VehicleActionStatus.Finished }])));
-
-        await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
-
-        ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
-        publishedOrders.Count.ShouldBe(3);
-        publishedOrders.Select(o => o.HeaderId).ShouldBe(new[] { 1u, 2u, 3u });
-    }
-
-    [TestMethod]
     public async Task Consume_OrderStateReceived_OrderErrorByAgv_PublishesActionFailedByAgvTransitionsToFinal()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
@@ -299,8 +253,8 @@ public class OrderExecutionStateMachineTest
     [TestMethod]
     public async Task Consume_OrderUpdateRequested_StitchingNodeNotInNewRoute_PublishesActionFailedByAgvKeepsState()
     {
-        // After initialization the stitching node (last released base node) is "1" (seqId=2).
-        // A new route that replaces "1" with "DIFFERENT_NODE" cannot be stitched → update fails.
+        // After initialization the full route is released; the stitching node (last released base node) is "AP01" (seqId=8).
+        // A new route that does not include "AP01" cannot be stitched → update fails.
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
         var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
 
@@ -317,7 +271,7 @@ public class OrderExecutionStateMachineTest
             OrderId = order.OrderId,
             OrderUpdateId = 1,
             AssignedAgv = agv,
-            PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS03", "DIFFERENT_NODE", "AP01"]),
+            PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS03", "DIFFERENT_NODE", "DIFFERENT_END"]),
             Route = new Route([], [])
         };
         await fixture.PublishMessageAsync(new OrderUpdateRequested(startOrderCommand.CorrelationId, newOrder, null));

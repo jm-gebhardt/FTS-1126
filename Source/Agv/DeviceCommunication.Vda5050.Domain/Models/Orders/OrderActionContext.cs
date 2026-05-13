@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using JetBrains.Annotations;
 
@@ -44,63 +45,63 @@ public record OrderActionContext
     {
         if (Vda5050Specifications.Parameters.StationType.Equals(parameter.Key))
         {
-            Vda5050Parameters.StationType = (string?)parameter.Value;
+            Vda5050Parameters.StationType = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.StationName.Equals(parameter.Key))
         {
-            Vda5050Parameters.StationName = (string?)parameter.Value;
+            Vda5050Parameters.StationName = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.LoadHandlingDevice.Equals(parameter.Key))
         {
-            Vda5050Parameters.LoadHandlingDevice = (string?)parameter.Value;
+            Vda5050Parameters.LoadHandlingDevice = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.MapId.Equals(parameter.Key))
         {
-            Vda5050Parameters.MapId = (string?)parameter.Value;
+            Vda5050Parameters.MapId = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.MapVersion.Equals(parameter.Key))
         {
-            Vda5050Parameters.MapVersion = (string?)parameter.Value;
+            Vda5050Parameters.MapVersion = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.LastNodeId.Equals(parameter.Key))
         {
-            Vda5050Parameters.LastNodeId = (string?)parameter.Value;
+            Vda5050Parameters.LastNodeId = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.ObjectType.Equals(parameter.Key))
         {
-            Vda5050Parameters.ObjectType = (string?)parameter.Value;
+            Vda5050Parameters.ObjectType = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.TriggerType.Equals(parameter.Key))
         {
-            Vda5050Parameters.TriggerType = (string?)parameter.Value;
+            Vda5050Parameters.TriggerType = parameter.Value.GetStringValue();
             return;
         }
         if (Vda5050Specifications.Parameters.X.Equals(parameter.Key))
         {
             Vda5050Parameters.Position ??= new Vda5050Position();
-            Vda5050Parameters.Position.X = (float) parameter.Value;
+            Vda5050Parameters.Position.X = parameter.Value.GetFloatValue();
             return;
         }
         if (Vda5050Specifications.Parameters.Y.Equals(parameter.Key))
         {
             Vda5050Parameters.Position ??= new Vda5050Position();
-            Vda5050Parameters.Position.Y = (float)parameter.Value;
+            Vda5050Parameters.Position.Y = parameter.Value.GetFloatValue();
             return;
         }
         if (Vda5050Specifications.Parameters.Theta.Equals(parameter.Key))
         {
             Vda5050Parameters.Position ??= new Vda5050Position();
-            Vda5050Parameters.Position.Theta = (float)parameter.Value;
+            Vda5050Parameters.Position.Theta = parameter.Value.GetFloatValue();
             return;
         }
-        CustomParameters ??= new Dictionary<string, object>(); 
+        CustomParameters ??= new Dictionary<string, object>();
         CustomParameters?.TryAdd(parameter.Key, parameter.Value);
     }
 }

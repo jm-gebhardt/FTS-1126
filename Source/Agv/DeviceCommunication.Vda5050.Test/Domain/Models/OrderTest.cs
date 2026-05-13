@@ -115,7 +115,7 @@ public class OrderTest
     }
 
     [TestMethod]
-    public void TryUpdatePlannedRoute_CompletedOrder_ReturnsFailure()
+    public void TryUpdatePlannedRoute_CompletedOrder_ReturnsSuccess()
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.TryUpdate(2, 2);
@@ -128,8 +128,8 @@ public class OrderTest
 
         var result = order.TryUpdatePlannedRoute(newRoute, 2, 2);
 
-        result.IsSuccess.ShouldBeFalse();
-        result.Error.ShouldBe(OrderErrors.OrderRouteUpdateOrderCompleted);
+        result.IsSuccess.ShouldBeTrue();
+        result.Error.ShouldBeNull();
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text.Json;
 
 namespace Gebhardt.Acc.Common.Extensions;
 
@@ -28,5 +29,27 @@ public static class ObjectExtension
                     property => property.GetValue(customObject)
                 );
         }
+
+        /// <summary>
+        /// Get string value from json object.
+        /// </summary>
+        public string? GetStringValue() => customObject switch
+        {
+            JsonElement e => e.GetString(),
+            string s => s,
+            null => null,
+            _ => customObject.ToString()
+        };
+
+        /// <summary>
+        /// Get float value from json object.
+        /// </summary>
+        public float GetFloatValue() => customObject switch
+        {
+            JsonElement e => e.GetSingle(),
+            float f => f,
+            double d => (float)d,
+            _ => Convert.ToSingle(customObject)
+        };
     }
 }

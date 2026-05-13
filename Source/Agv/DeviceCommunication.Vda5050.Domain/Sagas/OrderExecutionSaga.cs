@@ -78,7 +78,7 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// <summary>
     /// True, if the order was just completed by the agv.
     /// </summary>
-    public bool FinishedOrder => Order is { State: Models.Orders.State.Finished, PreviousState: Models.Orders.State.Running } && Order.IsCompleted();
+    public bool IsFinished => Order.IsCompleted();
 
     /// <summary>
     /// True, if an update of the planned route has been requested.
@@ -92,8 +92,8 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         Order = order;
         OrderHeaderId = headerId;
         InstantActionsHeaderId = instantActionsHeaderId;
-        BaseLength = Math.Min(Order.PlannedRoute.Nodes.Count / 2, 3);
-        MaxHorizonLength = Math.Min(Order.PlannedRoute.Nodes.Count / 2, 3) - 1;
+        BaseLength = Order.PlannedRoute.Nodes.Count;//Math.Min(Order.PlannedRoute.Nodes.Count / 2, 3);
+        MaxHorizonLength = 0;//Math.Min(Order.PlannedRoute.Nodes.Count / 2, 3) - 1;
         CurrentFleetManagerActionId = correlationId;
     }
 
@@ -122,11 +122,12 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         {
             return true;
         }
-        ErrorReference = null;
-        if (!Order.IsCompleted())
+        if (Order.IsCompleted())
         {
-            ErrorReference = result.Error!.Description;
+            ErrorReference = null;
+            return true;
         }
+        ErrorReference = result.Error!.Description;
         return false;
     }
 
@@ -146,7 +147,8 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         {
             return false;
         }
-        if (Order.Status.NewBaseRequest is true && !RouteUpdateRequested)
+
+        if (Order.Status.NewBaseRequest is true && !RouteUpdateRequested && !IsFinished)
         {
             return Order.TryUpdate(BaseLength, MaxHorizonLength);
         }

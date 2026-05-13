@@ -30,7 +30,7 @@ public class Route
     /// <summary>
     /// True, if the route is empty, has no edges.
     /// </summary>
-    public bool IsEmpty => Edges.Count == 0;
+    public bool IsEmpty => Edges.Count == 0 && Nodes.Count == 0;
 
     /// <summary>
     /// True if the route is valid.
@@ -95,19 +95,22 @@ public class Route
             // Ensure that start and end node of current edge are part of the route.
             return Result.Success();
         }
-        var previousNode = Nodes.FirstOrDefault(n => n.SequenceId == passedNodeSequenceId - 2) ;
-        if (previousNode == null)
+        IEnumerable<OrderNode> previousNodes = Nodes.Where(n => n.SequenceId <= passedNodeSequenceId - 2).ToList() ;
+        if (!previousNodes.Any())
         {
-            return Result.Failure(OrderErrors.ProceedNodeNotOnRoute);
+            return Result.Success();
         }
-
-        var passedEdge = Edges.FirstOrDefault(e => e.StartNodeId == previousNode.NodeId);
-        if (passedEdge == null)
+        foreach (var previousNode in previousNodes)
         {
-            return Result.Failure(OrderErrors.ProceedEdgeNotFound);
+            var passedEdge = Edges.FirstOrDefault(e => e.StartNodeId == previousNode.NodeId);
+            if (passedEdge == null)
+            {
+                return Result.Failure(OrderErrors.ProceedEdgeNotFound);
+            }
+            Nodes.Remove(previousNode);
+            Edges.Remove(passedEdge);
         }
-        Nodes.Remove(previousNode);
-        Edges.Remove(passedEdge);
+        
         return Result.Success();
     }
 

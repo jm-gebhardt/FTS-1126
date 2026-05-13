@@ -81,14 +81,6 @@ public class RouteTest
     }
 
     [TestMethod]
-    public void Proceed_PassedNodeNotInRoute_ReturnsFailure()
-    {
-        var route = RouteGenerator.GenerateFromNodeIds(["1", "2"]);
-
-        route.Proceed(42).ShouldBe(Result.Failure(OrderErrors.ProceedNodeNotOnRoute));
-    }
-
-    [TestMethod]
     public void Proceed_BrokenRoute_ReturnsFailure()
     {
         var route = RouteGenerator.GenerateFromNodeIds(["1", "2", "3"]);

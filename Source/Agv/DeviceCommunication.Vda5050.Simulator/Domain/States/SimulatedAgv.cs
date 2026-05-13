@@ -1,0 +1,398 @@
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Sequence;
+using Gebhardt.Acc.Common.Domain.Services;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
+using JetBrains.Annotations;
+using MassTransit;
+
+namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
+
+/// <summary>
+/// The simulated agv.
+/// </summary>
+[PublicAPI]
+public class SimulatedAgv : SagaStateMachineInstance
+{
+    /// <inheritdoc/>
+    public Guid CorrelationId { get; set; }
+
+    private readonly TimeProvider _timeProvider;
+
+    private const float InitialTheta = 0f;
+
+    /// <summary>
+    /// Threshold [%] for battery charge to be considered alive.
+    /// </summary>
+    public const int AliveChargeThreshold = 2;
+
+    /// <summary>
+    /// Maximum possible battery charge [%].
+    /// </summary>
+    public const double MaxCharge = 100;
+
+    /// <summary>
+    /// Value for simulating change in battery charge
+    /// </summary>
+    public double SimulatedBatteryCharge { get; set; }
+
+    private readonly int _initialBatteryCharge;
+
+    /// <summary>
+    /// Value for simulating change in battery charge [%/s]
+    /// </summary>
+    public double BatteryChargeRate { get; set; }
+
+    /// <summary>
+    /// Value for simulating change in battery discharge [%/s]
+    /// </summary>
+    public double BatteryDischargeRate { get; set; }
+
+    /// <summary>
+    /// The agv configuration.
+    /// </summary>
+    public AgvConfiguration Configuration { get; }
+
+    /// <summary>
+    /// The current state of the agv.
+    /// </summary>
+    public string CurrentState { get; set; }
+
+    /// <summary>
+    /// True, if the agv is online.
+    /// </summary>
+    public bool IsOnline { get; private set; }
+
+    /// <summary>
+    /// NodeID of last reached node or, if AGV is currently on a node,
+    /// current node (e.g., \"node7\"). Empty string (\"\") if no lastNodeId is available.
+    /// </summary>
+    public string? LastNodeId { get; set; }
+
+    /// <summary>
+    /// SequenceId of the last reached node or, if the AGV is currently on a node, sequenceId of
+    /// current node.
+    /// 0 if no lastNodeSequenceId is available.
+    /// </summary>
+    public int LastNodeSequenceId { get; set; }
+
+    /// <summary>
+    /// The state topic header id counter.
+    /// </summary>
+    public ISequenceCounter<IStateHeaderId> StateHeaderId { get; init; }
+
+    /// <summary>
+    /// The connection topic header id counter.
+    /// </summary>
+    public ISequenceCounter<IConnectionHeaderId> ConnectionHeaderId { get; init; }
+
+    /// <summary>
+    /// The visualization topic header id counter.
+    /// </summary>
+    public ISequenceCounter<IVisualizationHeaderId> VisualizationHeaderId { get; init; }
+
+    /// <summary>
+    /// Token used for signal position scheduling
+    /// </summary>
+    public Guid? SignalPositionTokenId { get; set; }
+
+    /// <summary>
+    /// Token used by the send status update schedule
+    /// </summary>
+    public Guid? SendStatusUpdateTokenId { get; set; }
+
+    /// <summary>
+    /// True, if the agv is charging.
+    /// </summary>
+    public bool Charging { get; set; }
+
+    /// <summary>
+    /// The current order.
+    /// </summary>
+    public Order? CurrentOrder { get; private set; }
+
+    /// <summary>
+    /// The current agv position.
+    /// </summary>
+    public AgvPosition CurrentPosition { get; private set; }
+
+    /// <summary>
+    /// The loads the agv is carrying
+    /// </summary>
+    public ICollection<Load> Loads { get; } = [];
+
+    /// <summary>
+    /// Current error.
+    /// </summary>
+    public AgvError? Error { get; private set; }
+
+    private readonly INurbsEdgeBuilder _edgeBuilder;
+    private readonly bool _generateError;
+
+    /// <inheritdoc cref="SimulatedAgv"/>
+    public SimulatedAgv(Guid correlationId,
+        AgvConfiguration configuration,
+        int initialBatteryCharge,
+        double batteryChargeRate,
+        double batteryDischargeRate,
+        TimeProvider timeProvider,
+        ISequenceCounter<IStateHeaderId> stateHeaderId,
+        ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
+        ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
+        INurbsEdgeBuilder edgeBuilder,
+        string? currentState = null,
+        bool generateError =false)
+    {
+        CorrelationId = correlationId;
+        Configuration = configuration;
+        BatteryChargeRate = batteryChargeRate;
+        BatteryDischargeRate = batteryDischargeRate;
+        SimulatedBatteryCharge = initialBatteryCharge;
+        _initialBatteryCharge = initialBatteryCharge;
+        _timeProvider = timeProvider;
+        CurrentState = currentState ?? string.Empty;
+        IsOnline = true;
+        StateHeaderId = stateHeaderId;
+        VisualizationHeaderId = visualizationHeaderId;
+        ConnectionHeaderId = connectionHeaderId;
+        CurrentPosition = new AgvPosition(true, 0, 0, 0, InitialTheta);
+        _edgeBuilder = edgeBuilder;
+        _generateError = generateError;
+    }
+
+    /// <summary>
+    /// Initialize the agv to the given position.
+    /// </summary>
+    /// <param name="position">The new position.</param>
+    /// <param name="lastNodeId">The last node id.</param>
+    public void InitPosition(AgvPosition position, string? lastNodeId = null)
+    {
+        CurrentPosition = position;
+        LastNodeId = lastNodeId;
+        LastNodeSequenceId = 0;
+    }
+
+    /// <summary>
+    /// Update the agv status
+    /// </summary>
+    /// <param name="timeDiffS"></param>
+    public void UpdateStatus(double timeDiffS)
+    {
+        double chargeDiff;
+        if (Charging)
+        {
+            chargeDiff = timeDiffS * BatteryChargeRate;
+        }
+        else
+        {
+            chargeDiff = timeDiffS * -BatteryDischargeRate;
+        }
+
+        SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, MaxCharge);
+        if (_generateError)
+        {
+            GenerateError();
+        }
+    }
+
+    /// <summary>
+    /// Start a new order.
+    /// </summary>
+    public void StartOrder(Order order)
+    {
+        var now = _timeProvider.GetUtcNow().DateTime;
+        CurrentOrder = order;
+        CurrentOrder.StartTime = now;
+        CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed);
+        var currentNode = CurrentOrder.GetLastNode(LastNodeId, now);
+        LastNodeId = currentNode.NodeId;
+        LastNodeSequenceId = currentNode.SequenceId;
+        CurrentOrder.PendingActionStates =
+        [
+            ..CurrentOrder.Base.Nodes.SelectMany(n => n.Actions)
+                .Select(a => new OrderActionState
+                {
+                    ActionId = a.ActionId,
+                    ActionType = a.ActionType,
+                    ActionDescription = a.ActionDescription,
+                    ActionStatus = VehicleActionStatus.Waiting
+                }),
+            ..CurrentOrder.Base.Edges.SelectMany(n => n.Actions)
+                .Select(a => new OrderActionState
+                {
+                    ActionId = a.ActionId,
+                    ActionType = a.ActionType,
+                    ActionDescription = a.ActionDescription,
+                    ActionStatus = VehicleActionStatus.Waiting
+                })
+        ];
+    }
+
+    /// <summary>
+    /// Update an order.
+    /// </summary>
+    public void UpdateOrder(Order order)
+    {
+        var now = _timeProvider.GetUtcNow().DateTime;
+        CurrentOrder = order;
+        CurrentOrder.StartTime = now;
+        CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed);
+        var currentNode = CurrentOrder.GetLastNode(LastNodeId, now);
+        LastNodeId = currentNode.NodeId;
+        LastNodeSequenceId = currentNode.SequenceId;
+        CurrentOrder.PendingActionStates =
+        [
+            ..CurrentOrder.Base.Nodes.SelectMany(n => n.Actions)
+                .Select(a => new OrderActionState
+                {
+                    ActionId = a.ActionId,
+                    ActionType = a.ActionType,
+                    ActionDescription = a.ActionDescription,
+                    ActionStatus = VehicleActionStatus.Waiting
+                }),
+            ..CurrentOrder.Base.Edges.SelectMany(n => n.Actions)
+                .Select(a => new OrderActionState
+                {
+                    ActionId = a.ActionId,
+                    ActionType = a.ActionType,
+                    ActionDescription = a.ActionDescription,
+                    ActionStatus = VehicleActionStatus.Waiting
+                })
+        ];
+    }
+
+    /// <summary>
+    /// Proceed with the order.
+    /// </summary>
+    public void ProceedOrder()
+    {
+        if (CurrentOrder?.StartTime == null)
+        {
+            return;
+        }
+        var now = _timeProvider.GetUtcNow().DateTime;
+        CurrentPosition = CurrentOrder.Proceed(LastNodeId, now);
+        if (CurrentOrder.State != null)
+        {
+            LastNodeId = CurrentOrder.Base.Nodes.First(n => n.SequenceId == CurrentOrder.State.LastNodeSequenceId).NodeId;
+            LastNodeSequenceId = CurrentOrder.State.LastNodeSequenceId;
+        }
+        UpdateLoad();
+        HandleChargingNodeAction();
+    }
+
+    private void HandleChargingNodeAction()
+    {
+        if (CurrentOrder?.CurrentAction?.ActionType == Vda5050Specifications.ActionTypes.StartCharging)
+        {
+            Charging = true;
+        }
+        if (CurrentOrder?.CurrentAction?.ActionType == Vda5050Specifications.ActionTypes.StopCharging)
+        {
+            Charging = false;
+        }
+    }
+
+    private void UpdateLoad()
+    {
+        if (LastNodeId == null)
+        {
+            return;
+        }
+        var pickAction = CurrentOrder?.GetActionOnNode(LastNodeId, Vda5050Specifications.ActionTypes.Pick);
+        if ((CurrentOrder?.HasFinishedActionOfType(Vda5050Specifications.ActionTypes.Pick) ?? false) && pickAction != null && Loads.All(l => l.PickStartTime != pickAction.StartedTime))
+        {
+            Loads.Add(new Load(pickAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString() ?? Guid.NewGuid().ToString(), pickAction.StartedTime!.Value));
+        }
+
+        var dropAction = CurrentOrder?.GetActionOnNode(LastNodeId, Vda5050Specifications.ActionTypes.Drop);
+        if ((CurrentOrder?.HasFinishedActionOfType(Vda5050Specifications.ActionTypes.Drop) ?? false) && dropAction != null && Loads.Count != 0)
+        {
+            var load = Loads.FirstOrDefault(l => l.Id == dropAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString()) ?? Loads.First();
+            Loads.Remove(load);
+        }
+    }
+
+    /// <summary>
+    /// Finish the order.
+    /// </summary>
+    public void FinishOrder()
+    {
+        if (CurrentOrder == null || CurrentOrder.StartTime == null)
+        {
+            return;
+        }
+        var now = _timeProvider.GetUtcNow().DateTime;
+        UpdateLoad();
+        CurrentOrder.TryFinish(now);
+        if (CurrentOrder.StartTime == null)
+        {
+            CurrentOrder = null;
+            LastNodeSequenceId = 0;
+        }
+    }
+
+    /// <summary>
+    /// Abort the current order.
+    /// </summary>
+    /// <param name="actionId"></param>
+    public void AbortOrder(string actionId)
+    {
+        if (CurrentOrder == null || CurrentOrder.StartTime == null)
+        {
+            return;
+        }
+        if (Charging)
+        {
+            Charging = false;
+        }
+        CurrentOrder!.Cancel(actionId);
+        FinishOrder();
+    }
+
+    private static readonly Random _random = Random.Shared;
+
+    /// <summary>
+    /// Randomly generate or release errors.
+    /// </summary>
+    public void GenerateError()
+    {
+        bool act = _random.Next(2) == 1;
+        if (Error != null && act)
+        {
+            Error = null;
+            return;
+        }
+        act = act && _timeProvider.GetUtcNow().Minute % 5 == 0;
+        Error = act ? ErrorGenerator.CreateError(CorrelationId) : null;
+    }
+
+    /// <summary>
+    /// Initialize position from nodes.
+    /// </summary>
+    /// <param name="nodes">The nodes to select the position from.</param>
+    public void InitializePosition(ICollection<GraphNode> nodes)
+    {
+        if(LastNodeId != null)
+        {
+            return;
+        }
+        var nodeIdx = _random.Next(nodes.Count - 1);
+        var node = nodes.Skip(nodeIdx).Take(1).First();
+        LastNodeId = node.Name;
+        CurrentPosition = new AgvPosition() { X = node.X, Y = node.Y, Theta = node.Theta, Z=0, PositionInitialized=true };
+        SimulatedBatteryCharge = _initialBatteryCharge;
+    }
+}
+
+/// <summary>
+/// A load.
+/// </summary>
+/// <param name="Id">The load id.</param>
+/// <param name="PickStartTime">The time the pick action started.</param>
+public record Load(string Id, DateTime PickStartTime);

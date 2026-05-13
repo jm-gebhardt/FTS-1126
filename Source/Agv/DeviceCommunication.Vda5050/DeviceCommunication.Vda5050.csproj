@@ -46,7 +46,4 @@
           <_Parameter1>Gebhardt.Acc.$(MSBuildProjectName)Test</_Parameter1>
       </AssemblyAttribute>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Services\EventHandler\AgvAddedEventHandler.cs" />
-  </ItemGroup>
 </Project>
