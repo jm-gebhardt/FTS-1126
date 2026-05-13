@@ -63,7 +63,7 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
         }
         IRequestClient<RegisterNotificationTypeCommand> registrationClient = clientFactory.CreateRequestClient<RegisterNotificationTypeCommand>();
 
-        IEnumerable<Task<Response<Result>>> tasks = unregisteredNotifications.Select(n => registrationClient.GetResponse<Result>(new RegisterNotificationTypeCommand(n.Name, NotificationType.PlatformModule), cancellationToken));
+        IEnumerable<Task<Response<Result>>> tasks = unregisteredNotifications.Select(n => registrationClient.GetResponse<Result>(new RegisterNotificationTypeCommand(n.Name, [n.Name], NotificationType.PlatformModule), cancellationToken));
 
         Response<Result>[] results = await Task.WhenAll(tasks);
         IEnumerable<(NotificationType notificationType, bool isRegistered)> zippedResults = unregisteredNotifications.Zip(results.Select(r => r.Message.IsSuccess));
@@ -123,7 +123,7 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
             return;
         }
 
-        Response<Result> response = await client.GetResponse<Result>(new RegisterNotificationTypeCommand(notificationType.Name, NotificationType.PlatformModule));
+        Response<Result> response = await client.GetResponse<Result>(new RegisterNotificationTypeCommand(notificationType.Name, [notificationType.Name], NotificationType.PlatformModule));
 
         bool isRegistered = response.Message.IsSuccess;
 
