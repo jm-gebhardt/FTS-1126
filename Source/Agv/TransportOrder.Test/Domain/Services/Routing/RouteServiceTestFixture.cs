@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Routing.Implementations;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,7 @@ public class RouteServiceTestFixture
 
     public RouteServiceTestFixture()
     {
-        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object, _queueRepository.Object);
+        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object, _queueRepository.Object, new Mock<ILoggingService>().Object);
     }
 
     public RouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, AgvGraph agvGraph)

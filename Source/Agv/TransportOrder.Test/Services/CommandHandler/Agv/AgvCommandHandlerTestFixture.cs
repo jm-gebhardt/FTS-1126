@@ -93,7 +93,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _actionGroupRetrievalService.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _routeService.Object);
-        collection.AddTransient<ILoggingService, LoggingService>();
+        collection.AddSingleton(Mock.Of<ILoggingService>());
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddSingleton<ITransportOrderNotificationSender>(_ => _toNotificationSender.Object);
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
@@ -295,7 +295,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
             });
         if (parkGraphNode != null)
         {
-            _nodeRepositoryMock.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() => {
+            _nodeRepositoryMock.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() =>
+            {
                 parkGraphNode.Lock = new NodeLock(parkGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
                 return parkGraphNode;
             });
@@ -327,7 +328,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
             });
         if (chargeGraphNode != null)
         {
-            _nodeRepositoryMock.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() => {
+            _nodeRepositoryMock.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() =>
+            {
                 chargeGraphNode.Lock = new NodeLock(chargeGraphNode, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
                 return chargeGraphNode;
             });
@@ -338,7 +340,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture AddChargingNode(bool isOnCharger, GraphNode? chargeGraphNode)
     {
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(isOnCharger);
-        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync( (Guid _) =>
+        _chargingPointManager.Setup(x => x.GetReservedChargerForAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid _) =>
         {
             if (chargeGraphNode == null)
             {

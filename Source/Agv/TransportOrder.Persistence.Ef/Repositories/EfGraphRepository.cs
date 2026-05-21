@@ -1,4 +1,5 @@
 using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -6,6 +7,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,17 +28,20 @@ public class EfGraphRepository : IGraphRepository
     private readonly IMapper _mapper;
     private readonly ISemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider;
     private readonly ILogger<EfGraphRepository> _logger;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="EfGraphRepository" />
     public EfGraphRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory,
         IMapper mapper,
         ISemaphoreProvider<IGraphRepositorySemaphore> semaphoreProvider,
-        ILogger<EfGraphRepository> logger)
+        ILogger<EfGraphRepository> logger,
+        ILoggingService loggingService)
     {
         _dbContextFactory = dbContextFactory;
         _mapper = mapper;
         _semaphoreProvider = semaphoreProvider;
         _logger = logger;
+        _loggingService = loggingService;
     }
 
     private static IQueryable<AgvGraph> QueryAgvGraphWithChildren(TransportOrderDbContext context)
@@ -527,6 +532,9 @@ public class EfGraphRepository : IGraphRepository
         catch (Exception)
         {
             _logger.LogError("Consolidating global graph failed, roll back transaction");
+            await _loggingService.LogSystem(_logger, LogCodes.GraphConsolidationFailed,
+                "Graph Consolidation Failed", "Consolidating global graph failed, roll back transaction",
+                logLevel: LogLevel.Error);
             if (transaction.SupportsSavepoints)
             {
                 await transaction.RollbackToSavepointAsync(GraphConsolidationSavePoint);

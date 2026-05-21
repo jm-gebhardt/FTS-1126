@@ -12,7 +12,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 /// <summary>
 /// Wraps logging.
 /// </summary>
-public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IMapper mapper, IActionGroupRepository actionGroupRepository): ILoggingService
+public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IMapper mapper, IActionGroupRepository actionGroupRepository) : ILoggingService
 {
     /// <inheritdoc cref="ILoggingService"/>>
     public async Task LogOrder(ILogger logger, LogLevel severity, int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null)
@@ -46,7 +46,7 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
     {
         // Get current action group
         Guid? actionGroupCorrelationId = null;
-        
+
         if (severity is LogLevel.Warning or LogLevel.Error)
         {
             IReadOnlyList<Models.ActionGroup.ActionGroup> actionGroups = await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Started], null, null, 1, agvId, null, Models.ActionGroup.SortBy.StartedDate, false);
@@ -57,13 +57,13 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 additionalLabels?.TryGetValue(LogLabels.ErrorDescription, out errorDescription);
                 if (severity is LogLevel.Error)
                 {
-                    await LogOrder(logger, LogLevel.Error, LogCodes.OrderAgvError, agvId, (Guid)actionGroupCorrelationId, "Order AGV Error", $"AGV reports error '{errorDescription}' during execution of order.", 
-                        errorDescription != null  ? new Dictionary<string, object?> { {LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
-                } 
+                    await LogOrder(logger, LogLevel.Error, LogCodes.OrderAgvError, agvId, (Guid)actionGroupCorrelationId, "Order AGV Error", $"AGV reports error '{errorDescription}' during execution of order.",
+                        errorDescription != null ? new Dictionary<string, object?> { { LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
+                }
                 else
                 {
-                    await LogOrder(logger, LogLevel.Warning, LogCodes.OrderAgvWarning, agvId, (Guid)actionGroupCorrelationId, "Order AGV Warning", $"AGV reports warning '{errorDescription}' during execution of order.", 
-                        errorDescription != null  ? new Dictionary<string, object?> { {LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
+                    await LogOrder(logger, LogLevel.Warning, LogCodes.OrderAgvWarning, agvId, (Guid)actionGroupCorrelationId, "Order AGV Warning", $"AGV reports warning '{errorDescription}' during execution of order.",
+                        errorDescription != null ? new Dictionary<string, object?> { { LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
                 }
             }
         }
@@ -129,7 +129,7 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 logger.LogStationInformation(code, stationId, title, message, additionalLabels);
                 break;
             }
-                
+
             case LogLevel.Warning:
             {
                 logger.LogStationWarning(code, stationId, title, message, additionalLabels);
@@ -146,11 +146,23 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
     }
 
     /// <inheritdoc cref="ILoggingService"/>>
-    public async Task LogSystem(ILogger logger,int code,  string title, string message, Dictionary<string, object?>? additionalLabels = null)
+    public async Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, LogLevel logLevel = LogLevel.Information)
     {
-        const LogLevel severity = LogLevel.Information;
-        var logEntry = await logEntryRepository.AddAsync(Categories.System, code, severity.ToString(), null, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
-        logger.LogSystemInformation(code, title, message, additionalLabels);
+        var logEntry = await logEntryRepository.AddAsync(Categories.System, code, logLevel.ToString(), null, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        switch (logLevel)
+        {
+            case LogLevel.Warning:
+                logger.LogSystemWarning(code, title, message, additionalLabels);
+                break;
+
+            case LogLevel.Error:
+                logger.LogSystemError(code, title, message, additionalLabels);
+                break;
+
+            default:
+                logger.LogSystemInformation(code, title, message, additionalLabels);
+                break;
+        }
         await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
     }
 }

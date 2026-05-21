@@ -1,5 +1,7 @@
-﻿using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.OrderTranslator.Domain.Models.HostOrder;
 using Gebhardt.Acc.OrderTranslator.Domain.Models.Station;
 using Gebhardt.Acc.OrderTranslator.Domain.Repositories;
@@ -46,7 +48,17 @@ public class HostOrderCommandHandler(
         ICollection<Station> dropStations = await stationRepository.GetStationsByLane(hostOrder.Target);
         if (pickStations.Count == 0 && dropStations.Count == 0)
         {
-            logger.LogError("No station configuration for host order {Order}", hostOrder.CorrelationId);
+            logger.LogError("No station configuration for host order {OrderId}", hostOrder.CorrelationId);
+            await context.Publish(new LogOccurred(new LogEntryDto
+            {
+                Id = Guid.Empty,
+                Category = Categories.Order,
+                LogCode = LogCodes.HostOrderNoStationConfiguration,
+                LogLevel = nameof(LogLevel.Error),
+                ActionGroupCorrelationId = hostOrder.CorrelationId,
+                Timestamp = DateTime.UtcNow,
+                Variables = new Dictionary<string, string> { { LogLabels.OrderId, hostOrder.CorrelationId.ToString() } }
+            }, [Categories.Order]));
             return;
         }
 
@@ -64,7 +76,17 @@ public class HostOrderCommandHandler(
         var actionGroup = hostOrder.CreateActionGroup(pickStations, dropStations);
         if (actionGroup == null)
         {
-            logger.LogError("Host order {Order} could not be converted into action group", hostOrder.CorrelationId);
+            logger.LogError("Host order {OrderId} could not be converted into action group", hostOrder.CorrelationId);
+            await context.Publish(new LogOccurred(new LogEntryDto
+            {
+                Id = Guid.Empty,
+                Category = Categories.Order,
+                LogCode = LogCodes.HostOrderConversionFailed,
+                LogLevel = nameof(LogLevel.Error),
+                ActionGroupCorrelationId = hostOrder.CorrelationId,
+                Timestamp = DateTime.UtcNow,
+                Variables = new Dictionary<string, string> { { LogLabels.OrderId, hostOrder.CorrelationId.ToString() } }
+            }, [Categories.Order]));
             return;
         }
 

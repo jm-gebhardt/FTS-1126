@@ -1,7 +1,9 @@
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using JetBrains.Annotations;
@@ -56,6 +58,15 @@ public class WcsOrderHandler : IPollable
             if (!order.IsValid)
             {
                 _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId}", order.Id);
+                await _bus.Publish(new LogOccurred(new LogEntryDto
+                {
+                    Id = Guid.Empty,
+                    Category = Categories.Order,
+                    LogCode = LogCodes.WcsOrderInvalid,
+                    LogLevel = nameof(LogLevel.Error),
+                    Timestamp = DateTime.UtcNow,
+                    Variables = new Dictionary<string, string> { { LogLabels.OrderId, order.Id.ToString() } }
+                }, [Categories.Order]), cancellationToken);
                 order.MessageStatus = MessageStatus.Failed; // Mark Message as FailedDate
             }
             else
@@ -87,8 +98,20 @@ public class WcsOrderHandler : IPollable
         {
             if (!order.IsValid)
             {
-                _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId} / {CorrelationId}",
-                    order.Id, order.OrderId.ToGuid());
+                _logger.LogError("Found invalid order in ToAgv with OrderId = {OrderId} / {OrderIdGuid}", order.Id, order.OrderId.ToGuid());
+                await _bus.Publish(new LogOccurred(new LogEntryDto
+                {
+                    Id = Guid.Empty,
+                    Category = Categories.Order,
+                    LogCode = LogCodes.WcsOrderInvalid,
+                    LogLevel = nameof(LogLevel.Error),
+                    Timestamp = DateTime.UtcNow,
+                    Variables = new Dictionary<string, string>
+                    {
+                        { LogLabels.OrderId, order.Id.ToString() },
+                        { LogLabels.OrderIdGuid, order.OrderId.ToGuid().ToString() }
+                    }
+                }, [Categories.Order]), cancellationToken);
                 order.MessageStatus = MessageStatus.Failed; // Mark Message as FailedDate
             }
             else

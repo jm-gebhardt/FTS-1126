@@ -736,7 +736,7 @@ public class AgvCommandHandler :
 
         if (!await _agvDb.Agvs.HasOnlineAgvs())
         {
-            _logger.LogWarning("All agvs went offline");
+            await _loggingService.LogSystem(_logger, LogCodes.AllAgvsOffline, "All AGVs Offline", "All AGVs went offline", logLevel: LogLevel.Warning);
             await context.Publish(new AllAgvsOffline());
         }
     }
@@ -1749,7 +1749,8 @@ public class AgvCommandHandler :
         ICollection<GraphNode> nodesForChargingAgv = await _nodeRepository.GetNodesForAgv(chargingAgvId);
         var chargingNode = nodesForChargingAgv.FirstOrDefault(n => n.Lock!.IsOccupiedByAgv(chargingAgvId)) ??
                            (chargingAgv.AgvStatus == null ?
-                               null : await _nodeRepository.GetNodeAsync(chargingAgv.AgvStatus!.LastNodeId.GetValueOrDefault()));
+                               null :
+                               await _nodeRepository.GetNodeAsync(chargingAgv.AgvStatus!.LastNodeId.GetValueOrDefault()));
 
         if (chargingNode == null)
         {
@@ -1931,10 +1932,16 @@ public class AgvCommandHandler :
         }
         if (hasCargoError)
         {
-            _logger.LogWarning("Agv {AgvCorrelationId} keeps having cargo mismatch error, cargo state {HasCargo} does not match state of order {ActionGroupCorrelationId}", agvCorrelationId, hasCargo, actionGroup.CorrelationId);
+            await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvCargoMismatch, agvCorrelationId, null,
+                "AGV Cargo Mismatch (Persists)",
+                $"AGV {agvCorrelationId} keeps having cargo mismatch error, cargo state {hasCargo} does not match state of order {actionGroup.CorrelationId}",
+                new Dictionary<string, object?> { { LogLabels.CargoState, hasCargo }, { LogLabels.OrderId, actionGroup.CorrelationId } });
             return;
         }
-        _logger.LogWarning("Agv {AgvCorrelationId} has cargo mismatch error, cargo state {HasCargo} does not match state of order {ActionGroupCorrelationId}", agvCorrelationId, hasCargo, actionGroup.CorrelationId);
+        await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvCargoMismatch, agvCorrelationId, null,
+            "AGV Cargo Mismatch",
+            $"AGV {agvCorrelationId} has cargo mismatch error, cargo state {hasCargo} does not match state of order {actionGroup.CorrelationId}",
+            new Dictionary<string, object?> { { LogLabels.CargoState, hasCargo }, { LogLabels.OrderId, actionGroup.CorrelationId } });
         updatedErrors.Add(new CargoMismatchError(agvCorrelationId, DateTime.UtcNow, hasCargo));
         await context.PublishSystemAgvErrorsAsync(agvCorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }

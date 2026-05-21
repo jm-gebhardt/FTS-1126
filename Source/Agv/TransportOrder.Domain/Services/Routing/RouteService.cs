@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
@@ -5,6 +6,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Exceptions;
 using Gebhardt.Acc.TransportOrder.Routing.Models;
@@ -20,14 +22,16 @@ public class RouteService : IRouteService
     private readonly IRouteFinder _routeFinder;
     private readonly ILogger<RouteService> _logger;
     private readonly IQueueRepository _queueRepository;
+    private readonly ILoggingService _loggingService;
 
     /// <inheritdoc cref="RouteService" />
-    public RouteService(IGraphRepository graphRepository, IRouteFinder routeFinder, ILogger<RouteService> logger, IQueueRepository queueRepository)
+    public RouteService(IGraphRepository graphRepository, IRouteFinder routeFinder, ILogger<RouteService> logger, IQueueRepository queueRepository, ILoggingService loggingService)
     {
         _graphRepository = graphRepository;
         _routeFinder = routeFinder;
         _logger = logger;
         _queueRepository = queueRepository;
+        _loggingService = loggingService;
     }
 
     private static Guid GetLastNodeId(Agv agv)
@@ -179,16 +183,19 @@ public class RouteService : IRouteService
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        List<Task<double?>> hasRouteTasks = agvs.Select(agv =>
+        List<Task<double?>> hasRouteTasks = agvs.Select(async agv =>
         {
             try
             {
-                return GetCostsForFirstActionAsync(agv, actionGroup, null, cts.Token);
+                return await GetCostsForFirstActionAsync(agv, actionGroup, null, cts.Token);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error while calculating route for Agv with CorrelationId {CorrelationId} in HasAnyAgvRouteAsync", agv.CorrelationId);
-                return Task.FromResult<double?>(null);
+                await _loggingService.LogAgv(_logger, LogLevel.Error, LogCodes.RouteCalculationFailed, agv.CorrelationId, null,
+                    "Route Calculation Failed",
+                    $"Error while calculating route for AGV {agv.CorrelationId}: {e.Message}");
+                return null;
             }
         }).ToList();
 

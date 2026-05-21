@@ -66,5 +66,6 @@ public interface ILoggingService
     /// <param name="title">The title.</param>
     /// <param name="message">The message.</param>
     /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
-    Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null);
+    /// <param name="logLevel">The log severity level.</param>
+    Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, LogLevel logLevel = LogLevel.Information);
 }

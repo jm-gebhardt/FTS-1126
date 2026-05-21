@@ -323,7 +323,9 @@ public class NodeStationCommandHandler(
         bool lockResult = node.Lock();
         if (!lockResult)
         {
-            logger.LogError("Lock of station {StationName} failed ", station.Name);
+            await loggingService.LogStation(logger, LogLevel.Error, LogCodes.StationLockFailed, id,
+                "Station Lock Failed", $"Lock of station {station.Name} failed",
+                new Dictionary<string, object?> { { LogLabels.StationName, station.Name } });
             return;
         }
 
@@ -356,7 +358,9 @@ public class NodeStationCommandHandler(
 
         if (!unlockResult)
         {
-            logger.LogError("Unlock of station {StationName} failed ", station.Name);
+            await loggingService.LogStation(logger, LogLevel.Error, LogCodes.StationUnlockFailed, id,
+                "Station Unlock Failed", $"Unlock of station {station.Name} failed",
+                new Dictionary<string, object?> { { LogLabels.StationName, station.Name } });
             return;
         }
 
@@ -426,14 +430,14 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
     {
-            var agvMap = context.Message.Map;
-            ICollection<Station> stations = await stationRepository.GetStations();
-            HashSet<Guid> nodeIds = agvMap.Nodes.Select(n => n.Id).ToHashSet();
-            foreach (var station in stations.Where(s => nodeIds.Contains(s.Id)))
-            {
-                station.SetMap(agvMap.CorrelationId);
-                await stationRepository.Update(station);
-            }
+        var agvMap = context.Message.Map;
+        ICollection<Station> stations = await stationRepository.GetStations();
+        HashSet<Guid> nodeIds = agvMap.Nodes.Select(n => n.Id).ToHashSet();
+        foreach (var station in stations.Where(s => nodeIds.Contains(s.Id)))
+        {
+            station.SetMap(agvMap.CorrelationId);
+            await stationRepository.Update(station);
+        }
     }
 
     /// <inheritdoc />

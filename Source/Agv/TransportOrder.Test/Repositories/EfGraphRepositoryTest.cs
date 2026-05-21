@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -116,7 +117,7 @@ public class EfGraphRepositoryTest
             factoryMock.Object,
             Mock.Of<IMapper>(),
             new SemaphoreProvider<IGraphRepositorySemaphore>(Mock.Of<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>()),
-            Mock.Of<ILogger<EfGraphRepository>>());
+            Mock.Of<ILogger<EfGraphRepository>>(), Mock.Of<ILoggingService>());
 
         (await repository.ConsolidateGraphAsync()).ShouldBeFalse();
     }

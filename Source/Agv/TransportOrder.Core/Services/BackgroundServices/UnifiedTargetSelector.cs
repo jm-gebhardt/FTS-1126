@@ -1,6 +1,9 @@
-﻿using Gebhardt.Acc.Common.Services;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using JetBrains.Annotations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +16,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 [UsedImplicitly]
 public class UnifiedTargetSelector(
     ILogger<UnifiedTargetSelector> logger,
+    IServiceScopeFactory serviceScopeFactory,
     PriorityAwareTargetSelector dp1TargetSelector,
     PriorityAwareWaitingHandler slwWaitingHandler,
     ISemaphoreProvider<IWaitingHandlerSemaphore> waitingHandlerSemaphore,
@@ -22,7 +26,8 @@ public class UnifiedTargetSelector(
     /// <summary>
     /// The time to wait between two target selection attempts.
     /// </summary>
-    [PublicAPI] public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
+    [PublicAPI]
+    public readonly TimeSpan WaitingTime = TimeSpan.FromMilliseconds(500);
 
     /// <inheritdoc cref="BackgroundService"/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,6 +42,11 @@ public class UnifiedTargetSelector(
             catch (Exception e)
             {
                 logger.LogError(e, "Error during unified target selection");
+                using var scope = serviceScopeFactory.CreateScope();
+                var loggingService = scope.ServiceProvider.GetRequiredService<ILoggingService>();
+                await loggingService.LogSystem(logger, LogCodes.TargetSelectionFailed,
+                    "Target Selection Failed", "Fatal error during unified target selection",
+                    logLevel: LogLevel.Error);
             }
             finally
             {

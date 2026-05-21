@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
 public class EfAgvGraphRepositoryTestFixture : TransportOrderDbFixture
 {
-    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new (new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
+    private readonly SemaphoreProvider<IGraphRepositorySemaphore> _semaphoreProvider = new(new Mock<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>().Object);
 
     public EfGraphRepository Repository { get; }
 
@@ -18,6 +19,6 @@ public class EfAgvGraphRepositoryTestFixture : TransportOrderDbFixture
 
     public EfAgvGraphRepositoryTestFixture()
     {
-        Repository = new EfGraphRepository(ContextFactory, Mapper, _semaphoreProvider, Mock.Of<ILogger<EfGraphRepository>>());
+        Repository = new EfGraphRepository(ContextFactory, Mapper, _semaphoreProvider, Mock.Of<ILogger<EfGraphRepository>>(), Mock.Of<ILoggingService>());
     }
 }

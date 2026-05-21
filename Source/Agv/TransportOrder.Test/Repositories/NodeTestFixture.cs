@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -56,6 +57,6 @@ public class NodeTestFixture : TransportOrderDbFixture
         _graphRepository = new EfGraphRepository(ContextFactory,
             Mapper,
             new SemaphoreProvider<IGraphRepositorySemaphore>(Mock.Of<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>()),
-            Mock.Of<ILogger<EfGraphRepository>>());
+            Mock.Of<ILogger<EfGraphRepository>>(), Mock.Of<ILoggingService>());
     }
 }

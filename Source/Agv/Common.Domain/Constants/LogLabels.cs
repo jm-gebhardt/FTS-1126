@@ -10,6 +10,7 @@ public static class LogLabels
     public const string AgvSerialNumber = "AgvSerialNumber";
     public const string ErrorDescription = "ErrorDescription";
     public const string OrderId = "OrderId";
+    public const string OrderIdGuid = "OrderIdGuid";
     public const string ActionType = "ActionType";
     public const string ActionStatus = "ActionStatus";
     public const string NodeId = "NodeId";

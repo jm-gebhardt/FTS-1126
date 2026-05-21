@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ public class EfGraphRepositoryTestFixture : TransportOrderDbFixture
 
     public EfGraphRepositoryTestFixture()
     {
-        GraphRepository = new EfGraphRepository(ContextFactory, Mapper, _semaphoreProvider, Mock.Of<ILogger<EfGraphRepository>>());
+        GraphRepository = new EfGraphRepository(ContextFactory, Mapper, _semaphoreProvider, Mock.Of<ILogger<EfGraphRepository>>(), Mock.Of<ILoggingService>());
         ActionGroupRepository = new EfActionGroupRepository(Mock.Of<ILogger<EfActionGroupRepository>>(), ContextFactory);
     }
 

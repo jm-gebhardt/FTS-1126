@@ -51,6 +51,10 @@ public static class LogCodes
     public const int AgvRemoveFromQueue = 336;
     public const int AgvSentInstantActionStatusChanged = 337;
     public const int AgvConsolidatingGlobalGraph = 338;
+    public const int GraphConsolidationFailed = 339;
+    public const int AllAgvsOffline = 340;
+    public const int AgvCargoMismatch = 341;
+    public const int RouteCalculationFailed = 342;
 
     // Order
     public const int OrderCreated = 100;
@@ -83,6 +87,10 @@ public static class LogCodes
     public const int OrderAgvWarning = 127;
     public const int OrderAgvError = 128;
     public const int AgvSentVehicleActionStatusChanged = 129;
+    public const int HostOrderNoStationConfiguration = 130;
+    public const int HostOrderConversionFailed = 131;
+    public const int WcsOrderInvalid = 132;
+    public const int TargetSelectionFailed = 133;
 
     //Station
     public const int StationStateChanged = 400;
@@ -99,6 +107,8 @@ public static class LogCodes
     public const int StationJamStateRequested = 411;
     public const int StationWentOffline = 412;
     public const int StationCameOnline = 413;
+    public const int StationLockFailed = 414;
+    public const int StationUnlockFailed = 415;
 
     //System
     public const int SystemOperatorInteraction = 500;
@@ -120,5 +130,5 @@ public static class LogCodes
     public const int SystemTriggerMarkedForDeletion = 516;
     public const int SystemQueueFillQuantityUpdated = 517;
     public const int SystemBackgroundAddedOrUpdated = 518;
-    public const int SystemBackgroundDeleted= 519;
+    public const int SystemBackgroundDeleted = 519;
 }
