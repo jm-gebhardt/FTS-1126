@@ -110,12 +110,17 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
                 {
                     foreach (IGrouping<AgvErrorSource, AgvError> errorGroup in errorsBySource)
                     {
-                        if (errorGroup.Key == AgvErrorSource.System)
+                        // Resolve every error server-side so the operator gets immediate
+                        // feedback in the UI, regardless of whether the device communication
+                        // layer can physically clear the error on the AGV. If the AGV keeps
+                        // reporting the error in its next state update it will be re-added.
+                        await _bus.Publish(new ResolveSystemAgvError(correlationId, errorGroup.ToList()), cancellationToken);
+
+                        if (errorGroup.Key != AgvErrorSource.System)
                         {
-                            await _bus.Publish(new ResolveSystemAgvError(correlationId, errorGroup.ToList()), cancellationToken);
-                        }
-                        else
-                        {
+                            // Also forward the reset to the device communication layer so
+                            // implementations that can physically clear the error (e.g. the
+                            // SimAgv simulator) still react to it.
                             await _bus.Publish(new Common.Messages.AgvManagement.Commands.ResetAgvErrors(correlationId, errorGroup.Select(e => e.CorrelationId).ToList()), cancellationToken);
                         }
                     }

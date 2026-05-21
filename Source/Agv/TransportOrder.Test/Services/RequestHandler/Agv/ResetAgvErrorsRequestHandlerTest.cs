@@ -43,6 +43,10 @@ public class ResetAgvErrorsRequestHandlerTest
         message.CorrelationId.ShouldBe(agvCorrelationId);
         message.ErrorIds.Count.ShouldBe(errors.Count);
         message.ErrorIds.Single().ShouldBe(errors[0].CorrelationId);
+
+        var resolve = await fixture.GetFirstPublishedMessageAsync<ResolveSystemAgvError>();
+        resolve.CorrelationId.ShouldBe(agvCorrelationId);
+        resolve.Errors.Single().CorrelationId.ShouldBe(errors[0].CorrelationId);
     }
 
     [TestMethod]
@@ -67,6 +71,10 @@ public class ResetAgvErrorsRequestHandlerTest
         message.CorrelationId.ShouldBe(agvCorrelationId);
         message.ErrorIds.Count.ShouldBe(1);
         message.ErrorIds.ShouldContain(errorToReset);
+
+        var resolve = await fixture.GetFirstPublishedMessageAsync<ResolveSystemAgvError>();
+        resolve.CorrelationId.ShouldBe(agvCorrelationId);
+        resolve.Errors.Single().CorrelationId.ShouldBe(errorToReset);
     }
 
     [TestMethod]
@@ -90,10 +98,12 @@ public class ResetAgvErrorsRequestHandlerTest
         resetAgvErrors.ErrorIds.Count.ShouldBe(1);
         resetAgvErrors.ErrorIds.Single().ShouldBe(errors[0].CorrelationId);
 
-        var resolveSystemAgvError = await fixture.GetFirstPublishedMessageAsync<ResolveSystemAgvError>();
-        resolveSystemAgvError.CorrelationId.ShouldBe(agvCorrelationId);
-        resolveSystemAgvError.Errors.Count.ShouldBe(1);
-        resolveSystemAgvError.Errors.Single().CorrelationId.ShouldBe(errors[1].CorrelationId);
+        // Wait for both ResolveSystemAgvError messages (one per error source group) before asserting.
+        await fixture.GetFirstPublishedMessageAsync<ResolveSystemAgvError>(2);
+        ICollection<ResolveSystemAgvError> resolveMessages = fixture.GetPublishedMessages<ResolveSystemAgvError>();
+        resolveMessages.Count.ShouldBe(2);
+        resolveMessages.ShouldContain(m => m.Errors.Count == 1 && m.Errors.Single().CorrelationId == errors[0].CorrelationId);
+        resolveMessages.ShouldContain(m => m.Errors.Count == 1 && m.Errors.Single().CorrelationId == errors[1].CorrelationId);
     }
 
     [TestMethod]
