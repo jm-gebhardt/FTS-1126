@@ -10,32 +10,32 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterTemplate;
 public record OrderFilterTemplateDto
 {
     /// <summary>
-    /// The handling unit of the order.
+    /// The handling units of orders.
     /// </summary>
-    public string? HandlingUnit { get; set; }
+    public ICollection<string>? HandlingUnits { get; set; }
 
     /// <summary>
-    /// The order type.
+    /// The order types.
     /// </summary>
-    public OrderType? OrderType { get; set; }
+    public ICollection<OrderType>? OrderTypes { get; set; }
 
     /// <summary>
-    /// The order path.
+    /// The order paths.
     /// </summary>
-    public OrderPath? Path { get; set; }
+    public ICollection<OrderPath>? Paths { get; set; }
 
     /// <summary>
-    /// The order duration range.
+    /// The order duration ranges.
     /// </summary>
-    public Duration? DurationRange { get; set; }
+    public ICollection<Duration>? DurationRanges { get; set; }
 
     /// <summary>
     /// The order status.
     /// </summary>
-    public OrderStatus? Status { get; set; }
+    public ICollection<OrderStatus>? Status { get; set; }
 
     /// <summary>
-    /// The incident type.
+    /// The incident types.
     /// </summary>
-    public IncidentType? IncidentType { get; set; }
+    public ICollection<IncidentType>? IncidentTypes { get; set; }
 }
