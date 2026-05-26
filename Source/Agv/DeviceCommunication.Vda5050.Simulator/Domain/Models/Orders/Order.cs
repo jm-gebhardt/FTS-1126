@@ -66,6 +66,8 @@ public class Order
 
     private double _totalPausedSeconds;
 
+    private AgvPosition? _currentActionPosition;
+
     /// <summary>
     /// Get the current last node
     /// </summary>
@@ -122,9 +124,14 @@ public class Order
                 _totalPausedSeconds += CurrentAction.Duration.TotalSeconds;
                 PendingActionStates.First(p => p.ActionId == CurrentAction.ActionId).ActionStatus = VehicleActionStatus.Finished;
                 CurrentAction = null;
+                _currentActionPosition = null;
             }
             else
             {
+                if (_currentActionPosition != null)
+                {
+                    return _currentActionPosition;
+                }
                 var current = GetLastNode(lastNodeId, now);
                 return new AgvPosition(){Theta = (float)(current.NodePosition?.Theta ?? 0), X = (float)(current.NodePosition?.X ?? 0), Y = (float)(current.NodePosition?.Y ?? 0), Z =  0 };
             }
@@ -156,7 +163,8 @@ public class Order
                 CurrentAction = currentNode.Actions.First(a => a.ActionId == currentAction.ActionId);
                 CurrentAction.StartedTime = now;
                 State!.ActionStates = PendingActionStates;
-                return new AgvPosition() { Theta = (float)(currentNode.NodePosition?.Theta ?? 0), X = (float)(currentNode.NodePosition?.X ?? 0), Y = (float)(currentNode.NodePosition?.Y ?? 0), Z =  0 };
+                _currentActionPosition = new AgvPosition { Theta = (float)(currentNode.NodePosition?.Theta ?? 0), X = (float)(currentNode.NodePosition?.X ?? 0), Y = (float)(currentNode.NodePosition?.Y ?? 0), Z = 0 };
+                return _currentActionPosition;
             }
         }
         var currentEdge = GetCurrentEdge(lastNodeId, now);
@@ -182,15 +190,24 @@ public class Order
         double secondsSpendOnCurrentEdge = (now - StartTime!.Value).TotalSeconds - _totalPausedSeconds
             - Base.Edges.Where(e => e.SequenceId < currentEdge.SequenceId).Sum(e => e.EstimatedTravelTime.TotalSeconds);
         double travelledFraction = secondsSpendOnCurrentEdge / currentEdge.EstimatedTravelTime.TotalSeconds;
+        AgvPosition position;
         if (currentEdge.Trajectory == null)
         {
             var endNode = Base.Nodes.FirstOrDefault(n => n.SequenceId == currentEdge.SequenceId + 1);
             double fraction = Math.Clamp(travelledFraction, 0, 1);
             float x = (float)((currentNode.NodePosition?.X ?? 0) + fraction * ((endNode?.NodePosition?.X ?? 0) - (currentNode.NodePosition?.X ?? 0)));
             float y = (float)((currentNode.NodePosition?.Y ?? 0) + fraction * ((endNode?.NodePosition?.Y ?? 0) - (currentNode.NodePosition?.Y ?? 0)));
-            return new AgvPosition() { X = x, Y = y, Theta = (float)(currentNode.NodePosition?.Theta ?? 0), Z = 0, PositionInitialized = true };
+            position = new AgvPosition() { X = x, Y = y, Theta = (float)(currentNode.NodePosition?.Theta ?? 0), Z = 0, PositionInitialized = true };
         }
-        return currentEdge.GetPosition(travelledFraction);
+        else
+        {
+            position = currentEdge.GetPosition(travelledFraction);
+        }
+        if (CurrentAction != null)
+        {
+            _currentActionPosition = position;
+        }
+        return position;
     }
 
     /// <summary>
@@ -220,7 +237,29 @@ public class Order
             edge.Prepare(edgeBuilder, agvSpeed);
             Duration += edge.EstimatedTravelTime;
         }
-        CurrentRoute = FullRoute;
+        // Copy full route, as the current route shrinks
+        CurrentRoute = new Route([..FullRoute.Nodes], [..FullRoute.Edges]);
+    }
+
+    /// <summary>
+    /// Carry travel progress from a previous order so an order update continues
+    /// from the AGV's current position instead of restarting at the route start.
+    /// </summary>
+    /// <param name="previous">The previous order the AGV was executing.</param>
+    public void CarryOverProgressFrom(Order previous)
+    {
+        StartTime = previous.StartTime;
+        _totalPausedSeconds = previous._totalPausedSeconds;
+        CurrentAction = previous.CurrentAction;
+        _currentActionPosition = previous._currentActionPosition;
+        foreach (var previousState in previous.PendingActionStates)
+        {
+            var carried = PendingActionStates.FirstOrDefault(s => s.ActionId == previousState.ActionId);
+            if (carried != null)
+            {
+                carried.ActionStatus = previousState.ActionStatus;
+            }
+        }
     }
 
     /// <summary>

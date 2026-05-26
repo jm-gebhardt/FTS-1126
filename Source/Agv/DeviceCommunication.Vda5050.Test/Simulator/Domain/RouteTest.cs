@@ -41,16 +41,15 @@ public class RouteTest
     }
 
     [TestMethod]
-    public void Proceed_WithPassedNodeSequenceId_KeepsCurrentEdge()
+    public void Proceed_WithPassedNodeSequenceId_DropsTraversedEdgeKeepsUpcomingEdge()
     {
-        // Passing node B (seqId 2) keeps edge A→B (seqId 1) because seqId >= passedNodeSequenceId - 1
         var route = new Route(
             [Node("A", 0), Node("B", 2), Node("C", 4)],
             [Edge("e1", 1, "A", "B"), Edge("e2", 3, "B", "C")]);
 
         route.Proceed(2);
 
-        route.Edges.Select(e => e.EdgeId).ShouldBe(["e1", "e2"], ignoreOrder: true);
+        route.Edges.Select(e => e.EdgeId).ShouldBe(["e2"], ignoreOrder: true);
     }
 
     [TestMethod]
@@ -63,7 +62,7 @@ public class RouteTest
         route.Proceed(4);
 
         route.Nodes.Single().NodeId.ShouldBe("C");
-        route.Edges.Select(e => e.EdgeId).ShouldBe(["e2"], ignoreOrder: true);
+        route.Edges.ShouldBeEmpty();
     }
 
     [TestMethod]

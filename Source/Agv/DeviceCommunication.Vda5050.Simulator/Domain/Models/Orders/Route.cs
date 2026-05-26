@@ -38,7 +38,7 @@ public class Route
             return ;
         }
         Nodes = Nodes.Where(n => n.SequenceId >= passedNodeSequenceId).ToList();
-        Edges = Edges.Where(e => e.SequenceId >= passedNodeSequenceId - 1).ToList();
+        Edges = Edges.Where(e => e.SequenceId >= passedNodeSequenceId + 1).ToList();
     }
 
     /// <summary>

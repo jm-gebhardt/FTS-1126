@@ -146,7 +146,7 @@ public class SimulatedAgv : SagaStateMachineInstance
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
         INurbsEdgeBuilder edgeBuilder,
         string? currentState = null,
-        bool generateError =false)
+        bool generateError = false)
     {
         CorrelationId = correlationId;
         Configuration = configuration;
@@ -239,12 +239,9 @@ public class SimulatedAgv : SagaStateMachineInstance
     public void UpdateOrder(Order order)
     {
         var now = _timeProvider.GetUtcNow().DateTime;
+        var previousOrder = CurrentOrder;
         CurrentOrder = order;
-        CurrentOrder.StartTime = now;
         CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed);
-        var currentNode = CurrentOrder.GetLastNode(LastNodeId, now);
-        LastNodeId = currentNode.NodeId;
-        LastNodeSequenceId = currentNode.SequenceId;
         CurrentOrder.PendingActionStates =
         [
             ..CurrentOrder.Base.Nodes.SelectMany(n => n.Actions)
@@ -264,6 +261,21 @@ public class SimulatedAgv : SagaStateMachineInstance
                     ActionStatus = VehicleActionStatus.Waiting
                 })
         ];
+
+        bool continuesPreviousOrder = previousOrder?.StartTime != null && previousOrder.OrderId == order.OrderId;
+        if (continuesPreviousOrder)
+        {
+            CurrentOrder.CarryOverProgressFrom(previousOrder!);
+        }
+        else
+        {
+            CurrentOrder.StartTime = now;
+        }
+
+        var currentNode = CurrentOrder.GetLastNode(LastNodeId, now);
+        LastNodeId = currentNode.NodeId;
+        LastNodeSequenceId = currentNode.SequenceId;
+        CurrentOrder.CurrentRoute.Proceed(currentNode.SequenceId);
     }
 
     /// <summary>
@@ -378,14 +390,14 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// <param name="nodes">The nodes to select the position from.</param>
     public void InitializePosition(ICollection<GraphNode> nodes)
     {
-        if(LastNodeId != null)
+        if (LastNodeId != null)
         {
             return;
         }
-        var nodeIdx = _random.Next(nodes.Count - 1);
+        int nodeIdx = _random.Next(nodes.Count - 1);
         var node = nodes.Skip(nodeIdx).Take(1).First();
         LastNodeId = node.Name;
-        CurrentPosition = new AgvPosition() { X = node.X, Y = node.Y, Theta = node.Theta, Z=0, PositionInitialized=true };
+        CurrentPosition = new AgvPosition() { X = node.X, Y = node.Y, Theta = node.Theta, Z = 0, PositionInitialized = true };
         SimulatedBatteryCharge = _initialBatteryCharge;
     }
 }

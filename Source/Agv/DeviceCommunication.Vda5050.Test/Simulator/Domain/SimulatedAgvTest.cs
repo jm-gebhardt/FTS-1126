@@ -249,6 +249,32 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
+    public void UpdateOrder_WhileMidEdge_ContinuesFromCurrentPositionInsteadOfRestarting()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+
+        var initialOrder = CreateOrder(["A", "B", "C"], edgeLength: 10);
+        agv.StartOrder(initialOrder);
+
+        timeProvider.Advance(TimeSpan.FromSeconds(15));
+        agv.ProceedOrder();
+        agv.CurrentPosition.X.ShouldBe(15f);
+        agv.LastNodeId.ShouldBe("B");
+
+        var updatedOrder = CreateOrder(["A", "B", "C", "D"], edgeLength: 10);
+        updatedOrder.OrderId = initialOrder.OrderId;
+        updatedOrder.OrderUpdateId = 1;
+        agv.UpdateOrder(updatedOrder);
+
+        agv.LastNodeId.ShouldBe("B");
+
+        agv.ProceedOrder();
+        agv.CurrentPosition.X.ShouldBe(15f);
+        agv.LastNodeId.ShouldBe("B");
+    }
+
+    [TestMethod]
     public void ProceedOrder_WhenCurrentOrderIsNull_DoesNothing()
     {
         var agv = CreateAgv();
@@ -296,6 +322,36 @@ public class SimulatedAgvTest
         agv.ProceedOrder();
 
         agv.LastNodeId.ShouldBe("B");
+    }
+
+    [TestMethod]
+    public void ProceedOrder_WhileEdgeActionRuns_HoldsPositionOnEdgeInsteadOfSnappingBackToStartNode()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+
+        var nodeA = new OrderNode { NodeId = "A", SequenceId = 0, Released = true, NodePosition = new OrderNodePosition { X = 0, Y = 0 } };
+        var nodeB = new OrderNode { NodeId = "B", SequenceId = 2, Released = true, NodePosition = new OrderNodePosition { X = 10, Y = 0 } };
+        var action = new OrderAction(Vda5050Specifications.ActionTypes.Pick, null, BlockingType.NONE, []);
+        var edge = new OrderEdge
+        {
+            EdgeId = "e0",
+            SequenceId = 1,
+            Released = true,
+            StartNodeId = "A",
+            EndNodeId = "B",
+            Length = 10,
+            Actions = [action]
+        };
+        agv.StartOrder(new Order { OrderId = "o1", FullRoute = new Route([nodeA, nodeB], [edge]) });
+
+        timeProvider.Advance(TimeSpan.FromSeconds(5));
+        agv.ProceedOrder();
+        agv.CurrentPosition.X.ShouldBe(5f);
+
+        timeProvider.Advance(TimeSpan.FromSeconds(2));
+        agv.ProceedOrder();
+        agv.CurrentPosition.X.ShouldBe(5f);
     }
 
     [TestMethod]

@@ -324,6 +324,29 @@ public class OrderTest
     }
 
     [TestMethod]
+    public void Proceed_MidSecondEdge_ReturnsInterpolatedPositionOnSecondEdge()
+    {
+        var order = CreatePreparedOrder(["A", "B", "C"]);
+        order.StartTime = _baseTime;
+
+        var position = order.Proceed("A", _baseTime.AddSeconds(15));
+
+        position.X.ShouldBe(15f);
+    }
+
+    [TestMethod]
+    public void Proceed_DoesNotMutateFullRouteBase()
+    {
+        var order = CreatePreparedOrder(["A", "B", "C"]);
+        order.StartTime = _baseTime;
+
+        order.Proceed("A", _baseTime.AddSeconds(15));
+
+        order.Base.Nodes.Count.ShouldBe(3);
+        order.Base.Edges.Count.ShouldBe(2);
+    }
+
+    [TestMethod]
     public void Proceed_MidEdge_ReturnsInterpolatedPosition()
     {
         // A at X=0, B at X=10; edge takes 10 s. At t=5 s → halfway → X=5
