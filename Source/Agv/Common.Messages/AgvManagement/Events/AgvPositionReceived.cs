@@ -25,6 +25,13 @@ public record AgvPositionReceived : CorrelatedBy<Guid>, IAgvSerialNumber, IMessa
     /// <inheritdoc />
     public DateTime MessageCreatedDate { get; init; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// When true, the position update bypasses the significance and silence filters.
+    /// Used by simulated drivers to ensure the snap-to-target final position reaches the UI,
+    /// since simulators publish noise-free positions that can fall below the significance threshold.
+    /// </summary>
+    public bool ForcePublish { get; init; }
+
     /// <inheritdoc cref="AgvPositionReceived"/>
     public AgvPositionReceived(Guid correlationId, string serialNumber, AgvPosition agvPosition)
     {

@@ -16,7 +16,8 @@ public class AgvPositionProfile : WebApiProfile
     {
         CreateMap<AgvPositionStatus, AgvPositionStatusDto>();
         CreateMap<AgvPosition, AgvPositionDto>();
-        CreateMap<AgvPositionReceived, AgvPositionStatus>();
+        CreateMap<AgvPositionReceived, AgvPositionStatus>()
+            .ForSourceMember(s => s.ForcePublish, opt => opt.DoNotValidate());
         CreateMap<AgvPositionChanged, AgvPositionStatus>()
             .ForCtorParam(nameof(AgvPositionStatus.AgvPosition),
                 opt =>

@@ -451,11 +451,18 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                         // reschedule finish action if action still needs time
                         ifActionStillRunning.Schedule(FinishActionSchedule, c => new ScheduleFinishAction(c.Saga.CorrelationId), c => c.Saga.RemainingDuration!.Value),
                     ifActionFinished =>
-                        ifActionFinished.ThenAsync(FinishActionAsync)
-                            .TransitionTo(Idle)
+                        // Transition to Idle first so AgvStatus.Busy is false on the status publish,
+                        // then PublishStatusAsync emits the final LastNodeId via UpdateStatus -> UpdatePosition
+                        // while Action and TravelSimulator.CurrentEdge are still live (snaps to TargetNode).
+                        // FinishActionAsync publishes ActionCompletedByAgv after, so downstream consumers
+                        // of the completion event see the AGV idle at its new node.
+                        // PublishFinalPositionAsync sets ForcePublish so the snap-to-target reaches the UI
+                        // even if the prior scheduled position was within the significance threshold.
+                        ifActionFinished.TransitionTo(Idle)
                             .ThenAsync(PublishStatusAsync)
+                            .ThenAsync(FinishActionAsync)
                             .Then(c => _logger.LogDebug("{MessageType} {CorrelationId} received", nameof(ScheduleFinishAction), c.Saga.CorrelationId))
-                            .ThenAsync(PublishPositionAsync)
+                            .ThenAsync(PublishFinalPositionAsync)
                 )
             );
     }
@@ -645,7 +652,13 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         }
     }
 
-    private async Task PublishPositionAsync(BehaviorContext<SimulatedAgvSaga> context)
+    private Task PublishPositionAsync(BehaviorContext<SimulatedAgvSaga> context) =>
+        PublishPositionAsync(context, forcePublish: false);
+
+    private async Task PublishFinalPositionAsync(BehaviorContext<SimulatedAgvSaga> context) =>
+        await PublishPositionAsync(context, forcePublish: true);
+
+    private async Task PublishPositionAsync(BehaviorContext<SimulatedAgvSaga> context, bool forcePublish)
     {
         var saga = context.Saga;
         Guid? previousNode = saga.LastNodeId;
@@ -661,7 +674,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 saga.CorrelationId,
                 saga.SerialNumber,
                 position
-            ), context.CancellationToken);
+            ) { ForcePublish = forcePublish }, context.CancellationToken);
 
             if (previousNode != saga.LastNodeId)
             {

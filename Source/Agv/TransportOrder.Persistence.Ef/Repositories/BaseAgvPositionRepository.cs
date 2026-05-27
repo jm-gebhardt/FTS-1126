@@ -32,6 +32,7 @@ public abstract class BaseAgvPositionRepository : IAgvPositionRepository
         var previousAgvPosition = GetPositionIfExisting(correlationId);
 
         if (previousAgvPosition == null ||
+            agvPositionStatus.ForcePublish ||
             agvPositionStatus.CreatedDate.AddSeconds(-MaxSilenceInSeconds) >= previousAgvPosition.CreatedDate ||
             _significanceChecker.HasSignificantChanges(previousAgvPosition.AgvPosition, agvPositionStatus.AgvPosition))
         {
