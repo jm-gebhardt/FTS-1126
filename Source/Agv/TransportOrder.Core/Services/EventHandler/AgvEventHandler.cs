@@ -468,6 +468,11 @@ public class AgvEventHandler :
 
         await Task.Delay(TimeSpan.FromSeconds(retryDelaySec));
         var agv = await _agvDb.Agvs.GetAgvAsync(agvWithCriticalBatteryLevel);
+        if (!agv.CanStartAutomaticAction || !agv.IsOnline)
+        {
+            _logger.LogWarning("Agv {AgvCorrelationId} can not start automatic actions in mode {AgvMode} or is offline ({IsAgvOffline}), not handling agv switch failure", agv.CorrelationId, agv.Mode, !agv.IsOnline);
+            return;
+        }
         try
         {
             var charger = await _chargingPointManager.ReserveChargerAsync(agv);

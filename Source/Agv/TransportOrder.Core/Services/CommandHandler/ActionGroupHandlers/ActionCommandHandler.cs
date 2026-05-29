@@ -429,7 +429,7 @@ public class ActionCommandHandler :
         var cancellationToken = context.CancellationToken;
 
         var actionGroupsByState = await _actionGroupRepository.GetLatestActionGroupsByStateForAgvAsync(agvCorrelationId);
-        if (actionGroupsByState.Created != null || actionGroupsByState.Started != null)
+        if (actionGroupsByState.Created != null || actionGroupsByState.Started is { IsChargingOrder: false } ) // allow creation of parking action group if agv is charging to ensure swapping of critical and charging agv works
         {
             _logger.LogInformation("Aborting creation of parking action for agv {AgvCorrelationId}, other action group created or started in the meantime", agvCorrelationId);
             await context.Publish(new FreeNode(parkNode.Id, true), cancellationToken);

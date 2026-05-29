@@ -523,6 +523,21 @@ public class AgvEventHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_SwitchChargingAgvsFailed_AgvNotInNormalMode_DoesNotPublishSwitchChargingAgvs()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5, mode: new AgvMode(ModeType.Maintenance));
+        var highestChargingAgv = AgvGenerator.GenerateChargingAgv(2, batteryCharge: 85);
+        var fixture = new AgvEventHandlerTestFixture()
+            .WithReservedCharger(null)
+            .WithMinBatteryAgvs([highestChargingAgv])
+            .WithAgv(agv);
+
+        await fixture.PublishMessageAsync(new SwitchChargingAgvsFailed(agv.CorrelationId, highestChargingAgv.CorrelationId, 0));
+
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvs>();
+    }
+
+    [TestMethod]
     public async Task Consume_SwitchChargingAgvsFailed_NoOtherCandidatesAvailable_DoesNotPublishSwitchChargingAgvs()
     {
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: 5);

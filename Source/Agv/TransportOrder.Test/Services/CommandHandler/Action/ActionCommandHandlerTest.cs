@@ -1595,6 +1595,28 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CreateParkingActionGroup_StartedChargingActionGroupExists_PublishedActionGroupCreated()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var existingActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
+        var actionGroupsByState = new AgvActionGroupsByState(Created: null, Started: existingActionGroup, Completed: null);
+
+        var parkActions = new List<AgvAction> { AgvActionGenerator.GenerateParkAction(targetNodeName: ParkNodeName) };
+        var parkActionGroup = AgvActionGenerator.GenerateActionGroup(parkActions);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .WithLatestActionGroupsByState(actionGroupsByState)
+            .WithAddActionGroupIsSuccessful()
+            .AddAgv(agv)
+            .AddActionGroup(parkActionGroup, hasUnfinishedAction: false);
+
+        var command = new CreateParkingActionGroup(Guid.NewGuid(), agv.CorrelationId, _parkNode);
+        await fixture.TestHarness.Bus.Publish(command);
+
+        await fixture.ShouldHaveConsumedAsync<CreateParkingActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCreated>();
+    }
+
+    [TestMethod]
     public async Task Consume_CreateQueueingActionGroup_ValidAgv_PublishedActionGroupCreated()
     {
         var agv = AgvGenerator.GenerateIdleAgv();

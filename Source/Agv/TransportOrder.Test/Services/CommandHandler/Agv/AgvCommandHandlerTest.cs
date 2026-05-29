@@ -2008,6 +2008,55 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_SwitchChargingAgvs_NonChargingAgvIsNotInNormalMode_DoesNotSwitch()
+    {
+        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, mode: new AgvMode(ModeType.Maintenance));
+        var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
+        const string queueEntryNode = "node";
+
+        const string charger = "charger";
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([criticalBatteryAgv, chargingAgv])
+            .WithNodesStates([new NodeLock(charger.ToGraphNode(), NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [charger.ToGraphNode()])
+            .WithAgvsToMove(null, nodeName: queueEntryNode, swapped: true)
+            .WithQueueInternalMoves([]);
+
+        await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<AbortChargeAction>();
+        await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvsFailed>();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchChargingAgvs_NonChargingAgvIsOffline_DoesNotSwitch()
+    {
+        var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1, mode: new AgvMode(ModeType.Normal));
+        criticalBatteryAgv.GoOffline();
+        var chargingAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: 80);
+        const string queueEntryNode = "node";
+
+        const string charger = "charger";
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([criticalBatteryAgv, chargingAgv])
+            .WithNodesStates([new NodeLock(charger.ToGraphNode(), NodeLockState.Occupied, false, chargingAgv.CorrelationId, DateTime.UtcNow)], [charger.ToGraphNode()])
+            .WithAgvsToMove(null, nodeName: queueEntryNode, swapped: true)
+            .WithQueueInternalMoves([]);
+
+        await fixture.PublishMessageAsync(new SwitchChargingAgvs(criticalBatteryAgv.CorrelationId, chargingAgv.CorrelationId));
+
+        await fixture.ShouldNotHavePublishedAsync<ChargingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<AbortChargeAction>();
+        await fixture.ShouldNotHavePublishedAsync<CreateQueueingActionGroup>();
+        await fixture.ShouldNotHavePublishedAsync<ParkingNodeSelectedForAgv>();
+        await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvsFailed>();
+        await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
+    }
+
+    [TestMethod]
     public async Task Consume_SwitchChargingAgvs_AgvIsInNotQueue_QueueAvailable_PublishesChargingNodeSelectedForAgv_CreateQueueingActionGroup()
     {
         var criticalBatteryAgv = AgvGenerator.GenerateIdleAgv(1);

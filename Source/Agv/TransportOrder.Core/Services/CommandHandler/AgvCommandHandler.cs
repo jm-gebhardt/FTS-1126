@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Exceptions;
@@ -7,8 +8,11 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Queue;
+using Gebhardt.Acc.Common.Notification.Models;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -20,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
@@ -28,16 +33,11 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
+using Gebhardt.Acc.TransportOrder.Messages.Utilities;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
-using Gebhardt.Acc.Common.Domain.Constants;
-using Gebhardt.Acc.Common.Messages.Queue;
-using Gebhardt.Acc.Common.Notification.Models;
-using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
-using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
-using Gebhardt.Acc.TransportOrder.Messages.Utilities;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
@@ -1742,6 +1742,11 @@ public class AgvCommandHandler :
         var (nonChargingAgvId, chargingAgvId) = context.Message;
 
         var nonChargingAgv = await _agvDb.Agvs.GetAgvAsync(nonChargingAgvId);
+        if (!nonChargingAgv.CanStartAutomaticAction || !nonChargingAgv.IsOnline)
+        {
+            _logger.LogWarning("Agv {AgvCorrelationId} can not start automatic actions in mode {AgvMode} or is offline {IsAgvOffline}, not switching with charging agv {ChargingAgvCorrelationId}", nonChargingAgv.CorrelationId, nonChargingAgv.Mode, !nonChargingAgv.IsOnline, chargingAgvId);
+            return;
+        }
         var chargingAgv = await _agvDb.Agvs.GetAgvAsync(chargingAgvId);
 
         _logger.LogInformation("Try switching charging agv {AgvCorrelationId} with non-charging agv {NonChargingAgvCorrelationId}", chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
