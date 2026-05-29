@@ -152,7 +152,7 @@ public class ActionGroupTest
 
         actionGroup.State.ShouldBe(ActionGroupState.Invalid);
         actionGroup.CompletedDate.ShouldNotBeNull();
-        ((DateTime) actionGroup.CompletedDate).ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
+        ((DateTime)actionGroup.CompletedDate).ShouldBeInRange(now.UtcDateTime, DateTime.UtcNow);
     }
 
     [TestMethod]
@@ -1480,5 +1480,32 @@ public class ActionGroupTest
         actionGroup.Reasons.First().ShouldBeEquivalentTo(FailReason.None.ToReason()!);
         action.State.ShouldBe(ActionState.Failed);
         action.CompletedDate.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void UnregisterFromDoppelspiel_Drop_KeepsAssignedAgv()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var assignedAgv = Guid.NewGuid();
+        actionGroup.AssignedAgv = assignedAgv;
+        actionGroup.RegisterDoppelspiel(ActionType.Drop);
+
+        actionGroup.UnregisterFromDoppelspiel(ActionType.Drop);
+
+        actionGroup.AssignedAgv.ShouldBe(assignedAgv);
+        actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).IsRegisteredForDoppelspiel.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void UnregisterFromDoppelspiel_Pick_ReleasesAssignedAgv()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        actionGroup.AssignedAgv = Guid.NewGuid();
+        actionGroup.RegisterDoppelspiel(ActionType.Pick);
+
+        actionGroup.UnregisterFromDoppelspiel(ActionType.Pick);
+
+        actionGroup.AssignedAgv.ShouldBeNull();
+        actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).IsRegisteredForDoppelspiel.ShouldBeFalse();
     }
 }

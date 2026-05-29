@@ -248,7 +248,7 @@ public class ActionCommandHelper
         var actionToBeStarted = actionGroup.Actions.First(a => a.CorrelationId == action.CorrelationId);
         if (actionToBeStarted.State is ActionState.Aborted or ActionState.Canceled)
         {
-            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId}. Action has been aborted or cancelled: {ActionState}. Agv: {AgvCorrelationId}", 
+            _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId}. Action has been aborted or cancelled: {ActionState}. Agv: {AgvCorrelationId}",
                 action.CorrelationId, actionGroup.CorrelationId, actionToBeStarted.State, assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
@@ -256,7 +256,7 @@ public class ActionCommandHelper
         if (actionGroup.FirstNotStartedAction == null)
         {
             _logger.LogWarning("Preventing start of action {ActionCorrelationId} of group {ActionGroupCorrelationId} there is no action that can be started, " +
-                               "{Action}, {ActionInGroup}. Agv: {AgvCorrelationId}", 
+                               "{Action}, {ActionInGroup}. Agv: {AgvCorrelationId}",
                 action.CorrelationId, actionGroup.CorrelationId, action.ToString(), actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).ToString(), assignedAgv.CorrelationId);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
@@ -264,8 +264,10 @@ public class ActionCommandHelper
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {
-            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first. Agv: {AgvCorrelationId}", 
-                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId);
+            ActionState? stateOfAction = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == action.CorrelationId)?.State;
+            _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first. Agv: {AgvCorrelationId}. " +
+                               "State of action in group is {ActionState}",
+                action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, stateOfAction);
             await context.Publish(new StartingActionForAgvFailed(assignedAgv.CorrelationId));
             return false;
         }

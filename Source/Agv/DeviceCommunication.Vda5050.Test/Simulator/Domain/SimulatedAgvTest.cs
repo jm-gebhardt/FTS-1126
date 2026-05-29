@@ -279,7 +279,7 @@ public class SimulatedAgvTest
     {
         var agv = CreateAgv();
 
-        Should.NotThrow(agv.ProceedOrder);
+        Should.NotThrow(() => agv.ProceedOrder());
     }
 
     [TestMethod]
@@ -355,36 +355,130 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
+    public void ProceedOrder_WhenChargingAndAgvMovesToDifferentNode_StopsCharging()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
+        agv.Charging = true;
+
+        timeProvider.Advance(TimeSpan.FromSeconds(15));
+        agv.ProceedOrder();
+
+        agv.LastNodeId.ShouldBe("B");
+        agv.Charging.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void ProceedOrder_WhenChargingAndAgvStaysOnSameNode_KeepsCharging()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
+        agv.Charging = true;
+
+        timeProvider.Advance(TimeSpan.FromSeconds(1));
+        agv.ProceedOrder();
+
+        agv.LastNodeId.ShouldBe("A");
+        agv.Charging.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void ProceedOrder_WithStartChargingAction_DoesNotAutoFinishAfter10Seconds()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var startChargingAction = new OrderAction(Vda5050Specifications.ActionTypes.StartCharging, null, BlockingType.NONE, []);
+        var node = new OrderNode { NodeId = "CHARGER", SequenceId = 0, Released = true, Actions = [startChargingAction] };
+        var order = new Order { OrderId = "charge-1", FullRoute = new Route([node], []) };
+        agv.StartOrder(order);
+
+        agv.ProceedOrder();
+        agv.CurrentOrder!.CurrentAction.ShouldNotBeNull();
+        agv.CurrentOrder.CurrentAction!.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.StartCharging);
+
+        timeProvider.Advance(TimeSpan.FromMinutes(5));
+        agv.ProceedOrder();
+
+        agv.CurrentOrder!.CurrentAction.ShouldNotBeNull();
+        agv.CurrentOrder.CurrentAction!.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.StartCharging);
+        agv.CurrentOrder.PendingActionStates.Single(s => s.ActionId == startChargingAction.ActionId).ActionStatus
+            .ShouldBe(VehicleActionStatus.Running);
+    }
+
+    [TestMethod]
+    public void UpdateStatus_WhenChargingReachesMaxCharge_FinishesStartChargingAction()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(initialBatteryCharge: 95, chargeRate: 10.0, timeProvider: timeProvider);
+        var startChargingAction = new OrderAction(Vda5050Specifications.ActionTypes.StartCharging, null, BlockingType.NONE, []);
+        var node = new OrderNode { NodeId = "CHARGER", SequenceId = 0, Released = true, Actions = [startChargingAction] };
+        agv.StartOrder(new Order { OrderId = "charge-1", FullRoute = new Route([node], []) });
+        agv.ProceedOrder();
+        agv.Charging = true;
+
+        agv.UpdateStatus(10);
+
+        agv.SimulatedBatteryCharge.ShouldBe(SimulatedAgv.MaxCharge);
+        agv.CurrentOrder!.CurrentAction.ShouldBeNull();
+        agv.CurrentOrder.PendingActionStates.Single(s => s.ActionId == startChargingAction.ActionId).ActionStatus
+            .ShouldBe(VehicleActionStatus.Finished);
+    }
+
+    [TestMethod]
+    public void StopCharging_WhileStartChargingIsRunning_FinishesActionAndStopsCharging()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var startChargingAction = new OrderAction(Vda5050Specifications.ActionTypes.StartCharging, null, BlockingType.NONE, []);
+        var node = new OrderNode { NodeId = "CHARGER", SequenceId = 0, Released = true, Actions = [startChargingAction] };
+        agv.StartOrder(new Order { OrderId = "charge-1", FullRoute = new Route([node], []) });
+        agv.ProceedOrder();
+        agv.Charging = true;
+
+        agv.StopCharging();
+
+        agv.Charging.ShouldBeFalse();
+        agv.CurrentOrder!.CurrentAction.ShouldBeNull();
+        agv.CurrentOrder.PendingActionStates.Single(s => s.ActionId == startChargingAction.ActionId).ActionStatus
+            .ShouldBe(VehicleActionStatus.Finished);
+    }
+
+    [TestMethod]
     public void FinishOrder_WhenCurrentOrderIsNull_DoesNothing()
     {
         var agv = CreateAgv();
 
-        Should.NotThrow(agv.FinishOrder);
+        Should.NotThrow(() => agv.FinishOrder());
     }
 
     [TestMethod]
-    public void FinishOrder_WhenOrderStillInProgress_KeepsCurrentOrder()
+    public void FinishOrder_WhenActionStillRunning_KeepsCurrentOrder()
     {
-        // Duration = 10 s; finish called at t=5 s → order not yet complete
         var timeProvider = new FakeTimeProvider(_baseTime);
         var agv = CreateAgv(timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
+        agv.CurrentOrder!.PendingActionStates.Add(new OrderActionState
+        {
+            ActionId = "a1",
+            ActionType = Vda5050Specifications.ActionTypes.Pick,
+            ActionStatus = VehicleActionStatus.Running
+        });
 
-        timeProvider.Advance(TimeSpan.FromSeconds(5));
         agv.FinishOrder();
 
         agv.CurrentOrder.ShouldNotBeNull();
     }
 
     [TestMethod]
-    public void FinishOrder_WhenOrderComplete_ClearsCurrentOrder()
+    public void FinishOrder_WhenAllActionsDone_ClearsCurrentOrder()
     {
-        // Duration = 10 s; finish called at t=20 s → order done
         var timeProvider = new FakeTimeProvider(_baseTime);
         var agv = CreateAgv(timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
-
         timeProvider.Advance(TimeSpan.FromSeconds(20));
+
         agv.FinishOrder();
 
         agv.CurrentOrder.ShouldBeNull();

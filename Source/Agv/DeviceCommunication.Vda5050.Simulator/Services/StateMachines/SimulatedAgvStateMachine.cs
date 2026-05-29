@@ -146,7 +146,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         DuringAny(SetSendAgvStatusHandler());
         DuringAny(StartChargingHandler());
         DuringAny(StopChargingHandler());
-        During(Idle, StartOrderHandler());
+        DuringAny(StartOrderHandler());
         DuringAny(UpdateOrderHandler());
         SetCompletedWhenFinalized(); // Delete when finalized
     }
@@ -216,7 +216,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     private EventActivityBinder<SimulatedAgv, CreateAgv> SetInitialCreateAgvHandler()
     {
         return When(CreateAgvEvent)
-            .Then(c => _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Configuration.SerialNumber, c.Saga.CorrelationId))
+            .Then(c =>
+            {
+                _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Configuration.SerialNumber, c.Saga.CorrelationId);
+                if (c.Message.InitialGraphNodes is { Count: > 0 } nodes)
+                {
+                    c.Saga.InitializePosition(nodes);
+                }
+            })
             .ThenAsync(PublishConnection)
             .ThenAsync(PublishState)
             .ThenAsync(PublishVisualization)
@@ -240,6 +247,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .Then(c => _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(SchedulePositionUpdate), c.Saga.CorrelationId))
             .ThenAsync(PublishVisualization)
             .Schedule(SignalPositionSchedule, c => new SchedulePositionUpdate(c.Saga.CorrelationId), GetPositionUpdateInterval)
+            .If(c => c.Saga.CurrentOrderReadyToFinish, t => t.ThenAsync(PublishState))
             .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
@@ -262,7 +270,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                 c.Saga.InitPosition(c.Message.Position, c.Message.LastNodeId);
             })
             .ThenAsync(PublishVisualization)
-            .If(c => c.Saga.CurrentOrder?.State?.NewBaseRequest is true, t => t.ThenAsync(PublishState));
+            .If(c => c.Saga.CurrentOrder?.State?.NewBaseRequest is true, t => t.ThenAsync(PublishState))
+            .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
     private EventActivityBinder<SimulatedAgv, StartOrder> StartOrderHandler()
@@ -271,7 +280,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .Then(c =>
             {
                 _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartOrder), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
-                c.Saga.StartOrder(c.Message.Order);
+                c.Saga.StartOrder(c.Message.Order, _logger);
             })
             .ThenAsync(PublishState)
             .ThenAsync(PublishVisualization)
@@ -287,7 +296,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                 c.Saga.InitializePosition(c.Message.Graph.Nodes);
             })
             .ThenAsync(PublishState)
-            .ThenAsync(PublishVisualization);
+            .ThenAsync(PublishVisualization)
+            .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
     private EventActivityBinder<SimulatedAgv, AbortOrder> AbortOrderHandler()
@@ -312,7 +322,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                 c.Saga.Charging = true;
             })
             .ThenAsync(PublishState)
-            .ThenAsync(PublishVisualization);
+            .ThenAsync(PublishVisualization)
+            .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
     private EventActivityBinder<SimulatedAgv, StopCharging> StopChargingHandler()
@@ -321,10 +332,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .Then(c =>
             {
                 _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(StopCharging), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
-                c.Saga.Charging = false;
+                c.Saga.StopCharging(_logger);
             })
             .ThenAsync(PublishState)
-            .ThenAsync(PublishVisualization);
+            .ThenAsync(PublishVisualization)
+            .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
     private EventActivityBinder<SimulatedAgv, UpdateOrder> UpdateOrderHandler()
@@ -333,10 +345,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .Then(c =>
             {
                 _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(UpdateOrder), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
-                c.Saga.UpdateOrder(c.Message.Order);
+                c.Saga.UpdateOrder(c.Message.Order, _logger);
             })
             .ThenAsync(PublishState)
-            .ThenAsync(PublishVisualization);
+            .ThenAsync(PublishVisualization)
+            .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
     private async Task PublishConnection(BehaviorContext<SimulatedAgv> context)
@@ -357,7 +370,19 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     private async Task PublishState(BehaviorContext<SimulatedAgv> context)
     {
         context.Saga.StateHeaderId.Increase();
-        context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds);
+        context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, _logger);
+        string actionStatesSummary = context.Saga.CurrentOrder == null
+            ? "(no order)"
+            : context.Saga.CurrentOrder.PendingActionStates.Count == 0
+                ? "(empty)"
+                : string.Join(",", context.Saga.CurrentOrder.PendingActionStates.Select(a => $"{a.ActionType}#{a.ActionId[..Math.Min(8, a.ActionId.Length)]}={a.ActionStatus}"));
+        _logger.LogInformation("PublishState {Agv}: orderId={OrderId} updateId={OrderUpdateId} lastNodeId={LastNodeId} actionStates=[{ActionStates}] loads={LoadCount}",
+            context.Saga.Configuration.SerialNumber,
+            context.Saga.CurrentOrder?.OrderId ?? "(none)",
+            context.Saga.CurrentOrder?.OrderUpdateId ?? 0,
+            context.Saga.LastNodeId ?? "(null)",
+            actionStatesSummary,
+            context.Saga.Loads.Count);
         await context.PublishMqtt(new MqttState
         {
             HeaderId = context.Saga.StateHeaderId.Current,
@@ -399,12 +424,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             }
         }, context.Saga.Configuration.GetRoutingKey(Vda5050Specifications.Subtopics.State), context.CancellationToken);
         context.Saga.CurrentOrder?.State?.NewBaseRequest = null;
-        context.Saga.FinishOrder();
+        context.Saga.FinishOrder(_logger);
     }
 
     private async Task PublishVisualization(BehaviorContext<SimulatedAgv> context)
     {
-        context.Saga.ProceedOrder();
+        context.Saga.ProceedOrder(_logger);
         context.Saga.VisualizationHeaderId.Increase();
         var message = new MqttVisualization
         {
@@ -424,6 +449,5 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             }
         };
         await context.PublishMqtt(message, context.Saga.Configuration.GetRoutingKey(Vda5050Specifications.Subtopics.Visualization), context.CancellationToken);
-        context.Saga.FinishOrder();
     }
 }

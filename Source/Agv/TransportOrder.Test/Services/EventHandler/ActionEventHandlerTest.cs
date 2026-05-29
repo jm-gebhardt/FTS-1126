@@ -28,10 +28,10 @@ public class ActionEventHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionCompletedByAgv_ActionAborted_DoesNotPublishCompleteActionOfActionGroup()
+    public async Task Consume_ActionCompletedByAgv_ActionAborted_TriggersHandleActionAbortion()
     {
         var agv = Guid.NewGuid();
-        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
         var action = actionGroup.Actions.First();
         actionGroup.AbortAction(action.CorrelationId, [], DateTimeOffset.Now);
         var fixture = new ActionEventHandlerTestFixture()
@@ -39,6 +39,24 @@ public class ActionEventHandlerTest
         var actionCompletedEvent = new ActionCompletedByAgv(action.CorrelationId, agv);
         await fixture.PublishMessageAsync(actionCompletedEvent);
 
+        await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<HandleActionAbortion>();
+    }
+
+    [TestMethod]
+    public async Task Consume_ActionCompletedByAgv_ActionAbortedButAgvMismatch_DoesNotTriggerHandleActionAbortion()
+    {
+        var assignedAgv = Guid.NewGuid();
+        var differentAgv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: assignedAgv);
+        var action = actionGroup.Actions.First();
+        actionGroup.AbortAction(action.CorrelationId, [], DateTimeOffset.Now);
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var actionCompletedEvent = new ActionCompletedByAgv(action.CorrelationId, differentAgv);
+        await fixture.PublishMessageAsync(actionCompletedEvent);
+
+        await fixture.ShouldNotHavePublishedAsync<HandleActionAbortion>();
         await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
     }
 

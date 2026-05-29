@@ -63,7 +63,6 @@ public class OrderExecutionSagaTest
         saga.Initialize();
 
         saga.Order.Route.IsEmpty.ShouldBeFalse();
-        saga.Order.Base.IsEmpty.ShouldBeFalse();
     }
 
     [TestMethod]
@@ -103,16 +102,6 @@ public class OrderExecutionSagaTest
         var saga = CreateSaga();
         saga.Order.State = State.Created;
         saga.Order.PreviousState = State.Initialized;
-
-        saga.ShouldSendNextOrder.ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public void ShouldSendNextOrder_NewBaseRequestTrue_ReturnsTrue()
-    {
-        var saga = CreateSaga();
-        saga.Initialize();
-        saga.Order.Status = OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, true);
 
         saga.ShouldSendNextOrder.ShouldBeTrue();
     }
@@ -190,37 +179,6 @@ public class OrderExecutionSagaTest
     }
 
     [TestMethod]
-    public void TryProceed_ValidProgress_ReturnsTrue()
-    {
-        var saga = CreateSaga();
-        saga.Initialize();
-        // LastNodeSequenceId = 0 → FullRoute.Proceed(0) returns Success immediately
-        saga.Order.Status = OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, false);
-
-        saga.TryProceed().ShouldBeTrue();
-    }
-
-    [TestMethod]
-    public void TryProceed_EmptyBase_ReturnsFalse()
-    {
-        var saga = CreateSaga();
-        // Do not Initialize: Base remains empty
-
-        saga.TryProceed().ShouldBeFalse();
-    }
-
-    [TestMethod]
-    public void TryProceed_EmptyBaseAndOrderNotCompleted_SetsErrorReference()
-    {
-        var saga = CreateSaga();
-        // Do not Initialize: Base is empty, order is not completed (no status pointing to last node)
-
-        saga.TryProceed();
-
-        saga.ErrorReference.ShouldBe(OrderErrors.ProceedBaseEmpty.Description);
-    }
-
-    [TestMethod]
     public void TryUpdateState_HappyPath_ReturnsTrue()
     {
         var saga = CreateSaga();
@@ -240,21 +198,6 @@ public class OrderExecutionSagaTest
         saga.TryUpdateState(state);
 
         saga.Order.State.ShouldBe(State.Running);
-    }
-
-    [TestMethod]
-    public void TryUpdateState_RouteUpdateRequested_SkipsTryUpdateOnNewBaseRequest()
-    {
-        var saga = CreateSaga();
-        saga.Initialize();
-        saga.RouteUpdateRequested = true;
-        int orderUpdateIdBefore = saga.Order.OrderUpdateId;
-        var state = OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, true);
-
-        saga.TryUpdateState(state).ShouldBeTrue();
-
-        // RouteUpdateRequested was true so TryUpdate was skipped
-        saga.Order.OrderUpdateId.ShouldBe(orderUpdateIdBefore);
     }
 
     [TestMethod]
@@ -307,8 +250,8 @@ public class OrderExecutionSagaTest
     {
         var saga = CreateSaga();
         saga.Initialize();
-        // After Initialize, Base last node is "PS01" 
-        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS01", "some waypoint", "map/NODE-11", "station"]) };
+        // Stitching node is first planned node "map/NODE-10" (no Status yet), so new route must contain it
+        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["map/NODE-10", "map/NODE-11", "PS01"]) };
 
         saga.TryUpdate(newOrder, Guid.NewGuid()).ShouldBeTrue();
     }
@@ -319,7 +262,7 @@ public class OrderExecutionSagaTest
         var saga = CreateSaga();
         saga.Initialize();
         var newFleetManagerActionId = Guid.NewGuid();
-        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS01", "some waypoint", "map/NODE-11", "station"]) };
+        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["map/NODE-10", "map/NODE-11", "PS01"]) };
 
         saga.TryUpdate(newOrder, newFleetManagerActionId);
 
@@ -331,7 +274,7 @@ public class OrderExecutionSagaTest
     {
         var saga = CreateSaga();
         saga.Initialize();
-        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS01", "some waypoint", "map/NODE-11", "station"]) };
+        var newOrder = new Order { PlannedRoute = RouteGenerator.GenerateFromNodeIds(["map/NODE-10", "map/NODE-11", "PS01"]) };
 
         saga.TryUpdate(newOrder, Guid.NewGuid());
 
@@ -421,7 +364,40 @@ public class OrderExecutionSagaTest
     }
 
     [TestMethod]
-    public void Restart_ResetsOrderAndReinitializes()
+    public void NewBaseRequested_WhenNewBaseNotified_ReturnsFalse()
+    {
+        var saga = CreateSaga();
+        saga.Initialize();
+        saga.TryUpdateState(OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, true));
+        saga.NewBaseNotified = true;
+
+        saga.NewBaseRequested.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void NewBaseRequested_WhenNotNotified_ReturnsTrue()
+    {
+        var saga = CreateSaga();
+        saga.Initialize();
+        saga.TryUpdateState(OrderGenerator.GenerateOrderState(saga.Order.OrderId, 0, 0, true));
+
+        saga.NewBaseRequested.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void Restart_ResetsNewBaseNotified()
+    {
+        var saga = CreateSaga();
+        saga.Initialize();
+        saga.NewBaseNotified = true;
+
+        saga.Restart();
+
+        saga.NewBaseNotified.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void Restart_ResetsOrderAndReInitializes()
     {
         var saga = CreateSaga();
         saga.Initialize();

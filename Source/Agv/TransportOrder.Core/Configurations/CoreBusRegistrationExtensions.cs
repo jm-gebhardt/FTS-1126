@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Vehicle;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -54,6 +55,7 @@ using RequestAgvZones = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.Reques
 using ResendAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.ResendAction;
 using ResetAgvErrors = Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands.ResetAgvErrors;
 using StartInstantAction = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.StartInstantAction;
+using UnblockStation = Gebhardt.Acc.Common.Messages.Stations.UnblockStation;
 using UnlockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.UnlockAgv;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Configurations;
@@ -234,7 +236,7 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
             c.Message<ReserveStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
-            c.Message<Common.Messages.Stations.UnblockStation>(x =>
+            c.Message<UnblockStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.StationId));
             nodePartitioner.PartitionMessageById<LockStation, NodeStationCommandHandler>(c);
             nodePartitioner.PartitionMessageById<UnlockStation, NodeStationCommandHandler>(c);
@@ -246,7 +248,7 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.CorrelationId);
 
                 x.UseMessageRetry(r =>
-                {   
+                {
                     r.Interval(6, TimeSpan.FromSeconds(7));
                     r.Handle<NodeNotFoundException>();
                 });
@@ -324,6 +326,21 @@ public static class CoreBusRegistrationExtensions
         });
         busRegistrationConfigurator.AddConsumer<DoppelspielCommandHandler>();
         busRegistrationConfigurator.AddRequestClient<CancelActionGroup>();
+
+        busRegistrationConfigurator.AddConsumer<ActionDispatchConsumer>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<StartActionCommand, ActionDispatchConsumer>(c);
+            partitioner.PartitionMessageById<UpdateActionCommand, ActionDispatchConsumer>(c);
+            partitioner.PartitionMessageById<AbortAndStartActionCommand, ActionDispatchConsumer>(c);
+            partitioner.PartitionMessageById<Common.Messages.ActionGroups.Commands.ResendAction, ActionDispatchConsumer>(c);
+        });
+
+        busRegistrationConfigurator.AddConsumer<NewBaseRequestConsumer>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<AgvNewBaseRequested, NewBaseRequestConsumer>(c);
+        });
     }
 
     /// <summary>

@@ -27,6 +27,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
+using Gebhardt.Acc.TransportOrder.Domain.Services.TrafficManagement;
 using Gebhardt.Acc.TransportOrder.Domain.Validators;
 using Gebhardt.Acc.TransportOrder.Messages;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef;
@@ -38,6 +39,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder;
 
@@ -54,6 +56,8 @@ public static class TransportOrderHostBuilderExtensions
         hostBuilder.ConfigureServices((context, services) =>
         {
             RegisterConfigurationServices(systemOptions, services, context);
+
+            RegisterTrafficManagementServices(services);
 
             RegisterMapServices(services);
 
@@ -94,10 +98,10 @@ public static class TransportOrderHostBuilderExtensions
             string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
             builder.UseSqlServer(connectionString, m =>
-                {
-                    m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
-                    m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                });
+            {
+                m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
+                m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            });
         });
 
         services.AddHealthChecks()
@@ -179,7 +183,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvPositionStatus>, AgvPositionDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>>, AgvErrorDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, Location>, TriggerLocationDictionaryProvider>();
-        services.AddSingleton<IConcurrentDictionaryProvider<Guid, List<Domain.Models.Agv.Cargo>>, AgvCargoDictionaryProvider>();
+        services.AddSingleton<IConcurrentDictionaryProvider<Guid, List<Cargo>>, AgvCargoDictionaryProvider>();
         services.AddSingleton<StationOnlineDictionaryProvider>();
         services.AddSingleton<IStationOnlineRepository, StationOnlineRepository>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();
@@ -206,6 +210,11 @@ public static class TransportOrderHostBuilderExtensions
     {
         services.AddSingleton(new AgvPositionConfiguration(PositionThreshold: 0.005, ThetaThreshold: Mathematics.ConvertToRadians(0.1), DeviationRangeThreshold: 0.001));
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
+    }
+
+    private static void RegisterTrafficManagementServices(IServiceCollection services)
+    {
+        services.AddScoped<ITrafficManager, TrafficManager>();
     }
 
     private static void RegisterMiscellaneousServices(IServiceCollection services)

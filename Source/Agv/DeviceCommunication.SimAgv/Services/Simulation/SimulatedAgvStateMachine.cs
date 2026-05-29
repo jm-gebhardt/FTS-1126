@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Dispatch;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -73,17 +73,17 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     /// <summary>
     /// Action has been started
     /// </summary>
-    public Event<StartActionCommand> StartActionCommandEvent { get; private set; } = null!;
+    public Event<DispatchRouteCommand> StartActionCommandEvent { get; private set; } = null!;
 
     /// <summary>
     /// Action has been updated
     /// </summary>
-    public Event<UpdateActionCommand> UpdateActionCommandEvent { get; private set; } = null!;
+    public Event<UpdateDispatchedRouteCommand> UpdateActionCommandEvent { get; private set; } = null!;
 
     /// <summary>
     /// Abort and start action.
     /// </summary>
-    public Event<AbortAndStartActionCommand> AbortAndStartActionCommandEvent { get; private set; } = null!;
+    public Event<AbortAndDispatchRouteCommand> AbortAndStartActionCommandEvent { get; private set; } = null!;
 
     /// <summary>
     /// CreateAgv was received
@@ -279,7 +279,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int maxDeviation = _options.InitialBatteryChargeDeviation;
         int calculatedBatteryCharge = _options.InitialBatteryCharge + Random.Shared.Next(-maxDeviation, maxDeviation + 1);
         const int safetyAgainstDeadBirth = 5;
-        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int) SimulatedAgvSaga.MaxCharge);
+        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgvSaga.AliveChargeThreshold + safetyAgainstDeadBirth, (int)SimulatedAgvSaga.MaxCharge);
         return initialBatteryCharge;
     }
     #endregion
@@ -297,10 +297,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .Respond(c => new CreateAgvResponse(c.Saga.CorrelationId));
     }
 
-    private EventActivityBinder<SimulatedAgvSaga, StartActionCommand> SetStartActionHandler()
+    private EventActivityBinder<SimulatedAgvSaga, DispatchRouteCommand> SetStartActionHandler()
     {
         return When(StartActionCommandEvent)
-            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(DispatchRouteCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
             .Then(Validate)
             .Then(c =>
             {
@@ -329,10 +329,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 GetPositionScheduleInterval);
     }
 
-    private EventActivityBinder<SimulatedAgvSaga, UpdateActionCommand> SetUpdateActionHandler()
+    private EventActivityBinder<SimulatedAgvSaga, UpdateDispatchedRouteCommand> SetUpdateActionHandler()
     {
         return When(UpdateActionCommandEvent)
-            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(UpdateDispatchedRouteCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
             .Then(Validate)
             .Then(c =>
             {
@@ -360,10 +360,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 GetPositionScheduleInterval);
     }
 
-    private EventActivityBinder<SimulatedAgvSaga, AbortAndStartActionCommand> SetAbortAndStartActionHandler()
+    private EventActivityBinder<SimulatedAgvSaga, AbortAndDispatchRouteCommand> SetAbortAndStartActionHandler()
     {
         return When(AbortAndStartActionCommandEvent)
-            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(StartActionCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
+            .Then(c => _logger.LogDebug("{MessageType} SerialNumber {AgvId} / CorrelationId {CorrelationId} / {ActionType} Action CorrelationId {ActionCorrelationId} received", nameof(AbortAndDispatchRouteCommand), c.Message.SerialNumber, c.Message.CorrelationId, c.Message.Action.ActionType, c.Message.Action.CorrelationId))
             .Then(Validate)
             .Then(c =>
             {
@@ -400,7 +400,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             .ThenAsync(PublishPositionAsync);
     }
 
-    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, StartActionCommand> c)
+    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, DispatchRouteCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
@@ -410,10 +410,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
             return;
         }
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.Select(n => n.Name).ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Route.BaseNodes.Select(n => n.Name).ToArray(), c.Message.Route.BaseEdges.Select(e => e.Id).ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
-    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> c)
+    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, UpdateDispatchedRouteCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
@@ -423,10 +423,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
             return;
         }
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.Select(n => n.Name).ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Route.BaseNodes.Select(n => n.Name).ToArray(), c.Message.Route.BaseEdges.Select(e => e.Id).ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
-    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> c)
+    private void SetCurrentAction(BehaviorContext<SimulatedAgvSaga, AbortAndDispatchRouteCommand> c)
     {
         c.Saga.LastActionAborted = false;
         c.Saga.Action = c.Message.Action;
@@ -436,7 +436,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Target.Position!, c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
             return;
         }
-        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Action.Nodes.Select(n => n.Name).ToArray(), c.Message.Action.Edges.ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
+        c.Saga.TravelSimulator.EstimateTravelTimes(c.Message.Route.BaseNodes.Select(n => n.Name).ToArray(), c.Message.Route.BaseEdges.Select(e => e.Id).ToArray(), c.Saga.ActionStartDate!.Value, c.Saga.AgvData!, 0);
     }
 
     private EventActivityBinder<SimulatedAgvSaga, ScheduleFinishAction> SetFinishActionHandler()
@@ -609,7 +609,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         int interval = simulationSpeed / requestsOnEdge;
         if (currentEdge != null)
         {
-            interval = (int) (currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
+            interval = (int)(currentEdge.EstimatedExitTime - currentEdge.InitialTurnFinishTime).TotalMilliseconds / requestsOnEdge;
         }
 
         return Math.Clamp(interval, lowerBound, upperBound);
@@ -712,37 +712,37 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         }
     }
 
-    private static void Validate(BehaviorContext<SimulatedAgvSaga, StartActionCommand> context)
+    private static void Validate(BehaviorContext<SimulatedAgvSaga, DispatchRouteCommand> context)
     {
         if (context.Message.Action == null)
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (context.Message.Action.Nodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
+        if (context.Message.Route.BaseNodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }
     }
 
-    private static void Validate(BehaviorContext<SimulatedAgvSaga, UpdateActionCommand> context)
+    private static void Validate(BehaviorContext<SimulatedAgvSaga, UpdateDispatchedRouteCommand> context)
     {
         if (context.Message.Action == null)
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (context.Message.Action.Nodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
+        if (context.Message.Route.BaseNodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }
     }
 
-    private static void Validate(BehaviorContext<SimulatedAgvSaga, AbortAndStartActionCommand> context)
+    private static void Validate(BehaviorContext<SimulatedAgvSaga, AbortAndDispatchRouteCommand> context)
     {
         if (context.Message.Action == null)
         {
             throw new ArgumentException("Action data missing.");
         }
-        if (context.Message.Action.Nodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
+        if (context.Message.Route.BaseNodes.Count == 0 && !context.Message.Action.IsMoveToCoordinate)
         {
             throw new ArgumentException("Nodes missing.");
         }
@@ -801,7 +801,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             ActionType.Drop => _options.CargoUnloadingTime,
             ActionType.Pick => _options.CargoLoadingTime,
             _ => 0
-        } / (float) context.Saga.SimulationSpeed;
+        } / (float)context.Saga.SimulationSpeed;
 
         await Task.Delay(TimeSpan.FromSeconds(delay));
     }
@@ -832,7 +832,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private readonly Random _random = Random.Shared;
 
-    private async Task PublishAgvWifiMessage(BehaviorContext<SimulatedAgvSaga> context) 
+    private async Task PublishAgvWifiMessage(BehaviorContext<SimulatedAgvSaga> context)
     {
         _logger.LogDebug("Publish random wifi message for Agv with Correlation Id: {AgvCorrelationId}", context.Saga.CorrelationId);
         int wifiStrength = _random.Next(70, 90);

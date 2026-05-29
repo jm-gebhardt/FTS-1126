@@ -36,7 +36,6 @@ public class OrderExecutionStateMachineTest
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
         saga.Order.OrderId.ShouldBe(order.OrderId);
         saga.Order.Route.IsEmpty.ShouldBeFalse();
-        saga.Order.Base.IsEmpty.ShouldBeFalse();
 
         await fixture.ShouldHavePublishedAsync<MqttOrder>();
         var mqttOrder = await fixture.GetFirstPublishedMessageAsync<MqttOrder>();
@@ -50,7 +49,7 @@ public class OrderExecutionStateMachineTest
     public async Task Consume_StartOrder_InitializationFails_PublishesActionFailedByAgvTransitionsToFinal()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
-        var order = new Order{ PlannedRoute = new Route([], []), AssignedAgv = agv};
+        var order = new Order { PlannedRoute = new Route([], []), AssignedAgv = agv };
 
         var fixture = new OrderExecutionStationMachineTestFixture(TimeSpan.FromSeconds(2))
             .Build();
@@ -108,7 +107,7 @@ public class OrderExecutionStateMachineTest
 
         // 2) Receive first status from agv
         var saga = fixture.GetSaga(startOrderCommand.CorrelationId);
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.ValidationError, [new ErrorReference{ReferenceKey = "Validation", ReferenceValue = "Failed for reason xy"}]);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.ValidationError, [new ErrorReference { ReferenceKey = "Validation", ReferenceValue = "Failed for reason xy" }]);
         var status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId, status));
@@ -251,10 +250,8 @@ public class OrderExecutionStateMachineTest
     }
 
     [TestMethod]
-    public async Task Consume_OrderUpdateRequested_StitchingNodeNotInNewRoute_PublishesActionFailedByAgvKeepsState()
+    public async Task Consume_OrderUpdateRequested_ValidRoute_Created_PublishesSecondMqttOrder()
     {
-        // After initialization the full route is released; the stitching node (last released base node) is "AP01" (seqId=8).
-        // A new route that does not include "AP01" cannot be stitched → update fails.
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
         var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
 
@@ -271,7 +268,40 @@ public class OrderExecutionStateMachineTest
             OrderId = order.OrderId,
             OrderUpdateId = 1,
             AssignedAgv = agv,
-            PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS03", "DIFFERENT_NODE", "DIFFERENT_END"]),
+            PlannedRoute = RouteGenerator.GenerateFromNodeIds(["PS03", "AP01"]),
+            Route = new Route([], [])
+        };
+        await fixture.PublishMessageAsync(new OrderUpdateRequested(startOrderCommand.CorrelationId, newOrder, null));
+
+        saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
+        await fixture.ShouldNotHavePublishedAsync<ActionFailedByAgv>();
+        ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
+        publishedOrders.Count.ShouldBe(2);
+        publishedOrders.Last().HeaderId.ShouldBe(2u);
+    }
+
+    [TestMethod]
+    public async Task Consume_OrderUpdateRequested_StitchingNodeNotInNewRoute_PublishesActionFailedByAgvKeepsState()
+    {
+        // After initialization with no Status the stitching node is the first planned node "PS03".
+        // A new route that omits "PS03" entirely cannot be stitched → update fails.
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
+        var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
+
+        var fixture = new OrderExecutionStationMachineTestFixture(TimeSpan.FromSeconds(2))
+            .Build();
+
+        var startOrderCommand = new StartOrder(agv.CurrentOrder!.Value, order);
+        await fixture.PublishMessageAsync(startOrderCommand);
+        var saga = fixture.GetSaga(startOrderCommand.CorrelationId);
+        saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
+
+        var newOrder = new Order
+        {
+            OrderId = order.OrderId,
+            OrderUpdateId = 1,
+            AssignedAgv = agv,
+            PlannedRoute = RouteGenerator.GenerateFromNodeIds(["DIFFERENT_NODE", "DIFFERENT_END"]),
             Route = new Route([], [])
         };
         await fixture.PublishMessageAsync(new OrderUpdateRequested(startOrderCommand.CorrelationId, newOrder, null));
@@ -280,5 +310,29 @@ public class OrderExecutionStateMachineTest
         await fixture.ShouldHavePublishedAsync<ActionFailedByAgv>();
         var logOccurred = await fixture.GetFirstPublishedMessageAsync<LogOccurred>();
         logOccurred.Entry.Variables[LogLabels.Reason].ShouldBe(OrderErrors.OrderRouteUpdateStitchingNodeNotFound.Description);
+    }
+
+    [TestMethod]
+    public async Task Consume_DuplicateStartOrder_InRunning_PublishesAdditionalMqttOrderWithoutChangingState()
+    {
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
+        var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
+
+        var fixture = new OrderExecutionStationMachineTestFixture(TimeSpan.FromSeconds(2))
+            .Build();
+
+        var startOrderCommand = new StartOrder(agv.CurrentOrder!.Value, order);
+        await fixture.PublishMessageAsync(startOrderCommand);
+        var saga = fixture.GetSaga(startOrderCommand.CorrelationId);
+        await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
+            OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false)));
+        saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));
+
+        await fixture.PublishMessageAsync(new StartOrder(startOrderCommand.CorrelationId, order));
+
+        ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
+        publishedOrders.Count.ShouldBe(2);
+        publishedOrders.Last().HeaderId.ShouldBe(2u);
+        saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));
     }
 }

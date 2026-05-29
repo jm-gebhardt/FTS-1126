@@ -1,5 +1,4 @@
-﻿
-using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -10,6 +9,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Order;
 using Shouldly;
 using AgvGraph = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs.AgvGraph;
 using AgvGraphGenerator = Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv.AgvGraphGenerator;
@@ -26,7 +26,7 @@ public class OrderBuilderTest
         var pickAction = AgvGraphGenerator.GenerateNodeAction(Vda5050Specifications.ActionTypes.Pick, agvCorrelationId: agv.CorrelationId, RequirementType.Required, BlockingType.SOFT, [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "Pick" }]);
         string[] nodeIds = ["map/NODE-10", "map/NODE-11", "PS01"];
         var agvGraph = AgvGraphGenerator.GenerateFromNodeIds(nodeIds, new Dictionary<string, ICollection<AgvNodeAction>> { { nodeIds.Last(), [pickAction] } }, agvCorrelationId: agv.CorrelationId);
-        
+
         var action = AgvActionGenerator.GenerateAction(nodeIds.First(), ActionType.Pick, targetNodeId: nodeIds.Last());
         action.Edges = agvGraph.Edges.Select(e => e.Id).ToList();
         action.Nodes = nodeIds.Select(n => n.ToGraphNode()).ToList();
@@ -35,18 +35,20 @@ public class OrderBuilderTest
                 AgvGenerator.GenerateNodeAction(pickAction.ActionType,
                     blockingType: BlockingType.SOFT,
                     agvSerialNumber: agv.SerialNumber,
-                    parameters: [
+                    parameters:
+                    [
                         new AgvActionParameter
                         {
                             IsOptional = false,
                             Key = Vda5050Specifications.Parameters.StationType,
                             ValueDataType = ValueDataType.String
                         }
-                    ])])
+                    ])
+            ])
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         order.OrderId.ShouldBe(action.CorrelationId.ToString());
         order.OrderUpdateId.ShouldBe(0);
@@ -72,18 +74,21 @@ public class OrderBuilderTest
                 AgvGenerator.GenerateNodeAction(pickAction.ActionType,
                     blockingType: BlockingType.SOFT,
                     agvSerialNumber: agv.SerialNumber,
-                    parameters: [
+                    parameters:
+                    [
                         new AgvActionParameter
                         {
                             IsOptional = false,
                             Key = Vda5050Specifications.Parameters.StationType,
                             ValueDataType = ValueDataType.String
                         }
-                    ])])
+                    ])
+            ])
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        await Should.ThrowAsync<OrderNodeAndEdgeMismatchException>(() => fixture.Builder.Build(agv.CorrelationId, action));
+        var routePlan = new RoutePlan(action.Nodes.ToList(), [], [], []);
+        await Should.ThrowAsync<OrderNodeAndEdgeMismatchException>(() => fixture.Builder.Build(agv.CorrelationId, routePlan, action));
     }
 
     [TestMethod]
@@ -103,7 +108,13 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        await Should.ThrowAsync<NodeNotDefinedForAgvException>(() => fixture.Builder.Build(agv.CorrelationId, action));
+        List<GraphNode> nodes = action.Nodes.ToList();
+        var routePlan = new RoutePlan(nodes,
+            Enumerable.Range(0, nodes.Count - 1)
+                .Select(i => new GraphEdge(nodes[i].Id, nodes[i + 1].Id, 1f, Guid.NewGuid()))
+                .ToList(),
+            [], []);
+        await Should.ThrowAsync<NodeNotDefinedForAgvException>(() => fixture.Builder.Build(agv.CorrelationId, routePlan, action));
     }
 
     [TestMethod]
@@ -115,15 +126,14 @@ public class OrderBuilderTest
 
         var action = AgvActionGenerator.GenerateAction(nodeIds.First(), targetNodeId: nodeIds.Last());
         action.Nodes = nodeIds.Select(n => n.ToGraphNode()).ToList();
-        List<Guid> unknownEdges = agvGraph.Edges.Select(e => e.Id).ToList();
-        unknownEdges.Add(Guid.NewGuid());
-        action.Edges = unknownEdges;
         var fixture = new OrderBuilderTestFixture()
             .AddActions([])
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        await Should.ThrowAsync<EdgeNotDefinedForAgvException>(() => fixture.Builder.Build(agv.CorrelationId, action));
+        List<GraphNode> nodes = action.Nodes.ToList();
+        var routePlan = new RoutePlan(nodes, [new GraphEdge(nodes[0].Id, nodes[1].Id, 1f, Guid.NewGuid())], [], []);
+        await Should.ThrowAsync<EdgeNotDefinedForAgvException>(() => fixture.Builder.Build(agv.CorrelationId, routePlan, action));
     }
 
     [TestMethod]
@@ -142,7 +152,7 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.Last()).Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
     }
@@ -163,20 +173,20 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.Last()).Actions.ShouldBeEmpty();
     }
 
     [TestMethod]
-    public async Task BuildNodes_WithConditionalAction_AddsActionToNode()
+    public async Task BuildNodes_WithConditionalActionMatchingTargetAndActionType_AddsActionToNode()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), "agv-1");
         var conditionalAction = AgvGraphGenerator.GenerateNodeAction(Vda5050Specifications.ActionTypes.Pick, agvCorrelationId: agv.CorrelationId, RequirementType.Conditional, BlockingType.SOFT);
         string[] nodeIds = ["map/NODE-10", "map/NODE-11", "PS01"];
         var agvGraph = AgvGraphGenerator.GenerateFromNodeIds(nodeIds, new Dictionary<string, ICollection<AgvNodeAction>> { { nodeIds.Last(), [conditionalAction] } }, agvCorrelationId: agv.CorrelationId);
 
-        var action = AgvActionGenerator.GenerateAction(nodeIds.First(), targetNodeId: nodeIds.Last());
+        var action = AgvActionGenerator.GenerateAction(nodeIds.First(), ActionType.Pick, targetNodeId: nodeIds.Last());
         action.Edges = agvGraph.Edges.Select(e => e.Id).ToList();
         action.Nodes = nodeIds.Select(n => n.ToGraphNode()).ToList();
         var fixture = new OrderBuilderTestFixture()
@@ -184,8 +194,34 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
+        order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.Last()).Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
+    }
+
+    [TestMethod]
+    public async Task BuildNodes_WithRequiredPickOnNonTargetNode_DoesNotAddAction()
+    {
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), "agv-1");
+        var pickAction = AgvGraphGenerator.GenerateNodeAction(Vda5050Specifications.ActionTypes.Pick, agvCorrelationId: agv.CorrelationId, RequirementType.Required, BlockingType.SOFT);
+        string[] nodeIds = ["PS-START", "map/NODE-11", "PS01"];
+        var agvGraph = AgvGraphGenerator.GenerateFromNodeIds(nodeIds, new Dictionary<string, ICollection<AgvNodeAction>>
+        {
+            { nodeIds.First(), [pickAction] },
+            { nodeIds.Last(), [pickAction] }
+        }, agvCorrelationId: agv.CorrelationId);
+
+        var action = AgvActionGenerator.GenerateAction(nodeIds.First(), ActionType.Pick, targetNodeId: nodeIds.Last());
+        action.Edges = agvGraph.Edges.Select(e => e.Id).ToList();
+        action.Nodes = nodeIds.Select(n => n.ToGraphNode()).ToList();
+        var fixture = new OrderBuilderTestFixture()
+            .AddActions([])
+            .AddAgv(agv)
+            .AgvAgvGraph(agvGraph);
+
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
+
+        order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.First()).Actions.ShouldBeEmpty();
         order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.Last()).Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
     }
 
@@ -204,7 +240,7 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         List<OrderNode> nodes = order.PlannedRoute.Nodes.OrderBy(n => n.SequenceId).ToList();
         List<OrderEdge> edges = order.PlannedRoute.Edges.OrderBy(e => e.SequenceId).ToList();
@@ -233,7 +269,7 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         order.PlannedRoute.Edges.Single().Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.WaitForTrigger);
     }
@@ -256,7 +292,7 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         order.PlannedRoute.Edges.Single().Actions.ShouldBeEmpty();
     }
@@ -277,7 +313,7 @@ public class OrderBuilderTest
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 
-        var order = await fixture.Builder.Build(agv.CorrelationId, action);
+        var order = await fixture.Builder.Build(agv.CorrelationId, RoutePlanGenerator.Build(action), action);
 
         order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.Last()).Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
     }

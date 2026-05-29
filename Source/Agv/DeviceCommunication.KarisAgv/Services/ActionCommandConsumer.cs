@@ -1,7 +1,7 @@
-﻿using Gebhardt.Acc.Common.Exceptions;
+using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Dispatch;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Extensions;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
@@ -18,24 +18,25 @@ namespace Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 /// </summary>
 [UsedImplicitly]
 public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRepository agvRepository, IGraphRepository graphRepository, IActionRepository actionRepository) :
-    IConsumer<StartActionCommand>,
-    IConsumer<UpdateActionCommand>,
-    IConsumer<AbortAndStartActionCommand>,
-    IConsumer<ResendAction>
+    IConsumer<DispatchRouteCommand>,
+    IConsumer<UpdateDispatchedRouteCommand>,
+    IConsumer<AbortAndDispatchRouteCommand>,
+    IConsumer<ResendDispatchedRouteCommand>
 {
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<StartActionCommand> context)
+    public async Task Consume(ConsumeContext<DispatchRouteCommand> context)
     {
         var action = context.Message.Action;
         string agvSerialNumber = context.Message.SerialNumber;
         var assignedAgv = context.Message.CorrelationId;
+        var routePlan = context.Message.Route;
 
         if (string.IsNullOrEmpty(agvSerialNumber))
         {
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
-        var order = await GetOrder(action, agvSerialNumber, OrderRecordType.Order, action.CorrelationId.ToString());
+        var order = await GetOrder(action, routePlan, agvSerialNumber, OrderRecordType.Order, action.CorrelationId.ToString());
 
         await context.PublishMqtt(order, context.CancellationToken);
 
@@ -52,12 +53,13 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
     }
 
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<UpdateActionCommand> context)
+    public async Task Consume(ConsumeContext<UpdateDispatchedRouteCommand> context)
     {
         var action = context.Message.Action;
         string agvSerialNumber = context.Message.SerialNumber;
         var assignedAgv = context.Message.CorrelationId;
         string orderId = action.CorrelationId.ToString();
+        var routePlan = context.Message.Route;
 
         if (string.IsNullOrEmpty(agvSerialNumber))
         {
@@ -71,7 +73,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             orderId = vehicleOrderId.Value.ToString();
         }
 
-        var order = await GetOrder(action, agvSerialNumber, OrderRecordType.OrderUpdate, orderId);
+        var order = await GetOrder(action, routePlan, agvSerialNumber, OrderRecordType.OrderUpdate, orderId);
 
         await context.PublishMqtt(order, context.CancellationToken);
 
@@ -88,20 +90,21 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
     }
 
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<AbortAndStartActionCommand> context)
+    public async Task Consume(ConsumeContext<AbortAndDispatchRouteCommand> context)
     {
         var action = context.Message.Action;
         string agvSerialNumber = context.Message.SerialNumber;
         var assignedAgv = context.Message.CorrelationId;
         Guid? abortedActionCorrelationId = context.Message.AbortedActionCorrelationId;
         string orderId = abortedActionCorrelationId == null ? action.CorrelationId.ToString() : abortedActionCorrelationId.Value.ToString();
+        var routePlan = context.Message.Route;
 
         if (string.IsNullOrEmpty(agvSerialNumber))
         {
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
-        var order = await GetOrder(action, agvSerialNumber, abortedActionCorrelationId == null ? OrderRecordType.Order : OrderRecordType.OrderUpdate, orderId);
+        var order = await GetOrder(action, routePlan, agvSerialNumber, abortedActionCorrelationId == null ? OrderRecordType.Order : OrderRecordType.OrderUpdate, orderId);
 
         FeedAgvRepository(assignedAgv, action);
         if (abortedActionCorrelationId != null)
@@ -122,9 +125,11 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
     }
 
     /// <inheritdoc />
-    public async Task Consume(ConsumeContext<ResendAction> context)
+    public async Task Consume(ConsumeContext<ResendDispatchedRouteCommand> context)
     {
-        (_, string serialNumber, var action) = context.Message;
+        var action = context.Message.Action;
+        string serialNumber = context.Message.SerialNumber;
+        var routePlan = context.Message.Route;
 
         string orderId = action.CorrelationId.ToString();
         Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
@@ -133,29 +138,30 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);
             orderId = vehicleOrderId.Value.ToString();
         }
-        var order = await GetOrder(action, serialNumber, OrderRecordType.Order, orderId);
+
+        var order = await GetOrder(action, routePlan, serialNumber, OrderRecordType.Order, orderId);
         await context.PublishMqtt(order, context.CancellationToken);
 
         logger.LogInformation("Resent order: {OrderId} for AGV:{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, serialNumber, action.Target.Node?.Name);
     }
 
-    private async Task<MqttOrder> GetOrder(AgvAction action, string agvSerialNumber, OrderRecordType recordType, string orderId)
+    private async Task<MqttOrder> GetOrder(AgvAction action, RoutePlan routePlan, string agvSerialNumber, OrderRecordType recordType, string orderId)
     {
-        List<object> routeNodes = await GetRouteNodes(action);
-        List<object> routeEdges = await GetRouteEdges(action);
+        List<object> routeNodes = await GetRouteNodes(routePlan);
+        List<object> routeEdges = await GetRouteEdges(routePlan);
 
         return action.ConvertToOrder(orderId, recordType, agvSerialNumber, routeNodes, routeEdges);
     }
 
-    private async Task<List<object>> GetRouteNodes(AgvAction action)
+    private async Task<List<object>> GetRouteNodes(RoutePlan routePlan)
     {
-        return (await graphRepository.GetMqttNodes([.. action.Nodes.Select(n => n.Name)])).ToList<object>();
+        return (await graphRepository.GetMqttNodes([.. routePlan.BaseNodes.Select(n => n.Name)])).ToList<object>();
     }
 
-    private async Task<List<object>> GetRouteEdges(AgvAction action)
+    private async Task<List<object>> GetRouteEdges(RoutePlan routePlan)
     {
-        return (await graphRepository.GetMqttEdges([.. action.Edges])).ToList<object>();
+        return (await graphRepository.GetMqttEdges([.. routePlan.BaseEdges.Select(e => e.Id)])).ToList<object>();
     }
 
     private void FeedAgvRepository(Guid correlationId, AgvAction agvAction)

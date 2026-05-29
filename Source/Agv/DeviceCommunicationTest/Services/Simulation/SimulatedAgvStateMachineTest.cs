@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Dispatch;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -171,17 +171,16 @@ public class SimulatedAgvStateMachineTest
         ICollection<GraphNode> nodes = graph.Nodes;
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First();
         (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(action.Target.Node);
-        action.Nodes = route.nodes;
-        action.Edges = route.edges;
-        var startNode = nodes.First(n => n.Id == action.Nodes.First().Id);
-        var destination = action.Nodes.Last();
+        var routePlan = RoutePlanGenerator.Build(route.nodes, route.edges);
+        var startNode = nodes.First(n => n.Id == route.nodes.First().Id);
+        var destination = route.nodes.Last();
         var agvSaga = SimulatedAgvSagaGenerator.Generate(simulationSpeed: 2, agvGraph: graph, currentNode: startNode);
         var fixture = new SimulatedAgvStateMachineTestFixture()
             .WithAgv(agvSaga)
             .Build();
 
-        var actionStarted = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
-            new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
+        var actionStarted = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, ActionStartedByAgv>(
+            new DispatchRouteCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, routePlan, action));
 
         var actionId = action.CorrelationId;
         actionStarted.CorrelationId.ShouldBe(actionId);
@@ -227,8 +226,7 @@ public class SimulatedAgvStateMachineTest
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
         var moveAction = actionGroup.Actions.Skip(1).FirstOrDefault();
         (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(moveAction!.Target.Node);
-        moveAction.Nodes = route.nodes;
-        moveAction.Edges = route.edges;
+        var startRoutePlan = RoutePlanGenerator.Build(route.nodes, route.edges);
 
         var agvSaga = SimulatedAgvSagaGenerator.Generate(
             currentState: nameof(SimulatedAgvStateMachine.Idle),
@@ -241,27 +239,30 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        // Move action will be updated to Drop action. 
+        // Move action will be updated to Drop action.
         var moveActionToDropAction = actionGroup.Actions.LastOrDefault();
         if (moveActionToDropAction != null)
         {
             (ICollection<GraphNode> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar);
+            List<GraphNode> updateNodes = dropRoute.dropNodes.Skip(1).ToList();
+            List<Guid> updateEdges = dropRoute.dropEdges.Skip(1).ToList();
             var updatedMoveAction = AgvActionGenerator.GenerateAction(
                 correlationId: moveAction.CorrelationId,
                 actionType: moveActionToDropAction.ActionType,
                 targetNodeId: AgvGraphGenerator.DestinationFar.Name,
                 parentId: moveActionToDropAction.ParentId,
                 infoToAgv: moveActionToDropAction.InfoToAgv,
-                nodes: dropRoute.dropNodes.Skip(1).ToArray(),
-                edges: dropRoute.dropEdges.Skip(1).ToArray());
+                nodes: updateNodes.ToArray(),
+                edges: updateEdges.ToArray());
+            var updateRoutePlan = RoutePlanGenerator.Build(updateNodes, updateEdges);
 
-            // Start move action 
-            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
-                new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
+            // Start move action
+            await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, ActionStartedByAgv>(
+                new DispatchRouteCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, startRoutePlan, moveAction));
 
             // Update move action to drop action with new target
-            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdatedByAgv>(
-                new UpdateActionCommand(correlationId, agvSaga.SerialNumber, updatedMoveAction));
+            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, ActionUpdatedByAgv>(
+                new UpdateDispatchedRouteCommand(correlationId, agvSaga.SerialNumber, updateRoutePlan, updatedMoveAction));
             actionUpdated.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
 
             // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
@@ -307,8 +308,7 @@ public class SimulatedAgvStateMachineTest
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
         var moveAction = actionGroup.Actions.Skip(1).FirstOrDefault();
         (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(moveAction!.Target.Node);
-        moveAction.Nodes = route.nodes;
-        moveAction.Edges = route.edges;
+        var startRoutePlan = RoutePlanGenerator.Build(route.nodes, route.edges);
 
         var agvSaga = SimulatedAgvSagaGenerator.Generate(
             currentState: nameof(SimulatedAgvStateMachine.Idle),
@@ -320,29 +320,32 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
 
-        // Move action will be updated to Drop action. 
+        // Move action will be updated to Drop action.
         var moveActionToDropAction = actionGroup.Actions.LastOrDefault();
         if (moveActionToDropAction != null)
         {
             (ICollection<GraphNode> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar);
+            List<GraphNode> updateNodes = dropRoute.dropNodes.Skip(1).ToList();
+            List<Guid> updateEdges = dropRoute.dropEdges.Skip(1).ToList();
             var updatedMoveAction = AgvActionGenerator.GenerateAction(
                 correlationId: moveAction.CorrelationId,
                 actionType: moveActionToDropAction.ActionType,
                 targetNodeId: AgvGraphGenerator.DestinationFar.Name,
                 parentId: moveActionToDropAction.ParentId,
                 infoToAgv: moveActionToDropAction.InfoToAgv,
-                nodes: dropRoute.dropNodes.Skip(1).ToArray(),
-                edges: dropRoute.dropEdges.Skip(1).ToArray());
+                nodes: updateNodes.ToArray(),
+                edges: updateEdges.ToArray());
+            var updateRoutePlan = RoutePlanGenerator.Build(updateNodes, updateEdges);
 
-            // Start move action 
-            await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, ActionStartedByAgv>(
-                new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, moveAction));
+            // Start move action
+            await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, ActionStartedByAgv>(
+                new DispatchRouteCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, startRoutePlan, moveAction));
 
             await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
 
             // Update move action to drop action with new target
-            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, ActionUpdatedByAgv>(
-                new UpdateActionCommand(correlationId, agvSaga.SerialNumber, updatedMoveAction));
+            var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, ActionUpdatedByAgv>(
+                new UpdateDispatchedRouteCommand(correlationId, agvSaga.SerialNumber, updateRoutePlan, updatedMoveAction));
             actionUpdated.CorrelationId.ShouldBe(updatedMoveAction.CorrelationId);
 
             // Position sent (Node travel time is twice as long as position sent interval, so this is surely sent in the meanwhile)
@@ -352,8 +355,8 @@ public class SimulatedAgvStateMachineTest
             // action finished
             (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
             (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
-            (await fixture.SagaHarness.Consumed.Any<StartActionCommand>()).ShouldBeTrue();
-            (await fixture.SagaHarness.Consumed.Any<UpdateActionCommand>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<DispatchRouteCommand>()).ShouldBeTrue();
+            (await fixture.SagaHarness.Consumed.Any<UpdateDispatchedRouteCommand>()).ShouldBeTrue();
 
             // Wait until saga has finished the updated action before asserting publication
             await fixture.WaitUntil(agvSaga, s =>
@@ -386,9 +389,9 @@ public class SimulatedAgvStateMachineTest
             .Build();
         agvSaga.TravelSimulator.GetType().GetProperty(nameof(AgvTravelSimulator.CurrentNode))!.SetValue(agvSaga.TravelSimulator, node);
         var action = AgvActionGenerator.GenerateAction(startNodeId: node.Name, targetNodeId: node.Name, actionType: ActionType.Pick);
-        action.Nodes = [node];
-        var agvLoadStatusReceived = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, AgvLoadStatusReceived>(
-            new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
+        var routePlan = new RoutePlan([node], [], [], []);
+        var agvLoadStatusReceived = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, AgvLoadStatusReceived>(
+            new DispatchRouteCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, routePlan, action));
 
         await fixture.WaitUntilAgvIdle(agvSaga);
         agvLoadStatusReceived.Cargos.Count.ShouldBe(1);
@@ -408,9 +411,9 @@ public class SimulatedAgvStateMachineTest
             .WithAgv(agvSaga)
             .Build();
         var action = AgvActionGenerator.GenerateAction(startNodeId: node.Name, targetNodeId: node.Name, actionType: ActionType.Drop);
-        action.Nodes = [node];
+        var routePlan = new RoutePlan([node], [], [], []);
 
-        await fixture.PublishMessageAsync(new StartActionCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, action));
+        await fixture.PublishMessageAsync(new DispatchRouteCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, routePlan, action));
         await fixture.WaitUntilAgvIdle(agvSaga);
         var agvLoadStatusReceived = await fixture.GetFirstPublishedMessageAsync<AgvLoadStatusReceived>();
         agvLoadStatusReceived.Cargos.Count.ShouldBe(0);

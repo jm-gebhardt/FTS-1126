@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Sequence;
+using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.HeadIds;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Errors;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
@@ -45,16 +45,6 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     public State CurrentState { get; set; } = null!;
 
     /// <summary>
-    /// The length of the base.
-    /// </summary>
-    public int BaseLength { get; private set; }
-
-    /// <summary>
-    /// The maximum length of the horizon to allow for order updates.
-    /// </summary>
-    public int MaxHorizonLength { get; private set; }
-
-    /// <summary>
     /// Error reference, if smth went wrong.
     /// </summary>
     public string? ErrorReference { get; private set; }
@@ -65,10 +55,9 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     public string? InstantActionId { get; private set; }
 
     /// <summary>
-    /// True, if the next order should be sent.
+    /// True, if the initial order should be sent.
     /// </summary>
-
-    public bool ShouldSendNextOrder => Order is { State: Models.Orders.State.Created, PreviousState: Models.Orders.State.Initialized } || Order.Status?.NewBaseRequest is true;
+    public bool ShouldSendNextOrder => Order is { State: Models.Orders.State.Created, PreviousState: Models.Orders.State.Initialized };
 
     /// <summary>
     /// True, if the order was just started by the agv.
@@ -79,6 +68,16 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// True, if the order was just completed by the agv.
     /// </summary>
     public bool IsFinished => Order.IsCompleted();
+
+    /// <summary>
+    /// True, if the AGV has requested a new base.
+    /// </summary>
+    public bool NewBaseRequested => Order.Status?.NewBaseRequest is true && !NewBaseNotified && !IsFinished;
+
+    /// <summary>
+    /// True, if the AGV new-base request has already been published.
+    /// </summary>
+    public bool NewBaseNotified { get; set; }
 
     /// <summary>
     /// True, if an update of the planned route has been requested.
@@ -92,8 +91,6 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         Order = order;
         OrderHeaderId = headerId;
         InstantActionsHeaderId = instantActionsHeaderId;
-        BaseLength = Order.PlannedRoute.Nodes.Count;//Math.Min(Order.PlannedRoute.Nodes.Count / 2, 3);
-        MaxHorizonLength = 0;//Math.Min(Order.PlannedRoute.Nodes.Count / 2, 3) - 1;
         CurrentFleetManagerActionId = correlationId;
     }
 
@@ -102,33 +99,17 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// </summary>
     public bool Initialize()
     {
-        if (Order.TryUpdate(BaseLength, MaxHorizonLength))
+        if (Order.PlannedRoute.IsEmpty)
         {
-            Order.UpdateState();
-            return true;
+            Order.Fail();
+            ErrorReference = OrderErrors.InitializationFailed.Description;
+            return false;
         }
-        Order.Fail();
-        ErrorReference = OrderErrors.InitializationFailed.Description;
-        return false;
-    }
-
-    /// <summary>
-    /// TryProceed with the order.
-    /// </summary>
-    public bool TryProceed()
-    {
-        var result = Order.TryProceed();
-        if (result.IsSuccess)
-        {
-            return true;
-        }
-        if (Order.IsCompleted())
-        {
-            ErrorReference = null;
-            return true;
-        }
-        ErrorReference = result.Error!.Description;
-        return false;
+        Order.Route = new Route(Order.PlannedRoute.Nodes.ToList(), Order.PlannedRoute.Edges.ToList());
+        Order.Route.Release();
+        Order.OrderUpdateId = 0;
+        Order.UpdateState();
+        return true;
     }
 
     /// <summary>
@@ -142,15 +123,6 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
         if (TryExtractOrderErrors())
         {
             return false;
-        }
-        if (!TryProceed())
-        {
-            return false;
-        }
-
-        if (Order.Status.NewBaseRequest is true && !RouteUpdateRequested && !IsFinished)
-        {
-            return Order.TryUpdate(BaseLength, MaxHorizonLength);
         }
         return true;
     }
@@ -178,7 +150,7 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     /// <summary>
     /// Prepare issuing an instant action
     /// </summary>
-    public void  PrepareInstantAction()
+    public void PrepareInstantAction()
     {
         InstantActionId = Guid.NewGuid().ToString();
         InstantActionsHeaderId.Increase();
@@ -200,7 +172,7 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     {
         CurrentFleetManagerActionId = currentFleetManagerActionId;
         RouteUpdateRequested = true; //prevent order updates until route update finished
-        var result = Order.TryUpdatePlannedRoute(newOrder.PlannedRoute, BaseLength, MaxHorizonLength);
+        var result = Order.TryUpdatePlannedRoute(newOrder.PlannedRoute);
         if (!result.IsSuccess)
         {
             ErrorReference = result.Error!.Description;
@@ -218,6 +190,7 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
     {
         ErrorReference = null;
         RouteUpdateRequested = false;
+        NewBaseNotified = false;
         InstantActionId = null;
         Order.Reset();
         return Initialize();

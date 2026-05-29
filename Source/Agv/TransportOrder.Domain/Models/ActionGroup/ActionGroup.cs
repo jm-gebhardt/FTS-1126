@@ -4,7 +4,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
-using Gebhardt.Acc.TransportOrder.Routing.Models;
+using DomainRoute = Gebhardt.Acc.TransportOrder.Routing.Models.Route;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -161,7 +161,7 @@ public class ActionGroup
     /// Shadow property for log entries. Used by filterables for one-to-many joins.
     /// </summary>
     public virtual ICollection<LogEntry.LogEntry>? LogEntries { get; init; }
-    
+
     /// <summary>
     /// True, if the order is registered for  Doppelspiel during drop.
     /// </summary>
@@ -176,7 +176,7 @@ public class ActionGroup
     /// The time since when the order can be considered for Doppelspiel.
     /// </summary>
     public DateTime? ConsideredForDoppelspielDate { get; set; }
-    
+
     /// <summary>
     /// True, if the orders Doppelspiel partner has been queued yet.
     /// </summary>
@@ -245,13 +245,18 @@ public class ActionGroup
         {
             action.UnregisterFromDoppelspiel();
         }
-        AssignedAgv = null;
+        if (actionType == ActionType.Pick)
+        {
+            // A Pick registered for Doppelspiel was pre-assigned to the partner's AGV. When the partnership is dissolved
+            // the pick has to return to the normal queue and find an AGV, so the pre-assignment is released here.
+            AssignedAgv = null;
+        }
     }
 
     /// <summary>
     /// Register order as Doppelspiel partner.
     /// </summary>
-    public void SetDoppelspielpartner(Guid partnerOrder, ActionType actionType, GraphNode? node=null)
+    public void SetDoppelspielpartner(Guid partnerOrder, ActionType actionType, GraphNode? node = null)
     {
         var action = Actions.FirstOrDefault(a => a.ActionType == actionType);
         if (action == null)
@@ -376,7 +381,7 @@ public class ActionGroup
     /// <param name="agvToAssign">The agv to assign.</param>
     /// <param name="force">Force assignment independent of whether it was previously assigned.</param>
     /// <exception cref="ActionGroupAlreadyAssignedException">If the action group was already assigned.</exception>
-    public void Assign(Guid agvToAssign, bool force=false)
+    public void Assign(Guid agvToAssign, bool force = false)
     {
         if (AssignedAgv == null)
         {
@@ -504,7 +509,7 @@ public class ActionGroup
     public void SetActionFailed(Guid actionId, DateTimeOffset now)
     {
         UpdateActionState(actionId, ActionState.Failed, now);
-    } 
+    }
 
     /// <summary>
     /// Fail and diagnose reason.
@@ -617,7 +622,7 @@ public class ActionGroup
             return;
         }
         var previousAction = Actions.OrderBy(a => a.Sequence).LastOrDefault(a => !a.ShouldSkip && a.Sequence < action.Sequence);
-        if(previousAction == null) // Doppelspiel pick and move action is skipped
+        if (previousAction == null) // Doppelspiel pick and move action is skipped
         {
             action.SetDockFront(palletNeedsRotation, dockFrontPreviousActionGroup, nodeDockingDirection, !startIsStation);
             return;
@@ -667,7 +672,7 @@ public class ActionGroup
     /// <param name="targetNode">The target node.</param>
     /// <exception cref="ActionNotFoundException">Thrown if no action with was found using the action id</exception>
     /// <param name="route">The route, if any.</param>
-    public void SetTargetForAction(Guid actionId, GraphNode targetNode, Route? route = null)
+    public void SetTargetForAction(Guid actionId, GraphNode targetNode, DomainRoute? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))
         {
@@ -793,7 +798,7 @@ public class ActionGroup
     /// <param name="actionId">The action id to skip.</param>
     /// <param name="targetNode">The new target node.</param>
     /// <param name="route">The route, if any.</param>
-    public AgvAction SetTargetForActionWithUpdate(Guid actionId, GraphNode targetNode, Route? route = null)
+    public AgvAction SetTargetForActionWithUpdate(Guid actionId, GraphNode targetNode, DomainRoute? route = null)
     {
         if (Actions.All(a => a.CorrelationId != actionId))
         {

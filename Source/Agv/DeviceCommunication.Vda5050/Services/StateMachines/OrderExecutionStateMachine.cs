@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Vehicle;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.LogEntry;
@@ -105,6 +106,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
         During(Created, Running, StopCharging());
         During(Created, Running, ResendOrder());
         During(Created, Running, UpdateOrder());
+        During(Created, Running, Restarting, ResendOnDuplicateStartOrder());
         DuringAny(CancelOrder());
         During(Restarting, RestartOrder());
         SetCompletedWhenFinalized();
@@ -142,6 +144,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
                 updated => updated
                     .ThenAsync(PublishOrderActionStatusChange)
                     .If(c => c.Saga.ShouldSendNextOrder, e => e.ThenAsync(PublishOrder))
+                    .If(c => c.Saga.NewBaseRequested, e => e.ThenAsync(PublishNewBaseRequestedEvent))
                     .If(c => c.Saga.OrderStartedRunning, e => e.ThenAsync(PublishOrderStartedEvent).TransitionTo(Running))
                     .If(c => c.Saga.IsFinished, e => e.ThenAsync(PublishOrderFinishedEvent).TransitionTo(Final).Finalize()),
                 failed => failed
@@ -172,14 +175,14 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
             .Then(c => { _logger.LogInformation("{MessageType} for order {OrderCorrelationId} of agv {AgvCorrelationId} received", nameof(OrderUpdateRequested), c.Message.CorrelationId, c.Saga.Order.AssignedAgv?.CorrelationId); })
             .IfElse(c => c.Saga.TryUpdate(c.Message.Order, c.Message.CurrentFleetManagerActionId ?? c.Message.CorrelationId),
                 updated => updated
-                    .If(c => c.Saga.ShouldSendNextOrder, e => e.ThenAsync(PublishOrder)),
+                    .ThenAsync(PublishOrder),
                 failed => failed
                     .Then(c => { _logger.LogError("Update of order {OrderCorrelationId} of agv {AgvCorrelationId} failed: {Reason}", c.Message.CorrelationId, c.Saga.Order.AssignedAgv?.CorrelationId, c.Saga.ErrorReference); })
                     .IfElse(c => string.Equals(c.Saga.ErrorReference, OrderErrors.OrderRouteUpdateOrderCompleted.Description),
                         orderCompleted => orderCompleted
                             .TransitionTo(Restarting).Then(c => { _logger.LogError("Order completed {OrderCorrelationId} of agv {AgvCorrelationId} during route update, restarting..", c.Message.CorrelationId, c.Saga.Order.AssignedAgv?.CorrelationId); })
                             .ThenAsync(c => c.Publish(new RestartOrder(c.Saga.CorrelationId))),
-                        otherFailure => otherFailure.ThenAsync(PublishOrderFailedEvent)) 
+                        otherFailure => otherFailure.ThenAsync(PublishOrderFailedEvent))
             );
     }
 
@@ -203,6 +206,13 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
     {
         return When(ResendOrderRequestEvent)
             .Then(c => { _logger.LogInformation("{MessageType} for order {OrderCorrelationId} of agv {AgvCorrelationId} received", nameof(OrderResendRequested), c.Message.CorrelationId, c.Saga.Order.AssignedAgv?.CorrelationId); })
+            .ThenAsync(PublishOrder);
+    }
+
+    private EventActivityBinder<OrderExecutionSaga, StartOrder> ResendOnDuplicateStartOrder()
+    {
+        return When(StartOrderCommand)
+            .Then(c => { _logger.LogInformation("{MessageType} for already-active order {OrderCorrelationId} of agv {AgvCorrelationId} received: republishing order so the AGV can resume", nameof(StartOrderCommand), c.Message.CorrelationId, c.Saga.Order.AssignedAgv?.CorrelationId); })
             .ThenAsync(PublishOrder);
     }
 
@@ -300,7 +310,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
 
     private async Task PublishOrderStartedEvent(BehaviorContext<OrderExecutionSaga> context)
     {
-        await context.Publish(new ActionStartedByAgv(context.Saga.CorrelationId, context.Saga.Order.AssignedAgv!.CorrelationId));
+        await context.Publish(new ActionStartedByAgv(context.Saga.CurrentFleetManagerActionId, context.Saga.Order.AssignedAgv!.CorrelationId));
         var logEntry = new LogEntryDto
         {
             ActionGroupCorrelationId = context.Saga.CorrelationId,
@@ -324,7 +334,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
         {
             return;
         }
-        await context.Publish(new ActionCompletedByAgv(context.Saga.CorrelationId, context.Saga.Order.AssignedAgv!.CorrelationId));
+        await context.Publish(new ActionCompletedByAgv(context.Saga.CurrentFleetManagerActionId, context.Saga.Order.AssignedAgv!.CorrelationId));
         var logEntry = new LogEntryDto
         {
             ActionGroupCorrelationId = context.Saga.CorrelationId,
@@ -344,7 +354,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
 
     private async Task PublishOrderFailedEvent(BehaviorContext<OrderExecutionSaga> context)
     {
-        await context.Publish(new ActionFailedByAgv(context.Saga.CorrelationId, context.Saga.Order.AssignedAgv!.CorrelationId));
+        await context.Publish(new ActionFailedByAgv(context.Saga.CurrentFleetManagerActionId, context.Saga.Order.AssignedAgv!.CorrelationId));
         var logEntry = new LogEntryDto
         {
             ActionGroupCorrelationId = context.Saga.CorrelationId,
@@ -366,7 +376,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
 
     private async Task PublishOrderCanceledEvent(BehaviorContext<OrderExecutionSaga> context)
     {
-        await context.Publish(new ActionAbortedByAgv(context.Saga.CorrelationId, context.Saga.Order.AssignedAgv!.CorrelationId));
+        await context.Publish(new ActionAbortedByAgv(context.Saga.CurrentFleetManagerActionId, context.Saga.Order.AssignedAgv!.CorrelationId));
         var logEntry = new LogEntryDto
         {
             ActionGroupCorrelationId = context.Saga.CorrelationId,
@@ -387,7 +397,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
 
     private async Task PublishOrderCancelFailedEvent(BehaviorContext<OrderExecutionSaga> context)
     {
-        await context.Publish(new ActionAbortionFailedByAgv(context.Saga.CorrelationId, context.Saga.Order.AssignedAgv!.CorrelationId));
+        await context.Publish(new ActionAbortionFailedByAgv(context.Saga.CurrentFleetManagerActionId, context.Saga.Order.AssignedAgv!.CorrelationId));
         var logEntry = new LogEntryDto
         {
             ActionGroupCorrelationId = context.Saga.CorrelationId,
@@ -405,6 +415,12 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
         };
 
         await context.Publish(new LogOccurred(logEntry, [Categories.Order]));
+    }
+
+    private async Task PublishNewBaseRequestedEvent(BehaviorContext<OrderExecutionSaga> context)
+    {
+        await context.Publish(new AgvNewBaseRequested(context.Saga.Order.AssignedAgv!.CorrelationId));
+        context.Saga.NewBaseNotified = true;
     }
     #endregion
 }

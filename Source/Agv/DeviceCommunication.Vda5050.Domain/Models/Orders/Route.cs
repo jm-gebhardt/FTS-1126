@@ -1,6 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Errors;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Errors;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 
@@ -57,7 +55,7 @@ public class Route
     public Route Subsample(int stitchingNodeSequenceId, int maximumNodeCount)
     {
         var stitchingNode = Nodes.Single(n => n.SequenceId == stitchingNodeSequenceId);
-        List<OrderNode> nodes = Nodes.Where(n => n.SequenceId >= stitchingNodeSequenceId && n.SequenceId <= stitchingNodeSequenceId + (maximumNodeCount - 1) * 2 ).ToList();
+        List<OrderNode> nodes = Nodes.Where(n => n.SequenceId >= stitchingNodeSequenceId && n.SequenceId <= stitchingNodeSequenceId + (maximumNodeCount - 1) * 2).ToList();
         var firstEdge = Edges.OrderBy(e => e.SequenceId).First(e => e.StartNodeId == stitchingNode.NodeId);
         List<OrderEdge> edges = Edges.Where(e => e.SequenceId >= firstEdge.SequenceId && e.SequenceId <= nodes.Last().SequenceId - 1).ToList();
         return new Route(nodes, edges);
@@ -70,48 +68,6 @@ public class Route
     {
         Nodes.ToList().ForEach(n => n.Release());
         Edges.ToList().ForEach(e => e.Release());
-    }
-
-    /// <summary>
-    /// Stitch the route to the given route.
-    /// </summary>
-    /// <param name="route">The route to extend it by.</param>
-    public Route Stitch(Route route)
-    {
-        ICollection<OrderEdge> edges = [.. Edges, .. route.Edges];
-        ICollection<OrderNode> nodes = [.. Nodes, .. route.Nodes.Skip(1)];
-        return new Route(nodes, edges);
-    }
-
-    /// <summary>
-    /// TryProceed on the route.
-    /// </summary>
-    /// <param name="passedNodeSequenceId">The sequence id of the node that has been passed.</param>
-    /// <returns>False, if there was no progress, or the passed node is not on this route.</returns>
-    public Result Proceed(int passedNodeSequenceId)
-    {
-        if (passedNodeSequenceId == 0)
-        {
-            // Ensure that start and end node of current edge are part of the route.
-            return Result.Success();
-        }
-        IEnumerable<OrderNode> previousNodes = Nodes.Where(n => n.SequenceId <= passedNodeSequenceId - 2).ToList() ;
-        if (!previousNodes.Any())
-        {
-            return Result.Success();
-        }
-        foreach (var previousNode in previousNodes)
-        {
-            var passedEdge = Edges.FirstOrDefault(e => e.StartNodeId == previousNode.NodeId);
-            if (passedEdge == null)
-            {
-                return Result.Failure(OrderErrors.ProceedEdgeNotFound);
-            }
-            Nodes.Remove(previousNode);
-            Edges.Remove(passedEdge);
-        }
-        
-        return Result.Success();
     }
 
     /// <summary>
@@ -151,21 +107,5 @@ public class Route
         var newRoute = new Route(Nodes.Where(n => n.SequenceId >= newFirstNode.SequenceId).ToList(), Edges.Where(e => e.SequenceId >= newFirstEdge.SequenceId).ToList());
         newRoute.ShiftSequenceIds(-newFirstNode.SequenceId);
         return newRoute;
-    }
-
-    /// <summary>
-    /// Get the base of the route (released nodes and edges.)
-    /// </summary>
-    public Route GetBase()
-    {
-        return new Route(Nodes.Where(n => n.Released).OrderBy(n => n.SequenceId).ToList(), Edges.Where(e => e.Released).OrderBy(e => e.SequenceId).ToList());
-    }
-
-    /// <summary>
-    /// Get the base of the route (not released nodes and edges.)
-    /// </summary>
-    public Route GetHorizon()
-    {
-        return new Route(Nodes.Where(n => !n.Released).OrderBy(n => n.SequenceId).ToList(), Edges.Where(e => !e.Released).OrderBy(e => e.SequenceId).ToList());
     }
 }

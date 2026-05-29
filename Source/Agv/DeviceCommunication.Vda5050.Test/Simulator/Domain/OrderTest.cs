@@ -183,7 +183,7 @@ public class OrderTest
     {
         var order = CreatePreparedOrder(["A", "B"]);
 
-        order.GetActionOnNode("X", Vda5050Specifications.ActionTypes.Pick).ShouldBeNull();
+        order.GetActionOnNode("X", 0, Vda5050Specifications.ActionTypes.Pick).ShouldBeNull();
     }
 
     [TestMethod]
@@ -191,7 +191,7 @@ public class OrderTest
     {
         var order = CreatePreparedOrder(["A", "B"]);
 
-        order.GetActionOnNode("A", Vda5050Specifications.ActionTypes.Pick).ShouldBeNull();
+        order.GetActionOnNode("A", 0, Vda5050Specifications.ActionTypes.Pick).ShouldBeNull();
     }
 
     [TestMethod]
@@ -201,7 +201,7 @@ public class OrderTest
         var node = new OrderNode { NodeId = "A", SequenceId = 0, Released = true, Actions = [action] };
         var order = new Order { FullRoute = new Route([node], []) };
 
-        var result = order.GetActionOnNode("A", Vda5050Specifications.ActionTypes.Pick);
+        var result = order.GetActionOnNode("A", 0, Vda5050Specifications.ActionTypes.Pick);
 
         result.ShouldNotBeNull();
         result.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
@@ -218,7 +218,7 @@ public class OrderTest
         var edge = new OrderEdge { EdgeId = "e1", SequenceId = 1, Released = true, StartNodeId = "A", EndNodeId = "B", Length = 10.0 };
         var order = new Order { FullRoute = new Route(nodes, [edge]) };
 
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 2.0f);  // 10 m / 2 m/s = 5 s
+        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 2.0f); // 10 m / 2 m/s = 5 s
 
         edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(5));
     }
@@ -239,7 +239,7 @@ public class OrderTest
         };
         var order = new Order { FullRoute = new Route(nodes, edges) };
 
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);  // 10 s + 20 s = 30 s
+        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f); // 10 s + 20 s = 30 s
 
         order.Duration.ShouldBe(TimeSpan.FromSeconds(30));
     }
@@ -263,9 +263,8 @@ public class OrderTest
     }
 
     [TestMethod]
-    public void TryFinish_WhenTimeExceedsDuration_ClearsStartTime()
+    public void TryFinish_WhenNoActionsPending_ClearsStartTime()
     {
-        // Duration = 10 s (one edge, Length=10, speed=1)
         var order = CreatePreparedOrder(["A", "B"]);
         order.StartTime = _baseTime;
 
@@ -275,18 +274,36 @@ public class OrderTest
     }
 
     [TestMethod]
-    public void TryFinish_WhenTimeWithinDuration_PreservesStartTime()
+    public void TryFinish_WhenActionStillPending_PreservesStartTime()
     {
         var order = CreatePreparedOrder(["A", "B"]);
         order.StartTime = _baseTime;
+        order.PendingActionStates.Add(new OrderActionState
+        {
+            ActionId = "a1",
+            ActionType = Vda5050Specifications.ActionTypes.Pick,
+            ActionStatus = VehicleActionStatus.Running
+        });
 
-        order.TryFinish(_baseTime.AddSeconds(5));
+        order.TryFinish(_baseTime.AddSeconds(20));
 
         order.StartTime.ShouldBe(_baseTime);
     }
 
     [TestMethod]
-    public void TryFinish_AlwaysClearsStatus()
+    public void TryFinish_WhenCompletable_ClearsStatus()
+    {
+        var order = CreatePreparedOrder(["A", "B"]);
+        order.StartTime = _baseTime;
+        order.State = new OrderState { OrderId = "order-1" };
+
+        order.TryFinish(_baseTime.AddSeconds(20)); // 20 s >= 10 s duration, no pending actions -> completable
+
+        order.State.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void TryFinish_WhenNotCompletable_PreservesStatus()
     {
         var order = CreatePreparedOrder(["A", "B"]);
         order.StartTime = _baseTime;
@@ -294,7 +311,7 @@ public class OrderTest
 
         order.TryFinish(_baseTime.AddSeconds(5));
 
-        order.State.ShouldBeNull();
+        order.State.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -407,8 +424,8 @@ public class OrderTest
         order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
         order.StartTime = _baseTime;
 
-        order.Proceed(null, _baseTime);                       // starts action at BaseTime
-        order.Proceed(null, _baseTime.AddSeconds(15));        // 15 s ≥ 10 s → finishes action
+        order.Proceed(null, _baseTime); // starts action at BaseTime
+        order.Proceed(null, _baseTime.AddSeconds(15)); // 15 s ≥ 10 s → finishes action
 
         actionState.ActionStatus.ShouldBe(VehicleActionStatus.Finished);
     }
@@ -427,8 +444,8 @@ public class OrderTest
         order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
         order.StartTime = _baseTime;
 
-        order.Proceed(null, _baseTime);                      // starts action
-        order.Proceed(null, _baseTime.AddSeconds(5));        // 5 s < 10 s → still running
+        order.Proceed(null, _baseTime); // starts action
+        order.Proceed(null, _baseTime.AddSeconds(5)); // 5 s < 10 s → still running
 
         actionState.ActionStatus.ShouldBe(VehicleActionStatus.Running);
     }
@@ -470,7 +487,7 @@ public class OrderTest
         };
         order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
         order.StartTime = _baseTime;
-        order.Proceed(null, _baseTime);  // starts action → Running + sets CurrentAction
+        order.Proceed(null, _baseTime); // starts action → Running + sets CurrentAction
         actionState.ActionStatus.ShouldBe(VehicleActionStatus.Running);
 
         order.Cancel("cancel-1");

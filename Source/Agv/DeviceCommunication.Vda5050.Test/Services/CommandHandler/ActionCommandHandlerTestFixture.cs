@@ -28,7 +28,7 @@ public class ActionCommandHandlerTestFixture: MassTransitConsumerTestFixture<Act
 
     public ActionCommandHandlerTestFixture AddOrder(Order order)
     {
-        _orderBuilder.Setup(x => x.Build(It.IsAny<Guid>(), It.IsAny<AgvAction>())).ReturnsAsync(order);
+        _orderBuilder.Setup(x => x.Build(It.IsAny<Guid>(), It.IsAny<RoutePlan>(), It.IsAny<AgvAction>())).ReturnsAsync(order);
         return this;
     }
 

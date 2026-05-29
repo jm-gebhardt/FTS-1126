@@ -2,6 +2,7 @@
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Errors;
 
+// ReSharper disable UnusedMember.Global
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 /// <summary>
 /// Provides errors for order operations.
@@ -13,6 +14,6 @@ public static class OrderErrors
     public static readonly Error ProceedEdgeNotFound = new("Could not proceed, edge not in current route");
     public static readonly Error InitializationFailed = new("Initialization failed");
     public static readonly Error OrderRouteUpdateStitchingNodeNotFound = new("Route update failed: End of current base not in new route");
-    public static readonly Error OrderRouteUpdateOrderCompleted= new("Route update failed: Order already completed");
+    public static readonly Error OrderRouteUpdateOrderCompleted = new("Route update failed: Order already completed");
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

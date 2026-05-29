@@ -10,6 +10,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
 using JetBrains.Annotations;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 
@@ -25,6 +26,7 @@ public class SimulatedAgv : SagaStateMachineInstance
     private readonly TimeProvider _timeProvider;
 
     private const float InitialTheta = 0f;
+    private readonly HashSet<string> _processedDropActionIds = [];
 
     /// <summary>
     /// Threshold [%] for battery charge to be considered alive.
@@ -117,6 +119,11 @@ public class SimulatedAgv : SagaStateMachineInstance
     public Order? CurrentOrder { get; private set; }
 
     /// <summary>
+    /// True if the current order is ready to be cleared on the next <see cref="FinishOrder"/> call.
+    /// </summary>
+    public bool CurrentOrderReadyToFinish => CurrentOrder?.IsCompletable(_timeProvider.GetUtcNow().DateTime) ?? false;
+
+    /// <summary>
     /// The current agv position.
     /// </summary>
     public AgvPosition CurrentPosition { get; private set; }
@@ -181,7 +188,8 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// Update the agv status
     /// </summary>
     /// <param name="timeDiffS"></param>
-    public void UpdateStatus(double timeDiffS)
+    /// <param name="logger">Optional logger.</param>
+    public void UpdateStatus(double timeDiffS, ILogger? logger = null)
     {
         double chargeDiff;
         if (Charging)
@@ -194,6 +202,12 @@ public class SimulatedAgv : SagaStateMachineInstance
         }
 
         SimulatedBatteryCharge = Math.Clamp(SimulatedBatteryCharge + chargeDiff, 0, MaxCharge);
+
+        if (Charging && SimulatedBatteryCharge >= MaxCharge && CurrentOrder?.CurrentAction?.ActionType == Vda5050Specifications.ActionTypes.StartCharging)
+        {
+            CurrentOrder.FinishCurrentChargingAction(_timeProvider.GetUtcNow().DateTime, logger);
+        }
+
         if (_generateError)
         {
             GenerateError();
@@ -201,14 +215,26 @@ public class SimulatedAgv : SagaStateMachineInstance
     }
 
     /// <summary>
+    /// Stops charging and finishes any running <c>startCharging</c> order action so the charge order can complete.
+    /// </summary>
+    public void StopCharging(ILogger? logger = null)
+    {
+        Charging = false;
+        CurrentOrder?.FinishCurrentChargingAction(_timeProvider.GetUtcNow().DateTime, logger);
+    }
+
+    /// <summary>
     /// Start a new order.
     /// </summary>
-    public void StartOrder(Order order)
+    public void StartOrder(Order order, ILogger? logger = null)
     {
         var now = _timeProvider.GetUtcNow().DateTime;
+        _processedDropActionIds.Clear();
         CurrentOrder = order;
         CurrentOrder.StartTime = now;
-        CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed);
+        logger?.LogInformation("StartOrder[{OrderId} updateId {UpdateId}] previousLastNodeId={LastNodeId} baseNodes={NodeCount} baseEdges={EdgeCount}",
+            order.OrderId, order.OrderUpdateId, LastNodeId ?? "(null)", order.Base.Nodes.Count, order.Base.Edges.Count);
+        CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed, logger);
         var currentNode = CurrentOrder.GetLastNode(LastNodeId, now);
         LastNodeId = currentNode.NodeId;
         LastNodeSequenceId = currentNode.SequenceId;
@@ -236,11 +262,13 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// <summary>
     /// Update an order.
     /// </summary>
-    public void UpdateOrder(Order order)
+    public void UpdateOrder(Order order, ILogger? logger = null)
     {
         var now = _timeProvider.GetUtcNow().DateTime;
         var previousOrder = CurrentOrder;
         CurrentOrder = order;
+        logger?.LogInformation("UpdateOrder[{OrderId} u{UpdateId}] previousLastNodeId={LastNodeId} baseNodes={NodeCount} baseEdges={EdgeCount}",
+            order.OrderId, order.OrderUpdateId, LastNodeId ?? "(null)", order.Base.Nodes.Count, order.Base.Edges.Count);
         CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed);
         CurrentOrder.PendingActionStates =
         [
@@ -281,20 +309,28 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// <summary>
     /// Proceed with the order.
     /// </summary>
-    public void ProceedOrder()
+    public void ProceedOrder(ILogger? logger = null)
     {
         if (CurrentOrder?.StartTime == null)
         {
             return;
         }
         var now = _timeProvider.GetUtcNow().DateTime;
-        CurrentPosition = CurrentOrder.Proceed(LastNodeId, now);
+        string? previousNodeId = LastNodeId;
+        CurrentPosition = CurrentOrder.Proceed(LastNodeId, now, logger);
         if (CurrentOrder.State != null)
         {
             LastNodeId = CurrentOrder.Base.Nodes.First(n => n.SequenceId == CurrentOrder.State.LastNodeSequenceId).NodeId;
             LastNodeSequenceId = CurrentOrder.State.LastNodeSequenceId;
         }
-        UpdateLoad();
+        if (Charging && previousNodeId != null && previousNodeId != LastNodeId)
+        {
+            Charging = false;
+            CurrentOrder?.FinishCurrentChargingAction(now, logger);
+            logger?.LogInformation("Charging stopped: AGV {AgvId} left node {PreviousNodeId} for {LastNodeId}",
+                Configuration.SerialNumber, previousNodeId, LastNodeId);
+        }
+        UpdateLoad(logger);
         HandleChargingNodeAction();
     }
 
@@ -310,40 +346,51 @@ public class SimulatedAgv : SagaStateMachineInstance
         }
     }
 
-    private void UpdateLoad()
+    private void UpdateLoad(ILogger? logger = null)
     {
         if (LastNodeId == null)
         {
+            logger?.LogDebug("UpdateLoad skipped: LastNodeId is null");
             return;
         }
-        var pickAction = CurrentOrder?.GetActionOnNode(LastNodeId, Vda5050Specifications.ActionTypes.Pick);
-        if ((CurrentOrder?.HasFinishedActionOfType(Vda5050Specifications.ActionTypes.Pick) ?? false) && pickAction != null && Loads.All(l => l.PickStartTime != pickAction.StartedTime))
+        var pickAction = CurrentOrder?.GetActionOnNode(LastNodeId, LastNodeSequenceId, Vda5050Specifications.ActionTypes.Pick);
+        bool pickFinishedHere = pickAction != null && (CurrentOrder?.PendingActionStates.Any(s => s.ActionId == pickAction.ActionId && s.ActionStatus == VehicleActionStatus.Finished) ?? false);
+        if (pickFinishedHere && Loads.All(l => l.PickStartTime != pickAction!.StartedTime))
         {
-            Loads.Add(new Load(pickAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString() ?? Guid.NewGuid().ToString(), pickAction.StartedTime!.Value));
+            string loadId = pickAction!.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString() ?? Guid.NewGuid().ToString();
+            Loads.Add(new Load(loadId, pickAction.StartedTime!.Value));
+            logger?.LogInformation("UpdateLoad: added load {LoadId} for finished pick action {ActionId} at node {LastNodeId} (loads now {LoadCount})",
+                loadId, pickAction.ActionId, LastNodeId, Loads.Count);
         }
 
-        var dropAction = CurrentOrder?.GetActionOnNode(LastNodeId, Vda5050Specifications.ActionTypes.Drop);
-        if ((CurrentOrder?.HasFinishedActionOfType(Vda5050Specifications.ActionTypes.Drop) ?? false) && dropAction != null && Loads.Count != 0)
+        var dropAction = CurrentOrder?.GetActionOnNode(LastNodeId, LastNodeSequenceId, Vda5050Specifications.ActionTypes.Drop);
+        bool dropFinishedHere = dropAction != null && (CurrentOrder?.PendingActionStates.Any(s => s.ActionId == dropAction.ActionId && s.ActionStatus == VehicleActionStatus.Finished) ?? false);
+        if (dropFinishedHere && !_processedDropActionIds.Contains(dropAction!.ActionId) && Loads.Count != 0)
         {
             var load = Loads.FirstOrDefault(l => l.Id == dropAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString()) ?? Loads.First();
             Loads.Remove(load);
+            _processedDropActionIds.Add(dropAction.ActionId);
+            logger?.LogInformation("UpdateLoad: removed load {LoadId} for finished drop action {ActionId} at node {LastNodeId} (loads now {LoadCount})",
+                load.Id, dropAction.ActionId, LastNodeId, Loads.Count);
         }
     }
 
     /// <summary>
     /// Finish the order.
     /// </summary>
-    public void FinishOrder()
+    public void FinishOrder(ILogger? logger = null)
     {
         if (CurrentOrder == null || CurrentOrder.StartTime == null)
         {
             return;
         }
         var now = _timeProvider.GetUtcNow().DateTime;
-        UpdateLoad();
+        UpdateLoad(logger);
+        string orderId = CurrentOrder.OrderId;
         CurrentOrder.TryFinish(now);
         if (CurrentOrder.StartTime == null)
         {
+            logger?.LogInformation("FinishOrder: clearing CurrentOrder {OrderId} (all actions completed)", orderId);
             CurrentOrder = null;
             LastNodeSequenceId = 0;
         }
@@ -394,10 +441,14 @@ public class SimulatedAgv : SagaStateMachineInstance
         {
             return;
         }
+        if (nodes.Count == 0)
+        {
+            return;
+        }
         int nodeIdx = _random.Next(nodes.Count - 1);
         var node = nodes.Skip(nodeIdx).Take(1).First();
         LastNodeId = node.Name;
-        CurrentPosition = new AgvPosition() { X = node.X, Y = node.Y, Theta = node.Theta, Z = 0, PositionInitialized = true };
+        CurrentPosition = new AgvPosition { X = node.X, Y = node.Y, Theta = node.Theta, Z = 0, PositionInitialized = true };
         SimulatedBatteryCharge = _initialBatteryCharge;
     }
 }

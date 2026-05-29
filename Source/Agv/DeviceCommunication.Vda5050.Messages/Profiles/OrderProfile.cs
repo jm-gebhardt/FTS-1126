@@ -29,8 +29,6 @@ public class OrderProfile : Profile
             .ForMember(m => m.HeaderId, opt => opt.Ignore())
             .ForMember(m => m.Timestamp, opt => opt.Ignore())
             .ForSourceMember(o => o.PlannedRoute, opt => opt.DoNotValidate())
-            .ForSourceMember(o => o.Base, opt => opt.DoNotValidate())
-            .ForSourceMember(o => o.Horizon, opt => opt.DoNotValidate())
             .ForSourceMember(o => o.Route, opt => opt.DoNotValidate())
             .ForSourceMember(o => o.AssignedAgv, opt => opt.DoNotValidate());
 

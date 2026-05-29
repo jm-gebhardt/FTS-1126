@@ -1,5 +1,8 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.BackgroundServices;
+using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
@@ -10,10 +13,16 @@ public class AgvProviderTestFixture() : SimulatedAgvStateMachineTestFixture(Time
 
     public new AgvProviderTestFixture Build()
     {
+        AddConsumers(typeof(GetGraphResponder));
         AddServices(sc => sc.AddSingleton<AgvProvider>());
         base.Build();
         _agvProvider = Provider.GetRequiredService<AgvProvider>();
         return this;
+    }
+
+    private class GetGraphResponder : IConsumer<GetGraph>
+    {
+        public Task Consume(ConsumeContext<GetGraph> context) => context.RespondAsync(new GotGraph(new Graph()));
     }
 
     public new AgvProviderTestFixture WithOptions(Options options)

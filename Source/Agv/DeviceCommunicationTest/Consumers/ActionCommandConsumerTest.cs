@@ -2,11 +2,12 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Dispatch;
 using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using MassTransit;
 using MassTransit.Testing;
 using Shouldly;
@@ -23,9 +24,8 @@ public class ActionCommandConsumerTest
     private readonly Guid _orderCorrelationId = OrderId.ToGuid();
 
     /// <summary>
-    /// Test consuming an ExecuteOrder message and publish an MqttOrder Mqtt message with proper bus configuration
+    /// Test consuming a DispatchRouteCommand and publish an MqttOrder with proper bus configuration.
     /// </summary>
-    /// <returns></returns>
     [TestMethod]
     public async Task Test_Send_TransportOrder_To_AGV_Via_MQTT()
     {
@@ -35,9 +35,9 @@ public class ActionCommandConsumerTest
             parentId: _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
 
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.OrderType.ShouldBe(OrderType.Pick);
@@ -52,26 +52,25 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_StartActionCommand_EmptyAssignedAgv_ThrowsException()
+    public async Task Consume_DispatchRouteCommand_EmptyAssignedAgv_ThrowsException()
     {
         var action = AgvActionGenerator.GenerateAction(correlationId: Guid.Empty, actionType: ActionType.Pick, targetNodeId: "", parentId: Guid.Empty);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        await fixture.TestHarness.Bus.Publish(new StartActionCommand(Guid.Empty, "", action));
-        await fixture.ShouldHaveConsumedAsync<StartActionCommand>();
-        (await fixture.TestHarness.Published.Any<Fault<StartActionCommand>>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new DispatchRouteCommand(Guid.Empty, "", new RoutePlan([], [], [], []), action));
+        await fixture.ShouldHaveConsumedAsync<DispatchRouteCommand>();
+        (await fixture.TestHarness.Published.Any<Fault<DispatchRouteCommand>>()).ShouldBeTrue();
 
-        IPublishedMessage<Fault<StartActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<StartActionCommand>>().First();
+        IPublishedMessage<Fault<DispatchRouteCommand>>? fault = fixture.TestHarness.Published.Select<Fault<DispatchRouteCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
     }
 
     /// <summary>
-    /// Test consuming a StartActionCommand message (the move action of a charge action group)
-    /// and publish an MqttOrder Mqtt message with proper bus configuration.
+    /// Test consuming a DispatchRouteCommand (the move action of a charge action group)
+    /// and publish an MqttOrder with proper bus configuration.
     /// </summary>
-    /// <returns></returns>
     [TestMethod]
-    public async Task Consume_StartActionCommand_MoveAction_To_AGV_Via_MQTT()
+    public async Task Consume_DispatchRouteCommand_MoveAction_To_AGV_Via_MQTT()
     {
         var action = AgvActionGenerator.GenerateAction(
             actionType: ActionType.Move,
@@ -79,9 +78,9 @@ public class ActionCommandConsumerTest
             parentId: _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
 
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.Stations.ShouldNotBeNull();
@@ -96,12 +95,11 @@ public class ActionCommandConsumerTest
     }
 
     /// <summary>
-    /// Test consuming a StartActionCommand message (the charge action of a charge action group) and
-    /// publish an MqttOrder Mqtt message with proper bus configuration.
+    /// Test consuming a DispatchRouteCommand (the charge action of a charge action group) and
+    /// publish an MqttOrder with proper bus configuration.
     /// </summary>
-    /// <returns></returns>
     [TestMethod]
-    public async Task Consume_StartActionCommand_ChargeAction_To_AGV_Via_MQTT()
+    public async Task Consume_DispatchRouteCommand_ChargeAction_To_AGV_Via_MQTT()
     {
         var action = AgvActionGenerator.GenerateChargeAction(
             targetNodeId: ToStation,
@@ -112,9 +110,9 @@ public class ActionCommandConsumerTest
             });
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
 
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.Stations.ShouldNotBeNull();
@@ -129,10 +127,8 @@ public class ActionCommandConsumerTest
     }
 
     /// <summary>
-    /// Test consuming a StartActionCommand message (the pick action) and
-    /// publish an MqttOrder Mqtt message with correct nodes and edges.
+    /// Test consuming a DispatchRouteCommand (the pick action) and publish an MqttOrder with correct nodes and edges.
     /// </summary>
-    /// <returns></returns>
     [TestMethod]
     public async Task Test_Send_PickAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
@@ -148,8 +144,9 @@ public class ActionCommandConsumerTest
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var routePlan = RoutePlanGenerator.Build(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), edges.SkipLast(1).ToArray());
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, routePlan, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
 
         mqtt.Stations.ShouldNotBeNull();
         mqtt.Stations.FromStation.ShouldNotBeNull();
@@ -161,10 +158,8 @@ public class ActionCommandConsumerTest
     }
 
     /// <summary>
-    /// Test consuming a StartActionCommand message (the drop action) and
-    /// publish an MqttOrder Mqtt message with correct nodes and edges.
+    /// Test consuming a DispatchRouteCommand (the drop action) and publish an MqttOrder with correct nodes and edges.
     /// </summary>
-    /// <returns></returns>
     [TestMethod]
     public async Task Test_Send_DropAction_To_AGV_Via_MQTT_CorrectNodesAndEdges()
     {
@@ -179,8 +174,9 @@ public class ActionCommandConsumerTest
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var routePlan = new RoutePlan(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), [], [], []);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, routePlan, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
 
         mqtt.Stations.ShouldNotBeNull();
         mqtt.Stations.FromStation.ShouldBeNull();
@@ -192,19 +188,18 @@ public class ActionCommandConsumerTest
     }
 
     /// <summary>
-    /// Test consuming a StartActionCommand message (the move action to a coordinate)
-    /// and publish an MqttOrder Mqtt message with proper bus configuration.
+    /// Test consuming a DispatchRouteCommand (the move action to a coordinate)
+    /// and publish an MqttOrder with proper bus configuration.
     /// </summary>
-    /// <returns></returns>
     [TestMethod]
-    public async Task Consume_StartActionCommand_MoveToCoordinateAction_To_AGV_Via_MQTT()
+    public async Task Consume_DispatchRouteCommand_MoveToCoordinateAction_To_AGV_Via_MQTT()
     {
         var target = new ActionTarget(12, 12, 0);
         var action = AgvActionGenerator.GenerateMoveToCoordinateAction(target, _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.Coordinates.ShouldBe(new Coordinates
@@ -220,14 +215,14 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_MoveToCoordinate_MqttMessageSent()
+    public async Task Consume_UpdateDispatchedRouteCommand_MoveToCoordinate_MqttMessageSent()
     {
         var target = new ActionTarget(12, 12, 0);
         var action = AgvActionGenerator.GenerateMoveToCoordinateAction(target, _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+        var command = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.Coordinates.ShouldBe(new Coordinates
@@ -243,7 +238,7 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_PreviouslyAbortedAndStartedOrder_MqttOrderWithPreviousIdSent()
+    public async Task Consume_UpdateDispatchedRouteCommand_PreviouslyAbortedAndStartedOrder_MqttOrderWithPreviousIdSent()
     {
         var vehicleId = Guid.NewGuid();
 
@@ -259,8 +254,9 @@ public class ActionCommandConsumerTest
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(vehicleId, action.CorrelationId);
         await fixture.FillGraphRepository();
 
-        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+        var routePlan = new RoutePlan(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), [], [], []);
+        var command = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, routePlan, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, MqttOrder>(command);
 
         mqtt.OrderId.ShouldBe(vehicleId.ToString());
         mqtt.Stations?.ToStation?.Id.ShouldBe(ToStation);
@@ -271,7 +267,7 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_Drop_MqttMessageSent()
+    public async Task Consume_UpdateDispatchedRouteCommand_Drop_MqttMessageSent()
     {
         const double liftHeight = 1.23d;
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
@@ -284,8 +280,9 @@ public class ActionCommandConsumerTest
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+        var routePlan = new RoutePlan(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), [], [], []);
+        var command = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, routePlan, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, MqttOrder>(command);
 
         mqtt.OrderType.ShouldBe(OrderType.Drop);
         mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
@@ -299,7 +296,7 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_Pick_MqttMessageSent()
+    public async Task Consume_UpdateDispatchedRouteCommand_Pick_MqttMessageSent()
     {
         string[] nodes = ["WP-001", "WP-002", "WP-003", ToStation];
         var action = AgvActionGenerator.GenerateAction(
@@ -314,8 +311,9 @@ public class ActionCommandConsumerTest
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
 
-        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+        var routePlan = new RoutePlan(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), [], [], []);
+        var command = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, routePlan, action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, MqttOrder>(command);
 
         mqtt.OrderType.ShouldBe(OrderType.Pick);
         mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
@@ -329,7 +327,7 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_Charge_MqttMessageSent()
+    public async Task Consume_UpdateDispatchedRouteCommand_Charge_MqttMessageSent()
     {
         var action = AgvActionGenerator.GenerateChargeAction(
             targetNodeId: ToStation,
@@ -337,8 +335,8 @@ public class ActionCommandConsumerTest
             infoToAgv: new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.DockFront, "true" } });
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+        var command = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.Stations.ShouldNotBeNull();
@@ -353,13 +351,13 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_MoveToNode_MqttMessageSent()
+    public async Task Consume_UpdateDispatchedRouteCommand_MoveToNode_MqttMessageSent()
     {
         var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Move, targetNodeId: ToStation, parentId: _orderCorrelationId);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        var command = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, action);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateActionCommand, MqttOrder>(command);
+        var command = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, MqttOrder>(command);
 
         mqtt.SerialNumber.ShouldBe(AgvSerialNumber);
         mqtt.Stations.ShouldNotBeNull();
@@ -374,22 +372,22 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateActionCommand_EmptyAssignedAgv_ThrowsException()
+    public async Task Consume_UpdateDispatchedRouteCommand_EmptyAssignedAgv_ThrowsException()
     {
         var action = AgvActionGenerator.GenerateAction(correlationId: Guid.Empty, actionType: ActionType.Pick, targetNodeId: "", parentId: Guid.Empty);
         var fixture = new ActionCommandConsumerTestFixture();
 
-        await fixture.TestHarness.Bus.Publish(new UpdateActionCommand(Guid.Empty, "", action));
-        await fixture.ShouldHaveConsumedAsync<UpdateActionCommand>();
-        (await fixture.TestHarness.Published.Any<Fault<UpdateActionCommand>>()).ShouldBeTrue();
+        await fixture.TestHarness.Bus.Publish(new UpdateDispatchedRouteCommand(Guid.Empty, "", new RoutePlan([], [], [], []), action));
+        await fixture.ShouldHaveConsumedAsync<UpdateDispatchedRouteCommand>();
+        (await fixture.TestHarness.Published.Any<Fault<UpdateDispatchedRouteCommand>>()).ShouldBeTrue();
 
-        IPublishedMessage<Fault<UpdateActionCommand>>? fault = fixture.TestHarness.Published.Select<Fault<UpdateActionCommand>>().First();
+        IPublishedMessage<Fault<UpdateDispatchedRouteCommand>>? fault = fixture.TestHarness.Published.Select<Fault<UpdateDispatchedRouteCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e =>
             e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
     }
 
     [TestMethod]
-    public async Task Consume_AbortAndStartActionCommand_NoAbortedAction_MqttMessageSentWithRecordTypeOrder()
+    public async Task Consume_AbortAndDispatchRouteCommand_NoAbortedAction_MqttMessageSentWithRecordTypeOrder()
     {
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
@@ -405,8 +403,9 @@ public class ActionCommandConsumerTest
                 { InfoToAgvKey.DockFront, "true" }
             });
 
-        var cmd = new AbortAndStartActionCommand(_agvCorrelationId, AgvSerialNumber, action, null);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<AbortAndStartActionCommand, MqttOrder>(cmd);
+        var routePlan = new RoutePlan(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), [], [], []);
+        var cmd = new AbortAndDispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, action, routePlan, null);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<AbortAndDispatchRouteCommand, MqttOrder>(cmd);
 
         mqtt.OrderType.ShouldBe(OrderType.Pick);
         mqtt.RecordType.ShouldBe(OrderRecordType.Order);
@@ -419,7 +418,7 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_AbortAndStartActionCommand_AbortedAction_MqttMessageSentWithRecordTypeOrderUpdate()
+    public async Task Consume_AbortAndDispatchRouteCommand_AbortedAction_MqttMessageSentWithRecordTypeOrderUpdate()
     {
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.FillGraphRepository();
@@ -436,8 +435,9 @@ public class ActionCommandConsumerTest
                 { InfoToAgvKey.DockFront, "true" }
             });
 
-        var cmd = new AbortAndStartActionCommand(_agvCorrelationId, AgvSerialNumber, action, abortedId);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<AbortAndStartActionCommand, MqttOrder>(cmd);
+        var routePlan = new RoutePlan(nodes.SkipLast(1).ToArray().ToGraphNodeArray(), [], [], []);
+        var cmd = new AbortAndDispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, action, routePlan, abortedId);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<AbortAndDispatchRouteCommand, MqttOrder>(cmd);
 
         mqtt.OrderType.ShouldBe(OrderType.Pick);
         mqtt.RecordType.ShouldBe(OrderRecordType.OrderUpdate);
@@ -452,13 +452,13 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_ResendAction_ValidData_PublishesMqttOrder()
+    public async Task Consume_ResendDispatchedRouteCommand_ValidData_PublishesMqttOrder()
     {
         var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick, targetNodeId: ToStation);
         var fixture = new ActionCommandConsumerTestFixture();
-        var resend = new ResendAction(_agvCorrelationId, AgvSerialNumber, action);
+        var resend = new ResendDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
 
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resend);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<ResendDispatchedRouteCommand, MqttOrder>(resend);
 
         mqtt.OrderId.ShouldBe(action.CorrelationId.ToString());
         mqtt.Stations.ShouldNotBeNull();
@@ -468,16 +468,16 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_ResendAction_UpdatedOrder_PublishesMqttOrder()
+    public async Task Consume_ResendDispatchedRouteCommand_UpdatedOrder_PublishesMqttOrder()
     {
         var vehicleOrderId = Guid.NewGuid();
         var action = AgvActionGenerator.GenerateAction(actionType: ActionType.Pick, targetNodeId: ToStation);
         var fixture = new ActionCommandConsumerTestFixture();
         await fixture.ActionRepository.AddVehicleAndInternalOrderIdMapping(vehicleOrderId, action.CorrelationId);
 
-        var resend = new ResendAction(_agvCorrelationId, AgvSerialNumber, action);
+        var resend = new ResendDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), action);
 
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<ResendAction, MqttOrder>(resend);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<ResendDispatchedRouteCommand, MqttOrder>(resend);
 
         mqtt.OrderId.ShouldBe(vehicleOrderId.ToString());
         mqtt.Stations.ShouldNotBeNull();
@@ -487,24 +487,24 @@ public class ActionCommandConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_StartActionCommand_PickDrop_HasRightOrderIds()
+    public async Task Consume_DispatchRouteCommand_PickDrop_HasRightOrderIds()
     {
         var fixture = new ActionCommandConsumerTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var pickAction = actionGroup.Actions.First();
         var dropAction = actionGroup.Actions.Last();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), pickAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
         mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
 
-        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command, 2);
         mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
     }
 
     [TestMethod]
-    public async Task Consume_StartActionCommand_MovePickDrop_HasRightOrderIds()
+    public async Task Consume_DispatchRouteCommand_MovePickDrop_HasRightOrderIds()
     {
         var fixture = new ActionCommandConsumerTestFixture();
         var actionGroup = AgvActionGenerator.GenerateMovePickDropActionGroup();
@@ -512,21 +512,21 @@ public class ActionCommandConsumerTest
         var pickAction = actionGroup.Actions.Skip(1).First();
         var dropAction = actionGroup.Actions.Skip(2).First();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, moveAction);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), moveAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
         mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
 
-        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), pickAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command, 2);
         mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
 
-        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 3);
+        command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command, 3);
         mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
     }
 
     [TestMethod]
-    public async Task Consume_StartActionCommand_PickMoveDrop_HasRightOrderIds()
+    public async Task Consume_DispatchRouteCommand_PickMoveDrop_HasRightOrderIds()
     {
         var fixture = new ActionCommandConsumerTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickMoveDropActionGroup();
@@ -534,21 +534,21 @@ public class ActionCommandConsumerTest
         var moveAction = actionGroup.Actions.Skip(1).First();
         var dropAction = actionGroup.Actions.Skip(2).First();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), pickAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
         mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
 
-        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, moveAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), moveAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command, 2);
         mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
 
-        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 3);
+        command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), dropAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command, 3);
         mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());
     }
 
     [TestMethod]
-    public async Task Consume_StartActionCommandAndUpdateActionCommand_PickAndMoveGetsUpdatedThenDrop_HasRightOrderIds()
+    public async Task Consume_DispatchRouteCommandAndUpdateDispatchedRouteCommand_PickAndMoveGetsUpdatedThenDrop_HasRightOrderIds()
     {
         var fixture = new ActionCommandConsumerTestFixture();
         var actionGroup = AgvActionGenerator.GeneratePickMoveDropActionGroup();
@@ -556,16 +556,16 @@ public class ActionCommandConsumerTest
         var moveAction = actionGroup.Actions.Skip(1).First();
         var dropAction = actionGroup.Actions.Skip(2).First();
 
-        var command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, pickAction);
-        var mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command);
+        var command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), pickAction);
+        var mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command);
         mqtt.OrderId.ShouldBe(pickAction.CorrelationId.ToString());
         await fixture.TryRemoveMappingAsync(mqtt.OrderId.ToGuid(), pickAction.CorrelationId);
 
-        command = new StartActionCommand(_agvCorrelationId, AgvSerialNumber, moveAction);
-        mqtt = await fixture.PublishAndGetFirstMessageAsync<StartActionCommand, MqttOrder>(command, 2);
+        command = new DispatchRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), moveAction);
+        mqtt = await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, MqttOrder>(command, 2);
         mqtt.OrderId.ShouldBe(moveAction.CorrelationId.ToString());
 
-        var updateCommand = new UpdateActionCommand(_agvCorrelationId, AgvSerialNumber, dropAction);
+        var updateCommand = new UpdateDispatchedRouteCommand(_agvCorrelationId, AgvSerialNumber, new RoutePlan([], [], [], []), dropAction);
         await fixture.TestHarness.Bus.Publish(updateCommand);
         mqtt = await fixture.GetFirstPublishedMessageAsync<MqttOrder>(3);
         mqtt.OrderId.ShouldBe(dropAction.CorrelationId.ToString());

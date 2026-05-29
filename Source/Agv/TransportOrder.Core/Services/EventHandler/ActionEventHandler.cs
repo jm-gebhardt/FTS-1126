@@ -38,6 +38,17 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
+        if (action.State is ActionState.Aborted)
+        {
+            if (actionGroup.AssignedAgv == null || actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
+            {
+                logger.LogWarning("Action {Action} of group {ActionGroupCorrelationId} confirmed Finished by agv {Agv}, but action group is assigned to {AssignedAgv} — not triggering abortion completion", actionCorrelationId, actionGroup.CorrelationId, context.Message.AgvCorrelationId, actionGroup.AssignedAgv);
+                return;
+            }
+            logger.LogInformation("Action {Action} of group {ActionGroupCorrelationId} was Aborted by trafficmanager and is now confirmed Finished by agv {Agv}, triggering abortion completion", actionCorrelationId, actionGroup.CorrelationId, context.Message.AgvCorrelationId);
+            await context.Publish(new HandleActionAbortion(actionGroup.AssignedAgv.Value));
+            return;
+        }
         if (action.CompletedDate != null)
         {
             logger.LogWarning("Action {Action} of group {ActionGroupCorrelationId} is in state {ActionStation}, not triggering completion ", actionCorrelationId, actionGroup.CorrelationId, action.State);
@@ -187,6 +198,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         }
 
         await context.Publish(new TryReactivateParkingAgvs());
+        await context.Publish(new TryReactivateChargingAgv(Guid.Empty));
     }
 
     /// <inheritdoc />
