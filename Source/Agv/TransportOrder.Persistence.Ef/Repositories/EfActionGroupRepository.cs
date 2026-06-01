@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Constants;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -82,10 +83,65 @@ public class EfActionGroupRepository : IActionGroupRepository
         }
     }
 
+    /// <summary>
+    /// Drops references to graph nodes that no longer exist before saving, so a stale order cannot violate
+    /// the Target_NodeId / AgvActionNodes foreign keys. Graph consolidation can delete nodes that an
+    /// in-flight order still references. Stale path nodes are removed (a fresh route is selected when the
+    /// action starts); a missing target node means the action can no longer be fulfilled, so the action
+    /// group is invalidated, mirroring the graph consolidation cleanup.
+    /// </summary>
+    private async Task SanitizeStaleNodeReferencesAsync(TransportOrderDbContext context, ActionGroup actionGroup)
+    {
+        HashSet<Guid> referencedNodeIds = actionGroup.Actions
+            .SelectMany(a => a.AgvActionNodes.Select(n => n.NodeId))
+            .Concat(actionGroup.Actions.Where(a => a.Target.NodeId.HasValue).Select(a => a.Target.NodeId!.Value))
+            .ToHashSet();
+        if (referencedNodeIds.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<Guid> existingNodeIds = (await context.Set<GraphNode>()
+                .Where(n => referencedNodeIds.Contains(n.Id))
+                .Select(n => n.Id)
+                .ToListAsync())
+            .ToHashSet();
+        if (existingNodeIds.Count == referencedNodeIds.Count)
+        {
+            return;
+        }
+
+        var invalidationReasons = new List<Reason>();
+        foreach (var action in actionGroup.Actions)
+        {
+            // Drop stale path nodes; a fresh route is selected when the action is started.
+            List<AgvActionNode> staleNodes = action.AgvActionNodes.Where(n => !existingNodeIds.Contains(n.NodeId)).ToList();
+            foreach (var staleNode in staleNodes)
+            {
+                action.AgvActionNodes.Remove(staleNode);
+            }
+
+            if (action.Target.NodeId.HasValue && !existingNodeIds.Contains(action.Target.NodeId.Value))
+            {
+                _logger.LogWarning("Target node {NodeId} of action {ActionCorrelationId} in group {ActionGroupCorrelationId} no longer exists; invalidating the action group.",
+                    action.Target.NodeId, action.CorrelationId, actionGroup.CorrelationId);
+                invalidationReasons.Add(new Reason(Reasons.TargetNodeDoesNotExist, action.Target.NodeId.Value.ToString()));
+                action.Target.Node = null;
+                action.Target.NodeId = null;
+            }
+        }
+
+        if (invalidationReasons.Count > 0)
+        {
+            actionGroup.InvalidateActionGroup(invalidationReasons, DateTimeOffset.UtcNow);
+        }
+    }
+
     /// <inheritdoc />
     public async Task<bool> AddAsync(ActionGroup actionGroup)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await SanitizeStaleNodeReferencesAsync(context, actionGroup);
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         await context.AddAsync(actionGroup);
         UpdateComputedProperties(context);
@@ -98,6 +154,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> AddOrUpdateAsync(ActionGroup actionGroup)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await SanitizeStaleNodeReferencesAsync(context, actionGroup);
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         if (await context.Set<ActionGroup>().AnyAsync(a => a.CorrelationId == actionGroup.CorrelationId))
         {
@@ -668,6 +725,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await SanitizeStaleNodeReferencesAsync(context, actionGroup);
         context.Set<ActionGroup>().Update(actionGroup);
         UpdateComputedProperties(context);
         int result = await context.SaveChangesAsync();

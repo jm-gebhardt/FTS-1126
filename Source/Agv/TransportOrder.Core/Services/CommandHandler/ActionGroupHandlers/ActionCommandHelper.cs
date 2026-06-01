@@ -180,20 +180,41 @@ public class ActionCommandHelper
     }
 
     /// <summary>
-    /// Try update action group.
+    /// SQL error numbers that are safe to retry because they are transient. Anything else (e.g. a foreign
+    /// key violation) is deterministic and must not be retried, otherwise a single bad action group would
+    /// be retried forever.
+    /// </summary>
+    private static readonly int[] TransientSqlErrorNumbers = [1205, -2]; // 1205 = deadlock victim, -2 = timeout
+
+    /// <summary>
+    /// Try update action group. Transient database errors are retried a bounded number of times; any other
+    /// database error is logged and not retried, so a deterministic failure cannot loop forever.
     /// </summary>
     /// <param name="actionGroup">The action group.</param>
     public async Task TryUpdateActionGroup(Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
-        try
+        const int maxTransientRetries = 3;
+        int attempt = 0;
+        while (true)
         {
-            await _actionGroupRepository.UpdateAsync(actionGroup);
-        }
-        catch (SqlException ex)
-        {
-            _logger.LogWarning("Update of action group caught {Exception}. Retrying ...", ex.Message);
-            await Task.Delay(1000);
-            await TryUpdateActionGroup(actionGroup);
+            try
+            {
+                await _actionGroupRepository.UpdateAsync(actionGroup);
+                return;
+            }
+            catch (SqlException ex) when (TransientSqlErrorNumbers.Contains(ex.Number) && attempt < maxTransientRetries)
+            {
+                attempt++;
+                _logger.LogWarning("Update of action group {ActionGroupCorrelationId} caught transient error {Exception}. Retrying ({Attempt}/{MaxRetries}) ...",
+                    actionGroup.CorrelationId, ex.Message, attempt, maxTransientRetries);
+                await Task.Delay(1000);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Update of action group {ActionGroupCorrelationId} failed with database error {SqlErrorNumber} and will not be retried.",
+                    actionGroup.CorrelationId, ex.Number);
+                return;
+            }
         }
     }
 

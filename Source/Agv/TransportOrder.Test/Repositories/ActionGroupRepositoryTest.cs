@@ -87,6 +87,24 @@ public class ActionGroupRepositoryTest
     }
 
     [TestMethod]
+    public async Task AddAsync_WhenTargetNodeNoLongerExists_InvalidatesActionGroupAndClearsTarget()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .BuildAsync();
+
+        // Intentionally do not add the target nodes to the graph, simulating nodes that graph
+        // consolidation removed while this order was still in flight. The save must not throw a
+        // foreign key violation; the order is invalidated and its dangling target reference cleared.
+        await fixture.ActionGroupRepository.AddAsync(actionGroup);
+
+        var stored = await fixture.ActionGroupRepository.GetActionGroupAsync(actionGroup.CorrelationId);
+        stored.ShouldNotBeNull();
+        stored.State.ShouldBe(ActionGroupState.Invalid);
+        stored.Actions.ShouldAllBe(a => a.Target.NodeId == null);
+    }
+
+    [TestMethod]
     public async Task AddOrUpdateAsync_WhenSuccessfullyAddedToRepository_CanGetActionGroupById()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
