@@ -13,5 +13,6 @@ public enum OrderType
     Drop,
     Move,
     Charge,
-    Transport
+    Transport,
+    Park
 }
