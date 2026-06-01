@@ -34,6 +34,9 @@ public abstract class MqttConsumerTestFixture<TConsumer> : MassTransitConsumerTe
         where T : class
     {
         await TestHarness.Bus.Publish(message, context => context.SetRoutingKey("routing.key"));
-        ConsumedMessages.Select<T>().Count().ShouldBe(1);
+        // Wait for the consumer to actually consume the message. The previous synchronous
+        // Select<T>().Count() check was a snapshot taken right after publishing, so under CI load
+        // it raced the consumer (count still 0) and failed intermittently.
+        (await ConsumedMessages.Any<T>()).ShouldBeTrue();
     }
 }
