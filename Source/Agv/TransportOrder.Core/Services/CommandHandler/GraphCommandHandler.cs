@@ -46,7 +46,7 @@ public class GraphCommandHandler :
 
         if (context.Message.Maps != null)
         {
-            await context.Publish(new SaveMaps(context.Message.Maps));
+            await context.Publish(new SaveMaps(context.Message.Maps, context.Message.CorrelationId));
         }
        
         _logger.LogInformation("Graph {CorrelationId} updated", context.Message.CorrelationId);

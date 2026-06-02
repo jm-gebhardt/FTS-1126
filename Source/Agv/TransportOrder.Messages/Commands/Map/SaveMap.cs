@@ -6,7 +6,8 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 /// Provides a command to save a map.
 /// </summary>
 /// <param name="Map">The map.</param>
-public record SaveMap(Common.Domain.Models.Graphs.Map Map) : CorrelatedBy<Guid>
+/// <param name="AgvCorrelationId">The correlation id of the AGV which provides map.</param>
+public record SaveMap(Common.Domain.Models.Graphs.Map Map, Guid AgvCorrelationId) : CorrelatedBy<Guid>
 {
     /// <summary>
     /// Correlation‑Id of the map.

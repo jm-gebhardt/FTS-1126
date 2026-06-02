@@ -52,9 +52,10 @@ public interface IMapRepository
     /// Add or update a map to/in the repository.
     /// </summary>
     /// <param name="map">The map.</param>
+    /// <param name="agvCorrelationId">The correlationId of the AGV which provides the map. </param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True if the Map could be stored. False if e.g. the nodes/edges or Agvs were not existing.</returns>
-    Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken);
+    Task<bool> AddOrUpdateAsync(Map map, Guid agvCorrelationId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Updates the background parameters of a map.

@@ -50,7 +50,7 @@ public class MapCommandHandler :
         _logger = logger;
     }
 
-    private async Task SaveMapAsync(Map messageMap, IPublishEndpoint publishEndpoint, CancellationToken cancellationToken = default)
+    private async Task SaveMapAsync(Map messageMap, Guid agvCorrelationId, IPublishEndpoint publishEndpoint, CancellationToken cancellationToken = default)
     {
         byte[] mapValue = Convert.FromBase64String(messageMap.ImageData);
 
@@ -72,7 +72,7 @@ public class MapCommandHandler :
             MapAgvs = agvIds.Select(agvId => new MapAgv(messageMap.CorrelationId, null, agvId, null)).ToList()
         };
 
-        if (await _mapRepository.AddOrUpdateAsync(map, cancellationToken))
+        if (await _mapRepository.AddOrUpdateAsync(map, agvCorrelationId, cancellationToken))
         {
             _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been added or updated in repository", messageMap.MapId, messageMap.CorrelationId);
             await publishEndpoint.Publish(new Common.Messages.Maps.MapSaved(messageMap), cancellationToken);
@@ -87,7 +87,7 @@ public class MapCommandHandler :
     }
 
     /// <inheritdoc/>
-    public Task Consume(ConsumeContext<SaveMap> context) => SaveMapAsync(context.Message.Map, context, context.CancellationToken);
+    public Task Consume(ConsumeContext<SaveMap> context) => SaveMapAsync(context.Message.Map, context.Message.AgvCorrelationId, context, context.CancellationToken);
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<SaveMaps> context)
@@ -95,7 +95,7 @@ public class MapCommandHandler :
         // quick implementation of handling potentially multiple maps. Does only happen once at startup.
         foreach (var map in context.Message.Maps)
         {
-            await SaveMapAsync(map, context, context.CancellationToken);
+            await SaveMapAsync(map, context.Message.AgvCorrelationId, context, context.CancellationToken);
         }
     }
 

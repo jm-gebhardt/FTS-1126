@@ -58,6 +58,11 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// </summary>
     public string[]? SpawnNodeIds { get; set; }
 
+    /// <summary>
+    /// Index of the next spawn node to use for round-robin SpawnAt selection.
+    /// </summary>
+    public int SpawnNodeIndex { get; set; }
+
     /// <inheritdoc cref="IAgv.CorrelationId" />
     public Guid CorrelationId { get; set; }
 
@@ -191,16 +196,30 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         List<GraphNode> graphNodes = nodes.ToList();
         List<GraphNode> stations = graphNodes.Where(n => n.IsPickOrDropStation()).ToList();
 
-        List<GraphNode> spawnGraphNodes = graphNodes.Where(n => SpawnNodeIds != null && SpawnNodeIds.Contains(n.Name)).ToList();
+        Dictionary<string, GraphNode> graphNodesByName = graphNodes.ToDictionary(node => node.Name);
+        List<GraphNode> spawnGraphNodes = SpawnNodeIds == null
+            ? []
+            : SpawnNodeIds
+                .Where(graphNodesByName.ContainsKey)
+                .Select(spawnNodeId => graphNodesByName[spawnNodeId])
+                .ToList();
+
         if (SpawnNodeIds is { Length: > 0 } && spawnGraphNodes.Count != SpawnNodeIds.Length)
         {
             string nodeIdsString = string.Join(",", SpawnNodeIds);
             throw new ArgumentException($"Option '--SpawnAt' contains unknown node id(s). Check [{nodeIdsString}].");
         }
+
         // if we have no stations, we just pick a random node
-        var stationNode = stations.Count == 0 ? graphNodes.ElementAt(Random.Shared.Next(0, graphNodes.Count)) : stations[Random.Shared.Next(0, stations.Count)];
-        // but we prefer spawnGraphNodes if available
-        var node = spawnGraphNodes.Count == 0 ? stationNode : spawnGraphNodes[Random.Shared.Next(0, spawnGraphNodes.Count)];
+        var stationNode = stations.Count == 0 ? graphNodes[Random.Shared.Next(0, graphNodes.Count)] : stations[Random.Shared.Next(0, stations.Count)];
+
+        var node = stationNode;
+        if (spawnGraphNodes.Count > 0)
+        {
+            int nextSpawnNodeIndex = (SpawnNodeIndex % spawnGraphNodes.Count + spawnGraphNodes.Count) % spawnGraphNodes.Count;
+            node = spawnGraphNodes[nextSpawnNodeIndex];
+            SpawnNodeIndex = (nextSpawnNodeIndex + 1) % spawnGraphNodes.Count;
+        }
 
         SetPosition(node);
     }
@@ -338,6 +357,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <param name="currentNode"></param>
     /// <param name="errors"></param>
     /// <param name="spawnNodeIds"></param>
+    /// <param name="spawnNodeIndex">Initial index used to pick the first SpawnAt node for this saga instance.</param>
     public SimulatedAgvSaga(
         Guid correlationId,
         string serialNumber,
@@ -350,7 +370,8 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         AgvData? agvData = null,
         GraphNode? currentNode = null,
         List<AgvError>? errors = null,
-        string[]? spawnNodeIds = null
+        string[]? spawnNodeIds = null,
+        int spawnNodeIndex = 0
     )
     {
         if (correlationId == Guid.Empty)
@@ -367,6 +388,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         CurrentState = currentState ?? "";
         CurrentNode = currentNode;
         SpawnNodeIds = spawnNodeIds;
+        SpawnNodeIndex = spawnNodeIndex;
         AgvGraph = agvGraph;
         if (agvData != null)
         {
@@ -404,7 +426,16 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
     /// <param name="timeProvider"></param>
     /// <param name="currentNode"></param>
     /// <param name="spawnNodeIds"></param>
-    public SimulatedAgvSaga(SimulatedAgv agv, int simulationSpeed, int initialBatteryCharge, double batteryChargeRate, TimeProvider timeProvider, GraphNode? currentNode = null, string[]? spawnNodeIds = null)
+    /// <param name="spawnNodeIndex">Initial index used to pick the first SpawnAt node for this saga instance.</param>
+    public SimulatedAgvSaga(
+        SimulatedAgv agv,
+        int simulationSpeed,
+        int initialBatteryCharge,
+        double batteryChargeRate,
+        TimeProvider timeProvider,
+        GraphNode? currentNode = null,
+        string[]? spawnNodeIds = null,
+        int spawnNodeIndex = 0)
     {
         _timeProvider = timeProvider;
         CorrelationId = agv.CorrelationId;
@@ -412,6 +443,7 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
         CommissioningDate = agv.CommissioningDate;
         CurrentNode = currentNode;
         SpawnNodeIds = spawnNodeIds;
+        SpawnNodeIndex = spawnNodeIndex;
         AgvGraph = agv.AgvGraph;
         AgvData = agv.AgvData;
         SetSimulationSpeed(simulationSpeed);

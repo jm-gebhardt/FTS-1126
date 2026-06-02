@@ -112,7 +112,7 @@ public class EfMapRepositoryTest
         var fixture = new EfMapRepositoryTestFixture();
         var map = MapGenerator.Generate();
 
-        bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
+        bool result = await fixture.Repository.AddOrUpdateAsync(map, Guid.NewGuid(), CancellationToken.None);
         result.ShouldBeTrue();
 
         var background = await fixture.Repository.GetMapAsync(map.CorrelationId);
@@ -135,7 +135,7 @@ public class EfMapRepositoryTest
 
         var map = MapGenerator.Generate(nodes: [n1, n2], edges: [e]);
 
-        bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
+        bool result = await fixture.Repository.AddOrUpdateAsync(map, agv.CorrelationId, CancellationToken.None);
         result.ShouldBeTrue();
         var savedMap = (await fixture.Repository.GetAllMapsAsync()).First();
         savedMap.Edges.Count.ShouldBe(1);
@@ -154,7 +154,7 @@ public class EfMapRepositoryTest
 
         var map = MapGenerator.Generate(nodes: graph.Nodes, edges: graph.Edges);
 
-        await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
+        await fixture.Repository.AddOrUpdateAsync(map, agv.CorrelationId, CancellationToken.None);
 
         await fixture.Repository.AssignAgvGraphToMapsAsync(agv.CorrelationId);
 
@@ -175,13 +175,13 @@ public class EfMapRepositoryTest
 
         var map = MapGenerator.Generate(nodes: graph.Nodes, edges: graph.Edges);
 
-        await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
+        await fixture.Repository.AddOrUpdateAsync(map, Guid.NewGuid(), CancellationToken.None);
 
         await fixture.Repository.AssignAgvGraphToMapsAsync(agv.CorrelationId);
 
         var mapUpdate = MapGenerator.Generate(nodes: graph.Nodes.Take(6).ToList(), edges: graph.Edges.Take(6).ToList(), correlationId: map.CorrelationId);
 
-        await fixture.Repository.AddOrUpdateAsync(mapUpdate, CancellationToken.None);
+        await fixture.Repository.AddOrUpdateAsync(mapUpdate, agv.CorrelationId, CancellationToken.None);
 
         var savedMap = (await fixture.Repository.GetAllMapsAsync()).First();
         savedMap.Edges.Count.ShouldBe(6);
@@ -207,7 +207,7 @@ public class EfMapRepositoryTest
 
         map.CustomBackground = new MapBackground(Guid.NewGuid(), 1, 1, 1, 1, 1, new byte[1], true);
 
-        await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
+        await fixture.Repository.AddOrUpdateAsync(map, agv.CorrelationId, CancellationToken.None);
 
         await fixture.Repository.AssignAgvGraphToMapsAsync(agv.CorrelationId);
 
@@ -231,7 +231,7 @@ public class EfMapRepositoryTest
         mapUpdate.CustomBackground = newCustomBackground;
         mapUpdate.BaseBackground = newBaseBackground;
 
-        await fixture.Repository.AddOrUpdateAsync(mapUpdate, CancellationToken.None);
+        await fixture.Repository.AddOrUpdateAsync(mapUpdate, agv.CorrelationId, CancellationToken.None);
 
         var savedMap = (await fixture.Repository.GetAllMapsAsync()).First();
 
@@ -252,10 +252,10 @@ public class EfMapRepositoryTest
     public async Task AddOrUpdate_ShouldReturnTrue_WhenUpdatingMap()
     {
         var fixture = new EfMapRepositoryTestFixture();
-
+        var agvCorrelationId = Guid.NewGuid();
         var map = MapGenerator.Generate();
 
-        bool result = await fixture.Repository.AddOrUpdateAsync(map, CancellationToken.None);
+        bool result = await fixture.Repository.AddOrUpdateAsync(map, agvCorrelationId, CancellationToken.None);
         result.ShouldBeTrue();
 
         var background = await fixture.Repository.GetMapAsync(map.CorrelationId);
@@ -279,7 +279,7 @@ public class EfMapRepositoryTest
             yOffset,
             DateTime.Now);
 
-        result = await fixture.Repository.AddOrUpdateAsync(mapUpdate, CancellationToken.None);
+        result = await fixture.Repository.AddOrUpdateAsync(mapUpdate, agvCorrelationId, CancellationToken.None);
         result.ShouldBeTrue();
         background = await fixture.Repository.GetMapAsync(mapUpdate.CorrelationId);
         background.BaseBackground.ShouldNotBeNull();
@@ -290,5 +290,51 @@ public class EfMapRepositoryTest
         background.BaseBackground.Resolution.ShouldBe(resolution);
         background.BaseBackground.XOffset.ShouldBe(xOffset);
         background.BaseBackground.YOffset.ShouldBe(yOffset);
+    }
+
+    [TestMethod]
+    public async Task AddOrUpdate_NewAgvDifferentGraph_MapMergeSuccessful()
+    {
+        var fixture = new EfMapRepositoryTestFixture();
+
+        var agv = AgvGenerator.GenerateIdleAgv(0, "1");
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agv.CorrelationId);
+        const string mapName = "MyMap";
+        var mapId = mapName.ToGuid();     
+        
+        fixture.Add(agv);
+        fixture.Add(graph);
+
+        var map = MapGenerator.Generate(
+            correlationId: mapId, 
+            mapName: mapName,
+            nodes: graph.Nodes.ToList(),
+            edges: graph.Edges.ToList(),
+            mapAgvs: [new MapAgv(mapId, null, agv.CorrelationId, null)]);
+
+        bool result = await fixture.Repository.AddOrUpdateAsync(map, agv.CorrelationId, CancellationToken.None);
+        result.ShouldBeTrue();
+        
+        var differentAgv = AgvGenerator.GenerateIdleAgv(1, "3");
+        var differentGraph = AgvGraphGenerator.CreateDifferentGraph(differentAgv.CorrelationId);
+        fixture.Add(differentAgv);
+        fixture.Add(differentGraph);
+        
+        var mapUpdate = MapGenerator.Generate(
+            correlationId: mapId, 
+            mapName: mapName,
+            nodes: differentGraph.Nodes.ToList(),
+            edges: differentGraph.Edges.ToList(),
+            mapAgvs: [new MapAgv(map.CorrelationId, null, differentAgv.CorrelationId, null)]
+        );
+        
+        result = await fixture.Repository.AddOrUpdateAsync(mapUpdate, differentAgv.CorrelationId, CancellationToken.None);
+        result.ShouldBeTrue();
+        
+        var updatedMap = (await fixture.Repository.GetAllMapsAsync()).First();
+
+        updatedMap.Nodes.Count.ShouldBe(map.Nodes.Count + mapUpdate.Nodes.Count);
+        updatedMap.Edges.Count.ShouldBe(map.Edges.Count + mapUpdate.Edges.Count);
+        updatedMap.MapAgvs.Count.ShouldBe(2);
     }
 }

@@ -133,9 +133,9 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc/>
-    public async Task<bool> AddOrUpdateAsync(Map map, CancellationToken cancellationToken)
+    public async Task<bool> AddOrUpdateAsync(Map map, Guid agvCorrelationId, CancellationToken cancellationToken)
     {
-        return await _semaphoreProvider.ExecuteLockedAsync(async () => await AddOrUpdateAsync(map), cancellationToken);
+        return await _semaphoreProvider.ExecuteLockedAsync(async () => await AddOrUpdateAsync(map, agvCorrelationId), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -212,7 +212,7 @@ public class EfMapRepository : IMapRepository
         return map.CorrelationId;
     }
 
-    private async Task<bool> AddOrUpdateAsync(Map map)
+    private async Task<bool> AddOrUpdateAsync(Map map, Guid agvCorrelationId)
     {
         try
         {
@@ -237,6 +237,29 @@ public class EfMapRepository : IMapRepository
                     return false;
                 }
             }
+
+            // Get all nodes and edges which are used by other AGVs.
+            // Those graph elements must not be removed from an existing map update.
+            HashSet<Guid> otherAgvNodeIds = (await context.Set<AgvGraph>()
+                .Where(agvGraph => agvGraph.AgvCorrelationId != agvCorrelationId)
+                .SelectMany(agvGraph => agvGraph.Nodes.Select(node => node.Id))
+                .Distinct()
+                .ToListAsync())
+                .ToHashSet();
+
+            HashSet<Guid> otherAgvEdgeIds = (await context.Set<AgvGraph>()
+                .Where(agvGraph => agvGraph.AgvCorrelationId != agvCorrelationId)
+                .SelectMany(agvGraph => agvGraph.Edges.Select(edge => edge.Id))
+                .Distinct()
+                .ToListAsync())
+                .ToHashSet();
+
+            HashSet<Guid> protectedAgvIds = (await context.Set<AgvGraph>()
+                    .Where(agvGraph => agvGraph.AgvCorrelationId != agvCorrelationId)
+                    .Select(agvGraph => agvGraph.AgvCorrelationId)
+                    .Distinct()
+                    .ToListAsync())
+                .ToHashSet();
 
             // Once an AgvGraph is established, nodes not referenced by any AgvGraph may have
             // been consolidated away. Filter the map's collections to only those that still
@@ -266,17 +289,28 @@ public class EfMapRepository : IMapRepository
                     map.Edges.Count - existingEdgeIds.Count);
             }
 
-            var effectiveMap = map with
-            {
-                Nodes = map.Nodes.Where(n => existingNodeIds.Contains(n.Id)).ToList(),
-                Edges = map.Edges.Where(e => existingEdgeIds.Contains(e.Id)).ToList()
-            };
-
             var existingMap = await context.Set<Map>()
                 .Include(m => m.MapAgvs)
                 .Include(m => m.Edges)
                 .Include(m => m.Nodes)
-                .SingleOrDefaultAsync(g => g.CorrelationId == effectiveMap.CorrelationId);
+                .SingleOrDefaultAsync(g => g.CorrelationId == map.CorrelationId);
+
+            ICollection<GraphNode> protectedNodes = existingMap == null
+                ? []
+                : existingMap.Nodes.Where(node => otherAgvNodeIds.Contains(node.Id)).ToList();
+
+            ICollection<GraphEdge> protectedEdges = existingMap == null
+                ? []
+                : existingMap.Edges.Where(edge => otherAgvEdgeIds.Contains(edge.Id)).ToList();
+
+            var effectiveMap = map with
+            {
+                Nodes = map.Nodes.Where(node => existingNodeIds.Contains(node.Id)).UnionBy(protectedNodes, node => node.Id).ToList(),
+                Edges = map.Edges.Where(edge => existingEdgeIds.Contains(edge.Id)).UnionBy(protectedEdges, edge => edge.Id).ToList(),
+                MapAgvs = map.MapAgvs
+                    .UnionBy((existingMap?.MapAgvs ?? []).Where(ma => protectedAgvIds.Contains(ma.AgvId)), ma => ma.AgvId)
+                    .ToList()
+            };
 
             if (existingMap == null)
             {

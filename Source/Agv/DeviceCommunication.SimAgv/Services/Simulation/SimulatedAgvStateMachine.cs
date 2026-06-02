@@ -180,6 +180,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
 
     private string[]? SpawnAt => _options.SpawnAt?.ToArray(); // Id of nodes where AGVs will spawn at simulation start up
 
+    private int _spawnNodeIndex;
+
     /// <summary>
     /// SimulatedAgvStateMachine Constructor
     /// </summary>
@@ -266,7 +268,23 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
             {
                 e.SetSagaFactory(context =>
                 {
-                    var saga = new SimulatedAgvSaga(context.Message.Agv, context.Message.SimulationSpeed, GetInitialBatteryCharge(), BatteryChargeRate, _timeProvider, null, SpawnAt);
+                    string[]? spawnAt = SpawnAt;
+                    int spawnNodeIndex = 0;
+                    if (spawnAt is { Length: > 0 })
+                    {
+                        spawnNodeIndex = _spawnNodeIndex;
+                        _spawnNodeIndex = _spawnNodeIndex + 1 >= spawnAt.Length ? 0 : _spawnNodeIndex + 1;
+                    }
+
+                    var saga = new SimulatedAgvSaga(
+                        context.Message.Agv,
+                        context.Message.SimulationSpeed,
+                        GetInitialBatteryCharge(),
+                        BatteryChargeRate,
+                        _timeProvider,
+                        null,
+                        spawnAt,
+                        spawnNodeIndex);
                     SetUpdateIntervals(saga.SimulationSpeed);
                     return saga;
                 });
