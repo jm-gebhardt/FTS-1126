@@ -10,9 +10,9 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterTemplate;
 public record FilterTemplateDto
 {
     /// <summary>
-    /// The filter id.
+    /// The (optional) filter id.
     /// </summary>
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
 
     /// <summary>
     /// Name of the filter
