@@ -117,10 +117,21 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     public async Task DeleteOutdatedErrors(DateTime outDatedTime)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // by default command timeout is 30s
-        
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // the default command timeout is 30s, which could be too short, depending on the amount of data
+
         var outdated = new SqlParameter("OutdatedTime", outDatedTime);
 
-        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE dbo.HouseKeepAgvErrors @OutdatedTime", outdated);
+        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE [dbo].[HouseKeepAgvErrors] @OutdatedTime", outdated);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteOutdatedWifiInformation(DateTime outDatedTime)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // the default command timeout is 30s, which could be too short, depending on the amount of data
+
+        var outdated = new SqlParameter("OutdatedTime", outDatedTime);
+
+        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE [dbo].[HouseKeepWIFIInformation] @OutdatedTime", outdated);
     }
 }

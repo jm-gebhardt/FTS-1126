@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Filterables;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -60,5 +61,16 @@ public class EfLogEntryRepository : ILogEntryRepository
     {
         PagedResult<LogEntryFilterable> logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)]);
         return _mapper.Map<PagedResult<LogEntryFilterable>, PagedResult<LogEntry>>(logs);
+    }
+
+    /// <inheritdoc cref="ILogEntryRepository"/>>
+    public async Task DeleteOutdatedLogs(DateTime outDatedTime)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // the default command timeout is 30s, which could be too short, depending on the amount of data
+
+        var outdated = new SqlParameter("OutdatedTime", outDatedTime);
+
+        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE [dbo].[HouseKeepLogs] @OutdatedTime", outdated);
     }
 }

@@ -15,7 +15,7 @@ public class HousekeepingRequestHandlerTest
     {
         var fixture = new HousekeepingRequestHandlerTestFixture<UpdateHousekeepingConfiguration>();
 
-        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateHousekeepingConfiguration(14, HousekeepingInterval.Days));
+        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateHousekeepingConfiguration(HousekeepingEntityType.Logs, 14, HousekeepingInterval.Days, 3, HousekeepingInterval.Days, 1, 1));
 
         response.Message.ShouldNotBeNull();
     }
@@ -25,7 +25,7 @@ public class HousekeepingRequestHandlerTest
     {
         var fixture = new HousekeepingRequestHandlerTestFixture<UpdateHousekeepingConfiguration>();
 
-        await fixture.GetResponseAsync<Success>(new UpdateHousekeepingConfiguration(7, HousekeepingInterval.Weeks));
+        await fixture.GetResponseAsync<Success>(new UpdateHousekeepingConfiguration(HousekeepingEntityType.Logs, 7, HousekeepingInterval.Weeks, 3, HousekeepingInterval.Days, 1, 1));
 
         fixture.HousekeepingConfigurationRepository.Verify(
             x => x.AddOrUpdateAsync(It.Is<HousekeepingConfiguration>(c =>

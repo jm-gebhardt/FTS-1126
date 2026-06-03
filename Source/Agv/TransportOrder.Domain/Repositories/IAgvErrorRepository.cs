@@ -59,4 +59,10 @@ public interface IAgvErrorRepository
     /// </summary>
     /// <param name="outDatedTime">The time an error gets outdated.</param>
     Task DeleteOutdatedErrors(DateTime outDatedTime);
+
+    /// <summary>
+    /// Delete wifi information older than given time.
+    /// </summary>
+    /// <param name="outDatedTime">The time a wifi information gets outdated.</param>
+    Task DeleteOutdatedWifiInformation(DateTime outDatedTime);
 }

@@ -23,7 +23,12 @@ public class EfHousekeepingRepository(StatisticsDbContext context, ILogger<EfHou
 
         await connection.OpenAsync();
 
-        await using var command = new SqlCommand("EXEC [dbo].[CompressAgvStatistics]", connection);
+        // HIGH deadlock priority ensures compression is never chosen as the deadlock victim —
+        // a rolled-back compression loses all accumulated work, whereas an INSERT is retried
+        // automatically by MassTransit. 
+        await using var command = new SqlCommand(
+            "SET DEADLOCK_PRIORITY HIGH; EXEC [dbo].[CompressAgvStatistics]",
+            connection);
         command.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
         await command.ExecuteNonQueryAsync();
     }

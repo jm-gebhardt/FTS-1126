@@ -117,14 +117,18 @@ public static class HostBuilderExtension
         hostBuilder.ConfigureServices((context, services) =>
         {
             services.AddConfigurationTypeManager();
-            services.AddDbContext<StatisticsDbContext>(o =>
+            services.AddSingleton<SqlPrintInterceptor>();
+            services.AddDbContext<StatisticsDbContext>((sp, o) =>
+            {
                 o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
                     m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
                         m.EnableRetryOnFailure();
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    }));
+                    });
+                o.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>());
+            });
             services.AddTransient<IStatisticsDb, EfStatisticsDb>();
             services.AddTransient<IMapRepository, EfMapRepository>();
             services.AddTransient<IHouseKeepingRepository, EfHousekeepingRepository>();

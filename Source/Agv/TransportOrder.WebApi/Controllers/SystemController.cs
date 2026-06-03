@@ -137,13 +137,11 @@ public class SystemController(
     /// <summary>
     /// Updates the agv error housekeeping configuration.
     /// </summary>
-    /// <param name="outdatedValue">The value for the outdated time (x days ago).</param>
-    /// <param name="outdatedInterval">The interval for the outdated time (days/weeks..).</param>
     [HttpPost]
     [Route("/system/housekeepingConfiguration")]
-    public async Task<ActionResult> UpdateHousekeepingInterval([FromQuery] int outdatedValue, [FromQuery] HousekeepingInterval outdatedInterval)
+    public async Task<ActionResult> UpdateHousekeepingInterval([FromQuery] int outdatedValue, [FromQuery] HousekeepingInterval outdatedInterval, [FromQuery] HousekeepingEntityType entityType, [FromQuery] int scheduleValue, [FromQuery] HousekeepingInterval scheduleInterval, [FromQuery] int scheduleHour, [FromQuery] int scheduleMinute)
     {
-        await updateHousekeepingConfigurationClient.GetResponse<Success>(new UpdateHousekeepingConfiguration(outdatedValue, outdatedInterval));
+        await updateHousekeepingConfigurationClient.GetResponse<Success>(new UpdateHousekeepingConfiguration(entityType, outdatedValue, outdatedInterval, scheduleValue, scheduleInterval, scheduleHour, scheduleMinute));
         return Ok();
     }
 }

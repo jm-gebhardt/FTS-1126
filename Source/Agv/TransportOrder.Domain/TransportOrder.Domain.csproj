@@ -11,6 +11,7 @@
         <PackageReference Include="MassTransit.EntityFrameworkCore" />
         <PackageReference Include="MassTransit" />
         <PackageReference Include="MassTransit.RabbitMQ" />
+        <PackageReference Include="Quartz" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />

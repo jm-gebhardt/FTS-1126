@@ -14,6 +14,7 @@ using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Core.Services;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
+using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
@@ -93,7 +94,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
         // -  database
-        services.AddDbContextFactory<TransportOrderDbContext>(builder =>
+        services.AddDbContextFactory<TransportOrderDbContext>((sp, builder) =>
         {
             string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
@@ -102,10 +103,13 @@ public static class TransportOrderHostBuilderExtensions
                 m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
                 m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
             });
+            builder.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>());
         });
 
         services.AddHealthChecks()
             .AddDbContextCheck<TransportOrderDbContext>();
+
+        services.AddSingleton<SqlPrintInterceptor>();
     }
 
     private static void RegisterMapServices(IServiceCollection services)
@@ -196,6 +200,10 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IAgvInstantActionDefinitionRepository, EfAgvInstantActionDefinitionRepository>();
         services.AddTransient<IOwnedFilterRepository, OwnedFilterRepository>();
         services.AddTransient<IHousekeepingConfigurationRepository, EfHousekeepingConfigurationRepository>();
+        services.AddTransient<IHousekeepingAction, ErrorHousekeepingAction>();
+        services.AddTransient<IHousekeepingAction, WifiHousekeepingAction>();
+        services.AddTransient<IHousekeepingAction, LogHousekeepingAction>();
+        services.AddTransient<HousekeepingJob>();
         services.AddTransient<IOwnedFilterTemplateRepository, OwnedFilterTemplateRepository>();
     }
 

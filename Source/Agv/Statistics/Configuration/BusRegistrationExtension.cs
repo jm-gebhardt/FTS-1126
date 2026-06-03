@@ -23,9 +23,12 @@ public static class BusRegistrationExtension
         cfg.AddConsumer<AgvErrorEventHandler>();
         cfg.AddConsumer<WifiMetricsEventHandler>();
 
-        cfg.AddConsumer<ErrorCommandHandler>();
-        cfg.AddConsumer<GridCellStayCommandHandler>();
-        cfg.AddConsumer<WifiMetricsCommandHandler>();
+        cfg.AddConsumer<ErrorCommandHandler>(c =>
+            c.UseMessageRetry(r => r.Interval(2, TimeSpan.FromMinutes(30))));
+        cfg.AddConsumer<GridCellStayCommandHandler>(c =>
+            c.UseMessageRetry(r => r.Interval(2, TimeSpan.FromMinutes(30))));
+        cfg.AddConsumer<WifiMetricsCommandHandler>(c =>
+            c.UseMessageRetry(r => r.Interval(2, TimeSpan.FromMinutes(30))));
         return cfg;
     }
 }

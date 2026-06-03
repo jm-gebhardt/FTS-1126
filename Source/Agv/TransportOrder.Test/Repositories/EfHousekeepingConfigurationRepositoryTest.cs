@@ -12,7 +12,7 @@ public class EfHousekeepingConfigurationRepositoryTest
         var fixture = await new EfHousekeepingConfigurationRepositoryTestFixture()
             .BuildAsync();
 
-        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync();
+        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync(HousekeepingEntityType.Logs);
 
         result.ShouldBeNull();
     }
@@ -20,13 +20,13 @@ public class EfHousekeepingConfigurationRepositoryTest
     [TestMethod]
     public async Task GetConfigurationAsync_WithConfiguration_ReturnsConfiguration()
     {
-        var configuration = new HousekeepingConfiguration(Guid.NewGuid(), 7, HousekeepingInterval.Days);
+        var configuration = new HousekeepingConfiguration(Guid.NewGuid(), HousekeepingEntityType.Logs, 7, HousekeepingInterval.Days, 3, HousekeepingInterval.Hours, 1, 1);
 
         var fixture = await new EfHousekeepingConfigurationRepositoryTestFixture()
             .WithConfiguration(configuration)
             .BuildAsync();
 
-        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync();
+        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync(configuration.EntityType);
 
         result.ShouldNotBeNull();
         result.OutdatedValue.ShouldBe(configuration.OutdatedValue);
@@ -39,10 +39,10 @@ public class EfHousekeepingConfigurationRepositoryTest
         var fixture = await new EfHousekeepingConfigurationRepositoryTestFixture()
             .BuildAsync();
 
-        var configuration = new HousekeepingConfiguration(Guid.NewGuid(), 14, HousekeepingInterval.Weeks);
+        var configuration = new HousekeepingConfiguration(Guid.NewGuid(), HousekeepingEntityType.Logs, 14, HousekeepingInterval.Weeks, 3, HousekeepingInterval.Hours, 1, 1);
         await fixture.HousekeepingConfigurationRepository.AddOrUpdateAsync(configuration);
 
-        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync();
+        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync(configuration.EntityType);
         result.ShouldNotBeNull();
         result.OutdatedValue.ShouldBe(14);
         result.OutdatedInterval.ShouldBe(HousekeepingInterval.Weeks);
@@ -51,16 +51,16 @@ public class EfHousekeepingConfigurationRepositoryTest
     [TestMethod]
     public async Task AddOrUpdateAsync_ExistingConfiguration_UpdatesConfiguration()
     {
-        var initial = new HousekeepingConfiguration(Guid.NewGuid(), 7, HousekeepingInterval.Days);
+        var initial = new HousekeepingConfiguration(Guid.NewGuid(), HousekeepingEntityType.Logs, 7, HousekeepingInterval.Days, 3, HousekeepingInterval.Hours, 1, 1);
 
         var fixture = await new EfHousekeepingConfigurationRepositoryTestFixture()
             .WithConfiguration(initial)
             .BuildAsync();
 
-        var updated = new HousekeepingConfiguration(initial.Id, 30, HousekeepingInterval.Months);
+        var updated = new HousekeepingConfiguration(initial.Id, initial.EntityType, 30, HousekeepingInterval.Months, 3, HousekeepingInterval.Hours, 1, 1);
         await fixture.HousekeepingConfigurationRepository.AddOrUpdateAsync(updated);
 
-        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync();
+        var result = await fixture.HousekeepingConfigurationRepository.GetConfigurationAsync(updated.EntityType);
         result.ShouldNotBeNull();
         result.OutdatedValue.ShouldBe(30);
         result.OutdatedInterval.ShouldBe(HousekeepingInterval.Months);

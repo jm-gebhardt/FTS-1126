@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;
@@ -18,11 +18,22 @@ public class HousekeepingRequestHandler(ILogger<HousekeepingRequestHandler> logg
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<UpdateHousekeepingConfiguration> context)
     {
-        var (value, interval) = context.Message;
+        var msg = context.Message;
 
-        logger.LogInformation("Updating agv error housekeeping to {Value} {Interval}", value, interval.ToString());
+        logger.LogInformation(
+            "Updating housekeeping configuration for {EntityType}: outdated after {OutdatedValue} {OutdatedInterval}, schedule every {ScheduleValue} {ScheduleInterval} at {Hour:D2}:{Minute:D2}",
+            msg.EntityType, msg.OutdatedValue, msg.OutdatedInterval,
+            msg.ScheduleValue, msg.ScheduleInterval, msg.ScheduleHour, msg.ScheduleMinute);
 
-        await housekeepingConfigurationRepository.AddOrUpdateAsync(new HousekeepingConfiguration(Guid.NewGuid(), value, interval));
+        await housekeepingConfigurationRepository.AddOrUpdateAsync(new HousekeepingConfiguration(
+            Guid.NewGuid(),
+            msg.EntityType,
+            msg.OutdatedValue,
+            msg.OutdatedInterval,
+            msg.ScheduleValue,
+            msg.ScheduleInterval,
+            msg.ScheduleHour,
+            msg.ScheduleMinute));
 
         await context.RespondAsync(new Success());
     }

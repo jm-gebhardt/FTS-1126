@@ -32,4 +32,10 @@ public interface ILogEntryRepository
     /// <param name="pageSize">The page size.</param>
     /// <returns>A collection of log entries matching the filter.</returns>
     Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize);
+
+    /// <summary>
+    /// Delete log entries older than given time.
+    /// </summary>
+    /// <param name="outDatedTime">The time a log entry gets outdated.</param>
+    Task DeleteOutdatedLogs(DateTime outDatedTime);
 }
