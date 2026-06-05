@@ -1508,4 +1508,18 @@ public class ActionGroupTest
         actionGroup.AssignedAgv.ShouldBeNull();
         actionGroup.Actions.Single(a => a.ActionType == ActionType.Pick).IsRegisteredForDoppelspiel.ShouldBeFalse();
     }
+
+    [TestMethod]
+    public void SetDoppelspielpartner_ActionNotStartedYet_MiddleActionSkipped()
+    {
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget();
+
+        var dpId = Guid.NewGuid();
+
+        actionGroup.SetDoppelspielpartner(dpId, ActionType.Pick, new GraphNode());
+
+        actionGroup.Actions[0].ShouldSkip.ShouldBeFalse();
+        actionGroup.Actions[1].ShouldSkip.ShouldBeTrue();
+        actionGroup.Actions[0].ActionType.ShouldBe(ActionType.Pick);
+    }
 }

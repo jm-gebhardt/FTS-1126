@@ -264,13 +264,29 @@ public class ActionGroup
             return;
         }
         action.SetDoppelspielPartner(partnerOrder);
-        if (action.IsIncomplete && node != null)
+
+        if (!action.IsIncomplete || node == null)
         {
-            action.SetTarget(node);
-            var priorAction = Actions.SingleOrDefault(a => a.Sequence == action.Sequence - 1);
-            action.InfoToAgv = priorAction?.InfoToAgv;
-            priorAction?.Skip();
+            return;
         }
+
+        var priorAction = Actions.SingleOrDefault(a => a.Sequence == action.Sequence - 1);
+
+        var actionToSkip = priorAction;
+        var actionToUpdate = action;
+        if (priorAction is { StartedDate: null })
+        {
+            actionToSkip = action;
+            actionToUpdate = priorAction;
+            actionToUpdate.ActionType = actionToSkip.ActionType;
+        }
+        else
+        {
+            action.InfoToAgv = priorAction?.InfoToAgv;
+        }
+
+        actionToUpdate.SetTarget(node);
+        actionToSkip?.Skip();
     }
 
     /// <summary>

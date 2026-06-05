@@ -209,10 +209,11 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         int stack = 0;
         foreach (var action in actions)
         {
-            stack += action.ActionType switch
+            stack += action switch
             {
-                ActionType.Pick => 1,
-                ActionType.Drop => -1,
+                { ShouldSkip: true } => 0,
+                { ActionType: ActionType.Pick } => 1,
+                { ActionType: ActionType.Drop } => -1,
                 _ => 0
             };
 

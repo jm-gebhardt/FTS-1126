@@ -1130,7 +1130,7 @@ public class ActionCommandHandler :
             agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
-            //Nodes will be overwritten, check before update if the start of the action was a station
+            // Nodes will be overwritten, check before update if the start of the action was a station
             bool startNodeIsStation = await GetStartNodeIsStation(actionToUpdate);
             if (actionToUpdate.CorrelationId == targetAction.CorrelationId)
             {
