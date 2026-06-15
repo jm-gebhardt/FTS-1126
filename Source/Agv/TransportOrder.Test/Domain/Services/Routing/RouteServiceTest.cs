@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -5,6 +6,7 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Routing.Exceptions;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
@@ -319,5 +321,38 @@ public class RouteServiceTest
 
         double? costs = await fixture.RouteService.GetCostsForFirstActionNotPassingNodesAsync(agv, actionGroup, data, [actionGroup.Actions.First().Target.NodeId!.Value], CancellationToken.None);
         costs.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task HasAnyAgvRouteAsync_WhenCancelled_PropagatesCancellationWithoutLoggingFailure()
+    {
+        // Cancellation (a caller abort, or the internal cancel once another AGV already has a route) must never be
+        // logged as a route calculation failure. A caller cancellation is surfaced rather than reported as "no route".
+        var firstAgv = AgvGenerator.GenerateIdleAgv(1);
+        var secondAgv = AgvGenerator.GenerateIdleAgv(2);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(AgvGraphGenerator.ChargingClose.Name);
+        var fixture = new RouteServiceTestFixture();
+
+        await Should.ThrowAsync<OperationCanceledException>(async () =>
+            await fixture.RouteService.HasAnyAgvRouteAsync(actionGroup, [firstAgv, secondAgv], new CancellationToken(true)));
+
+        fixture.LoggingService.Verify(x => x.LogAgv(It.IsAny<ILogger>(), LogLevel.Error, LogCodes.RouteCalculationFailed,
+            It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task HasAnyAgvRouteAsync_WhenRouteCalculationThrows_LogsRouteCalculationFailed()
+    {
+        var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
+        var agv = AgvGenerator.GenerateIdleAgv(1, lastNodeName: AgvGraphGenerator.ChargingClose.Name);
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup("unknownNode");
+        var fixture = new RouteServiceTestFixture()
+            .WithAgv(agv, agvGraph);
+
+        bool hasRoute = await fixture.RouteService.HasAnyAgvRouteAsync(actionGroup, [agv], CancellationToken.None);
+
+        hasRoute.ShouldBeFalse();
+        fixture.LoggingService.Verify(x => x.LogAgv(It.IsAny<ILogger>(), LogLevel.Error, LogCodes.RouteCalculationFailed,
+            agv.CorrelationId, It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>()), Times.AtLeastOnce);
     }
 }

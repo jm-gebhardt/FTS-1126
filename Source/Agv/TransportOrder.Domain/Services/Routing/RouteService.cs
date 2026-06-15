@@ -189,6 +189,11 @@ public class RouteService : IRouteService
             {
                 return await GetCostsForFirstActionAsync(agv, actionGroup, null, cts.Token);
             }
+            catch (OperationCanceledException)
+            {
+                // Expected when this AGV loses the race to one that already has a valid route, or the caller aborts: not a route calculation failure, so it is not logged.
+                return null;
+            }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error while calculating route for Agv with CorrelationId {CorrelationId} in HasAnyAgvRouteAsync", agv.CorrelationId);
@@ -214,6 +219,9 @@ public class RouteService : IRouteService
 
             hasRouteTasks.Remove(finishedTask);
         }
+
+        // No AGV has a route. If the caller aborted, surface the cancellation instead of reporting "no route".
+        cancellationToken.ThrowIfCancellationRequested();
         return false;
     }
 

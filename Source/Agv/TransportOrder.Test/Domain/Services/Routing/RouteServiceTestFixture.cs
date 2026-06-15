@@ -14,11 +14,13 @@ public class RouteServiceTestFixture
     private readonly Mock<IGraphRepository> _agvGraphRepository = new();
     private readonly Mock<IQueueRepository> _queueRepository = new();
 
+    public Mock<ILoggingService> LoggingService { get; } = new();
+
     public RouteService RouteService { get; }
 
     public RouteServiceTestFixture()
     {
-        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object, _queueRepository.Object, new Mock<ILoggingService>().Object);
+        RouteService = new RouteService(_agvGraphRepository.Object, new AStarRouteFinder(), new Mock<ILogger<RouteService>>().Object, _queueRepository.Object, LoggingService.Object);
     }
 
     public RouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, AgvGraph agvGraph)
