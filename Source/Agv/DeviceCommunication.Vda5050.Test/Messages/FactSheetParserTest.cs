@@ -20,10 +20,10 @@ public class FactSheetParserTest
     private readonly IMapper _mapper = MappingHelper.GetMapper(new AgvActionProfile());
     private readonly Mock<ILogger> _logger = new();
 
-    private void ValidateAgvData(AgvData agvData, MqttFactsheet factSheet)
+    private void ValidateAgvData(AgvData agvData, MqttFactsheet factSheet, Agv agv)
     {
         agvData.Model.ShouldBe(factSheet.TypeSpecification.SeriesName);
-        agvData.Type.ShouldBe(factSheet.TypeSpecification.AgvClass.ToString());
+        agvData.Type.ShouldBe(agv.VehicleTypeId);
         agvData.IpV4Address.ShouldBe(factSheet.VehicleConfig?.Network?.LocalIpAddress);
         agvData.SoftwareVersion.ShouldBe(factSheet.VehicleConfig!.Versions!.First().Value);
         agvData.Acceleration.ShouldBe(factSheet.PhysicalParameters.AccelerationMax);
@@ -45,7 +45,7 @@ public class FactSheetParserTest
     {
         var parser = new FactsheetParser(_logger.Object, _mapper);
 
-        var factSheet = MqttFactSheetGenerator.Generate(serialNumber: string.Empty);
+        var factSheet = MqttFactSheetGenerator.Generate(string.Empty);
 
         Should.Throw<SerialNumberNotSetException>(() => parser.Parse(factSheet));
     }
@@ -59,7 +59,7 @@ public class FactSheetParserTest
 
         parser.Parse(factSheet);
 
-        ValidateAgvData(parser.AgvData, factSheet);
+        ValidateAgvData(parser.AgvData, factSheet, parser.Agv!);
         ValidateAgv(parser.Agv!, factSheet);
         parser.Actions.Count.ShouldBe(factSheet.ProtocolFeatures.AgvActions.Count);
     }

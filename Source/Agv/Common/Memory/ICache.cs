@@ -52,4 +52,9 @@ public interface ICache<TKey, TValue>
     /// <param name="value">When the method returns, contains the value associated with the removed key if the removal is successful; otherwise, the default value for the type of the value parameter.</param>
     /// <returns>True if the key was found and the entry was successfully removed from the cache; otherwise, false.</returns>
     bool TryRemove(TKey key, [MaybeNullWhen(false)] out TValue value);
+
+    /// <summary>
+    /// Returns a snapshot of all keys currently in the cache.
+    /// </summary>
+    IReadOnlyCollection<TKey> GetKeys();
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+using System.Text.Json;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -54,16 +55,30 @@ public static class EfValueConverters
     }
 
     /// <summary>
+    /// Creates a value comparer for a non-nullable <see cref="IReadOnlyList{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The element type.</typeparam>
+    /// <returns>A ValueComparer that compares by sequence equality and snapshots as a new list.</returns>
+    [PublicAPI]
+    public static ValueComparer<IReadOnlyList<T>> CreateReadOnlyListComparer<T>()
+    {
+        return new ValueComparer<IReadOnlyList<T>>(
+            (c1, c2) => (c1 == null && c2 == null) || (c1 != null && c2 != null && c1.SequenceEqual(c2)),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v == null ? 0 : v.GetHashCode())),
+            c => c.ToList());
+    }
+
+    /// <summary>
     /// Creates a value converter for converting between an object of type T and its JSON string representation.
     /// </summary>
     /// <typeparam name="T">The type of the object to convert to/from JSON.</typeparam>
     /// <param name="options">Optional JsonSerializerOptions to customize serialization/deserialization.</param>
     /// <returns>A ValueConverter that converts between T and its JSON string representation.</returns>
-    public static ValueConverter<T?, string?> CreateJsonConverter<T>(JsonSerializerOptions? options = null)
+    public static ValueConverter<T, string?> CreateJsonConverter<T>(JsonSerializerOptions? options = null)
     {
-        return new ValueConverter<T?, string?>(
+        return new ValueConverter<T, string?>(
             v => v == null ? null : JsonSerializer.Serialize(v, options),
-            v => string.IsNullOrEmpty(v) ? default : JsonSerializer.Deserialize<T>(v, (JsonSerializerOptions?) null)
+            v => string.IsNullOrEmpty(v) ? default! : JsonSerializer.Deserialize<T>(v, options)!
         );
     }
 }

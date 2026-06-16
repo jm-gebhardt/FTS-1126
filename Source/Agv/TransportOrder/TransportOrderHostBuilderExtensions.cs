@@ -22,6 +22,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -205,6 +206,9 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IHousekeepingAction, LogHousekeepingAction>();
         services.AddTransient<HousekeepingJob>();
         services.AddTransient<IOwnedFilterTemplateRepository, OwnedFilterTemplateRepository>();
+        services.AddSingleton<IEdgePolygonProvider, DirectEdgePolygonProvider>();
+        services.AddSingleton<IMarginStrategy>(new SafetyMarginStrategy(0.2));
+        services.AddTransient<IBoundingBoxRepository, EfBoundingBoxRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)
@@ -216,7 +220,7 @@ public static class TransportOrderHostBuilderExtensions
 
     private static void RegisterSignificanceCheckers(IServiceCollection services)
     {
-        services.AddSingleton(new AgvPositionConfiguration(PositionThreshold: 0.005, ThetaThreshold: Mathematics.ConvertToRadians(0.1), DeviationRangeThreshold: 0.001));
+        services.AddSingleton(new AgvPositionConfiguration(0.005, Mathematics.ConvertToRadians(0.1), 0.001));
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
     }
 

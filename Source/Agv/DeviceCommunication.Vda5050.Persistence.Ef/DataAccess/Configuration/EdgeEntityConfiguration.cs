@@ -27,7 +27,7 @@ public class EdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
         builder.OwnsOne(e => e.AgvTrajectory, trajectoryBuilder =>
         {
             trajectoryBuilder.Property(t => t.KnotVector)
-                .HasConversion(EfValueConverters.CreateJsonConverter<IList<float>>()!)
+                .HasConversion(EfValueConverters.CreateJsonConverter<IList<float>>())
                 .Metadata.SetValueComparer(new ValueComparer<IList<float>>(
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -52,7 +52,7 @@ public class EdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
                 paramBuilder.HasKey(ShadowId);
 
                 paramBuilder.Property(p => p.Value)
-                    .HasConversion(EfValueConverters.CreateJsonConverter<object>()!);
+                    .HasConversion(EfValueConverters.CreateJsonConverter<object>());
             });
         });
     }

@@ -13,5 +13,20 @@ public static class GraphGenerator
     /// Generate default graph
     /// </summary>
     /// <returns></returns>
-    public static Graph CreateDefaultGraph() => AgvGraphGenerator.CreateDefaultGraph().ToGraph();
+    public static Graph CreateDefaultGraph()
+    {
+        return AgvGraphGenerator.CreateDefaultGraph().ToGraph();
+    }
+
+    /// <summary>
+    /// Generates a graph from the given nodes and edges.
+    /// </summary>
+    public static Graph Generate(ICollection<GraphNode>? nodes = null, ICollection<GraphEdge>? edges = null)
+    {
+        return new Graph
+        {
+            Nodes = nodes ?? [],
+            Edges = edges ?? []
+        };
+    }
 }

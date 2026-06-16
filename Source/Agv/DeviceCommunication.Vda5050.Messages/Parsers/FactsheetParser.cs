@@ -45,19 +45,21 @@ public class FactsheetParser(ILogger logger, IMapper mapper)
     public void Parse(MqttFactsheet factSheet)
     {
         GetSerialNumber(factSheet);
-        GetAgv(factSheet);
-        GetAgvData(factSheet);
+        var agv = GetAgv(factSheet);
+        GetAgvData(factSheet, agv);
         GetAgvActions(factSheet);
     }
 
-    private void GetAgv(MqttFactsheet factSheet)
+    private Agv GetAgv(MqttFactsheet factSheet)
     {
         if (Agv == null)
         {
             Agv = new Agv(CorrelationId, factSheet.Manufacturer, factSheet.TypeSpecification.SeriesName, SerialNumber);
-            return;
+            return Agv;
         }
+
         Agv.SeriesName = factSheet.TypeSpecification.SeriesName;
+        return Agv;
     }
 
     private void GetSerialNumber(MqttFactsheet factSheet)
@@ -70,12 +72,12 @@ public class FactsheetParser(ILogger logger, IMapper mapper)
         }
     }
 
-    private void GetAgvData(MqttFactsheet factSheet)
+    private void GetAgvData(MqttFactsheet factSheet, Agv agv)
     {
         AgvData = new AgvData(
             agvCorrelationId: CorrelationId,
             model: factSheet.TypeSpecification.SeriesName,
-            type: factSheet.TypeSpecification.AgvClass.ToString(),
+            type: agv.VehicleTypeId,
             ipV4Address: factSheet.VehicleConfig?.Network?.LocalIpAddress ?? string.Empty,
             softwareVersion: factSheet.VehicleConfig?.Versions != null ? factSheet.VehicleConfig!.Versions!.SingleOrDefault(v => string.Equals(v.Key, "softwareVersion", StringComparison.InvariantCultureIgnoreCase))?.Value ?? string.Empty : string.Empty,
             batteryCapacity: -1,

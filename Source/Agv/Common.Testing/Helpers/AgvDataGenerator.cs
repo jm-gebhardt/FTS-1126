@@ -14,11 +14,12 @@ public static class AgvDataGenerator
         double maxVelocityTurn = 0.8,
         double maxVelocityTurnOnSpot = 0.7,
         double turnOnSpotThreshold = 0.0872664, // 5°
-        AgvData.Sensor[]? sensors = null)
+        AgvData.Sensor[]? sensors = null,
+        string type = "BF1")
     {
         return new AgvData(correlationId ?? Guid.NewGuid(),
             "KARIS",
-            "BF1",
+            type,
             ipV4Address,
             "v0",
             batteryCapacity,

@@ -65,4 +65,7 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue>
     /// <inheritdoc />
     public int Count(Func<KeyValuePair<TKey, TValue>, bool> predicate)
         => _cache.Count(kvp => predicate(new KeyValuePair<TKey, TValue>(kvp.Key, kvp.Value.Value)));
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<TKey> GetKeys() => _cache.Keys.ToList();
 }

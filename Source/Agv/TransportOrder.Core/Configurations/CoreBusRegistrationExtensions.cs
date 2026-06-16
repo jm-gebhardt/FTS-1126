@@ -12,6 +12,7 @@ using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.BoundingBox;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
@@ -26,6 +27,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Zones;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
@@ -206,7 +208,13 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GetGraphRequestHandler>();
         busRegistrationConfigurator.AddRequestClient<GetGraph>();
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
-
+        busRegistrationConfigurator.AddConsumer<BoundingBoxEventHandler>();
+        busRegistrationConfigurator.AddConsumer<BoundingBoxCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(1);
+            partitioner.PartitionMessageById<CalculateBoundingBoxes, BoundingBoxCommandHandler>(c);
+            partitioner.PartitionMessageById<CalculateBoundingBoxesForAgvType, BoundingBoxCommandHandler>(c);
+        });
         busRegistrationConfigurator.AddConsumer<NodeStationEventHandler>();
         busRegistrationConfigurator.AddConsumer<QueueEventHandler>();
 
@@ -349,6 +357,8 @@ public static class CoreBusRegistrationExtensions
     /// <param name="configurator">The registration configurator</param>
     public static void AddMediator(this IMediatorRegistrationConfigurator configurator)
     {
+        RegisterMediatorGraphHandlers(configurator);
+
         RegisterMediatorMapHandlers(configurator);
 
         RegisterMediatorAgvRequestHandlers(configurator);
@@ -374,6 +384,17 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorLogRequestHandlers(configurator);
 
         RegisterMediatorOwnedResourceHandlers(configurator);
+    }
+
+    private static void RegisterMediatorGraphHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<BoundingBoxRequestHandler>();
+        configurator.AddRequestClient<GetBoundingBoxes>();
+
+        configurator.AddConsumer<BoundingBoxConflictRequestHandler>();
+        configurator.AddRequestClient<GetBoundingBoxConflicts>();
+        configurator.AddRequestClient<GetNodeBoundingBoxConflicts>();
+        configurator.AddRequestClient<GetEdgeBoundingBoxConflicts>();
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)

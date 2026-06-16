@@ -36,7 +36,7 @@ public class NodeEntityConfiguration : IEntityTypeConfiguration<Node>
                 paramBuilder.HasKey(ShadowId);
 
                 paramBuilder.Property(p => p.Value)
-                    .HasConversion(EfValueConverters.CreateJsonConverter<object>()!);
+                    .HasConversion(EfValueConverters.CreateJsonConverter<object>());
             });
         });
     }

@@ -48,7 +48,7 @@ public class GraphLayoutEntityConfiguration : IEntityTypeConfiguration<GraphLayo
         builder.Property(e => e.StationId).HasMaxLength(DbStringLimits.NodeName);
         builder.Property(e => e.StationName).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.InteractionNodeIds)
-            .HasConversion(EfValueConverters.CreateJsonConverter<ICollection<string>>()!)
+            .HasConversion(EfValueConverters.CreateJsonConverter<ICollection<string>>())
             .Metadata.SetValueComparer(new ValueComparer<ICollection<string>>(
                 (c1, c2) => c1!.SequenceEqual(c2!),
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -95,7 +95,7 @@ public class GraphLayoutNodeEntityConfiguration : IEntityTypeConfiguration<Graph
                     paramBuilder.HasKey(ShadowId);
                     paramBuilder.Property(p => p.Key).HasMaxLength(DbStringLimits.Name);
                     paramBuilder.Property(p => p.Value)
-                        .HasConversion(EfValueConverters.CreateJsonConverter<object>()!);
+                        .HasConversion(EfValueConverters.CreateJsonConverter<object>());
                 });
             });
         });
@@ -130,7 +130,7 @@ public class GraphLayoutEdgeEntityConfiguration : IEntityTypeConfiguration<Graph
             vpBuilder.OwnsOne(vp => vp.Trajectory, trajectoryBuilder =>
             {
                 trajectoryBuilder.Property(t => t.KnotVector)
-                    .HasConversion(EfValueConverters.CreateJsonConverter<IList<float>>()!)
+                    .HasConversion(EfValueConverters.CreateJsonConverter<IList<float>>())
                     .Metadata.SetValueComparer(new ValueComparer<IList<float>>(
                         (c1, c2) => c1!.SequenceEqual(c2!),
                         c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -157,7 +157,7 @@ public class GraphLayoutEdgeEntityConfiguration : IEntityTypeConfiguration<Graph
                     paramBuilder.HasKey(ShadowId);
                     paramBuilder.Property(p => p.Key).HasMaxLength(DbStringLimits.Name);
                     paramBuilder.Property(p => p.Value)
-                        .HasConversion(EfValueConverters.CreateJsonConverter<object>()!);
+                        .HasConversion(EfValueConverters.CreateJsonConverter<object>());
                 });
             });
         });

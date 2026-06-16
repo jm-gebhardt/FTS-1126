@@ -17,12 +17,12 @@ public class GraphNodeEntityConfiguration : IEntityTypeConfiguration<GraphNode>
         builder.ToTable(TableName);
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.NodeName);
-        
+
         var jsonOptions = new JsonSerializerOptions();
         jsonOptions.Converters.Add(new JsonNodeTypeConverter());
         builder.Property(e => e.Type).HasConversion(
-            v => JsonSerializer.Serialize(v, jsonOptions),
-            v => JsonSerializer.Deserialize<ICollection<AgvGraph.NodeType>>(v, jsonOptions)!);
+            EfValueConverters.CreateJsonConverter<ICollection<AgvGraph.NodeType>>(jsonOptions),
+            EfValueConverters.CreateListComparer<AgvGraph.NodeType>());
         builder.Property(e => e.TypeString)
             .UsePropertyAccessMode(PropertyAccessMode.Property)
             .HasMaxLength(DbStringLimits.Description)
