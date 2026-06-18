@@ -16,7 +16,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
         return exception switch
         {
             FluentValidation.ValidationException or JsonException => HttpStatusCode.BadRequest,
-            NotFoundException or FileNotFoundException => HttpStatusCode.NotFound,
+            NotFoundException or System.IO.FileNotFoundException => HttpStatusCode.NotFound,
             IOException => HttpStatusCode.Conflict,
             _ => base.Convert(exception)
         };

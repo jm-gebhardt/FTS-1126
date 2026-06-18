@@ -1,9 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Testing.Fixtures;
+using JetBrains.Annotations;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +12,13 @@ using ActionScope = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvAc
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain.Services;
 
+[PublicAPI]
 public class OrderBuilderTestFixture: FixtureBase
 {
     private readonly Mock<IAgvRepository> _agvRepository = new();
-    private readonly Mock<IAgvGraphProvider> _agvGraphProvider = new();
     private readonly Mock<IAgvActionRepository> _agvActionRepository = new();
 
+    [UsedImplicitly]
     public readonly IOrderBuilder Builder;
 
     public OrderBuilderTestFixture()
@@ -28,7 +28,6 @@ public class OrderBuilderTestFixture: FixtureBase
             sc.AddTransient(_ => new Mock<ILogger<OrderBuilder>>().Object);
             sc.AddTransient(_ => _agvRepository.Object);
             sc.AddTransient(_ => _agvActionRepository.Object);
-            sc.AddTransient(_ => _agvGraphProvider.Object);
             sc.AddTransient<IOrderActionBuilder, DetectObjectOrderActionBuilder>();
             sc.AddTransient<IOrderActionBuilder, DropOrderActionBuilder>();
             sc.AddTransient<IOrderActionBuilder, EnableMapOrderActionBuilder>();
@@ -49,12 +48,6 @@ public class OrderBuilderTestFixture: FixtureBase
     public OrderBuilderTestFixture AddAgv(Agv agv)
     {
         _agvRepository.Setup(x => x.GetRequiredAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
-        return this;
-    }
-
-    public OrderBuilderTestFixture AgvAgvGraph(AgvGraph agvGraph)
-    {
-        _agvGraphProvider.Setup(x => x.GetRequiredAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(agvGraph);
         return this;
     }
 

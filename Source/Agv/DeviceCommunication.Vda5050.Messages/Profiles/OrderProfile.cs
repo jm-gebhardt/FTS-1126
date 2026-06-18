@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
 
 /// <summary>
 /// Provides mapping for <see cref="MqttOrder"/>
 /// </summary>
+[UsedImplicitly]
 public class OrderProfile : Profile
 {
     /// <inheritdoc cref="OrderProfile" />

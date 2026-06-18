@@ -46,4 +46,11 @@ public interface IAgvRepository
     /// Initialize the agv cache.
     /// </summary>
     Task InitializeCacheAsync();
+
+    /// <summary>
+    /// Get all agvs for given vehicle types.
+    /// </summary>
+    /// <param name="vehicleTypeIds">The vehicle types.</param>
+    /// <returns>A collection of agvs.</returns>
+    Task<ICollection<Agv>> GetAllForVehicleTypesAsync(ICollection<string> vehicleTypeIds);
 }

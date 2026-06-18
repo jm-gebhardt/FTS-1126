@@ -1,14 +1,14 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using RoutePlan = Gebhardt.Acc.Common.Messages.ActionGroups.RoutePlan;
+﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
@@ -16,6 +16,7 @@ using OrderActionContext = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Model
 using OrderEdge = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders.OrderEdge;
 using OrderNode = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders.OrderNode;
 using OrderNodePosition = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders.OrderNodePosition;
+using RoutePlan = Gebhardt.Acc.Common.Messages.ActionGroups.RoutePlan;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
 
@@ -26,17 +27,18 @@ public class OrderBuilder(
     ILogger<OrderBuilder> logger,
     IAgvRepository agvRepository,
     IAgvActionRepository agvActionRepository,
-    IAgvGraphProvider agvGraphProvider,
-    OrderActionBuilderRegistry orderActionBuilder) : IOrderBuilder
+    ILifRepository lifRepository,
+    OrderActionBuilderRegistry orderActionBuilder,
+    IMapper mapper) : IOrderBuilder
 {
     /// <inheritdoc/>
     public async Task<Models.Orders.Order> Build(Guid agvCorrelationId, RoutePlan routePlan, Common.Messages.ActionGroups.AgvAction action)
     {
-        var agvGraph = await agvGraphProvider.GetRequiredAgvGraphAsync(agvCorrelationId);
         var agv = await agvRepository.GetRequiredAgvAsync(agvCorrelationId);
+        ICollection<Layout> layouts = await lifRepository.GetLayoutsByVehicleTypeIdAsync(agv.VehicleTypeId);
 
-        ICollection<OrderNode> nodes = await BuildNodes(agv, agvGraph.Nodes, action, routePlan.BaseNodes);
-        ICollection<OrderEdge> edges = await BuildEdges(agv, agvGraph.Edges, routePlan.BaseEdges, action.CorrelationId);
+        ICollection<OrderNode> nodes = await BuildNodes(agv, layouts.SelectMany(n => n.Nodes).ToList(), action, routePlan.BaseNodes);
+        ICollection<OrderEdge> edges = await BuildEdges(agv, layouts.SelectMany(n => n.Edges).ToList(), routePlan.BaseEdges, action.CorrelationId);
         var plannedRoute = new Route(nodes, edges);
         if (!plannedRoute.IsValid)
         {
@@ -69,12 +71,13 @@ public class OrderBuilder(
         ICollection<AgvAction> agvEdgeActions = await agvActionRepository.GetActionsForScopeAsync(agv.SerialNumber, ActionScope.Edge);
         foreach (var passed in baseEdges.Select((edge, index) => new { index, edge }))
         {
-            var agvGraphEdge = agvEdges.SingleOrDefault(e => e.Id == passed.edge.Id);
+            var agvGraphEdge = agvEdges.SingleOrDefault(e => e.EdgeId.ToGuid() == passed.edge.Id);
             if (agvGraphEdge == null)
             {
                 logger.LogError("Failed to create order edge {EdgeId} for action {ActionCorrelationId} of agv {AgvCorrelationId}", passed.edge.Id, actionCorrelationId, agv.CorrelationId);
                 throw new EdgeNotDefinedForAgvException(passed.edge.Id, agv.CorrelationId);
             }
+            var properties = agvGraphEdge.GetPropertiesForVehicle(agv.VehicleTypeId);
             var orderEdge = new OrderEdge
             {
                 EdgeId = agvGraphEdge.EdgeId,
@@ -82,20 +85,20 @@ public class OrderBuilder(
                 Released = false,
                 EndNodeId = agvGraphEdge.EndNodeId,
                 StartNodeId = agvGraphEdge.StartNodeId,
-                MaxHeight = agvGraphEdge.MaxHeight,
-                MaxRotationSpeed = agvGraphEdge.MaxRotationSpeed,
-                MaxSpeed = agvGraphEdge.MaxSpeed,
-                MinHeight = agvGraphEdge.MinHeight,
-                Orientation = agvGraphEdge.AgvOrientation,
-                OrientationType = agvGraphEdge.OrientationType,
-                RotationAllowed = agvGraphEdge.RotationAllowed,
-                Trajectory = agvGraphEdge.AgvTrajectory
+                MaxHeight = properties?.MaxHeight,
+                MaxRotationSpeed = properties?.MaxRotationSpeed,
+                MaxSpeed = properties?.MaxSpeed,
+                MinHeight = properties?.MinHeight,
+                Orientation = properties?.VehicleOrientation,
+                OrientationType = mapper.Map<OrientationType?>(properties?.OrientationType),
+                RotationAllowed = properties?.RotationAllowed,
+                Trajectory = mapper.Map<Models.Orders.Trajectory?>(properties?.Trajectory)
             };
 
-            foreach (var requiredAction in agvGraphEdge.AgvActions.Where(a => a.RequirementType is RequirementType.Required or RequirementType.Conditional))
+            foreach (var requiredAction in properties?.Actions?.Where(a => a.RequirementType is RequirementType.Required or RequirementType.Conditional) ?? [])
             {
                 var definedAction = agvEdgeActions.SingleOrDefault(a => a.ActionType == requiredAction.ActionType);
-                var context = new OrderActionContext(requiredAction.Parameters, requiredAction.BlockingType, Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType));
+                var context = new OrderActionContext(requiredAction.ActionParameters?.Select(p => new OrderActionParameter() { Key=p.Key, Value =p.Value}).ToList() ?? [], requiredAction.BlockingType, Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType));
                 if (definedAction != null)
                 {
                     logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using fact sheet and graph information", requiredAction.ActionType, passed.edge.Id, actionCorrelationId, agv.CorrelationId);
@@ -105,7 +108,7 @@ public class OrderBuilder(
                 logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using only graph information", requiredAction.ActionType, passed.edge.Id, actionCorrelationId, agv.CorrelationId);
                 orderEdge.Actions.Add(orderActionBuilder.Build(requiredAction));
             }
-            foreach (var optionalAction in agvGraphEdge.AgvActions.Where(a => a.RequirementType is RequirementType.Optional))
+            foreach (var optionalAction in properties?.Actions?.Where(a => a.RequirementType is RequirementType.Optional) ?? [])
             {
                 // Conditions for running optional action have to be specified, for now only log
                 logger.LogWarning("Not building optional action {ActionType} on edge {EdgeId} for action {ActionCorrelationId} of agv {AgvCorrelationId}", optionalAction.ActionType, passed.edge.Id, actionCorrelationId, agv.CorrelationId);
@@ -129,7 +132,7 @@ public class OrderBuilder(
         ICollection<AgvAction> agvNodesActions = await agvActionRepository.GetActionsForScopeAsync(agv.SerialNumber, ActionScope.Node);
         foreach (var passed in baseNodes.Select((node, index) => new { index, node }))
         {
-            var agvGraphNode = agvNodes.SingleOrDefault(n => n.Id == passed.node.Id);
+            var agvGraphNode = agvNodes.SingleOrDefault(n => n.NodeId.ToGuid() == passed.node.Id);
             if (agvGraphNode == null)
             {
                 logger.LogError("Failed to create order node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId}", passed.node.Id, action.CorrelationId, agv.CorrelationId);
@@ -137,7 +140,7 @@ public class OrderBuilder(
             }
             var orderNode = new OrderNode();
             AddNodeOrderActions(agv, action, agvGraphNode, agvNodesActions, passed.node, orderNode);
-            orderNode.NodePosition = new OrderNodePosition() { X = agvGraphNode.Position.X, Y = agvGraphNode.Position.Y };
+            orderNode.NodePosition = new OrderNodePosition() { X = agvGraphNode.NodePosition.X, Y = agvGraphNode.NodePosition.Y };
             orderNode.Released = false;
             orderNode.SequenceId = passed.index * 2; // sequenceId runs over nodes and edges
             orderNode.NodeId = agvGraphNode.NodeId;
@@ -148,7 +151,9 @@ public class OrderBuilder(
 
     private void AddNodeOrderActions(Agv agv, Common.Messages.ActionGroups.AgvAction action, Node agvGraphNode, ICollection<AgvAction> agvNodesActions, GraphNode passedNode, OrderNode orderNode)
     {
-        foreach (var requiredAction in agvGraphNode.AgvActions.Where(a => a.RequirementType is RequirementType.Required or RequirementType.Conditional))
+        var properties = agvGraphNode.GetPropertiesForVehicle(agv.VehicleTypeId);
+
+        foreach (var requiredAction in properties?.Actions?.Where(a => a.RequirementType is RequirementType.Required or RequirementType.Conditional) ?? [])
         {
             if (Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType)
                 && (!action.ActionType.MatchesVda5050Type(requiredAction.ActionType) || action.Target.Node?.Id != passedNode.Id))
@@ -157,7 +162,7 @@ public class OrderBuilder(
             }
             orderNode.Actions.Add(BuildOrderNodeAction(agv, action, agvNodesActions, requiredAction, passedNode));
         }
-        foreach (var optionalAction in agvGraphNode.AgvActions.Where(a => a.RequirementType is RequirementType.Optional))
+        foreach (var optionalAction in properties?.Actions?.Where(a => a.RequirementType is RequirementType.Optional) ?? [])
         {
             if (action.ActionType.MatchesVda5050Type(optionalAction.ActionType) && action.Target.Node?.Id == passedNode.Id)
             {
@@ -173,10 +178,10 @@ public class OrderBuilder(
         }
     }
 
-    private Models.Orders.OrderAction BuildOrderNodeAction(Agv agv, Common.Messages.ActionGroups.AgvAction action, ICollection<AgvAction> agvNodesActions, AgvNodeAction requiredAction, GraphNode passedNode)
+    private Models.Orders.OrderAction BuildOrderNodeAction(Agv agv, Common.Messages.ActionGroups.AgvAction action, ICollection<AgvAction> agvNodesActions, VehicleTypeNodePropertyAction requiredAction, GraphNode passedNode)
     {
         var definedAction = agvNodesActions.SingleOrDefault(a => a.ActionType == requiredAction.ActionType);
-        var context = new OrderActionContext(requiredAction.Parameters, requiredAction.BlockingType, Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType));
+        var context = new OrderActionContext(requiredAction.ActionParameters?.Select(p => new OrderActionParameter { Key=p.Key, Value=p.Value}).ToList() ?? [], requiredAction.BlockingType, Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType));
         if (definedAction != null)
         {
             logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using fact sheet and graph information", requiredAction.ActionType, passedNode.Id, action.CorrelationId, agv.CorrelationId);

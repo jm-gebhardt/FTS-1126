@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿/*using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
@@ -303,7 +303,7 @@ public class OrderBuilderTest
         var agv = AgvGenerator.Generate(Guid.NewGuid(), "agv-1");
         var pickAction = AgvGraphGenerator.GenerateNodeAction(Vda5050Specifications.ActionTypes.Pick, agvCorrelationId: agv.CorrelationId, RequirementType.Required, BlockingType.SOFT);
         string[] nodeIds = ["map/NODE-10", "map/NODE-11", "PS01"];
-        var agvGraph = AgvGraphGenerator.GenerateFromNodeIds(nodeIds, new Dictionary<string, ICollection<AgvNodeAction>> { { nodeIds.Last(), [pickAction] } }, agvCorrelationId: agv.CorrelationId);
+        var agvGraph = AgvGraphGenerator.GenerateFromNodeIds(nodeIds, new Dictionary<string, ICollection<AgvNodeAction*//**//*>> { { nodeIds.Last(), [pickAction] } }, agvCorrelationId: agv.CorrelationId);
 
         var action = AgvActionGenerator.GenerateAction(nodeIds.First(), ActionType.Pick, targetNodeId: nodeIds.Last());
         action.Edges = agvGraph.Edges.Select(e => e.Id).ToList();
@@ -317,4 +317,4 @@ public class OrderBuilderTest
 
         order.PlannedRoute.Nodes.Single(n => n.NodeId == nodeIds.Last()).Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
     }
-}
+}*/

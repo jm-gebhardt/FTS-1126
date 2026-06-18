@@ -1,12 +1,14 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
 
 /// <summary>
 /// Profile for AgvError
 /// </summary>
+[UsedImplicitly]
 public class MqttErrorProfile : Profile
 {
     /// <see cref="MqttErrorProfile" />

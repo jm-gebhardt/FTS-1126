@@ -127,6 +127,18 @@ public interface IGraphRepository
     Task UpdateGraphAsync(Graph graph);
 
     /// <summary>
+    /// Updates the graph elements for vehicle types.
+    /// </summary>
+    /// <param name="graphs">The new type Graphs.</param>
+    Task<bool> UpdateAgvTypeGraphsAsync(ICollection<Graph> graphs);
+
+    /// <summary>
+    /// Deletes the graph elements for vehicle types.
+    /// </summary>
+    /// <param name="graphs">The type Graphs to delete.</param>
+    Task<bool> DeleteAgvTypeGraphsAsync(ICollection<Graph> graphs);
+
+    /// <summary>
     /// Get the CorrelationIds of the Agv which have at least one node in the given list.
     /// </summary>
     /// <param name="nodes"></param>

@@ -2,12 +2,14 @@
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
 
 /// <summary>
 /// Provides mapping for <see cref="MqttAgvAction"/>
 /// </summary>
+[UsedImplicitly]
 public class AgvActionProfile: Profile
 {
     /// <inheritdoc cref="AgvActionProfile" />

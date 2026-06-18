@@ -1,5 +1,5 @@
 ﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
@@ -51,9 +51,9 @@ public sealed class OrderActionBuilderRegistry
     /// </summary>
     /// <param name="nodeAction">The node Action.</param>
     /// <returns>The order action.</returns>
-    public Models.Orders.OrderAction Build(AgvNodeAction nodeAction)
+    public Models.Orders.OrderAction Build(VehicleTypeNodePropertyAction nodeAction)
     {
-        return new Models.Orders.OrderAction(nodeAction.ActionType, null, nodeAction.BlockingType, nodeAction.Parameters);
+        return new Models.Orders.OrderAction(nodeAction.ActionType, null, nodeAction.BlockingType, nodeAction.ActionParameters?.Select(p => new OrderActionParameter() { Key = p.Key, Value=p.Value }).ToList() ?? []);
     }
 
     /// <summary>
@@ -61,8 +61,8 @@ public sealed class OrderActionBuilderRegistry
     /// </summary>
     /// <param name="edgeAction">The edge Action.</param>
     /// <returns>The order action.</returns>
-    public Models.Orders.OrderAction Build(AgvEdgeAction edgeAction)
+    public Models.Orders.OrderAction Build(VehicleTypeEdgePropertyAction edgeAction)
     {
-        return new Models.Orders.OrderAction(edgeAction.ActionType, null, edgeAction.BlockingType, edgeAction.Parameters);
+        return new Models.Orders.OrderAction(edgeAction.ActionType, null, edgeAction.BlockingType, edgeAction.ActionParameters?.Select(p => new OrderActionParameter() { Key = p.Key, Value=p.Value}).ToList() ?? []);
     }
 }

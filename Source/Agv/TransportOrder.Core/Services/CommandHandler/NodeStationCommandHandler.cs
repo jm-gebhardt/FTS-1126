@@ -43,7 +43,6 @@ public class NodeStationCommandHandler(
     IConsumer<SetNodeApproachingProperties>,
     IConsumer<InitializeNodeApproachingProperties>,
     IConsumer<FreeStationOccupancy>,
-    IConsumer<OccupyStation>,
     IConsumer<UnblockStation>,
     IConsumer<ReserveStation>,
     IConsumer<LockStation>,
@@ -290,18 +289,7 @@ public class NodeStationCommandHandler(
         await context.Publish(new AgvLeftStation(station.Id, agvCorrelationId.GetValueOrDefault()));
         await PublishNodeStateChange(context, node);
     }
-
-    /// <inheritdoc />
-    public async Task Consume(ConsumeContext<OccupyStation> context)
-    {
-        var agv = context.Message.AgvCorrelationId;
-        var station = await stationRepository.GetStation(context.Message.Station.Id);
-        var node = await nodeRepository.GetNodeAsync(station.Id);
-        node.Occupy(agv, true, ignoreLocked: true);
-        await nodeRepository.UpdateLock(node, ignoreLocked: true);
-        await PublishNodeStateChange(context, node);
-    }
-
+ 
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ReserveStation> context)
     {

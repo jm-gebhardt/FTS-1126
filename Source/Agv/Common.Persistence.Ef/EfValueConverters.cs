@@ -67,6 +67,34 @@ public static class EfValueConverters
             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v == null ? 0 : v.GetHashCode())),
             c => c.ToList());
     }
+    
+    /// <summary>    
+    /// Creates a value comparer for comparing arrays of type T.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the array.</typeparam>
+    /// <returns>A ValueComparer that can compare two nullable arrays of type T for equality and compute hash codes.</returns>
+    public static ValueComparer<T[]?> CreateArrayComparer<T>()
+    {
+        return new ValueComparer<T[]?>(
+            (c1, c2) => (c1 == null && c2 == null) || (c1 != null && c2 != null && Enumerable.SequenceEqual(c1, c2)),
+            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, v == null ? 0 : v.GetHashCode())),
+            c => c == null ? null : c.ToArray()
+        );
+    }
+
+    /// <summary>
+    /// Creates a value converter for converting between an object of type T and its JSON string representation.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to convert to/from JSON.</typeparam>
+    /// <param name="options">Optional JsonSerializerOptions to customize serialization/deserialization.</param>
+    /// <returns>A ValueConverter that converts between T and its JSON string representation.</returns>
+    public static ValueConverter<T?, string?> CreateNullableJsonConverter<T>(JsonSerializerOptions? options = null)
+    {
+        return new ValueConverter<T?, string?>(
+            v => v == null ? null : JsonSerializer.Serialize(v, options),
+            v => string.IsNullOrEmpty(v) ? default : JsonSerializer.Deserialize<T>(v, (JsonSerializerOptions?) null)
+        );
+    }
 
     /// <summary>
     /// Creates a value converter for converting between an object of type T and its JSON string representation.

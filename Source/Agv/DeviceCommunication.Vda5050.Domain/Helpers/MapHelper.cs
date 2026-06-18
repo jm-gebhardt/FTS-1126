@@ -44,20 +44,20 @@ public static class MapHelper
     /// Compute pixel dimensions, resolution, and coordinate offsets from a set of nodes.
     /// </summary>
     internal static (int Width, int Height, float Resolution, float XOffset, float YOffset) ComputeMapGeometry(
-        IReadOnlyList<GraphNode> nodes)
+        IReadOnlyList<GraphNode> nodes, float? minX=null, float? maxX=null, float? minY=null, float? maxY=null)
     {
         if (nodes.Count == 0)
         {
             return (FallbackExtent, FallbackExtent, FallbackResolution, 0f, 0f);
         }
 
-        float minX = nodes.Min(n => n.X);
-        float maxX = nodes.Max(n => n.X);
-        float minY = nodes.Min(n => n.Y);
-        float maxY = nodes.Max(n => n.Y);
+        minX = minX != null ? Math.Min(minX.Value, nodes.Min(n => n.X)): nodes.Min(n => n.X);
+        maxX = maxX != null ? Math.Max(maxX.Value, nodes.Max(n => n.X)): nodes.Max(n => n.X);
+        minY = minY != null ? Math.Min(minY.Value, nodes.Min(n => n.Y)): nodes.Min(n => n.X);
+        maxY = maxY != null ? Math.Max(maxY.Value, nodes.Max(n => n.Y)): nodes.Max(n => n.Y);
 
-        float rangeX = maxX - minX;
-        float rangeY = maxY - minY;
+        float rangeX = maxX.GetValueOrDefault() - minX.GetValueOrDefault();
+        float rangeY = maxY.GetValueOrDefault() - minY.GetValueOrDefault();
 
         float marginX = Math.Max(MarginMeters, rangeX * MarginFraction);
         float marginY = Math.Max(MarginMeters, rangeY * MarginFraction);
@@ -71,8 +71,8 @@ public static class MapHelper
         int width = Math.Max(MinPixelDimension, (int)Math.Ceiling(totalX / resolution));
         int height = Math.Max(MinPixelDimension, (int)Math.Ceiling(totalY / resolution));
 
-        float xOffset = marginX - minX;
-        float yOffset = marginY - minY;
+        float xOffset = marginX - minX.GetValueOrDefault();
+        float yOffset = marginY - minY.GetValueOrDefault();
 
         return (width, height, resolution, xOffset, yOffset);
     }

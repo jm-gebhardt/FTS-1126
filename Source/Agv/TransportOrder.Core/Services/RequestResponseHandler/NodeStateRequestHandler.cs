@@ -1,6 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
@@ -30,11 +28,6 @@ public class NodeStateRequestHandler : IConsumer<GetMapNodeStates>
         var correlationId = context.Message.CorrelationId;
 
         ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId);
-
-        if (nodeStates.IsNullOrEmpty())
-        {
-            throw new MapNotFoundException(correlationId);
-        }
 
         await context.RespondAsync(new GotMapNodeStates(nodeStates));
     }

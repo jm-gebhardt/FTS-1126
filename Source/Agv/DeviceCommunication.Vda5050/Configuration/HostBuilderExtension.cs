@@ -10,7 +10,6 @@ using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Sagas;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Filters;
@@ -55,6 +54,7 @@ public static class HostBuilderExtension
                             configurator.AddConsumers();
                             configurator.AddSagaStateMachine<OrderExecutionStateMachine, OrderExecutionSaga>()
                                 .InMemoryRepository();
+                            configurator.AddMediator(c => c.AddMediator());
                         }
                         ,
                         // ReSharper disable once UnusedParameter.Local
@@ -103,16 +103,14 @@ public static class HostBuilderExtension
                 //Repositories
                 services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
                 services.AddTransient<IAgvActionRepository, EfAgvActionRepository>();
-                services.AddTransient<IGraphLayoutRepository, EfGraphLayoutRepository>();
                 services.AddTransient<IAgvRepository, EfAgvRepository>();
+                services.AddTransient<ILifRepository, EfLifRepository>();
 
                 //Services
                 services.AddHostedService<InitializationProvider>();
                 services.AddSingleton(TimeProvider.System);
-                services.AddTransient<ILifGraphConverter, LifGraphConverter>();
-                services.AddTransient<IAgvGraphProvider, AgvGraphProvider>();
                 services.AddTransient<INurbsEdgeBuilder, TinySplineEdgeBuilder>();
-                services.AddValidatorsFromAssemblyContaining<ILifGraphConverter>();
+                services.AddValidatorsFromAssemblyContaining<ILifRepository>();
 
                 //Caches
                 services.AddSingleton<IAgvCacheProvider, AgvCache>();

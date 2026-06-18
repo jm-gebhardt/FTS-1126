@@ -5,7 +5,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
-using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using Gebhardt.Acc.TransportOrder.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.WebApi;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.RestrictedArea;
 

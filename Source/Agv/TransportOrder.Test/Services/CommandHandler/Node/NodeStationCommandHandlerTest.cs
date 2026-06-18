@@ -364,22 +364,6 @@ public class NodeStationCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_OccupyStation_ValidData_ForceOccupyNodeCalled()
-    {
-        var agv = Guid.NewGuid();
-        var node = "AP01".ToGraphNode();
-        var fixture = new NodeStationCommandHandlerTestFixture()
-            .WithNodeLock(null)
-            .WithAnyStation()
-            .WithNode(node);
-
-        await fixture.PublishMessageAsync(new OccupyStation(node, agv));
-
-        fixture.VerifyNodeLockUpdated(Times.Once());
-        await fixture.ShouldHavePublishedAsync<NodeStateChanged>();
-    }
-
-    [TestMethod]
     public async Task Consume_StationReserved_ValidData_ForceReserveNodeCalled()
     {
         var agv = Guid.NewGuid();

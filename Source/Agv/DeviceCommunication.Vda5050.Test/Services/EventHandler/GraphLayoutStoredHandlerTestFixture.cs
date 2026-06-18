@@ -7,7 +7,7 @@ using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.EventHandler;
 
-public class GraphLayoutStoredHandlerTestFixture : MassTransitConsumerTestFixture<GraphLayoutStoredHandler>
+public class GraphLayoutStoredHandlerTestFixture : MassTransitConsumerTestFixture<LayoutEventHandler>
 {
     private readonly Mock<IAgvRepository> _agvRepository = new();
 

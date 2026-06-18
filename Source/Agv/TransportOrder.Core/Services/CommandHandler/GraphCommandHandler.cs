@@ -20,18 +20,22 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 [UsedImplicitly]
 public class GraphCommandHandler : 
     IConsumer<UpdateGraphRequest>,
-    IConsumer<AgvGraphChanged>
+    IConsumer<AgvGraphChanged>,
+    IConsumer<AgvTypeGraphUpdated>,
+    IConsumer<AgvTypeGraphDeleted>
 {
     private readonly IGraphRepository _graphRepository;
     private readonly ILogger<GraphCommandHandler> _logger;
     private readonly ILoggingService _loggingService;
+    private readonly IStationRepository _stationRepository;
 
     /// <inheritdoc cref="GraphCommandHandler"/>
-    public GraphCommandHandler(IGraphRepository graphRepository, ILogger<GraphCommandHandler> logger, ILoggingService loggingService)
+    public GraphCommandHandler(IGraphRepository graphRepository, IStationRepository stationRepository, ILogger<GraphCommandHandler> logger, ILoggingService loggingService)
     {
         _graphRepository = graphRepository;
         _logger = logger;
         _loggingService = loggingService;
+        _stationRepository = stationRepository;
     }
 
     /// <inheritdoc />
@@ -63,5 +67,32 @@ public class GraphCommandHandler :
            return;
         }
         await context.Publish(new GlobalGraphConsolidated());
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AgvTypeGraphUpdated> context)
+    {
+        if (!await _graphRepository.UpdateAgvTypeGraphsAsync(context.Message.UpdatedTypeGraphs))
+        {
+            _logger.LogError("Updating agv type graphs failed");
+            return;
+        }
+
+        foreach (var graph in context.Message.UpdatedTypeGraphs)
+        {
+            await _stationRepository.AddStations(graph);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AgvTypeGraphDeleted> context)
+    {
+        if (!await _graphRepository.DeleteAgvTypeGraphsAsync(context.Message.UpdatedTypeGraphs))
+        {
+            _logger.LogError("Deleting agv type graphs failed");
+            await context.RespondAsync(new Failed());
+            return;
+        }
+        await context.RespondAsync(new Success());
     }
 }

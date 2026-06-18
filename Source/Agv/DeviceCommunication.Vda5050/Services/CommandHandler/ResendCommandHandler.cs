@@ -12,12 +12,9 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 /// Handles requests for resending agv related information, e.g. <see cref="RequestAgvData"/> and <see cref="RequestAgvGraph"/>.
 /// </summary>
 [UsedImplicitly]
-public class ResendCommandHandler(
-    ILogger<ResendCommandHandler> logger,
-    IAgvDataRepository agvDataRepository,
-    IAgvRepository agvRepository)
-    : IConsumer<RequestAgvData>,
-        IConsumer<RequestAgvGraph>
+public class ResendCommandHandler(ILogger<ResendCommandHandler> logger, IAgvDataRepository agvDataRepository, IAgvRepository agvRepository):
+    IConsumer<RequestAgvData>,
+    IConsumer<RequestAgvGraph>
 {
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestAgvData> context)

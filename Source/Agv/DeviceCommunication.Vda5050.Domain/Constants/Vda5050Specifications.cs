@@ -11,7 +11,9 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 public static class Vda5050Specifications
 {
     public const string Version = "2.1.0";
-    
+
+    public const string LifUploadFileType = "application/json";
+
     public static class ActionTypes
     {
         public const string Pick = "pick";

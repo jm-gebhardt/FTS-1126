@@ -240,8 +240,6 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(nodePartitioner, p => p.Message.OldLastNodeId.GetValueOrDefault()));
             c.Message<FreeStationOccupancy>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.NodeId));
-            c.Message<OccupyStation>(x =>
-                x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
             c.Message<ReserveStation>(x =>
                 x.UsePartitioner(nodePartitioner, p => p.Message.Station.Id));
             c.Message<UnblockStation>(x =>

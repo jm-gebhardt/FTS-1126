@@ -79,4 +79,11 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
             agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
         }
     }
+
+    /// <inheritdoc cref="IAgvRepository"/>
+    public async Task<ICollection<Agv>> GetAllForVehicleTypesAsync(ICollection<string> vehicleTypeIds)
+    {
+        HashSet<string> vehicles = vehicleTypeIds.ToHashSet();
+        return (await GetAllAsync()).Where(a => vehicles.Contains(a.VehicleTypeId)).ToList();
+    }
 }

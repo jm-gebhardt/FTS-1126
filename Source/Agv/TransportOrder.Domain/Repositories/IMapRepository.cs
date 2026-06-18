@@ -23,6 +23,11 @@ public interface IMapRepository
     Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false);
 
     /// <summary>
+    /// /Retrieves the dimensions of the default map of the system.
+    /// </summary>
+    Task<(string? MapName, float MinY, float MaxY, float MinX, float MaxX)> GetDefaultMap();
+
+    /// <summary>
     /// Sets (or overwrites) the custom background for a map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>

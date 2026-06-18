@@ -66,7 +66,10 @@ public class EfStationRepository(
 
             List<Station> newStations = newNodes.ToList().Select(n =>
             {
-                var station = new Station(n.Name, n.GetPrimaryType(), n.GetAdditionalTypes());
+                var station = new Station(n.Name, n.GetPrimaryType(), n.GetAdditionalTypes())
+                {
+                    Id = n.Id
+                };
                 station.SetSize(stationSize.maxWidth + Padding, stationSize.maxLength + Padding);
                 station.SetMap(map?.CorrelationId);
                 return station;

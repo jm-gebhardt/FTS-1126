@@ -23,9 +23,8 @@ public class DeviceCommunicationVda5050DbContext : BaseDbContext<DeviceCommunica
        modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
        modelBuilder.ApplyConfiguration(new AgvActionEntityConfiguration());
        modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
-       modelBuilder.ApplyConfiguration(new GraphLayoutEntityConfiguration());
-       modelBuilder.ApplyConfiguration(new GraphLayoutNodeEntityConfiguration());
-       modelBuilder.ApplyConfiguration(new GraphLayoutEdgeEntityConfiguration());
+       modelBuilder.ApplyConfiguration(new LifFileEntityConfiguration());
+       modelBuilder.ApplyConfiguration(new LayoutEntityConfiguration());
     }
 }
 

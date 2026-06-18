@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.Maps;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -28,7 +29,8 @@ public class MapCommandHandler :
     IConsumer<AgvGraphChanged>,
     IConsumer<UpdateMap>,
     IConsumer<SetBackground>,
-    IConsumer<DeleteBackground>
+    IConsumer<DeleteBackground>,
+    IConsumer<GetDefaultMap>
 {
     private readonly IMapRepository _mapRepository;
     private readonly IMapper _mapper;
@@ -75,7 +77,7 @@ public class MapCommandHandler :
         if (await _mapRepository.AddOrUpdateAsync(map, agvCorrelationId, cancellationToken))
         {
             _logger.LogInformation("Map {MapId}/{MapCorrelationId} has been added or updated in repository", messageMap.MapId, messageMap.CorrelationId);
-            await publishEndpoint.Publish(new Common.Messages.Maps.MapSaved(messageMap), cancellationToken);
+            await publishEndpoint.Publish(new MapSaved(messageMap), cancellationToken);
             var mapChangedEvent = _mapper.Map<MapChanged>((map, true));
             await publishEndpoint.Publish(mapChangedEvent, cancellationToken);
         }
@@ -169,5 +171,17 @@ public class MapCommandHandler :
         }
 
         await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc cref="MapCommandHandler"/>
+    public async Task Consume(ConsumeContext<GetDefaultMap> context)
+    {
+        (string? mapName, float minY, float maxY, float minX, float maxX) = await _mapRepository.GetDefaultMap();
+        if (mapName==null)
+        {
+            await context.RespondAsync(new NoDefaultMap());
+            return;
+        }
+        await context.RespondAsync(new GotDefaultMap(mapName, minY, maxY, minX, maxX));
     }
 }

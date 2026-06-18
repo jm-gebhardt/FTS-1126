@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Graph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
@@ -48,20 +47,20 @@ public static class BusRegistrationExtension
             configurator.AddConsumer<ResendCommandHandler>();
             configurator.AddConsumer<AgvCommandHandler>();
             configurator.AddConsumer<ActionCommandHandler>();
-            configurator.AddConsumer<StoreGraphLayoutsHandler>(c =>
+            configurator.AddRequestClient<StoreLayouts>();
+            configurator.AddConsumer<LifCommandHandler>(c =>
             {
                 var partitioner = c.CreatePartitioner(PartitionCount);
-                c.Message<StoreGraphLayouts>(x => x.UsePartitioner(partitioner,
+                c.Message<StoreLayouts>(x => x.UsePartitioner(partitioner,
                     p => string.Join("|", p.Message.Layouts.Select(l => l.LayoutId).Distinct().OrderBy(id => id))));
             });
-            configurator.AddConsumer<PublishAgvGraphHandler>();
-            configurator.AddConsumer<GraphLayoutStoredHandler>();
+            configurator.AddConsumer<AgvGraphCommandHandler>();
+            configurator.AddConsumer<LayoutEventHandler>();
             configurator.AddConsumer<ActionEventHandler>();
             configurator.AddConsumer<LifRequestHandler>();
             configurator.AddConsumer<AgvEventHandler>();
             configurator.AddConsumer<GraphMerger>();
 
-            configurator.AddRequestClient<AddOrUpdateLif>();
             return configurator;
         }
     }

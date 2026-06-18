@@ -1,4 +1,3 @@
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Graphs;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
@@ -117,4 +116,17 @@ public class OrderEdge
     {
         Released = true;
     }
+}
+
+/// <summary>
+/// Orientation type for an edge.
+/// </summary>
+[PublicAPI]
+public enum OrientationType
+{
+    /// <summary>Orientation is relative to the global project-specific map coordinate system.</summary>
+    Global,
+
+    /// <summary>Orientation is tangential to the edge. 0.0 = forwards, π = backwards.</summary>
+    Tangential
 }

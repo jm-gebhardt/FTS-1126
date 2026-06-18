@@ -16,8 +16,8 @@ public class GraphLayoutStoredHandlerTest
         var fixture = new GraphLayoutStoredHandlerTestFixture()
             .SetAgvs(agv1, agv2);
 
-        await fixture.TestHarness.Bus.Publish(new GraphLayoutStored(["L1"], ["manufacturer.series"]));
-        await fixture.ShouldHaveConsumedAsync<GraphLayoutStored>();
+        await fixture.TestHarness.Bus.Publish(new LayoutStored(["L1"], ["manufacturer.series"]));
+        await fixture.ShouldHaveConsumedAsync<LayoutStored>();
 
         ICollection<PublishAgvGraph> messages = fixture.GetPublishedMessages<PublishAgvGraph>();
         messages.Count.ShouldBe(2);
@@ -32,8 +32,8 @@ public class GraphLayoutStoredHandlerTest
         var fixture = new GraphLayoutStoredHandlerTestFixture()
             .SetAgvs(agv);
 
-        await fixture.TestHarness.Bus.Publish(new GraphLayoutStored(["L1"], ["Other.Type"]));
-        await fixture.ShouldHaveConsumedAsync<GraphLayoutStored>();
+        await fixture.TestHarness.Bus.Publish(new LayoutStored(["L1"], ["Other.Type"]));
+        await fixture.ShouldHaveConsumedAsync<LayoutStored>();
 
         await fixture.ShouldNotHavePublishedAsync<PublishAgvGraph>();
     }
@@ -45,8 +45,8 @@ public class GraphLayoutStoredHandlerTest
         var fixture = new GraphLayoutStoredHandlerTestFixture()
             .SetAgvs(matchingAgv);
 
-        await fixture.TestHarness.Bus.Publish(new GraphLayoutStored(["L1"], ["manufacturer.series", "Unknown.Type"]));
-        await fixture.ShouldHaveConsumedAsync<GraphLayoutStored>();
+        await fixture.TestHarness.Bus.Publish(new LayoutStored(["L1"], ["manufacturer.series", "Unknown.Type"]));
+        await fixture.ShouldHaveConsumedAsync<LayoutStored>();
 
         ICollection<PublishAgvGraph> messages = fixture.GetPublishedMessages<PublishAgvGraph>();
         messages.Count.ShouldBe(1);

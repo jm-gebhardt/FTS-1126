@@ -54,6 +54,23 @@ public class EfMapRepository : IMapRepository
         return maps;
     }
 
+    /// <inheritdoc/>
+    public async Task<(string? MapName, float MinY, float MaxY, float MinX, float MaxX)> GetDefaultMap()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var map = await context.Set<Map>()
+            .Include(g => g.Nodes)
+            .Include(g => g.Edges)
+            .Include(g => g.MapAgvs)
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+        if(map == null)
+        {
+            return (null, 0, 0, 0, 0);
+        }
+        return (map.MapName, map.Nodes.Min(n => n.Y), map.Nodes.Max(n => n.Y), map.Nodes.Min(n => n.X), map.Nodes.Max(n => n.X));
+    }
+
     /// <inheritdoc />
     public async Task SetCustomBackgroundAsync(Guid mapCorrelationId, MapBackground mapBackground)
     {

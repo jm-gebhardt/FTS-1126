@@ -613,4 +613,162 @@ public class EfGraphRepository : IGraphRepository
             }
         }
     }
+
+    private const string GraphUpdateSavePoint = "BeforeGraphUpdate";
+
+    /// <inheritdoc />
+    public async Task<bool> UpdateAgvTypeGraphsAsync(ICollection<Graph> graphs)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            if (transaction.SupportsSavepoints)
+            {
+                await transaction.CreateSavepointAsync(GraphUpdateSavePoint);
+            }
+
+            //For now, remove all nodes and edges, later filter by agv type and replace only for this agv type
+            List<GraphNode> unusedNodes = await context.Set<GraphNode>().ToListAsync();
+            HashSet<Guid> unusedNodeIds = unusedNodes.Select(n => n.Id).ToHashSet();
+            List<GraphEdge> unusedEdges = await context.Set<GraphEdge>().ToListAsync();
+            IQueryable<Station> unusedStations = context.Set<Station>().Where(s => unusedNodeIds.Contains(s.Id));
+            IQueryable<NodeLock> unusedNodeLocks = context.Set<NodeLock>().Where(n => unusedNodeIds.Contains(n.NodeId));
+            HashSet<Guid> unusedEdgeIds = unusedEdges.Select(e => e.Id).ToHashSet();
+
+            HashSet<Guid> survivingNodeIds = (await context.Set<GraphNode>()
+                .Where(n => !unusedNodeIds.Contains(n.Id))
+                .Select(n => n.Id)
+                .ToListAsync()).ToHashSet();
+            await AbortAndCleanActionsWithStaleNodesAsync(context, survivingNodeIds);
+            await context.SaveChangesAsync();
+
+            context.Set<GraphNode>().RemoveRange(unusedNodes);
+            context.Set<GraphEdge>().RemoveRange(unusedEdges);
+            context.Set<Station>().RemoveRange(unusedStations);
+            context.Set<NodeLock>().RemoveRange(unusedNodeLocks);
+            await DeleteAgvGraphReferencesAsync(context, unusedNodeIds, unusedEdgeIds);
+            await context.SaveChangesAsync();
+
+            await context.Set<GraphNode>().AddRangeAsync(graphs.SelectMany(g => g.Nodes).ToList());
+            await context.Set<GraphEdge>().AddRangeAsync(graphs.SelectMany(g => g.Edges).ToList());
+            
+            await RemoveMapReferencesAsync(context, unusedNodeIds, unusedEdgeIds);
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            _logger.LogError("Updating agv type graphs failed, roll back transaction");
+            await _loggingService.LogSystem(_logger, LogCodes.GraphConsolidationFailed,
+                "Updating Agv type graphs", "Updating agv type graphs failed, roll back transaction",
+                logLevel: LogLevel.Error);
+            if (transaction.SupportsSavepoints)
+            {
+                await transaction.RollbackToSavepointAsync(GraphUpdateSavePoint);
+                return false;
+            }
+            await transaction.RollbackAsync();
+            return false;
+        }
+    }
+
+    private const string GraphDeleteSavePoint = "BeforeGraphDelete";
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAgvTypeGraphsAsync(ICollection<Graph> graphs)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            if (transaction.SupportsSavepoints)
+            {
+                await transaction.CreateSavepointAsync(GraphDeleteSavePoint);
+            }
+            HashSet<Guid> unusedNodeIds = graphs.SelectMany(g => g.Nodes.Select(n => n.Id)).Distinct().ToHashSet();
+            HashSet<Guid> unusedEdgeIds = graphs.SelectMany(g => g.Edges.Select(e => e.Id)).Distinct().ToHashSet();
+            IQueryable<GraphNode> unusedNodes = context.Set<GraphNode>().Where(n => unusedNodeIds.Contains(n.Id));
+            IQueryable<GraphEdge> unusedEdges = context.Set<GraphEdge>().Where(e => unusedEdgeIds.Contains(e.Id));
+            IQueryable<Station> unusedStations = context.Set<Station>().Where(s => unusedNodeIds.Contains(s.Id));
+            IQueryable<NodeLock> unusedNodeLocks = context.Set<NodeLock>().Where(n => unusedNodeIds.Contains(n.NodeId));
+
+            context.Set<GraphNode>().RemoveRange(unusedNodes);
+            context.Set<GraphEdge>().RemoveRange(unusedEdges);
+            context.Set<Station>().RemoveRange(unusedStations);
+            context.Set<NodeLock>().RemoveRange(unusedNodeLocks);
+
+            await DeleteAgvGraphReferencesAsync(context, unusedNodeIds, unusedEdgeIds);
+            await context.SaveChangesAsync();
+
+            await RemoveMapReferencesAsync(context, unusedNodeIds, unusedEdgeIds);
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            _logger.LogError("Delete agv type graphs failed, roll back transaction");
+            await _loggingService.LogSystem(_logger, LogCodes.GraphConsolidationFailed,
+                "Delete Agv type graphs", "Delete agv type graphs failed, roll back transaction",
+                logLevel: LogLevel.Error);
+            if (transaction.SupportsSavepoints)
+            {
+                await transaction.RollbackToSavepointAsync(GraphDeleteSavePoint);
+                return false;
+            }
+            await transaction.RollbackAsync();
+            return false;
+        }
+    }
+
+    private async Task DeleteAgvGraphReferencesAsync(
+        TransportOrderDbContext context,
+        HashSet<Guid> unusedNodes,
+        HashSet<Guid> unusedEdges)
+    {
+        List<AgvGraph> agvGraphs = await context.Set<AgvGraph>()
+            .Include(g => g.Nodes)
+            .Include(g => g.Edges)
+            .Where(g => g.Nodes.Any(n => unusedNodes.Contains(n.Id) || g.Edges.Any(e => unusedEdges.Contains(e.Id))) ).ToListAsync();
+        foreach (var graph in agvGraphs)
+        {
+           foreach (var node in graph.Nodes.Where(n => unusedNodes.Contains(n.Id)))
+           {
+               graph.Nodes.Remove(node);
+           }
+           foreach (var edge in graph.Edges.Where(e => unusedEdges.Contains(e.Id)))
+           {
+               graph.Edges.Remove(edge);
+           }
+           context.Update(graph);
+        }
+    }
+
+    private async Task RemoveMapReferencesAsync(
+        TransportOrderDbContext context,
+        HashSet<Guid> unusedNodes,
+        HashSet<Guid> unusedEdges)
+    {
+        List<Map> mapsWithStaleRefs = await context.Set<Map>()
+            .Where(m => m.Nodes.Any(n => unusedNodes.Contains(n.Id))
+                        || m.Edges.Any(e => unusedEdges.Contains(e.Id)))
+            .Include(m => m.Nodes.Where(n => unusedNodes.Contains(n.Id)))
+            .Include(m => m.Edges.Where(e => unusedNodes.Contains(e.Id)))
+            .ToListAsync();
+
+        foreach (var map in mapsWithStaleRefs)
+        {
+            foreach (var node in map.Nodes.ToList())
+            {
+                map.Nodes.Remove(node);
+            }
+            foreach (var edge in map.Edges.ToList())
+            {
+                map.Edges.Remove(edge);
+            }
+        }
+    }
 }

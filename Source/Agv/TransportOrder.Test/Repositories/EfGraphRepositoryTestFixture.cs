@@ -59,4 +59,10 @@ public class EfGraphRepositoryTestFixture : TransportOrderDbFixture
 
         await ActionGroupRepository.AddAsync(actionGroup);
     }
+
+    public async Task SetupVdaTypeGraphAsync(GraphNode[] nodes, GraphEdge[]? edges = null)
+    {
+        edges ??= [];
+        await GraphRepository.UpdateAgvTypeGraphsAsync([new Graph { Nodes = nodes, Edges = edges }]);
+    }
 }

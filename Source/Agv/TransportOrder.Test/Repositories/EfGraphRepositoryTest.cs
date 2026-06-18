@@ -122,6 +122,70 @@ public class EfGraphRepositoryTest
         (await repository.ConsolidateGraphAsync()).ShouldBeFalse();
     }
 
+    [TestMethod]
+    public async Task UpdateAgvTypeGraphsAsync_ActiveActionHasStaleTargetNode_ActionIsAbortedAndTargetCleared()
+    {
+        var fixture = new EfGraphRepositoryTestFixture();
+        var vdaNode1 = new GraphNode(AgvGraphGenerator.Src1Node.Id, AgvGraphGenerator.Src1) {  X = 1f, Y = 1f, Z = 0f };
+        var vdaNode2 = new GraphNode(AgvGraphGenerator.Dst1Node.Id, AgvGraphGenerator.Dst1) {  X = 2f, Y = 5f, Z = 0f };
+
+        await fixture.SetupVdaTypeGraphAsync([vdaNode1]);
+
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: AgvGraphGenerator.Src1);
+        await fixture.ActionGroupRepository.AddAsync(actionGroup);
+
+        await fixture.SetupVdaTypeGraphAsync([vdaNode2]);
+
+        var loaded = await fixture.ActionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+        var loadedMove = loaded.Actions.Single(a => a.ActionType == ActionType.Move);
+        loadedMove.State.ShouldBe(ActionState.Aborted);
+        loadedMove.Target.NodeId.ShouldBeNull();
+        (await fixture.GraphRepository.NodeExistsByIdAsync(vdaNode1.Id)).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task UpdateAgvTypeGraphsAsync_ActiveActionHasStalePathNode_ActionIsAbortedAndNodesCleared()
+    {
+        var fixture = new EfGraphRepositoryTestFixture();
+        var vdaNode1 = new GraphNode(AgvGraphGenerator.Src1Node.Id, AgvGraphGenerator.Src1) { X = 1f, Y = 1f, Z = 0f };
+        var vdaNode2 = new GraphNode(AgvGraphGenerator.Dst1Node.Id, AgvGraphGenerator.Dst1) {  X = 2f, Y = 5f, Z = 0f };
+
+        await fixture.SetupVdaTypeGraphAsync([vdaNode1]);
+
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: AgvGraphGenerator.Src1);
+        actionGroup.Actions.Single().Nodes = [vdaNode1];
+        await fixture.ActionGroupRepository.AddAsync(actionGroup);
+
+        await fixture.SetupVdaTypeGraphAsync([vdaNode2]);
+
+        var loaded = await fixture.ActionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+        var loadedMove = loaded.Actions.Single();
+        loadedMove.State.ShouldBe(ActionState.Aborted);
+        loadedMove.AgvActionNodes.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task UpdateAgvTypeGraphsAsync_CompletedActionHasStaleTargetNode_TargetClearedNotReAborted()
+    {
+        var fixture = new EfGraphRepositoryTestFixture();
+        var vdaNode1 = new GraphNode(AgvGraphGenerator.Src1Node.Id, AgvGraphGenerator.Src1) {  X = 1f, Y = 1f, Z = 0f };
+        var vdaNode2 = new GraphNode(AgvGraphGenerator.Dst1Node.Id, AgvGraphGenerator.Dst1) {  X = 2f, Y = 5f, Z = 0f };
+
+        await fixture.SetupVdaTypeGraphAsync([vdaNode1]);
+
+        var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: AgvGraphGenerator.Src1);
+        AgvActionGenerator.SetActionGroupToState(actionGroup, ActionGroupState.Completed);
+        await fixture.ActionGroupRepository.AddAsync(actionGroup);
+
+        await fixture.SetupVdaTypeGraphAsync([vdaNode2]);
+
+        var loaded = await fixture.ActionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+        var loadedMove = loaded.Actions.Single(a => a.ActionType == ActionType.Move);
+        loadedMove.State.ShouldBe(ActionState.Completed);
+        loadedMove.Target.NodeId.ShouldBeNull();
+        (await fixture.GraphRepository.NodeExistsByIdAsync(vdaNode1.Id)).ShouldBeFalse();
+    }
+
     private sealed class ThrowingTransportOrderDbContext(DbContextOptions<TransportOrderDbContext> options) : TransportOrderDbContext(options)
     {
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -105,11 +105,42 @@ public class EfActionGroupRepository : IActionGroupRepository
             RestoreNodes(actionGroup, savedNodes);
             return true;
         }
+        await ClearStaleTargetNodeIdsAsync(actionGroup, context);
         await context.AddAsync(actionGroup);
         UpdateComputedProperties(context);
         await context.SaveChangesAsync();
         RestoreNodes(actionGroup, savedNodes);
         return false;
+    }
+
+    private async Task ClearStaleTargetNodeIdsAsync(ActionGroup actionGroup, TransportOrderDbContext context)
+    {
+        List<Guid> referencedNodeIds = actionGroup.Actions
+            .Where(a => a.Target.NodeId != null)
+            .Select(a => a.Target.NodeId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (referencedNodeIds.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<Guid> existingNodeIds = (await context.Set<GraphNode>()
+            .Where(n => referencedNodeIds.Contains(n.Id))
+            .Select(n => n.Id)
+            .ToListAsync()).ToHashSet();
+
+        foreach (var action in actionGroup.Actions)
+        {
+            if (action.Target.NodeId != null && !existingNodeIds.Contains(action.Target.NodeId.Value))
+            {
+                _logger.LogWarning(
+                    "Clearing stale Target.NodeId {NodeId} on action {ActionId} before insert — node no longer exists",
+                    action.Target.NodeId, action.CorrelationId);
+                action.Target.NodeId = null;
+            }
+        }
     }
 
     private async Task UpdateActionGroupAndActions(ActionGroup actionGroup, TransportOrderDbContext context)

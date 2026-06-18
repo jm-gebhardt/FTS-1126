@@ -162,7 +162,7 @@ public class OrderEdge
         {
             _bezier = new Bezier(controlPoints);
         }
-        GraphEdge = edgeBuilder.BuildFromNurbs(nurbs, StartNodeId.ToGuid(), EndNodeId.ToGuid());
+        GraphEdge = edgeBuilder.BuildFromNurbs(nurbs, StartNodeId.ToGuid(), EndNodeId.ToGuid(),Guid.NewGuid());
         if (GraphEdge.Length == 0)
         {
             EstimatedTravelTime = TimeSpan.FromSeconds(1);
