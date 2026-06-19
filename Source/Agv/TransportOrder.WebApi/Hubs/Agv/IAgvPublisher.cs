@@ -58,12 +58,6 @@ public interface IAgvPublisher
     Task SendAgvErrorChangedAsync(Guid correlationId, List<AgvError> errors);
 
     /// <summary>
-    /// Publishes the Agv removed event to all clients.
-    /// </summary>
-    /// <param name="correlationId">The correlationId of the agv</param>
-    Task SendAgvRemovedAsync(Guid correlationId);
-
-    /// <summary>
     /// Publishes the status of an Agv route to all clients.
     /// </summary>
     /// <param name="currentAgvRouteReadModel">The current route of the agv.</param>

@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
@@ -9,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes action group related event and sends messages via <see cref="IAgvPublisher"/>
+/// Consumes action group related events and sends messages via <see cref="IAgvPublisher"/>.
 /// </summary>
 [PublicAPI]
 public class AgvActionGroupConsumer : IConsumer<ActionGroupStarted>,
@@ -17,25 +16,21 @@ public class AgvActionGroupConsumer : IConsumer<ActionGroupStarted>,
 {
     private readonly ILogger<AgvActionGroupConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
-    private readonly IMapper _mapper;
 
     /// <summary>
     /// Initializes a new <see cref="AgvActionGroupConsumer"/>.
     /// </summary>
     public AgvActionGroupConsumer(
         IAgvPublisher agvPublisher,
-        IMapper mapper,
         ILogger<AgvActionGroupConsumer> logger)
     {
         _agvPublisher = agvPublisher;
-        _mapper = mapper;
         _logger = logger;
     }
 
     /// <summary>
-    /// Send message to all clients
+    /// Send message to all clients.
     /// </summary>
-    /// <param name="context"></param>
     public Task Consume(ConsumeContext<ActionGroupStarted> context)
     {
         var (actionGroup, correlationId, _) = context.Message;
@@ -44,7 +39,7 @@ public class AgvActionGroupConsumer : IConsumer<ActionGroupStarted>,
     }
 
     /// <summary>
-    /// Send SendAgvRouteChanged with empty remaining route.
+    /// Sends an empty route to all clients when an action group completes.
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupCompleted> context)
     {
@@ -52,6 +47,8 @@ public class AgvActionGroupConsumer : IConsumer<ActionGroupStarted>,
         {
             return;
         }
-        await _agvPublisher.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(context.Message.ActionGroup.AssignedAgv!.Value, [], []));
+
+        var agvId = context.Message.ActionGroup.AssignedAgv!.Value;
+        await _agvPublisher.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvId, [], []));
     }
 }

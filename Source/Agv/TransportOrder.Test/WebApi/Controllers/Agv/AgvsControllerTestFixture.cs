@@ -105,15 +105,15 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?)null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
 
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?)null));
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?) null));
-        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?)null));
+        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?)null));
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(_agvSettingsReadModel);
         AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> agvs) => agvs.ToDictionary(a => a, MaintenanceLog? (_) => null));
         AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>())).Verifiable();
@@ -157,14 +157,17 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         QueueActionGroupRequestClient.Setup(x => x.GetResponse<Success>(It.IsAny<QueueActionGroup>(), CancellationToken.None, default))
             .Callback((QueueActionGroup q, CancellationToken _, RequestTimeout _) => { SentQueueActionGroup = q.ActionGroup; });
 
-        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?) null));
+        AgvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (GraphNode?)null));
         AgvDb.Setup(x => x.AgvSettings.GetSettingsGroupForAgv(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
         AgvDb.Setup(x => x.AgvSettings.AddOrUpdateSettingsForAgvGroup(It.IsAny<AgvSettingsReadModel>(), It.IsAny<GroupType>(), It.IsAny<string>())).Verifiable();
         return this;
     }
 
-    private static Guid GetGuid(string agvSerialNumber) => agvSerialNumber.ToGuid();
+    private static Guid GetGuid(string agvSerialNumber)
+    {
+        return agvSerialNumber.ToGuid();
+    }
 
     private Mock<IAgvPositionRepository> GetAgvPositionRepository()
     {
@@ -243,22 +246,25 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         return controller;
     }
 
-    protected override IEnumerable<Profile> GetProfiles() =>
-    [
-        new AgvProfile(),
-        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
-        new AgvStatusProfile(),
-        new AgvSettingsProfile(),
-        new AgvGraphProfile(),
-        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvGraphProfile(),
-        new AgvPositionProfile(),
-        new AgvErrorProfile(),
-        new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
-        new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
-        new ActionProfile(),
-        new CargoProfile(),
-        new LogEntryProfile()
-    ];
+    protected override IEnumerable<Profile> GetProfiles()
+    {
+        return
+        [
+            new AgvProfile(),
+            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvProfile(),
+            new AgvStatusProfile(),
+            new AgvSettingsProfile(),
+            new AgvGraphProfile(),
+            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvGraphProfile(),
+            new AgvPositionProfile(),
+            new AgvErrorProfile(),
+            new Gebhardt.Acc.TransportOrder.Messages.Profiles.AgvErrorProfile(),
+            new Gebhardt.Acc.TransportOrder.WebApi.Profiles.ActionProfile(),
+            new ActionProfile(),
+            new CargoProfile(),
+            new LogEntryProfile()
+        ];
+    }
 
     public AgvsControllerTestFixture<TRequest, TRequestHandler> WithActiveAgvErrors(IReadOnlyList<AgvError> agvErrors)
     {

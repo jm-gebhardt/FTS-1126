@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
+using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Microsoft.Extensions.Logging;
@@ -13,11 +14,13 @@ public class AgvRouteServiceTestFixture : TransportOrderDbFixture
     private readonly List<ActionGroup> _actionsGroups = new();
     private readonly List<TransportOrder.Domain.Models.Agv.Agv> _agvs = new();
 
+    public AgvRoutePlanCache RoutePlanCache { get; } = new();
+
     public AgvRouteRetrievalService AgvRouteRetrievalService { get; }
 
     public AgvRouteServiceTestFixture()
     {
-        AgvRouteRetrievalService = new AgvRouteRetrievalService(ContextFactory, _agvRepositoryMock.Object, _loggerMock.Object);
+        AgvRouteRetrievalService = new AgvRouteRetrievalService(ContextFactory, _agvRepositoryMock.Object, RoutePlanCache, _loggerMock.Object);
     }
 
     private void SetupAgvs()

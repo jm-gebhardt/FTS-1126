@@ -61,13 +61,6 @@ public interface IAgvClient
     Task AgvLockedChanged(AgvLockedStatusDto lockedStatus);
 
     /// <summary>
-    /// Agv removed.
-    /// </summary>
-    /// <param name="removed">The agv removed status.</param>
-    [SignalRMethod("AgvRemoved")]
-    Task AgvRemoved(AgvRemovedDto removed);
-
-    /// <summary>
     /// Agv route changed.
     /// </summary>
     /// <param name="currentRoute">The current route of the agv.</param>

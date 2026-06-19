@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
@@ -27,13 +27,14 @@ public class ActionGroupConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_ActionGroupCompleted_ValidData_SentAgvRouteChanged()
+    public async Task Consume_ActionGroupCompleted_ValidData_SendsEmptyRoute()
     {
         var agvCorrelationId = Guid.NewGuid();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId);
         var fixture = new ConsumerHubTestFixture<AgvActionGroupConsumer, IAgvPublisher>();
 
         await fixture.PublishMessageAsync(new ActionGroupCompleted(actionGroup, actionGroup.CorrelationId, DateTime.UtcNow));
+
         fixture.PublisherMock.Verify(h => h.SendAgvRouteChangedAsync(new CurrentAgvRouteReadModel(agvCorrelationId, Array.Empty<GraphNode>(), Array.Empty<Guid>())),
             Times.Once);
     }

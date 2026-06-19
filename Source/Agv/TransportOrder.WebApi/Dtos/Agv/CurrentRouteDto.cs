@@ -17,18 +17,21 @@ public record CurrentRouteDto : DatedMessage
 
     /// <summary>The remaining nodes.</summary>
     public string[] RemainingNodes { get; init; }
-    
+
     /// <summary>
     /// The remaining edges.
     /// </summary>
     public Guid[] RemainingEdges { get; init; }
+
+    /// <summary>The number of leading remaining nodes that belong to the base segment.</summary>
+    public int BaseNodeCount { get; init; }
 
     /// <inheritdoc cref="CurrentRouteDto"/>>
     public CurrentRouteDto(Guid correlationId, string[] remainingNodes, Guid[] remainingEdges)
     {
         CorrelationId = correlationId;
         RemainingNodes = remainingNodes;
-        RemainingEdges= remainingEdges;
+        RemainingEdges = remainingEdges;
     }
 
     /// <summary>

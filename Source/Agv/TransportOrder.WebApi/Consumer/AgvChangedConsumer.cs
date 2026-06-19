@@ -12,11 +12,10 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 
 /// <summary>
-/// Consumes <see cref="AgvStateChanged"/>, <see cref="AgvRemoved" />, <see cref="AgvErrorChanged" />, <see cref="AgvLockedChanged" />, <see cref="AgvOnlineChanged" /> and sends messages via <see cref="IAgvPublisher"/>
+/// Consumes <see cref="AgvStateChanged"/>, <see cref="AgvErrorChanged" />, <see cref="AgvLockedChanged" />, <see cref="AgvOnlineChanged" /> and sends messages via <see cref="IAgvPublisher"/>
 /// </summary>
 [UsedImplicitly]
 public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
-    IConsumer<AgvRemoved>,
     IConsumer<AgvErrorChanged>,
     IConsumer<AgvLockedChanged>,
     IConsumer<AgvOnlineChanged>,
@@ -42,7 +41,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     public AgvChangedConsumer(
         ILogger<AgvChangedConsumer> logger,
         IAgvPublisher agvPublisher,
-        IMapper mapper)
+        IMapper mapper
+    )
     {
         _logger = logger;
         _agvPublisher = agvPublisher;
@@ -68,16 +68,6 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
         var agv = context.Message.Agv;
         _logger.LogTrace("{MessageType} {CorrelationId} received. It is now: {NewState}", nameof(AgvStateChanged), context.Message.CorrelationId, agv.CurrentState);
         await _agvPublisher.SendAgvStateChangedAsync(agv);
-    }
-
-    /// <summary>
-    /// Send AgvRemoved message to all clients
-    /// </summary>
-    /// <param name="context"></param>
-    public async Task Consume(ConsumeContext<AgvRemoved> context)
-    {
-        _logger.LogTrace("{MessageType} {CorrelationId} received", nameof(AgvRemoved), context.Message.CorrelationId);
-        await _agvPublisher.SendAgvRemovedAsync(context.Message.CorrelationId);
     }
 
     /// <summary>

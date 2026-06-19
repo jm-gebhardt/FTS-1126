@@ -76,6 +76,28 @@ public class AgvProfileTest
     }
 
     [TestMethod]
+    public void Map_CurrentAgvRouteReadModelToCurrentRouteDto_MapsRemainingAndBaseNodeCount()
+    {
+        const string remainingNodeName = "WAY1";
+        const int baseNodeCount = 1;
+        var correlationId = Guid.NewGuid();
+        var remainingEdgeId = Guid.NewGuid();
+        var readModel = new CurrentAgvRouteReadModel(
+            correlationId,
+            [new GraphNode(remainingNodeName.ToGuid(), remainingNodeName)],
+            [remainingEdgeId],
+            baseNodeCount);
+
+        var mapper = GetMapper();
+
+        var dto = mapper.Map<CurrentRouteDto>(readModel);
+
+        dto.RemainingNodes.ShouldBe([remainingNodeName]);
+        dto.RemainingEdges.ShouldBe([remainingEdgeId]);
+        dto.BaseNodeCount.ShouldBe(baseNodeCount);
+    }
+
+    [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvSettingsIsMappedToAgvSettingsDto()
     {
         var agvSettings = new AgvSettings();
@@ -130,7 +152,7 @@ public class AgvProfileTest
 
         var mapper = MappingHelper.GetMapper(new AgvSettingsProfile());
         var settings = mapper.Map<AgvSettingsDto, AgvSettingsReadModel>(settingsDto);
-        settings.BatteryLevelCritical.ShouldBe((int) settingsDto.BatteryLevelCritical!);
+        settings.BatteryLevelCritical.ShouldBe((int)settingsDto.BatteryLevelCritical!);
         settings.BatteryLevelLow.ShouldBeLessThan(0);
         settings.MinChargeUp.ShouldBeLessThan(0);
         settings.MaxChargeUp.ShouldBeLessThan(0);

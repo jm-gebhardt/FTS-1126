@@ -189,6 +189,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, Lazy<List<AgvError>>>, AgvErrorDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, Location>, TriggerLocationDictionaryProvider>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, List<Cargo>>, AgvCargoDictionaryProvider>();
+        services.AddSingleton<IAgvRoutePlanCacheProvider, AgvRoutePlanCache>();
         services.AddSingleton<StationOnlineDictionaryProvider>();
         services.AddSingleton<IStationOnlineRepository, StationOnlineRepository>();
         services.AddTransient<IAgvPositionRepository, AgvPositionRepository>();

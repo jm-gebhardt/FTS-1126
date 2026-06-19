@@ -142,4 +142,26 @@ public class AgvRouteRetrievalServiceTest
         actualRoutes.Find(r => r.CorrelationId == agv.CorrelationId)!.RemainingEdges.ShouldBe(route.edges.Skip(1).ToArray());
         actualRoutes.Find(r => r.CorrelationId == nonExistingAgvCorrelationId).ShouldBeNull();
     }
+
+    [TestMethod]
+    public async Task GetAgvRouteAsync_WhenRoutePlanCached_PopulatesBaseAndHorizon()
+    {
+        (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        var node = route.nodes[1];
+        var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: node.Name);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(ActionState.Started, assignedAgv: agv.CorrelationId);
+        var action = actionGroup.Actions.First();
+        action.Nodes = route.nodes;
+        action.Edges = route.edges;
+        var fixture = await new AgvRouteServiceTestFixture()
+            .WithAgv(agv)
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+        fixture.RoutePlanCache.ConcurrentDict[agv.CorrelationId] = new RoutePlan([node], [], [], []);
+
+        var actualRoute = await fixture.AgvRouteRetrievalService.GetAgvRouteAsync(agv.CorrelationId);
+
+        actualRoute.ShouldNotBeNull();
+        actualRoute.BaseNodeCount.ShouldBe(1);
+    }
 }

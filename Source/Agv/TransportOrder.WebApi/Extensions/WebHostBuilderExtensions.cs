@@ -253,11 +253,11 @@ public static class WebHostBuilderExtensions
             endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<QueueHub>(QueueHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
 
-            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
+            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions
             {
                 Predicate = _ => true
             });
-            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions()
+            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions
             {
                 Predicate = _ => true,
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
@@ -271,7 +271,7 @@ public static class WebHostBuilderExtensions
                 // If the request is coming from a proxy, set the server path to the proxy sub path.
                 if (request.Headers.TryGetValue("X-Forwarded-Prefix", out var serverPath))
                 {
-                    swaggerDoc.Servers = new List<OpenApiServer>()
+                    swaggerDoc.Servers = new List<OpenApiServer>
                     {
                         new() { Description = "Server behind Proxy", Url = serverPath }
                     };

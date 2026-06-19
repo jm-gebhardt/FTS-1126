@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
@@ -85,10 +86,10 @@ public class AgvPublisherTest
             .Callback<AssignedActionGroupDto>(dto => capturedDto = dto);
 
         var correlationId = Guid.NewGuid();
-        var assignedActionGroup = new Common.Messages.ActionGroups.ActionGroup();
+        var assignedActionGroup = new ActionGroup();
         var actionGroupDto = new ActionGroupDto();
 
-        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<Common.Messages.ActionGroups.ActionGroup>())).Returns(actionGroupDto);
+        fixture.MapperMock.Setup(m => m.Map<ActionGroupDto>(It.IsAny<ActionGroup>())).Returns(actionGroupDto);
 
         await fixture.Publisher.SendAssignedActionGroupChangedAsync(correlationId, assignedActionGroup.CorrelationId);
 
@@ -202,17 +203,6 @@ public class AgvPublisherTest
         await fixture.Publisher.SendAgvErrorChangedAsync(correlationId, errors);
 
         fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvErrorChanged(It.Is<AgvErrorStatusDto>(dto => dto == expectedDto)), Times.Once);
-    }
-
-    [TestMethod]
-    public async Task SendAgvRemovedAsync_SendsAgvRemovedDto_To_AgvRemoved()
-    {
-        var fixture = new AgvPublisherTestFixture();
-        var correlationId = Guid.NewGuid();
-
-        await fixture.Publisher.SendAgvRemovedAsync(correlationId);
-
-        fixture.HubContextMock.Verify(c => c.Clients.Client(fixture.TestConnectionId).AgvRemoved(It.Is<AgvRemovedDto>(dto => dto.CorrelationId == correlationId)), Times.Once);
     }
 
     [TestMethod]

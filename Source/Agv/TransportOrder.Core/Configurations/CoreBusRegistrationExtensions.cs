@@ -1,5 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Dispatch;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Vehicle;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
@@ -346,6 +348,17 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<AgvNewBaseRequested, NewBaseRequestConsumer>(c);
+        });
+
+        busRegistrationConfigurator.AddConsumer<RoutePlanCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<DispatchRouteCommand, RoutePlanCommandHandler>(c);
+            partitioner.PartitionMessageById<UpdateDispatchedRouteCommand, RoutePlanCommandHandler>(c);
+            partitioner.PartitionMessageById<AbortAndDispatchRouteCommand, RoutePlanCommandHandler>(c);
+            partitioner.PartitionMessageById<ResendDispatchedRouteCommand, RoutePlanCommandHandler>(c);
+            c.Message<ActionGroupCompleted>(x =>
+                x.UsePartitioner(partitioner, p => p.Message.ActionGroup.AssignedAgv.GetValueOrDefault()));
         });
     }
 

@@ -1,6 +1,7 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
@@ -16,17 +17,20 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 {
     private readonly IDbContextFactory<TransportOrderDbContext> _dbContextFactory;
     private readonly IAgvRepository _agvRepository;
+    private readonly IAgvRoutePlanCacheProvider _routePlanCache;
     private readonly ILogger<AgvRouteRetrievalService> _logger;
 
     /// <inheritdoc cref="AgvRouteRetrievalService"/>
     public AgvRouteRetrievalService(
         IDbContextFactory<TransportOrderDbContext> dbContextFactory,
         IAgvRepository agvRepository,
+        IAgvRoutePlanCacheProvider routePlanCache,
         ILogger<AgvRouteRetrievalService> logger
     )
     {
         _dbContextFactory = dbContextFactory;
         _agvRepository = agvRepository;
+        _routePlanCache = routePlanCache;
         _logger = logger;
     }
 
@@ -50,7 +54,6 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             .OrderByDescending(g => g.StartedDate)
             .FirstOrDefaultAsync();
 
-        // if lastNodeId parameter is not we want to get the current value from the repository
         Task<Guid?> lastNodeIdTask = lastNodeId == null ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult(lastNodeId);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
@@ -70,7 +73,8 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute, remainingNodes);
         _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes.Select(n => n.Name)));
 
-        return agvRoute;
+        var plan = _routePlanCache.ConcurrentDict.GetValueOrDefault(agvCorrelationId);
+        return agvRoute.AnnotateBase(plan?.BaseNodes.Select(n => n.Id));
     }
 
     /// <inheritdoc />
@@ -82,14 +86,14 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
 
         if (agvCorrelationIds.Count != 0)
         {
-            queryable = queryable.Where(a => a.AssignedAgv != null && agvCorrelationIds.Contains((Guid) a.AssignedAgv));
+            queryable = queryable.Where(a => a.AssignedAgv != null && agvCorrelationIds.Contains((Guid)a.AssignedAgv));
         }
 
         Task<Dictionary<Guid, ActionGroup?>> actionGroupTask = queryable
             .OrderByDescending(a => a.StartedDate)
-            .GroupBy(a => (Guid) a.AssignedAgv!, a => a)
+            .GroupBy(a => (Guid)a.AssignedAgv!, a => a)
             .Select(g => g.FirstOrDefault())
-            .ToDictionaryAsync(a => (Guid) a!.AssignedAgv!, a => a);
+            .ToDictionaryAsync(a => (Guid)a!.AssignedAgv!, a => a);
 
         Task<IReadOnlyDictionary<Guid, Guid?>> lastNodeIdTask = _agvRepository.GetLastNodeIdAsync(agvCorrelationIds);
 
@@ -125,7 +129,8 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, remainingRoute, remainingNodes);
             _logger.LogTrace("{AgvCorrelationId} last node Id is: {LastNodeId} and the current route{Route}", agvCorrelationId, lastNodeId, string.Join(" -> ", agvRoute.RemainingNodes.Select(n => n.Name)));
 
-            agvRoutesById[agvCorrelationId] = agvRoute;
+            var plan = _routePlanCache.ConcurrentDict.GetValueOrDefault(agvCorrelationId);
+            agvRoutesById[agvCorrelationId] = agvRoute.AnnotateBase(plan?.BaseNodes.Select(n => n.Id));
         }
 
         return agvRoutesById.Select(kv => kv.Value).ToList();

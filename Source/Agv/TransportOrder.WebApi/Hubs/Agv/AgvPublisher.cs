@@ -130,14 +130,6 @@ public class AgvPublisher : IAgvPublisher
     }
 
     /// <inheritdoc/>
-    public Task SendAgvRemovedAsync(Guid correlationId)
-    {
-        var dto = new AgvRemovedDto(correlationId);
-        _hubBroadcaster.Broadcast(c => c.AgvRemoved(dto));
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc/>
     public Task SendCargoChangeAsync(IReadOnlyCollection<Cargo> cargos)
     {
         var dto = _mapper.Map<ICollection<CargoDto>>(cargos);

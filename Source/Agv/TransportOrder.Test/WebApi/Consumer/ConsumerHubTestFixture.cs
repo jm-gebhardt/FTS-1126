@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 using MassTransit;
@@ -26,6 +27,9 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
     protected readonly Mock<INodeRepository> NodeRepositoryMock = new();
     private readonly Mock<IStationRepository> _stationRepository = new();
     private readonly Mock<ILogEntryRepository> _logEntryRepository = new();
+    private readonly AgvRoutePlanCache _routePlanCache = new();
+
+    public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
 
     protected override IEnumerable<Profile> GetProfiles() =>
     [
@@ -56,8 +60,6 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
     }
 
-    public Mock<IAgvRouteRetrievalService> AgvRouteServiceMock { get; } = new();
-
     protected override MassTransitConsumerTestFixture<TConsumer> AddServices(IServiceCollection collection)
     {
         base.AddServices(collection);
@@ -65,6 +67,7 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         collection.AddTransient(_ => NodeRepositoryMock.Object);
         collection.AddTransient(_ => _actionGroupRetrievalServiceMock.Object);
         collection.AddTransient(_ => AgvRouteServiceMock.Object);
+        collection.AddSingleton<IAgvRoutePlanCacheProvider>(_ => _routePlanCache);
         collection.AddTransient(_ => _actionGroupRepositoryMock.Object);
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _logEntryRepository.Object);

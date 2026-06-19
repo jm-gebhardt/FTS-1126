@@ -19,6 +19,7 @@ using Gebhardt.Acc.TestPlanRunner.Services.EventHandlers;
 using Gebhardt.Acc.TestPlanRunner.Services.RequestResponseHandlers;
 using Gebhardt.Acc.TestPlanRunner.WebApi.Middleware;
 using Gebhardt.Acc.TestPlanRunner.WebApi.Swagger;
+using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -77,6 +78,7 @@ public static class TestPlanRunnerHostBuilder
                 services.AddSingleton(typeof(IKeyedSemaphoreProvider<>), typeof(KeyedSemaphoreProvider<>));
                 services.AddSingleton<IAgvRepository, AgvRepository>(); // captive (ITestPlanManager is singleton)
                 services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
+                services.AddSingleton<IAgvRoutePlanCacheProvider, AgvRoutePlanCache>();
                 services.AddSingleton<IAgvRouteRetrievalService, AgvRouteRetrievalService>();// captive (ITestStepCancellationEvaluator is singleton)
                 services.AddSingleton<ITestPlanManager, TestPlanManager>();
                 services.AddSingleton<ITestStepCancellationEvaluator, TestStepCancellationEvaluator>();
