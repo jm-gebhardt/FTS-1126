@@ -111,7 +111,7 @@ public static class WebHostBuilderExtension
                     options.UseAllOfToExtendReferenceSchemas(); // Allows $ref enums to be nullable
                     options.UseAllOfForInheritance(); // Allows $ref objects to be nullable
 
-                    options.CustomSchemaIds(Swagger.CustomSchemaSelector.RemoveDtoSuffix);
+                    options.CustomSchemaIds(Swagger.CustomSchemaSelector.GetSchemaId);
 
                     var securityScheme = new OpenApiSecurityScheme
                     {
