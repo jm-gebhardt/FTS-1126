@@ -1,6 +1,9 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
+using MassTransit;
+using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.CommandHandler;
 
@@ -8,26 +11,49 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.CommandHandler;
 public class ResendCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_RequestAgvData_ValidData_PublishesAgvDataReceived()
+    public async Task Consume_RequestAgvData_AgvExists_PublishesMqttInstantActionsWithFactsheetRequest()
     {
-        var agvData = AgvDataGenerator.GenerateAgvData();
-        var fixture = new ResendCommandHandlerTestFixture()
-            .AddAgvData(agvData);
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), interfaceName: "uagv", protocolMajorVersion: "2");
+        var fixture = new ResendCommandHandlerTestFixture().AddAgv(agv);
 
-        await fixture.PublishMessageAsync(new RequestAgvData(agvData.AgvCorrelationId, "serial number"));
+        await fixture.PublishMessageAsync(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
 
-        await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
+        await fixture.ShouldHavePublishedAsync<MqttInstantActions>();
+        PublishContext<MqttInstantActions> context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
+        context.Message.Actions.ShouldHaveSingleItem();
+        context.Message.Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.RequestFactsheet);
     }
 
     [TestMethod]
-    public async Task Consume_RequestAgvData_NoAgvData_DoesNotPublishAgvDataReceived()
+    public async Task Consume_RequestAgvData_AgvExists_PublishesToInstantActionsRoutingKey()
     {
-        var agvData = AgvDataGenerator.GenerateAgvData();
-        var fixture = new ResendCommandHandlerTestFixture()
-            .AddAgvData(null);
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), interfaceName: "uagv", protocolMajorVersion: "2");
+        var fixture = new ResendCommandHandlerTestFixture().AddAgv(agv);
 
-        await fixture.PublishMessageAsync(new RequestAgvData(agvData.AgvCorrelationId, "serial number"));
+        await fixture.PublishMessageAsync(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
 
-        await fixture.ShouldNotHavePublishedAsync<AgvDataReceived>();
+        PublishContext<MqttInstantActions> context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
+        context.RoutingKey().ShouldBe(agv.GetRoutingKey(Vda5050Specifications.Subtopics.InstantActions));
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestAgvData_AgvExists_UpdatesFactSheetRequestCache()
+    {
+        var agv = AgvGenerator.Generate(Guid.NewGuid(), interfaceName: "uagv", protocolMajorVersion: "2");
+        var fixture = new ResendCommandHandlerTestFixture().AddAgv(agv);
+
+        await fixture.PublishMessageAsync(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
+
+        fixture.FactSheetRequestCache.ConcurrentDict.ContainsKey(agv.CorrelationId).ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestAgvData_AgvNotFound_DoesNotPublishMqttInstantActions()
+    {
+        var fixture = new ResendCommandHandlerTestFixture().AddAgv(null);
+
+        await fixture.PublishMessageAsync(new RequestAgvData(Guid.NewGuid(), "serial number"));
+
+        await fixture.ShouldNotHavePublishedAsync<MqttInstantActions>();
     }
 }

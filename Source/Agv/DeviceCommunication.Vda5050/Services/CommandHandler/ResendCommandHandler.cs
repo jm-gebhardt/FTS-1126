@@ -1,7 +1,13 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Sequence;
+using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.HeadIds;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Graph;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -12,23 +18,45 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 /// Handles requests for resending agv related information, e.g. <see cref="RequestAgvData"/> and <see cref="RequestAgvGraph"/>.
 /// </summary>
 [UsedImplicitly]
-public class ResendCommandHandler(ILogger<ResendCommandHandler> logger, IAgvDataRepository agvDataRepository, IAgvRepository agvRepository):
-    IConsumer<RequestAgvData>,
-    IConsumer<RequestAgvGraph>
+public class ResendCommandHandler(
+    ILogger<ResendCommandHandler> logger,
+    IAgvRepository agvRepository,
+    IFactSheetRequestCacheProvider factSheetRequestCache,
+    ISequenceCounter<IInstantActionsHeaderId> instantActionSequenceCounter):
+     IConsumer<RequestAgvData>,
+     IConsumer<RequestAgvGraph>
 {
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestAgvData> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
         string agvSerialNumber = context.Message.SerialNumber;
-        logger.LogInformation("(Re)sending of agv data requested for agv {AgvSerialNumber}/{AgvCorrelationId}", agvSerialNumber, agvCorrelationId);
-        var agvData = await agvDataRepository.GetAgvDataAsync(agvCorrelationId);
-        if (agvData != null)
+        logger.LogInformation("Requesting fact sheet for agv {AgvSerialNumber}/{AgvCorrelationId}", agvSerialNumber, agvCorrelationId);
+        var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
+        if(agv == null)
         {
-            await context.Publish(new AgvDataReceived(agvCorrelationId, agvSerialNumber, agvData));
+            logger.LogError("Can only request fact sheet for agv {AgvSerialNumber}/{AgvCorrelationId} once the agv has connected", agvSerialNumber, agvCorrelationId);
             return;
         }
-        logger.LogInformation("No data available for (re)sending of agv data requested for agv {AgvSerialNumber}/{AgvCorrelationId}", agvSerialNumber, agvCorrelationId);
+        instantActionSequenceCounter.Increase();
+        await context.PublishMqtt(new MqttInstantActions()
+        {
+            HeaderId = instantActionSequenceCounter.Current,
+            Timestamp = DateTimeOffset.UtcNow,
+            Version = Vda5050Specifications.Version,
+            Manufacturer = agv.Manufacturer,
+            SerialNumber = agv.SerialNumber,
+            Actions =
+           [
+               new MqttInstantAction
+                {
+                    ActionType = Vda5050Specifications.ActionTypes.RequestFactsheet,
+                    ActionId = Guid.NewGuid().ToString(),
+                    BlockingType = BlockingType.NONE
+                }
+           ]
+        }, agv.GetRoutingKey(Vda5050Specifications.Subtopics.InstantActions), context.CancellationToken);
+        factSheetRequestCache.ConcurrentDict.AddOrUpdate(agvCorrelationId, true, (_, _) => true);
     }
 
     /// <inheritdoc/>

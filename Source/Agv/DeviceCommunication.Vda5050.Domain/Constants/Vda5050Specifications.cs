@@ -26,6 +26,7 @@ public static class Vda5050Specifications
         public const string StopCharging = "stopCharging";
         public const string WaitForTrigger = "waitForTrigger";
         public const string CancelOrder = "cancelOrder";
+        public const string RequestFactsheet = "factsheetRequest";
 
         /// <summary>
         /// True, if the given action type is predefined in Vda5050.

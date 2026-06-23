@@ -1,6 +1,8 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
@@ -20,13 +22,15 @@ public class MqttStateConsumer : IConsumer<MqttState>
     private readonly ILogger<MqttStateConsumer> _logger;
     private readonly StateParser _stateParser;
     private readonly IAgvRepository _agvRepository;
+    private readonly IFactSheetRequestCacheProvider _factSheetRequestCache;
 
     ///<inheritdoc cref="MqttStateConsumer"/> 
-    public MqttStateConsumer(ILogger<MqttStateConsumer> logger, IMapper mapper, IAgvRepository agvRepository)
+    public MqttStateConsumer(ILogger<MqttStateConsumer> logger, IMapper mapper, IAgvRepository agvRepository, IFactSheetRequestCacheProvider factSheetRequestCache)
     {
         _logger = logger;
         _stateParser = new StateParser(logger, mapper);
         _agvRepository = agvRepository;
+        _factSheetRequestCache = factSheetRequestCache;
     }
 
     /// <inheritdoc/> 
@@ -40,6 +44,10 @@ public class MqttStateConsumer : IConsumer<MqttState>
         await SendAgvErrorStatusAsync(context);
         await SendAgvLoadStatusAsync(context);
         await SendOrderStatusAsync(context);
+        if (!await _factSheetRequestCache.HasAgvRequestedFactSheet(_stateParser.CorrelationId))
+        {
+            await context.Publish(new RequestAgvData(_stateParser.CorrelationId, _stateParser.SerialNumber));
+        }
     }
 
     private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context)

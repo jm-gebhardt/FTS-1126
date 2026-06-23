@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 
@@ -37,5 +38,33 @@ public class MqttStateConsumerTest
         await fixture.ShouldNotHavePublishedAsync<AgvPositionReceived>();
         await fixture.ShouldHavePublishedAsync<AgvErrorStatusReceived>();
         await fixture.ShouldHavePublishedAsync<AgvLoadStatusReceived>();
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttState_FactSheetNotYetRequested_PublishesRequestAgvData()
+    {
+        var agv = AgvGenerator.Generate(Guid.NewGuid());
+        var fixture = new MqttStateConsumerTestFixture()
+            .AddAgv(agv)
+            .SetFactSheetNotYetRequested();
+
+        var message = MqttStateGenerator.Generate();
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        await fixture.ShouldHavePublishedAsync<RequestAgvData>();
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttState_FactSheetAlreadyRequested_DoesNotPublishRequestAgvData()
+    {
+        var agv = AgvGenerator.Generate(Guid.NewGuid());
+        var fixture = new MqttStateConsumerTestFixture().AddAgv(agv);
+
+        var message = MqttStateGenerator.Generate();
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        await fixture.ShouldNotHavePublishedAsync<RequestAgvData>();
     }
 }
