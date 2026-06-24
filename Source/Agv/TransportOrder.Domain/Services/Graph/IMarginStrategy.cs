@@ -12,5 +12,5 @@ public interface IMarginStrategy
     /// <summary>
     /// Returns a new polygon that extended the given polygon according to this strategy.
     /// </summary>
-    Polygon Apply(Polygon polygon, MarginContext context);
+    Polygon Apply(Polygon polygon);
 }

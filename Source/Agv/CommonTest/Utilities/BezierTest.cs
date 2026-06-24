@@ -105,4 +105,35 @@ public class BezierTest
         Should.Throw<ArgumentOutOfRangeException>(() => bezier.GetLength(0));
         Should.Throw<ArgumentOutOfRangeException>(() => bezier.GetLength(-1));
     }
+
+    [TestMethod]
+    public void GetSamples_ValidData_ReturnsRequestedCountWithCorrectStartAndEndPoints()
+    {
+        // (0,0) → (0,1) → (1,1) → (1,0) — symmetric arch
+        var bezier = new Bezier(new List<Vector2> { new(0, 0), new(0, 1), new(1, 1), new(1, 0) });
+
+        (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] samples = bezier.GetSamples(5);
+
+        samples.Length.ShouldBe(5);
+        samples[0].Point.X.ShouldBe(0f, 0.0001f);
+        samples[0].Point.Y.ShouldBe(0f, 0.0001f);
+        samples[^1].Point.X.ShouldBe(1f, 0.0001f);
+        samples[^1].Point.Y.ShouldBe(0f, 0.0001f);
+    }
+
+    [TestMethod]
+    public void GetSamples_StraightHorizontalCurve_AllFramesHaveUnitXTangentAndUnitYNormal()
+    {
+        var bezier = new Bezier(new List<Vector2> { new(0, 0), new(1, 0), new(2, 0), new(3, 0) });
+
+        (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] samples = bezier.GetSamples(10);
+
+        foreach (var (_, tangent, normal) in samples)
+        {
+            tangent.X.ShouldBe(1f, 0.0001f);
+            tangent.Y.ShouldBe(0f, 0.0001f);
+            normal.X.ShouldBe(0f, 0.0001f);
+            normal.Y.ShouldBe(1f, 0.0001f);
+        }
+    }
 }

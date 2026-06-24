@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 
-namespace Gebhardt.Acc.TransportOrder.Test.GraphAnalysis;
+namespace Gebhardt.Acc.TransportOrder.Test.Core.Services;
 
 public class BoundingBoxConflictRequestHandlerTestFixture
     : MediatorTestFixture<GetBoundingBoxConflicts, BoundingBoxConflictRequestHandler, MockConsumer>

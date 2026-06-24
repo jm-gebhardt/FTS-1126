@@ -24,5 +24,5 @@ public interface IEdgePolygonProvider
     /// <summary>
     /// Returns the AGV driving direction in radians at the given endpoint of the edge.
     /// </summary>
-    double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to, EdgeEndpoint endpoint);
+    double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to);
 }

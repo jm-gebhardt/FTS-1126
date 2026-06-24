@@ -85,6 +85,31 @@ public class Polygon
     }
 
     /// <summary>
+    /// Returns a new <see cref="Polygon"/> whose vertices are rotated by <paramref name="angle"/>
+    /// counter-clockwise around <paramref name="center"/>. When <paramref name="center"/> is
+    /// <see langword="null"/>, the rotation is performed around the origin.
+    /// </summary>
+    /// <param name="angle">Rotation angle in radians (counter-clockwise).</param>
+    /// <param name="center">Center of rotation. Uses the origin when <see langword="null"/>.</param>
+    public Polygon Rotate(double angle, PolygonPoint? center = null)
+    {
+        double cx = center?.X ?? 0.0;
+        double cy = center?.Y ?? 0.0;
+        double cos = Math.Cos(angle);
+        double sin = Math.Sin(angle);
+
+        var rotated = new PolygonPoint[Points.Count];
+        for (int i = 0; i < Points.Count; i++)
+        {
+            double dx = Points[i].X - cx;
+            double dy = Points[i].Y - cy;
+            rotated[i] = new PolygonPoint(cx + dx * cos - dy * sin, cy + dx * sin + dy * cos);
+        }
+
+        return new Polygon(rotated);
+    }
+
+    /// <summary>
     /// Returns true when this polygon geometrically intersects with <paramref name="other"/>.
     /// </summary>
     public bool IsIntersecting(Polygon other)

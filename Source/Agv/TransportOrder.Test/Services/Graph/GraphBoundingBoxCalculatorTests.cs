@@ -5,7 +5,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 using Shouldly;
 
-namespace Gebhardt.Acc.TransportOrder.Test.GraphAnalysis;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.Graph;
 
 [TestClass]
 public class GraphBoundingBoxCalculatorTests
@@ -96,7 +96,7 @@ public class GraphBoundingBoxCalculatorTests
             return new Polygon([new PolygonPoint(0, 0), new PolygonPoint(1, 0), new PolygonPoint(0, 1)]);
         }
 
-        public double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to, EdgeEndpoint endpoint)
+        public double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to)
         {
             return direction;
         }

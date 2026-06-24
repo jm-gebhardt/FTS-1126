@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using JetBrains.Annotations;
 using System.Numerics;
+using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.Common.Domain.Models.Graphs;
 
@@ -114,5 +115,38 @@ public class Bezier
             length += Vector2.Distance(p1, p2);
         }
         return length;
+    }
+
+    /// <summary>
+    /// Samples the curve at <paramref name="steps"/> equally spaced positions and returns the local frame
+    /// (curve point, unit tangent and left-hand normal) at each position.
+    /// </summary>
+    /// <param name="steps">The amount of positions sampled along the curve (min. 2).</param>
+    public (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] GetSamples(int steps)
+    {
+        if (steps < 2)
+        {
+            throw new ArgumentException($"{nameof(steps)} has to be >=2");
+        }
+
+        double stepSize = 1d / (steps - 1);
+        var frame = new (Vector2 Point, Vector2 Tangent, Vector2 Normal)[steps];
+        var tangent = Vector2.UnitX;
+
+        for (int i = 0; i < steps; i++)
+        {
+            double intervalPosition = Math.Clamp(stepSize * i, 0d, 1d);
+            var curvePoint = DeCasteljau(intervalPosition, out var tangentPoint1, out var tangentPoint2);
+
+            var tangentDirection = tangentPoint2 - tangentPoint1;
+            if (tangentDirection.LengthSquared() > Mathematics.FloatComparator)
+            {
+                tangent = Vector2.Normalize(tangentDirection);
+            }
+            var normal = new Vector2(-tangent.Y, tangent.X);
+            frame[i] = (curvePoint, tangent, normal);
+        }
+
+        return frame;
     }
 }

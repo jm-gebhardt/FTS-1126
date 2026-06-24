@@ -6,7 +6,7 @@ using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Shouldly;
 
-namespace Gebhardt.Acc.TransportOrder.Test.GraphAnalysis;
+namespace Gebhardt.Acc.TransportOrder.Test.Core.Services;
 
 [TestClass]
 public class BoundingBoxConflictRequestHandlerTests

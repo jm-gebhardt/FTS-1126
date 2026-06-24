@@ -26,7 +26,7 @@ public class SafetyMarginStrategy : IMarginStrategy
     }
 
     /// <inheritdoc/>
-    public Polygon Apply(Polygon polygon, MarginContext context)
+    public Polygon Apply(Polygon polygon)
     {
         int count = polygon.Points.Count;
         var result = new PolygonPoint[count];

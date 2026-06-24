@@ -1,16 +1,15 @@
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
-namespace Gebhardt.Acc.TransportOrder.Test.GraphAnalysis;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.Graph;
 
 public class GraphBoundingBoxCalculatorTestFixture
 {
     private List<IEdgePolygonProvider> _providers = [new DirectEdgePolygonProvider()];
-    private Graph _graph = new();
+    private Common.Domain.Models.Graphs.Graph _graph = new();
 
     public GraphBoundingBoxCalculator Calculator => new(_graph, _providers);
 
-    public GraphBoundingBoxCalculatorTestFixture WithGraph(Graph graph)
+    public GraphBoundingBoxCalculatorTestFixture WithGraph(Common.Domain.Models.Graphs.Graph graph)
     {
         _graph = graph;
         return this;

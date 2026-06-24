@@ -1,4 +1,3 @@
-using System.Numerics;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
@@ -31,8 +30,8 @@ public class GraphBoundingBoxCalculator
             var from = _nodesById[edge.FromNodeId];
             var to = _nodesById[edge.ToNodeId];
             var provider = SelectProvider(edge.Variant);
-            _nodeOrientations.TryAdd(edge.FromNodeId, provider.GetDirectionAtEndpoint(edge, from, to, EdgeEndpoint.From));
-            _nodeOrientations.TryAdd(edge.ToNodeId, provider.GetDirectionAtEndpoint(edge, from, to, EdgeEndpoint.To));
+            _nodeOrientations.TryAdd(edge.FromNodeId, provider.GetDirectionAtEndpoint(edge, from, to));
+            _nodeOrientations.TryAdd(edge.ToNodeId, provider.GetDirectionAtEndpoint(edge, from, to));
         }
     }
 
@@ -78,9 +77,7 @@ public class GraphBoundingBoxCalculator
                     p.Lx * sinT + p.Ly * cosT + node.Y))
             .ToList());
 
-        var dir = new Vector2((float)cosT, (float)sinT);
-        var ctx = new MarginContext(node, null, null, null, agvData, dir);
-        var polygon = margins.Aggregate(rawPolygon, (p, m) => m.Apply(p, ctx));
+        var polygon = margins.Aggregate(rawPolygon, (p, m) => m.Apply(p));
 
         return new ResourceBoundingBox
         {

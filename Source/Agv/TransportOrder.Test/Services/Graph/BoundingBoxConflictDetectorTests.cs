@@ -4,7 +4,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 
-namespace Gebhardt.Acc.TransportOrder.Test.GraphAnalysis;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.Graph;
 
 [TestClass]
 public class BoundingBoxConflictDetectorTests

@@ -208,6 +208,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<HousekeepingJob>();
         services.AddTransient<IOwnedFilterTemplateRepository, OwnedFilterTemplateRepository>();
         services.AddSingleton<IEdgePolygonProvider, DirectEdgePolygonProvider>();
+        services.AddSingleton<IEdgePolygonProvider, BezierEdgePolygonProvider>();
         services.AddSingleton<IMarginStrategy>(new SafetyMarginStrategy(0.2));
         services.AddTransient<IBoundingBoxRepository, EfBoundingBoxRepository>();
     }
