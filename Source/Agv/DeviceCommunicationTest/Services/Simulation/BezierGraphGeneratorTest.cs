@@ -14,8 +14,8 @@ public class BezierGraphGeneratorTest
         return Enumerable.Range(0, count).Select(idx => $"{suffix}{idx}").ToArray();
     }
 
-    private const float South = (float) Math.PI;
-    private const float North = 0f;
+    private const float South = -(float)Math.PI / 2;
+    private const float North = (float)Math.PI / 2;
 
     [TestMethod]
     [DataRow(0, 0, 0)]
@@ -111,7 +111,7 @@ public class BezierGraphGeneratorTest
         var generator = new BezierGraphGenerator(sources, destinations, new GeneratedMapGenerator(), 3, []);
         var graph = generator.Generate(Guid.NewGuid());
 
-        foreach (string stationName in (string[]) [..sources, ..destinations])
+        foreach (string stationName in (string[])[..sources, ..destinations])
         {
             var fromEdge = graph.Edges.Single(e => e.FromNodeId == stationName.ToGuid());
             var toEdge = graph.Edges.Single(e => e.ToNodeId == stationName.ToGuid());

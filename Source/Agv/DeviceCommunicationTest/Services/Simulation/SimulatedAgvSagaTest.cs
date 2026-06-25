@@ -69,7 +69,7 @@ public class SimulatedAgvSagaTest
         saga.SimulatedBatteryCharge.ShouldBe(batteryCharge);
         saga.AgvStatus.Charging.ShouldBeTrue();
         saga.AgvStatus.EstimatedFullyChargedTime.ShouldNotBeNull();
-        ((DateTime) saga.AgvStatus.EstimatedFullyChargedTime!).ShouldBe(now.AddSeconds((SimulatedAgvSaga.MaxCharge - batteryCharge) / batteryChargeRate));
+        ((DateTime)saga.AgvStatus.EstimatedFullyChargedTime!).ShouldBe(now.AddSeconds((SimulatedAgvSaga.MaxCharge - batteryCharge) / batteryChargeRate));
     }
 
     [TestMethod]
@@ -138,8 +138,8 @@ public class SimulatedAgvSagaTest
     {
         var nodes = new List<GraphNode>
         {
-            NodeGenerator.GenerateNode(x: 3, y: 36, nodeName: "W1"),
-            NodeGenerator.GenerateNode(x: 34, y: 91, nodeName: "W2")
+            NodeGenerator.GenerateNode(x: 3, y: -36, nodeName: "W1"),
+            NodeGenerator.GenerateNode(x: 34, y: -91, nodeName: "W2")
         };
         var fixture = new SimulatedAgvSagaTestFixture()
             .WithNumberOfEdges(1)
@@ -152,13 +152,13 @@ public class SimulatedAgvSagaTest
         fixture.Saga.UpdatePosition();
         fixture.Saga.Position!.X.ShouldBe(nodes[0].X, 0.01);
         fixture.Saga.Position!.Y.ShouldBe(nodes[0].Y, 0.01);
-        fixture.Saga.Position!.Theta.ShouldBe(2.63f, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe(-1.0575f, 0.01);
 
         fixture.SimulateToPercentage(100);
         fixture.Saga.UpdatePosition();
         fixture.Saga.Position!.X.ShouldBe(nodes[1].X, 0.01);
         fixture.Saga.Position!.Y.ShouldBe(nodes[1].Y, 0.01);
-        fixture.Saga.Position!.Theta.ShouldBe(2.63f, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe(-1.0575f, 0.01);
     }
 
     [TestMethod]
@@ -181,7 +181,7 @@ public class SimulatedAgvSagaTest
         fixture.Saga.UpdatePosition();
         fixture.Saga.Position!.X.ShouldBe(10f, 0.05);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.05);
-        fixture.Saga.Position!.Theta.ShouldBe((float) Math.PI / 2, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe(0, 0.01);
     }
 
     [TestMethod]
@@ -204,7 +204,7 @@ public class SimulatedAgvSagaTest
 
         fixture.Saga.Position!.X.ShouldBe(0f, 0.01);
         fixture.Saga.Position!.Y.ShouldBe(0f, 0.01);
-        fixture.Saga.Position!.Theta.ShouldBe((float) 3 / 2 * (float) Math.PI, 0.01);
+        fixture.Saga.Position!.Theta.ShouldBe((float)Math.PI, 0.01);
     }
 
     [TestMethod]
@@ -232,7 +232,7 @@ public class SimulatedAgvSagaTest
         saga.ActionStartDate = finish;
         saga.Action = AgvActionGenerator.GenerateMoveAction();
         saga.TravelSimulator = new AgvTravelSimulatorMock().Object;
-        var remainingDuration = (TimeSpan) saga.RemainingDuration!;
+        var remainingDuration = (TimeSpan)saga.RemainingDuration!;
 
         var expectedRemaining = saga.ActionFinishDate!.Value - now;
         remainingDuration.TotalSeconds.ShouldBe(expectedRemaining.TotalSeconds);

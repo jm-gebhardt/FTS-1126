@@ -39,6 +39,6 @@ public class ZonesParser(MqttZones zones)
     public ICollection<AgvZone> AgvZones =>
         zones.Zones.Select(z => new AgvZone(z.ZoneId,
             z.Capacity,
-            z.Polygon.Select(p => new PolygonPoint(p.X, -p.Y)).ToList(),
+            z.Polygon.Select(p => new PolygonPoint(p.X, p.Y)).ToList(),
             z.Occupancy)).ToList();
 }

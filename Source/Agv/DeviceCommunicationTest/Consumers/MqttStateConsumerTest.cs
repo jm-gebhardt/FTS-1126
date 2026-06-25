@@ -118,9 +118,9 @@ public class MqttStateConsumerTest
         publishedPos.CorrelationId.ShouldBe(agvSerialNumber.ToGuid());
         publishedPos.SerialNumber.ShouldBe(agvSerialNumber);
         publishedPos.AgvPosition.PositionInitialized.ShouldBe(positionInitialized);
-        publishedPos.AgvPosition.Theta.ShouldBe((float)Mathematics.ConvertToRadians(90) - theta);
+        publishedPos.AgvPosition.Theta.ShouldBe(theta);
         publishedPos.AgvPosition.X.ShouldBe(x);
-        (publishedPos.AgvPosition.Y * -1).ShouldBe(y);
+        publishedPos.AgvPosition.Y.ShouldBe(y);
     }
 
     [TestMethod]
@@ -160,7 +160,7 @@ public class MqttStateConsumerTest
 
         await fixture.ShouldHavePublishedAsync<MqttState>();
         await fixture.ShouldHaveConsumedAsync<MqttState>();
-        
+
         var agvErrorStatus = await fixture.GetFirstPublishedMessageAsync<AgvErrorStatusReceived>();
         agvErrorStatus.Errors.ShouldNotBeNull();
         agvErrorStatus.Errors.Count.ShouldBe(1);
@@ -192,18 +192,19 @@ public class MqttStateConsumerTest
             new() { LoadId = cargoId + "2", LoadPosition = "positionC2", LoadType = "Box", LoadDimensions = new MqttLoadDimensions { Height = dimensionHeight, Width = 0.8f, Length = 0.9f }, BoundingBoxReference = null }
         };
 
-        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId) {
-             Loads = loadList,
-               AgvPosition = new MqttAgvPosition()
+        await fixture.TestHarness.Bus.PublishMqtt(new MqttState(agvTestIdentifier, orderId)
+        {
+            Loads = loadList,
+            AgvPosition = new MqttAgvPosition()
             {
                 PositionInitialized = true,
                 Theta = 0,
                 X = 12,
                 Y = 12
             }
-            }, callback: null);
+        }, callback: null);
         await fixture.ShouldHavePublishedAsync<MqttState>();
-        
+
         var consumedState = await fixture.GetFirstConsumedMessageAsync<MqttState>();
         consumedState.SerialNumber.ShouldBe(agvTestIdentifier);
 

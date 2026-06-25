@@ -16,6 +16,6 @@ public static class ExportedNodeExtension
     /// <returns>The graph node.</returns>
     public static GraphNode ToGraphNode(this ExportedNode node)
     {
-        return new GraphNode(node.NodeId.ToGuid(), node.NodeId, (float) node.X, -(float) node.Y, 0, [AgvGraph.NodeType.WayPoint], null, null, null) { TimeStamp = node.TimeStamp };
+        return new GraphNode(node.NodeId.ToGuid(), node.NodeId, (float)node.X, (float)node.Y, 0, [AgvGraph.NodeType.WayPoint], null, null, null) { TimeStamp = node.TimeStamp };
     }
 }

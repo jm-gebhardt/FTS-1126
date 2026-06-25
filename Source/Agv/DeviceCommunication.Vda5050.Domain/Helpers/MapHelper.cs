@@ -71,8 +71,8 @@ public static class MapHelper
         int width = Math.Max(MinPixelDimension, (int)Math.Ceiling(totalX / resolution));
         int height = Math.Max(MinPixelDimension, (int)Math.Ceiling(totalY / resolution));
 
-        float xOffset = marginX - minX.GetValueOrDefault();
-        float yOffset = marginY - minY.GetValueOrDefault();
+        float xOffset = minX.GetValueOrDefault() - marginX;
+        float yOffset = minY.GetValueOrDefault() - marginY;
 
         return (width, height, resolution, xOffset, yOffset);
     }

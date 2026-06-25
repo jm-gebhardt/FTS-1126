@@ -15,15 +15,6 @@ public static class ExportedControlPointExtension
     extension(ExportedControlPoint point)
     {
         /// <summary>
-        /// Invert the y-coordinate of the control point.
-        /// </summary>
-        /// <returns></returns>
-        public ExportedControlPoint InvertY()
-        {
-            return point with { Y = -point.Y };
-        }
-
-        /// <summary>
         /// Get the <see cref="Vector2"/> representation of a control point.
         /// </summary>
         /// <returns>Vector to using x, y coordinates of the control point.</returns>
@@ -38,7 +29,7 @@ public static class ExportedControlPointExtension
         /// <returns></returns>
         public EdgeCoefficient ToEdgeCoefficient()
         {
-            return new EdgeCoefficient(point.X, -point.Y);
+            return new EdgeCoefficient(point.X, point.Y);
         }
     }
 }

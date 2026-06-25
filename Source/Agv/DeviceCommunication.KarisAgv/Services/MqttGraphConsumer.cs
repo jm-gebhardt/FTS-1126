@@ -44,29 +44,6 @@ public class MqttGraphConsumer : IConsumer<MqttGraph>
         var reversedYGraph = context.Message;
         var correlationId = context.Message.SerialNumber.ToGuid();
 
-        //Special treatment because we are in a different coordinate system than Karis AGV
-        if (reversedYGraph.Nodes != null)
-        {
-            foreach (var t in reversedYGraph.Nodes)
-            {
-                t.Y *= -1;
-            }
-        }
-
-        if (reversedYGraph.Edges != null)
-        {
-            foreach (var e in reversedYGraph.Edges)
-            {
-                if (e.ControlPoints != null)
-                {
-                    foreach (var controlPoint in e.ControlPoints)
-                    {
-                        controlPoint.Y *= -1;
-                    }
-                }
-            }
-        }
-
         var graphParser = new GraphParser(reversedYGraph);
         graphParser.Parse();
         await _graphRepository.Add(graphParser.NodesById, graphParser.EdgesById);

@@ -27,11 +27,11 @@ public static class ExportedEdgeExtension
         {
             if (edge.EdgeType == EdgeType.Direct)
             {
-                return (float) Mathematics.EuclideanDistance(start.AsVector3(), end.AsVector3());
+                return (float)Mathematics.EuclideanDistance(start.AsVector3(), end.AsVector3());
             }
-            List<Vector2> points = [start.AsVector2(), .. edge.ControlPoints.Select(p => p.InvertY().AsVector2()).ToList(), end.AsVector2()];
+            List<Vector2> points = [start.AsVector2(), .. edge.ControlPoints.Select(p => p.AsVector2()).ToList(), end.AsVector2()];
             var bezier = new Bezier(points);
-            return (float) bezier.GetLength(100);
+            return (float)bezier.GetLength(100);
         }
 
         /// <summary>

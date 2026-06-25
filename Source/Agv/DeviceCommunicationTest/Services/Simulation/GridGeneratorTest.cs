@@ -8,11 +8,10 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Services.Simulation;
 [TestClass]
 public class GridGeneratorTest
 {
-    private const float East = (float) Math.PI / 2f;
-
-    private const float West = 3f * (float) Math.PI / 2f;
-    private const float South = (float) Math.PI;
-    private const float North = 0f;
+    private const float East = 0f;
+    private const float West = (float)Math.PI;
+    private const float South = -(float)Math.PI / 2f;
+    private const float North = (float)Math.PI / 2f;
 
     [TestMethod]
     [DataRow(0, 0, 0)]

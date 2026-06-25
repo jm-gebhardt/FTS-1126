@@ -369,8 +369,8 @@ public class AgvTravelSimulatorTest
         string[] nodes = { "D-Paint", "WP-0016", "WP-0015" };
         Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), agvGraph.Edges.ToList());
         var startNode = agvGraph.Nodes.First(n => n.Name == nodes.First());
-        float orientationOnEdgeAfterStation = (float) Mathematics.ConvertToRadians(90);
-        float orientationOnNextEdge = (float) Mathematics.ConvertToRadians(270);
+        float orientationOnEdgeAfterStation = (float)Mathematics.ConvertToRadians(0);
+        float orientationOnNextEdge = (float)Mathematics.ConvertToRadians(180);
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, orientationOnEdgeAfterStation);
         var simulator = new AgvTravelSimulator(agvGraph, position, new FakeTimeProvider());
 

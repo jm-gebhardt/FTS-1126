@@ -107,6 +107,7 @@ public class Station
 /// <summary>
 /// The position and rotation of the station based on to the maps/graphs coordinate system
 /// </summary>
+[PublicAPI]
 public record Position
 {
     /// <summary>

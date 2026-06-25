@@ -132,15 +132,15 @@ public abstract class BaseEdge : GraphEdge
             angle -= Math.Sign(angle) * 2d * Math.PI;
         }
 
-        orientation = (previousOrientation + (float)(angle * turningFraction)) % (float)(2d * Math.PI);
+        orientation = previousOrientation + (float)(angle * turningFraction);
 
-        if (orientation < 0)
-        {
-            orientation += (float)(2d * Math.PI);
-        }
-        if (orientation > 2f * Math.PI)
+        if (orientation > (float)Math.PI)
         {
             orientation -= (float)(2d * Math.PI);
+        }
+        else if (orientation <= -(float)Math.PI)
+        {
+            orientation += (float)(2d * Math.PI);
         }
         return orientation;
     }
@@ -172,7 +172,7 @@ public abstract class BaseEdge : GraphEdge
             // use tangent
             fromVector -= toVector;
         }
-        return (float)(Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
+        return (float)Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X);
     }
 
     /// <summary>
@@ -190,6 +190,6 @@ public abstract class BaseEdge : GraphEdge
             // use tangent
             fromVector -= toVector;
         }
-        return (float)(Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
+        return (float)Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X);
     }
 }

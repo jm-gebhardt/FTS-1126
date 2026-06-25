@@ -65,8 +65,8 @@ public class GeneratedMapGenerator : MapGeneratorBase
     protected override Map GenerateInternal(Guid mapId, string mapName, IGraph graph)
     {
         float resolution = (Max.X - Min.X + 2 * WallDistance) / ImageWidth;
-        float xOffset = -Min.X + WallDistance;
-        float yOffset = -Min.Y + WallDistance;
+        float xOffset = Min.X - WallDistance;
+        float yOffset = Min.Y - WallDistance;
 
         int imageHeightPx = (int)Math.Ceiling((Max.Y - Min.Y + 2 * WallDistance) / resolution);
         float wallThicknessPx = WallThickness / resolution; // Wall thickness: 24 cm

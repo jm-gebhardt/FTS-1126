@@ -23,9 +23,9 @@ public class StateParserTest
     {
         state.AgvPosition.ShouldNotBeNull();
         position.X.ShouldBe(state.AgvPosition.X);
-        position.Y.ShouldBe(state.AgvPosition.Y * -1);
+        position.Y.ShouldBe(state.AgvPosition.Y);
         position.Z.ShouldBe(0);
-        position.Theta.ShouldBe((float)Mathematics.ConvertToRadians(90.0f) - state.AgvPosition.Theta);
+        position.Theta.ShouldBe(state.AgvPosition.Theta);
         position.DeviationRange.ShouldBe(state.AgvPosition.DeviationRange);
         position.PositionInitialized.ShouldBe(state.AgvPosition.PositionInitialized);
     }

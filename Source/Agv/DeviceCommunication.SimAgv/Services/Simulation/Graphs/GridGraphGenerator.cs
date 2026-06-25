@@ -24,14 +24,14 @@ namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 public class GridGraphGenerator : GraphGeneratorBase
 {
     /// Station angles are defined as:
-    ///         0
-    /// 3/2 pi -|- pi/2
-    ///         pi
-    private const float East = (float) Math.PI / 2f;
+    ///        pi/2
+    ///     pi -|- 0
+    ///        -pi/2
+    private const float East = 0f;
 
-    private const float West = 3f * (float) Math.PI / 2f;
-    private const float South = (float) Math.PI;
-    private const float North = 0f;
+    private const float West = (float)Math.PI;
+    private const float South = -(float)Math.PI / 2f;
+    private const float North = (float)Math.PI / 2f;
 
     private const float OriginXOffset = 5;
     private const float OriginYOffset = 5;
@@ -145,7 +145,7 @@ public class GridGraphGenerator : GraphGeneratorBase
                 {
                     Type = [AgvGraph.NodeType.WayPoint],
                     X = x * NodeOffset + OriginXOffset,
-                    Y = y * NodeOffset + OriginYOffset,
+                    Y = -(y * NodeOffset + OriginYOffset),
                     TimeStamp = _timeStamp
                 });
             }
@@ -194,7 +194,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             {
                 Type = [AgvGraph.NodeType.Pick],
                 X = gridNode.X,
-                Y = gridNode.Y - OriginYOffset / 2,
+                Y = gridNode.Y + OriginYOffset / 2,
                 Theta = North,
                 TimeStamp = _timeStamp
             };
@@ -221,7 +221,7 @@ public class GridGraphGenerator : GraphGeneratorBase
             {
                 Type = [AgvGraph.NodeType.Drop],
                 X = gridNode.X,
-                Y = gridNode.Y + OriginYOffset / 2,
+                Y = gridNode.Y - OriginYOffset / 2,
                 Theta = South,
                 TimeStamp = _timeStamp
             };
@@ -279,7 +279,7 @@ public class GridGraphGenerator : GraphGeneratorBase
         }
 
         float step = 2.0f * GridRows / _serviceNodeTypes.Length;
-        int nodeIdx = (int) (step * serviceNodeIndex + 0.5);
+        int nodeIdx = (int)(step * serviceNodeIndex + 0.5);
 
         if (nodeIdx % 2 == 0)
         {

@@ -58,8 +58,8 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
 
     private const string ManualCharge = "ManualCharge";
 
-    private const float North = 0f;
-    private const float South = (float) Math.PI;
+    private const float North = (float)Math.PI / 2f;
+    private const float South = -(float)Math.PI / 2f;
 
     private const float StationSpacing = 2f;
 
@@ -81,18 +81,18 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
     private const float Cx2 = Cx1 + StationSpacing;
     private const float Cx3 = Cx2 + StationSpacing;
 
-    private const float Y4 = 21f;
-    private const float Ywp17 = 13f;
-    private const float Ywp18 = 19f;
+    private const float Y4 = -21f;
+    private const float Ywp17 = -13f;
+    private const float Ywp18 = -19f;
 
-    private const float Row0 = 5f;
-    private const float Row1 = Row0 + RowSpacing;
-    private const float Row2 = Row1 + RowSpacing;
-    private const float Row3 = Row2 + RowSpacing;
-    private const float EmptyRow = Row3 + RowSpacing;
-    private const float Row4 = EmptyRow + RowSpacing;
-    private const float Row5 = Row4 + RowSpacing;
-    private const float Row6 = Row5 + RowSpacing;
+    private const float Row0 = -5f;
+    private const float Row1 = Row0 - RowSpacing;
+    private const float Row2 = Row1 - RowSpacing;
+    private const float Row3 = Row2 - RowSpacing;
+    private const float EmptyRow = Row3 - RowSpacing;
+    private const float Row4 = EmptyRow - RowSpacing;
+    private const float Row5 = Row4 - RowSpacing;
+    private const float Row6 = Row5 - RowSpacing;
 
     private const float Col0 = X8;
     private const float Col1 = X2;
@@ -244,7 +244,7 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
     {
         var sourceNode = nodes.Single(n => n.Name == fromNodeId);
         var targetNode = nodes.Single(n => n.Name == toNodeId);
-        float length = (float) Mathematics.EuclideanDistance(sourceNode, targetNode);
+        float length = (float)Mathematics.EuclideanDistance(sourceNode, targetNode);
         return GraphEdge.CreateDirect(fromNodeId.ToGuid(), toNodeId.ToGuid(), length, GraphHelper.ToGuid(EdgeType.Direct, fromNodeId, length, toNodeId), _timeStamp);
     }
 
@@ -253,9 +253,9 @@ public class KaeserGraphGenerator(IMapGenerator mapGenerator) : GraphGeneratorBa
         var sourceNode = nodes.Single(n => n.Name == fromNodeId).AsVector3();
         var targetNode = nodes.Single(n => n.Name == toNodeId).AsVector3();
         List<Vector3> points = [sourceNode];
-        points.AddRange(pathPoints.Select(c => new Vector3((float) c.X!, (float) c.Y!, 0f)));
+        points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
         points.Add(targetNode);
         double length = new Polypath(points).GetLength();
-        return GraphEdge.CreatePolypath(fromNodeId.ToGuid(), toNodeId.ToGuid(), (float) length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float) length, toNodeId), _timeStamp);
+        return GraphEdge.CreatePolypath(fromNodeId.ToGuid(), toNodeId.ToGuid(), (float)length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId), _timeStamp);
     }
 }
