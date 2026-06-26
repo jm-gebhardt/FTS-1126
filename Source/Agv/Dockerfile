@@ -32,7 +32,7 @@ COPY Agv/ ./Agv/
 # Restore with NuGet authentication (uses BuildKit secret)
 RUN --mount=type=secret,id=nuget_pat \
     if [ -f /run/secrets/nuget_pat ]; then \
-        dotnet nuget update source AgvDev \
+        dotnet nuget update source feed-AgvDev \
             --username "az" \
             --password "$(cat /run/secrets/nuget_pat)" \
             --store-password-in-clear-text \

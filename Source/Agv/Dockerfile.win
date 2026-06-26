@@ -29,7 +29,7 @@ COPY Agv/ ./Agv/
 RUN --mount=type=secret,id=nuget_pat `
     if (Test-Path "C:\run\secrets\nuget_pat") { `
         $pat = Get-Content "C:\run\secrets\nuget_pat"; `
-        dotnet nuget update source AgvDev `
+        dotnet nuget update source feed-AgvDev `
             --username "az" `
             --password "$pat" `
             --store-password-in-clear-text `
