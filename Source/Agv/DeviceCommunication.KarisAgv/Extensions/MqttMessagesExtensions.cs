@@ -80,12 +80,12 @@ public static class MqttMessagesExtensions
         /// <param name="end">The end <see cref="MqttNode"/></param>
         public Bezier ToBezier(MqttNode start, MqttNode end)
         {
-            var points = new List<Vector2> { start.AsVector2(), edge.ControlPoints!.First().AsVector2() };
-            if (edge.ControlPoints!.Count == 2)
-            {
-                points.Add(edge.ControlPoints!.Last().AsVector2());
-            }
-            points.Add(end.AsVector2());
+            Vector2[] points =
+            [
+                start.AsVector2(),
+                ..edge.ControlPoints?.Select(cp => cp.AsVector2()) ?? [],
+                end.AsVector2()
+            ];   
             return new Bezier(points);
         }
 
@@ -96,13 +96,10 @@ public static class MqttMessagesExtensions
         /// <param name="end">The end <see cref="MqttNode"/></param>
         public Polypath ToPolypath(MqttNode start, MqttNode end)
         {
-            var points = new List<Vector3> { start.AsVector3() };
-
-            foreach (var controlPoint in edge.ControlPoints ?? new List<MqttControlPoint>())
-            {
-                points.Add(controlPoint.AsVector3());
-            }
-            points.Add(end.AsVector3());
+            List<Vector3> points = new[] { start.AsVector3() }
+                .Concat(edge.ControlPoints?.Select(cp => cp.AsVector3()) ?? [])
+                .Concat([end.AsVector3()])
+                .ToList();
 
             return new Polypath(points);
         }

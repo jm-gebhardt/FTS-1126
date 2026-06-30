@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Errors;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Helpers;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Exceptions;
@@ -43,17 +44,17 @@ public class GraphParser
     public string? RelatedMapName { get; private set; }
 
     /// <summary>
-    /// The Id of the related map.
+    /// The ID of the related map.
     /// </summary>
     public Guid RelatedMapId { get; private set; }
 
     /// <summary>
-    /// Dictionary of MqttEdges by their Id.
+    /// Dictionary of MqttEdges by their ID.
     /// </summary>
     public Dictionary<Guid, MqttEdge> EdgesById { get; } = new();
 
     /// <summary>
-    /// Dictionary of MqttNodes by their Id.
+    /// Dictionary of MqttNodes by their ID.
     /// </summary>
     public Dictionary<string, MqttNode> NodesById { get; } = new();
 
@@ -74,8 +75,9 @@ public class GraphParser
     /// <param name="mqttEdge">The edge for which the metric will be calculated.</param>
     /// <param name="nodes">List of nodes e.g. required for getting coordinates.</param>
     /// <returns>Distance of the edge.</returns>
-    /// <exception cref="InvalidOperationException">Nodes addressed by the edge cannot be found
+    /// <exception cref="MqttGraphParsingException">Nodes addressed by the edge cannot be found
     /// in the nodes listing or isn't unique.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"> Unknown edge type.</exception>
     private static double CalculateEdgeLength(MqttEdge mqttEdge, MqttNode[] nodes)
     {
         var start = nodes.SingleOrDefault(x => x.NodeId == mqttEdge.StartId);
@@ -89,7 +91,7 @@ public class GraphParser
 
         if (start == null || end == null)
         {
-            throw new InvalidOperationException("Node addressed by an edge is not part of the node listing.");
+            throw new MqttGraphParsingException($"Edge '{mqttEdge.EdgeId}': Node '" + (start == null ? mqttEdge.StartId : mqttEdge.EndId) + "' addressed by edge is not part of the node listing.");
         }
 
         double length = edgeType switch
@@ -145,11 +147,16 @@ public class GraphParser
 
         var edge = GetGraphEdgeForCurveType(mqttEdge, metric, (float) length, swap, fromNodeId, toNodeId);
         bool allAdded = _edges.Add(edge);
+
         if (allAdded && _isVelocityDataValid)
         {
             _overallDistance += (float) length;
             // No division by zero due to _considerVelocity.
             _overallDuration += (float) length / mqttEdge.MaxVelocity;
+        }
+        else if (!allAdded)
+        {
+            throw new MqttGraphParsingException($"Edge '{mqttEdge.EdgeId}' is not unique (StartId: '{mqttEdge.StartId}', EndId: '{mqttEdge.EndId}', EdgeType: '{mqttEdge.EdgeType}')");
         }
 
         if (allAdded)
@@ -181,28 +188,28 @@ public class GraphParser
 
                 if (controlPoints?.Count != 1)
                 {
-                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier2)} curve");
+                    throw new MqttGraphParsingException($"Edge '{mqttEdge.EdgeId}': Wrong number of control points for {nameof(EdgeType.Bezier2)} curve");
                 }
                 return GraphEdge.CreateBezier2(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, id, TimeStamp);
 
             case EdgeType.Bezier3:
                 if (controlPoints?.Count != 2)
                 {
-                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier3)} curve");
+                    throw new MqttGraphParsingException($"Edge '{mqttEdge.EdgeId}': Wrong number of control points for {nameof(EdgeType.Bezier3)} curve");
                 }
                 return GraphEdge.CreateBezier3(fromNodeId, toNodeId, length, controlPoints.First().X, controlPoints.First().Y, controlPoints.Last().X, controlPoints.Last().Y, id, TimeStamp);
 
             case EdgeType.Bezier5:
                 if (controlPoints?.Count != 4)
                 {
-                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Bezier5)} curve");
+                    throw new MqttGraphParsingException($"Edge '{mqttEdge.EdgeId}': Wrong number of control points for {nameof(EdgeType.Bezier5)} curve");
                 }
                 return GraphEdge.CreateBezier5(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray(), id, TimeStamp);
 
             case EdgeType.Polypath:
                 if (controlPoints == null || controlPoints.Count < 1)
                 {
-                    throw new MqttGraphParsingException($"Wrong number of control points for {nameof(EdgeType.Polypath)} curve");
+                    throw new MqttGraphParsingException($"Edge '{mqttEdge.EdgeId}': Wrong number of control points for {nameof(EdgeType.Polypath)} curve");
                 }
                 return GraphEdge.CreatePolypath(fromNodeId, toNodeId, length, controlPoints.Select(c => new EdgeCoefficient(c.X, c.Y)).ToList(), id, TimeStamp);
 
@@ -247,8 +254,9 @@ public class GraphParser
                 // Calculate costs based on distance.
                 metric = (float) length;
             }
-
-            allAdded &= BuildEdge(edge, metric, length);
+            bool edgeAdded = BuildEdge(edge, metric, length);
+            allAdded &= edgeAdded;
+ 
             if (edge.Bidirectional)
             {
                 // Build reversed edge by swapping From and To.
@@ -266,7 +274,7 @@ public class GraphParser
     private bool ParseNodes()
     {
         bool allAdded = true;
-
+        
         foreach (var mqttNode in _graph.Nodes!)
         {
             var newNode = new GraphNode(mqttNode.NodeId.ToGuid(), mqttNode.NodeId)
@@ -277,11 +285,17 @@ public class GraphParser
                 Y = mqttNode.Y,
                 Z = mqttNode.Z ?? 0f
             };
-            allAdded &= _nodes.Add(newNode);
+            bool nodeAdded = _nodes.Add(newNode);
+            allAdded &= nodeAdded;
+            if (!nodeAdded)
+            {
+                throw new MqttGraphParsingException($"Node '{mqttNode.NodeId}' is not unique.)");
+            }
+
             if (allAdded)
             {
                 NodesById.Add(newNode.Name, mqttNode);
-                // this would throw as the edge is not unique. Usability will be set to invalid outside.
+                // this would throw as the node is not unique. But with allAdded it's safe. Usability will be set to invalid outside.
             }
         }
 
@@ -295,11 +309,21 @@ public class GraphParser
     /// This method is called by each public member.
     /// For diagnostic purpose the graph is built even when the graph is invalid.
     /// </remarks>
-    public void Parse()
+    public Result Parse()
     {
+        Error? resultError = null;
+        _usability = AgvGraph.GraphUsability.Valid;
+        _serialNumber = null;
+        _checkedVelocity = false;
+        _isVelocityDataValid = false;
+        _overallDistance = 0f;
+        _overallDuration = 0f;
         _isParsed = false;
+        _nodes.Clear();
+        _edges.Clear();
         EdgesById.Clear();
         NodesById.Clear();
+
         if (!string.IsNullOrEmpty(_graph.SerialNumber))
         {
             _serialNumber = _graph.SerialNumber;
@@ -310,14 +334,14 @@ public class GraphParser
         }
 
         if (_usability == AgvGraph.GraphUsability.Valid &&
-            (_graph.Nodes!.Length == 0 ||
+            (_graph.Nodes == null || _graph.Nodes.Length == 0 ||
              ParseNodes() == false))
         {
             _usability = AgvGraph.GraphUsability.InvalidNodes;
         }
 
         if (_usability == AgvGraph.GraphUsability.Valid &&
-            (_graph.Edges!.Length == 0 ||
+            (_graph.Edges == null || _graph.Edges.Length == 0 ||
              ParseEdges() == false))
         {
             _usability = AgvGraph.GraphUsability.InvalidEdges;
@@ -332,6 +356,8 @@ public class GraphParser
         RelatedMapName = _graph.RelatedMapId;
         RelatedMapId = _graph.RelatedMapId.ToGuid();
         _isParsed = true;
+
+        return _usability == AgvGraph.GraphUsability.Valid ? Result.Success() : Result.Failure(resultError ?? new Error("Unknown error during graph parsing."));
     }
 
     /// <summary>
