@@ -27,10 +27,10 @@ trigger:
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#why-am-i-prompted-to-authorize-resources-the-first-time-i-try-to-check-out-a-different-repository
 resources:
   repositories:
-    - repository: templates
-      type: git
-      name: Architecture/Gebhardt.Platform.CI
-      ref: main
+  - repository: templates
+    type: git
+    name: Architecture/Gebhardt.Platform.CI
+    ref: main
 
 variables:
   - group: 'Architecture - CI' # Use matching group in current team project, e.g. 'Galileo - CI'
