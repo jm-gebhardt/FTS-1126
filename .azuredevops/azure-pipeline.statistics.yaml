@@ -1,0 +1,50 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - master # to be removed when branch name is changed to main
+      - main
+      - develop
+      - release/*
+      - hotfix/*
+  paths:
+    include:
+      - Source/Agv/Statistics/**
+      - Source/Agv/Statistics.Domain/**
+      - Source/Agv/Statistics.Messages/**
+      - Source/Agv/Statistics.Persistence.Ef/**
+      - Source/Agv/Statistics.WebApi/**
+      - Source/Agv/Statistics.Test/**
+      - Source/Agv/Common/**
+      - Source/Agv/Common.Domain/**
+      - Source/Agv/Common.Messages/**
+      - Source/Agv/Common.Persistence.Ef/**
+      - Source/Agv/Common.WebApi/**
+      - Source/Directory.Build.props
+      - Source/Directory.Packages.props
+
+# Check out the repository with the Azure Pipelines templates. When this pipeline is executed the first time, there has to be manually given permission in the GUI.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#why-am-i-prompted-to-authorize-resources-the-first-time-i-try-to-check-out-a-different-repository
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Architecture/Gebhardt.Platform.CI
+      ref: main
+
+variables:
+  - group: 'Architecture - CI' # Use matching group in current team project, e.g. 'Galileo - CI'
+
+stages:
+  - template: backend-template-2.yml@templates
+    parameters:
+      buildTarget: './Agv/Statistics/Statistics.csproj'
+      publishNuget: false
+      publishDocker: false
+      acrServiceConnection: $(acrServiceConnection)
+      useNerdbankVersioning: true
+      workingDirectory: './Source'
+      testTarget: './Agv/Statistics.Test/**/*.csproj'
+      nugetConfigPath: './Agv/nuget.config'
+      servicePublishProject: './Agv/Statistics/Statistics.csproj'
+      entryPointProjectName: 'Statistics'

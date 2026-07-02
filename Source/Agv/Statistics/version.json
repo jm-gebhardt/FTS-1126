@@ -1,0 +1,12 @@
+{
+  "version": "1.0-alpha.{height}",
+  "inherit": true,
+  "pathFilters": [
+    ".",
+    "../Statistics.Domain",
+    "../Statistics.Messages",
+    "../Statistics.Persistence.Ef",
+    "../Statistics.Test",
+    "../Statistics.WebApi"
+  ]
+}

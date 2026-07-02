@@ -17,10 +17,12 @@ using Gebhardt.Acc.Statistics.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 using Gebhardt.Acc.Statistics.Services.BackgroundServices;
 using Gebhardt.Acc.Statistics.Services.EventHandler;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -116,11 +118,14 @@ public static class HostBuilderExtension
 
         hostBuilder.ConfigureServices((context, services) =>
         {
+            string? sqlServerConnectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                                ?? context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName);
+
             services.AddConfigurationTypeManager();
             services.AddSingleton<SqlPrintInterceptor>();
             services.AddDbContext<StatisticsDbContext>((sp, o) =>
             {
-                o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
+                o.UseSqlServer(sqlServerConnectionString,
                     m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
@@ -146,7 +151,7 @@ public static class HostBuilderExtension
             services.AddAgvScopedCache<AgvErrorReceived>(20);
 
             services.AddHealthChecks()
-                .AddDbContextCheck<StatisticsDbContext>();
+                .AddDbContextCheck<StatisticsDbContext>(failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
 
             RegisterFilters(services);
         });
