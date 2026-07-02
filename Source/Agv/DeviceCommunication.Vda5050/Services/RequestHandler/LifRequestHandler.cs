@@ -146,7 +146,7 @@ public class LifRequestHandler(
             throw new NoFileProvidedException();
         }
 
-        if (!file.ContentType.Equals(Vda5050Specifications.LifUploadFileType, StringComparison.OrdinalIgnoreCase))
+        if (!file.ContentType.StartsWith(Vda5050Specifications.LifUploadFileType, StringComparison.OrdinalIgnoreCase))
         {
             throw new WrongFileTypeException(file.ContentType, Vda5050Specifications.LifUploadFileType);
         }

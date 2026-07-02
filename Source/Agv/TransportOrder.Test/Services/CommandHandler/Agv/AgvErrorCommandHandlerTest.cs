@@ -58,20 +58,21 @@ public class AgvErrorCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_UpdateErrorStatus_WifiMessage_AgvErrorReceivedPublished()
+    public async Task Consume_UpdateErrorStatus_WifiMessage_NotStoredInDb_AgvErrorReceivedNotPublished()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(2, agv.CorrelationId, errorType: "WIFI", errorLevel: ErrorLevel.Information);
         var fixture = new AgvErrorCommandHandlerTestFixture()
-            .WithActiveAgvErrors([errorStatus.Errors.First()])
+            .WithActiveAgvErrors([])
             .WithAgv(agv)
             .WithActionGroups([]);
 
         var errorChanged = await fixture.PublishAndGetFirstMessageAsync<UpdateErrorStatus, AgvErrorChanged>(new UpdateErrorStatus(agv.CorrelationId, [errorStatus.Errors.Last()], errorStatus.AgvPosition));
         errorChanged.NewErrors.Count.ShouldBe(1);
-        errorChanged.ResolvedErrors.Count.ShouldBe(1);
-        var errorReceived = await fixture.GetFirstPublishedMessageAsync<AgvErrorReceived>();
-        errorReceived.Error.CorrelationId.ShouldBe(errorStatus.Errors.Last().CorrelationId);
+        errorChanged.ResolvedErrors.Count.ShouldBe(0);
+        errorChanged.Errors.ShouldContain(e => e.CorrelationId == errorStatus.Errors.Last().CorrelationId);
+        fixture.AgvDbMock.Verify(x => x.Errors.AddAndUpdateAgvErrorAsync(It.Is<List<AgvError>>(l => l.Count == 0), It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), Times.Once);
+        await fixture.ShouldNotHavePublishedAsync<AgvErrorReceived>();
     }
 
     [TestMethod]

@@ -2,12 +2,13 @@
 using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
 using Gebhardt.Acc.PrismatCommunication.Domain.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 
 /// <inheritdoc cref="IHostOrderRepository"/>>.
-public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRepository<HostOrder, PrismatCommunicationDbContext>(context, true), IHostOrderRepository
+public class EfHostOrderRepository(PrismatCommunicationDbContext context, IDbContextFactory<PrismatCommunicationDbContext> dbContextFactory) : EfRepository<HostOrder, PrismatCommunicationDbContext>(context, true), IHostOrderRepository
 {
     private readonly PrismatCommunicationDbContext _context = context;
 
@@ -28,5 +29,16 @@ public class EfHostOrderRepository(PrismatCommunicationDbContext context) : EfRe
     public async Task<HostOrder?> GetLatestUnfinishedOrderByHu(string hu)
     {
         return await _context.Set<HostOrder>().Where(o => o.FinishedDate == null && o.CanceledDate == null && o.Hu == hu).OrderByDescending(o => o.CreatedDate).FirstOrDefaultAsync();
+    }
+
+    /// <inheritdoc cref="IHostOrderRepository"/>
+    public async Task DeleteOutdatedOrdersAsync(DateTime outDatedTime)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // the default command timeout is 30s, which could be too short, depending on the amount of data
+
+        var outdated = new SqlParameter("OutdatedTime", outDatedTime);
+
+        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE [dbo].[HousekeepHostOrders] @OutdatedTime", outdated);
     }
 }

@@ -38,12 +38,12 @@ stages:
         version: '10.0.x'
         performMultiLevelLookup: true
     - task: DotNetCoreCLI@2
-      displayName: 'Restoring based on NuGetBackupFeed.config'
+      displayName: 'Restoring based on NuGet.Config'
       inputs:
         command: 'restore'
         projects: '$(SourceDirectory)/$(Build.Target)'
         feedsToUse: 'config'
-        nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
+        nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
     - task: DotNetCoreCLI@2
       displayName: 'Build Target ($(Build.Target))'
       inputs:
@@ -54,7 +54,7 @@ stages:
         echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
         dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
         dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
-        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.0.1
+        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.3
         dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
         dotnet run $(ResharperDirectory)/check-suggestions.cs
         # Check logs.txt
@@ -82,12 +82,12 @@ stages:
         version: '10.0.x'
         performMultiLevelLookup: true
     - task: DotNetCoreCLI@2
-      displayName: 'Restoring based on NuGetBackupFeed.config'
+      displayName: 'Restoring based on NuGet.Config'
       inputs:
         command: 'restore'
         projects: '$(SourceDirectory)/$(Build.Target)'
         feedsToUse: 'config'
-        nugetConfigPath: '$(SourceDirectory)/NuGetBackupFeed.Config'
+        nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
     - task: DotNetCoreCLI@2
       displayName: 'Run All tests'
       inputs:

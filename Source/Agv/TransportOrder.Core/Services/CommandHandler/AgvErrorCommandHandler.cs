@@ -113,13 +113,14 @@ public class AgvErrorCommandHandler :
         bool changed = newErrors.Count > 0 || resolvedErrors.Count > 0;
         if (changed)
         {
-            await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrors, resolvedErrors, correlationId);
+            List<AgvError> wifiInformation = newErrors.Where(e => e.IsWifiMessage()).ToList();
+            await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrors.Where(e => !e.IsWifiMessage()).ToList(), resolvedErrors, correlationId);
             await LogErrors(newErrors, agv);
             IReadOnlyList<AgvError> allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
-            await publishEndpoint.Publish(new AgvErrorChanged(correlationId, allErrors.ToList(), newErrors, resolvedErrors));
+            await publishEndpoint.Publish(new AgvErrorChanged(correlationId, [..allErrors.ToList(), ..wifiInformation], newErrors, resolvedErrors));
         }
 
-        foreach (var error in newErrors)
+        foreach (var error in newErrors.Where(e => e.ErrorLevel != ErrorLevel.Information))
         {
             position ??= _agvDb.Positions.GetPosition(correlationId).AgvPosition;
             await publishEndpoint.Publish(new AgvErrorReceived(error, position, agv.SerialNumber));
@@ -155,18 +156,6 @@ public class AgvErrorCommandHandler :
         if (errors.Count != 0)
         {
             newErrors = errors.Where(e => !previousErrors.Any(e.IsSameError)).ToList();
-        }
-        if (previousErrors.Any(e => e.IsWifiMessage()) && errors.Any(e => e.IsWifiMessage()) && !resolvedErrors.Any(e => e.IsWifiMessage()))
-        {
-            // Resolve previous wifi information even if parts of the message are not identical
-            // to ensure only one wifi message is shown at a time.
-            IEnumerable<AgvError> previousWifiMessages = previousErrors.Where(e => e.IsWifiMessage());
-            resolvedErrors.AddRange(previousWifiMessages);
-            if (!newErrors.Any(e => e.IsWifiMessage()))
-            {
-                IEnumerable<AgvError> newWifiMessages = errors.Where(e => e.IsWifiMessage());
-                newErrors.AddRange(newWifiMessages);
-            }
         }
 
         await HandleErrorChangesAsync(context, newErrors, resolvedErrors, correlationId, position);

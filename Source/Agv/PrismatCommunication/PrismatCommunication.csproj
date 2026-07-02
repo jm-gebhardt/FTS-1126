@@ -16,6 +16,10 @@
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="Microsoft.Data.SqlClient" />
         <PackageReference Include="YamlDotNet" />
+        <PackageReference Include="Quartz.Plugins.TimeZoneConverter" />
+        <PackageReference Include="Quartz.Extensions.DependencyInjection" />
+        <PackageReference Include="Quartz.Extensions.Hosting" />
+        <PackageReference Include="Quartz" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

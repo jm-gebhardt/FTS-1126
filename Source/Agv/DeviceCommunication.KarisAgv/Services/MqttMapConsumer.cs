@@ -71,8 +71,8 @@ public class MqttMapConsumer : IConsumer<MqttMap>
                         dimensions.Width,
                         dimensions.Height,
                         context.Message.Resolution,
-                        context.Message.XOffset * -1.0f,
-                        context.Message.YOffset * -1.0f
+                        context.Message.XOffset,
+                        context.Message.YOffset
                     )
                 ));
             }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using Quartz;
 
 namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 
@@ -15,6 +16,9 @@ namespace Gebhardt.Acc.PrismatCommunication.Configuration;
 /// </summary>
 public static class PrismatCommunicationHostBuilder
 {
+    private const string QuartzSchedulerName = "HousekeepingPrismatCommunication";
+    private const string QuartzSchedulerId = "AUTO";
+
     /// <summary>
     /// Creates the host builder.
     /// </summary>
@@ -27,6 +31,16 @@ public static class PrismatCommunicationHostBuilder
         return GebhardtStartup.CreateHostBuilder(args)
             .AddMassTransit(initialLogger, simulationOptions)
             .AddPrismatCommunication(simulationOptions, initialLogger)
+            .ConfigureServices((_, services) =>
+            {
+                services.AddQuartz(q =>
+                {
+                    q.SchedulerId = QuartzSchedulerId;
+                    q.SchedulerName = QuartzSchedulerName;
+                    q.UseTimeZoneConverter();
+                });
+                services.AddQuartzHostedService();
+            })
             .ConfigureWebHost(h =>
                 h.UseKestrel()
                     .ConfigureAppConfiguration((_, config) =>

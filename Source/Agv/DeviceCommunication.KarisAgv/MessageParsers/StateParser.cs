@@ -201,9 +201,9 @@ public class StateParser(ILogger logger, IMapper mapper)
         AgvPosition = new AgvPosition(
             state.AgvPosition.PositionInitialized,
             state.AgvPosition.X,
-            state.AgvPosition.Y * -1, // Special treatment for Karis AGV. Y Axis is inverted
+            state.AgvPosition.Y,
             0f,
-            (float) Mathematics.ConvertToRadians(90.0f) - state.AgvPosition.Theta, // Special treatment for Karis AGV. 90° in our System (AGV facing right) is 0° in our world
+            state.AgvPosition.Theta,
             state.AgvPosition.DeviationRange
         );
     }

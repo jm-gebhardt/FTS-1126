@@ -69,7 +69,10 @@ public class StationListParser
     /// </remarks>
     public void Parse()
     {
+        _usability = AgvGraph.GraphUsability.Valid;
         _isParsed = false;
+        _serialNumber = null;
+
         var graphParser = new GraphParser(_graph);
         graphParser.Parse();
         _agvGraph = graphParser.Graph;

@@ -8,16 +8,6 @@ namespace Gebhardt.Acc.DeviceCommunicationTest.Extensions;
 [TestClass]
 public class StationExtensionTest
 {
-    [TestMethod]
-    public void ToGraphNode_ValidData_InvertsYAxis()
-    {
-        const float yaxis = 1;
-        var exportedStation = new ExportedStation(Function.Drop, "id", new ExportedPosition(1, 1, yaxis), "");
-
-        var node = exportedStation.ToGraphNode();
-        node.Y.ShouldBe(-yaxis);
-    }
-
     [DataRow(Function.Maintenance, AgvGraph.NodeType.Maintenance)]
     [DataRow(Function.Both, AgvGraph.NodeType.PickDrop)]
     [DataRow(Function.Pick, AgvGraph.NodeType.Pick)]

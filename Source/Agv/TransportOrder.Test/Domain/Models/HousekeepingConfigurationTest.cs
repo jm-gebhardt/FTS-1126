@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Housekeeping;
 using Microsoft.Extensions.Configuration;
 using Shouldly;
@@ -46,6 +47,20 @@ public class HousekeepingConfigurationTest
 
         config.OutdatedValue.ShouldBe(14);
         config.OutdatedInterval.ShouldBe(HousekeepingInterval.Days);
+    }
+
+    [TestMethod]
+    public void ConfigurationConstructor_MissingConfig_ActionGroups_UsesDefaults()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection([])
+            .Build();
+
+        var config = HousekeepingConfiguration.CreateDefault(HousekeepingEntityType.ActionGroups, configuration);
+
+        config.OutdatedValue.ShouldBe(90);
+        config.OutdatedInterval.ShouldBe(HousekeepingInterval.Days);
+        config.ScheduleHour.ShouldBe(4);
     }
 
     [TestMethod]

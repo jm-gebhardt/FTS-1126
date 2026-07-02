@@ -569,11 +569,7 @@ public class GraphParserTest
         };
 
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        parser.Parse();
-        Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
-
-        var graph = parser.Graph;
-        graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidNodes);
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
     }
 
     /// <summary>
@@ -587,14 +583,14 @@ public class GraphParserTest
             new() { NodeId = "1", X = 0f, Y = 0f, Z = 0f },
             new() { NodeId = "2", X = 10f, Y = 0f, Z = 0f }
         };
-        MqttEdge[] edges = [];
+        var edges = new MqttEdge[]
+        {
+            new() { EdgeId = "1", StartId = "4", EndId = "5", Bidirectional = false, MaxVelocity = 10, EdgeType = nameof(EdgeType.Direct) }
+        };
 
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber1, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        parser.Parse();
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
-
-        var graph = parser.Graph;
-        graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
     }
 
     [TestMethod]
@@ -607,16 +603,14 @@ public class GraphParserTest
         };
         var edges = new MqttEdge[]
         {
-            new() { EdgeId = "1", StartId = "1", EndId = "1", Bidirectional = false, MaxVelocity = 10 },
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 10, EdgeType = nameof(EdgeType.Direct) },
             // Duplicate edge
-            new() { EdgeId = "1", StartId = "1", EndId = "1", Bidirectional = false, MaxVelocity = 10 }
+            new() { EdgeId = "1", StartId = "1", EndId = "2", Bidirectional = false, MaxVelocity = 10, EdgeType = nameof(EdgeType.Direct) }
         };
 
         var parser = new GraphParser(new MqttGraph(AgvSerialNumber2, DateTimeOffset.UtcNow, nodes, edges, string.Empty));
-        parser.Parse();
+        Should.Throw<MqttGraphParsingException>(parser.Parse);
         Should.Throw<InvalidOperationException>(() => parser.SerialNumber);
-
-        parser.Graph.Usability.ShouldBe(AgvGraph.GraphUsability.InvalidEdges);
     }
 
     [TestMethod]

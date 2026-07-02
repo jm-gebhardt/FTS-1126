@@ -16,6 +16,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
         <PackageReference Include="FluentValidation" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+        <PackageReference Include="Quartz" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />

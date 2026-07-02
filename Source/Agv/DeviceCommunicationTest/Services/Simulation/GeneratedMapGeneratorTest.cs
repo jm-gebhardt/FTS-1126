@@ -38,8 +38,8 @@ public class GeneratedMapGeneratorTest
         map.ImageData.ShouldNotBeNull();
         map.ImageData.Length.ShouldBeGreaterThan(0);
         map.Resolution.ShouldBeGreaterThan(0f);
-        map.XOffset.ShouldBeGreaterThan(0f);
-        map.YOffset.ShouldBeGreaterThan(0f);
+        map.XOffset.ShouldBeLessThan(0f);
+        map.YOffset.ShouldBeLessThan(0f);
         Convert.FromBase64String(map.ImageData).Length.ShouldBeGreaterThan(0);
     }
 
@@ -67,8 +67,8 @@ public class GeneratedMapGeneratorTest
         map.ImageData.ShouldNotBeNull();
         map.ImageData.Length.ShouldBeGreaterThan(0);
         map.Resolution.ShouldBeGreaterThan(0f);
-        map.XOffset.ShouldBeLessThan(0f);
-        map.YOffset.ShouldBeLessThan(0f);
+        map.XOffset.ShouldBeGreaterThan(0f);
+        map.YOffset.ShouldBeGreaterThan(0f);
     }
 
     [TestMethod]

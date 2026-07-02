@@ -10,6 +10,6 @@ public class HostOrderRepositoryTestFixture: PrismatDbTestFixture
     public HostOrderRepositoryTestFixture()
     {
         var context = ContextFactory.CreateDbContext();
-        Repository = new EfHostOrderRepository(context);
+        Repository = new EfHostOrderRepository(context, ContextFactory);
     }
 }

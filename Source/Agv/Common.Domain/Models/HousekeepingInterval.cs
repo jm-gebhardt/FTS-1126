@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.Housekeeping;
+﻿namespace Gebhardt.Acc.Common.Domain.Models;
 
 /// <summary>
 /// The housekeeping interval

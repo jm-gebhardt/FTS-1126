@@ -17,8 +17,8 @@ public class GridProfile : Profile
         CreateMap<Grid, GridDto>()
             .ForMember(dest => dest.XStart, opt => opt.MapFrom(src => (float) src.XStep))
             .ForMember(dest => dest.YStart, opt => opt.MapFrom(src => (float) src.YStep))
-            .ForMember(dest => dest.XSize, opt => { opt.MapFrom(src => src.Maps!.Single().XMax - src.Maps!.Single().XMin); })
-            .ForMember(dest => dest.YSize, opt => { opt.MapFrom(src => src.Maps!.Single().YMax - src.Maps!.Single().YMin); })
+            .ForMember(dest => dest.XSize, opt => { opt.MapFrom(src => src.Maps!.First().XMax - src.Maps!.First().XMin); })
+            .ForMember(dest => dest.YSize, opt => { opt.MapFrom(src => src.Maps!.First().YMax - src.Maps!.First().YMin); })
             ;
     }
 }

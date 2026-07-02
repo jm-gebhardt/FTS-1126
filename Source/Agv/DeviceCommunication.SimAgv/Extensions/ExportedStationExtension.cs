@@ -17,9 +17,9 @@ public static class ExportedStationExtension
     public static GraphNode ToGraphNode(this ExportedStation station)
     {
         ICollection<AgvGraph.NodeType> types = GetNodeTypes(station.Function);
-        return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, -station.Position.Y, 0f, types, null, null, null)
+        return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, station.Position.Y, 0f, types, null, null, null)
         {
-            Theta = (float) Mathematics.ConvertToRadians(90.0f) - station.Position.Theta,
+            Theta = station.Position.Theta,
             TimeStamp = station.TimeStamp
         };
     }
@@ -35,7 +35,7 @@ public static class ExportedStationExtension
         {
             return [ParseNodeType(singleFunction)];
         }
-        return ((List<Function>) function).Select(ParseNodeType).ToList();
+        return ((List<Function>)function).Select(ParseNodeType).ToList();
     }
 
     /// <summary>

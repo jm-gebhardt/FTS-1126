@@ -48,16 +48,7 @@ public class GridDto
     /// </summary>
     public int YSize { get; private set; }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="gridName"></param>
-    /// <param name="ySize"></param>
-    /// <param name="xSize"></param>
-    /// <param name="xStart"></param>
-    /// <param name="xStep"></param>
-    /// <param name="yStart"></param>
-    /// <param name="yStep"></param>
+    /// <inheritdoc cref="GridDto"/>
     public GridDto(string gridName, int ySize, int xSize, float xStart, float xStep, float yStart, float yStep)
     {
         GridId = Guid.NewGuid();
