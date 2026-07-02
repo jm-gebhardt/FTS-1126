@@ -39,9 +39,9 @@ stages:
     publishNuget: false
     publishDocker: false
     useNerdbankVersioning: true
-    workingDirectory: './Source'
+    workingDirectory: '(Build.Repository.LocalPath)/Source'
     testTarget: './Agv/Statistics.Test/**/*.csproj'
-    nugetConfigPath: './Agv/nuget.config'
+    nugetConfigPath: '$(Build.Repository.LocalPath)/nuget.config'
     servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
     openApiEnabled: false
