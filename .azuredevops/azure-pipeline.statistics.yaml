@@ -33,7 +33,7 @@ resources:
     ref: preview
 
 variables:
-  - group: 'Architecture - CI' # Use matching group in current team project, e.g. 'Galileo - CI'
+- group: 'StoreWareDev'
 
 stages:
 - template: backend-template-2.yml@templates
