@@ -32,16 +32,12 @@ resources:
     name: Architecture/Gebhardt.Platform.CI
     ref: preview
 
-variables:
-- group: 'ACC' # Use matching group in current team project, e.g. 'Galileo - CI'
-
 stages:
 - template: backend-template-2.yml@templates
   parameters:
     buildTarget: './Agv/Statistics/Statistics.csproj'
     publishNuget: false
     publishDocker: false
-    acrServiceConnection: $(acrServiceConnection)
     useNerdbankVersioning: true
     workingDirectory: './Source'
     testTarget: './Agv/Statistics.Test/**/*.csproj'
