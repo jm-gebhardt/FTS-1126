@@ -426,4 +426,10 @@ public interface IActionGroupRepository
     /// <param name="assignedAgvs">List of agv ids which have assigned running idle action groups.</param>
     /// <returns>Filtered list of agv ids which have additionally created or started pick action.</returns>
     Task<ICollection<Guid>> GetAgvsMovingCargo(ICollection<Guid> assignedAgvs);
+
+    /// <summary>
+    /// Delete action groups older than given time.
+    /// </summary>
+    /// <param name="outDatedTime">The time an action group gets outdated.</param>
+    Task DeleteOutdatedActionGroupsAsync(DateTime outDatedTime);
 }

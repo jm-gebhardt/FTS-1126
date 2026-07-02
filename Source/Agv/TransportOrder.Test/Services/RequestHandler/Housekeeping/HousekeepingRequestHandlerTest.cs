@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;

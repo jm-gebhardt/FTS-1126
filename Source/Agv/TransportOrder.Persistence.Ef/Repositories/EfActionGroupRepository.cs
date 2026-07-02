@@ -12,6 +12,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
 using MassTransit.Initializers;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
@@ -1204,5 +1205,16 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Select(ag => ag.AssignedAgv!.Value).Distinct().ToListAsync();
         
         return filteredAgvIds;
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteOutdatedActionGroupsAsync(DateTime outDatedTime)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(30)); // the default command timeout is 30s, which could be too short, depending on the amount of data
+
+        var outdated = new SqlParameter("OutdatedTime", outDatedTime);
+
+        await dbContext.Database.ExecuteSqlRawAsync("EXECUTE [dbo].[HousekeepActionGroups] @OutdatedTime", outdated);
     }
 }

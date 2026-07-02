@@ -8,6 +8,7 @@ public enum HousekeepingEntityType
 #pragma warning disable CS1591
     Errors = 0,
     Wifi = 1,
-    Logs = 2
+    Logs = 2,
+    ActionGroups = 3
 #pragma warning restore CS1591
 }

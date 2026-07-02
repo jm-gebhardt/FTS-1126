@@ -13,6 +13,7 @@ using Gebhardt.Acc.PrismatCommunication.Messages.Filters;
 using Gebhardt.Acc.PrismatCommunication.Persistence.DataAccess;
 using Gebhardt.Acc.PrismatCommunication.Persistence.Repositories;
 using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices;
+using Gebhardt.Acc.PrismatCommunication.Services.BackgroundServices.Housekeeping;
 using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.Simulation;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
@@ -105,6 +106,12 @@ public static class HostBuilderExtension
             services.TryAddCustomerConfiguration();
             services.AddSingleton<ObservableConcurrentQueue<PrismatTelegram>>();
             services.AddSingleton<TelegramQueuePersistenceService>();
+
+            // Housekeeping
+            services.AddTransient<IHousekeepingConfigurationRepository, EfHousekeepingConfigurationRepository>();
+            services.AddTransient<IHousekeepingAction, HostOrderHousekeepingAction>();
+            services.AddTransient<HousekeepingJob>();
+            services.AddHostedService<Housekeeping>();
 
             // Filters
             services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();

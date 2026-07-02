@@ -28,4 +28,10 @@ public interface IHostOrderRepository : IRepository<HostOrder>
     /// <param name="hu">The handling unit.</param>
     /// <returns></returns>
     Task<HostOrder?> GetLatestUnfinishedOrderByHu(string hu);
+
+    /// <summary>
+    /// Delete orders older than given time.
+    /// </summary>
+    /// <param name="outDatedTime">The time an order gets outdated.</param>
+    Task DeleteOutdatedOrdersAsync(DateTime outDatedTime);
 }

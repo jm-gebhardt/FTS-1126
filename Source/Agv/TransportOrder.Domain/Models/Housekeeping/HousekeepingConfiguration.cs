@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Configuration;
 using Quartz;
@@ -66,6 +67,7 @@ public class HousekeepingConfiguration
             HousekeepingEntityType.Errors => (14, 1),
             HousekeepingEntityType.Wifi   => (1, 2),
             HousekeepingEntityType.Logs   => (14, 3),
+            HousekeepingEntityType.ActionGroups   => (90, 4),
             _                             => (14, 1)
         };
 

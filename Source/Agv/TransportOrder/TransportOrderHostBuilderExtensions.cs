@@ -205,6 +205,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IHousekeepingAction, ErrorHousekeepingAction>();
         services.AddTransient<IHousekeepingAction, WifiHousekeepingAction>();
         services.AddTransient<IHousekeepingAction, LogHousekeepingAction>();
+        services.AddTransient<IHousekeepingAction, ActionGroupHousekeepingAction>();
         services.AddTransient<HousekeepingJob>();
         services.AddTransient<IOwnedFilterTemplateRepository, OwnedFilterTemplateRepository>();
         services.AddSingleton<IEdgePolygonProvider, DirectEdgePolygonProvider>();
