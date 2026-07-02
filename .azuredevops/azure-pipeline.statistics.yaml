@@ -30,7 +30,7 @@ resources:
   - repository: templates
     type: git
     name: Architecture/Gebhardt.Platform.CI
-    ref: main
+    ref: preview
 
 variables:
   - group: 'Architecture - CI' # Use matching group in current team project, e.g. 'Galileo - CI'
