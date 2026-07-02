@@ -44,3 +44,4 @@ stages:
     nugetConfigPath: './Agv/nuget.config'
     servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
+    openApiEnabled: false
