@@ -232,6 +232,58 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateAgvStatus_ReportsNoOrderButStartedActionGroupAssigned_PublishesOrderMismatchWarning()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var startedActionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true)
+            .WithCurrentStartedOrCreatedActionGroups([])
+            .AddAgvs([agv])
+            .WithActiveErrors([])
+            .WithStartedActionGroupForAgv(startedActionGroup);
+
+        var newAgvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, string.Empty, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
+        await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus));
+
+        var update = await fixture.GetFirstPublishedMessageAsync<UpdateSystemAgvErrors>();
+        update.ErrorsToAdd.Single(e => e.IsOrderMismatchError()).ShouldBeOfType<OrderMismatchError>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_ReportsNoOrderButNoStartedActionGroup_DoesNotPublishOrderMismatchWarning()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true)
+            .WithCurrentStartedOrCreatedActionGroups([])
+            .AddAgvs([agv])
+            .WithActiveErrors([]);
+
+        var newAgvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, string.Empty, false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
+        await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus));
+
+        await fixture.ShouldNotHavePublishedAsync<UpdateSystemAgvErrors>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_AgvReportsOrderAgainWithActiveOrderMismatchWarning_PublishesResolve()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithGraphExists(true)
+            .WithCurrentStartedOrCreatedActionGroups([])
+            .AddAgvs([agv])
+            .WithActiveErrors([new OrderMismatchError(agv.CorrelationId, DateTime.UtcNow)]);
+
+        var newAgvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, "newOrder", false, agv.AgvStatus!.Automatic, agv.AgvStatus!.BatteryCharge, agv.AgvStatus!.Charging, agv.AgvStatus!.Disturbed, agv.AgvStatus!.LastNodeId);
+        await fixture.PublishMessageAsync(new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, newAgvStatus));
+
+        var update = await fixture.GetFirstPublishedMessageAsync<UpdateSystemAgvErrors>();
+        update.ErrorsToResolve.Single(e => e.IsOrderMismatchError()).ShouldBeOfType<OrderMismatchError>();
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateAgvStatus_BatteryStatusChangedUnderThreshold_DoNotPublishesAgvBatteryChargeChanged()
     {
         var fixture = new AgvCommandHandlerTestFixture()
