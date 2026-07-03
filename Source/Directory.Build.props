@@ -20,5 +20,6 @@
   </ItemGroup>
   <PropertyGroup>
     <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(MSBuildThisFileDirectory)..\artifacts\</ArtifactsPath>
   </PropertyGroup>
 </Project>
