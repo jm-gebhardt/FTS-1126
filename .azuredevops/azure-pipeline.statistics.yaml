@@ -35,12 +35,14 @@ resources:
 stages:
 - template: backend-template-2.yml@templates
   parameters:
-    buildTarget: './Source/Agv/Statistics/Statistics.csproj'
+    buildTarget: './Agv/Statistics/Statistics.csproj'
     publishNuget: false
     publishDocker: false
     useNerdbankVersioning: true
-    testTarget: './Source/Agv/Statistics.Test/**/*.csproj'
+    workingDirectory: '$(Build.Repository.LocalPath)/Source'
+    testTarget: './Agv/Statistics.Test/**/*.csproj'
     nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
-    servicePublishProject: './Source/Agv/Statistics/Statistics.csproj'
+    servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
     openApiEnabled: false
+    buildOutputPath: 'Source/artifacts'

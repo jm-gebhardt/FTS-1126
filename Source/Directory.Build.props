@@ -18,8 +18,4 @@
     -->
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
   </ItemGroup>
-  <PropertyGroup>
-    <UseArtifactsOutput>true</UseArtifactsOutput>
-    <ArtifactsPath>$(MSBuildThisFileDirectory)..\artifacts\</ArtifactsPath>
-  </PropertyGroup>
 </Project>
