@@ -563,7 +563,46 @@ public class AgvCommandHandler :
 
         await PublishAgvStatusUpdateEvents(context, agv, batteryStatusChanged, batteryChargeChanged, oldStatus, lastNodeIdChanged, wasOnline, operatingDataChanged);
 
+        await TryUpdateOrderMismatchWarning(context, agv, oldStatus, agv.AgvStatus!);
+
         await TryAutoAccept(context, agv, context.CancellationToken);
+    }
+
+    private async Task TryUpdateOrderMismatchWarning(IPublishEndpoint context, Agv agv, AgvStatus? oldStatus, AgvStatus newStatus)
+    {
+        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
+        bool hasWarning = activeErrors.Any(e => e.IsOrderMismatchError());
+        bool reportsNoOrder = string.IsNullOrEmpty(newStatus.OrderId);
+
+        // Raise only when the agv just dropped its order (e.g. after a power cycle). A normally idle agv
+        // keeps an empty OrderId, so gating on the transition avoids re-querying it on every status frame.
+        bool orderIdCleared = !string.IsNullOrEmpty(oldStatus?.OrderId) && reportsNoOrder;
+        if (!hasWarning && !orderIdCleared)
+        {
+            return;
+        }
+
+        bool orderStillAssigned = reportsNoOrder
+                                  && await _actionGroupRepository.GetStartedActionGroupForAgvAsync(agv.CorrelationId) != null;
+        if (orderStillAssigned == hasWarning)
+        {
+            return;
+        }
+
+        List<AgvError> updatedErrors = activeErrors.ToList();
+        if (orderStillAssigned)
+        {
+            _logger.LogInformation("Agv {AgvCorrelationId} reports idle but has a started order assigned, raising order mismatch warning", agv.CorrelationId);
+            updatedErrors.Add(new OrderMismatchError(agv.CorrelationId, DateTime.UtcNow));
+        }
+        else
+        {
+            _logger.LogInformation("Resolving order mismatch warning for agv {AgvCorrelationId}", agv.CorrelationId);
+            updatedErrors.RemoveAll(e => e.IsOrderMismatchError());
+        }
+
+        var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
+        await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }
 
     private static async Task PublishAgvZonesChanged(IPublishEndpoint context, Guid agvId, ICollection<string>? zones)
