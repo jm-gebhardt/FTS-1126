@@ -35,7 +35,7 @@ resources:
 stages:
 - template: backend-template-2.yml@templates
   parameters:
-    buildTarget: './Agv/Statistics/Statistics.csproj'
+    buildTarget: './Agv/Statistics/Statistics.sln'
     publishNuget: false
     publishDocker: false
     useNerdbankVersioning: true
