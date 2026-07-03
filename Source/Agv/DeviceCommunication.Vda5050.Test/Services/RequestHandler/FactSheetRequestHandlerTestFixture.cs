@@ -1,6 +1,7 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Profiles;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.FactSheet;
@@ -14,12 +15,21 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.RequestHandler;
 public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdateFactSheet, FactSheetRequestHandler, MockConsumer>
 {
     private readonly Mock<IAgvActionRepository> _agvActionRepository = new();
+    private readonly Mock<IAgvTypeRepository> _agvTypeRepository = new();
 
-    protected override IEnumerable<Profile> GetProfiles() => [new FactSheetProfile(), new AgvActionProfile()];
+    protected override IEnumerable<Profile> GetProfiles()
+    {
+        return [new FactSheetProfile(), new AgvActionProfile()];
+    }
 
     public FactSheetRequestHandlerTestFixture()
     {
         AddServices(s => s.AddTransient(_ => _agvActionRepository.Object));
+        AddServices(s => s.AddTransient(_ => _agvTypeRepository.Object));
+        _agvTypeRepository.Setup(x => x.ExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
+        _agvTypeRepository
+            .Setup(x => x.AddAsync(It.IsAny<AgvType>()))
+            .Returns(Task.CompletedTask);
         _agvActionRepository
             .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);

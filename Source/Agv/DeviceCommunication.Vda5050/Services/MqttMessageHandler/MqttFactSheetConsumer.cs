@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
@@ -26,16 +28,18 @@ public class MqttFactSheetConsumer :
     private readonly IAgvDataRepository _agvDataRepository;
     private readonly IAgvActionRepository _agvActionRepository;
     private readonly IAgvRepository _agvRepository;
+    private readonly IAgvTypeRepository _agvTypeRepository;
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="MqttFactSheetConsumer"/>
-    public MqttFactSheetConsumer(ILogger<MqttFactSheetConsumer> logger, IAgvDataRepository agvDataRepository, IAgvActionRepository agvActionRepository, IAgvRepository agvRepository, IMapper mapper)
+    public MqttFactSheetConsumer(ILogger<MqttFactSheetConsumer> logger, IAgvDataRepository agvDataRepository, IAgvActionRepository agvActionRepository, IAgvRepository agvRepository, IAgvTypeRepository agvTypeRepository, IMapper mapper)
     {
         _parser = new FactsheetParser(logger, mapper);
         _logger = logger;
         _agvDataRepository = agvDataRepository;
         _agvActionRepository = agvActionRepository;
         _agvRepository = agvRepository;
+        _agvTypeRepository = agvTypeRepository;
         _mapper = mapper;
     }
 
@@ -67,6 +71,13 @@ public class MqttFactSheetConsumer :
         }
         await context.Publish(new AgvDataReceived(_parser.CorrelationId, _parser.SerialNumber, _parser.AgvData));
         await context.Publish(new AgvAddedOrUpdated(_parser.CorrelationId, _parser.SerialNumber));
+
+        var agvType = _mapper.Map<AgvType>(context.Message);
+        if (!await _agvTypeRepository.ExistsAsync(agvType.AgvTypeIdentifier))
+        {
+            await _agvTypeRepository.AddAsync(agvType);
+            await context.Publish(new AgvTypeCreated(agvType.Id, _mapper.Map<AgvTypeInfo>(agvType)));
+        }
     }
 
     private async Task PublishInstantActions(ConsumeContext<MqttFactsheet> context)

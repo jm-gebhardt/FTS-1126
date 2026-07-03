@@ -1,9 +1,10 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.FactSheet;
@@ -17,13 +18,29 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
 /// Handles fact sheet-related requests.
 /// </summary>
 [UsedImplicitly]
-public class FactSheetRequestHandler(IAgvActionRepository agvActionRepository, IMapper mapper, IBus bus, ILogger<FactSheetRequestHandler> logger):
+public class FactSheetRequestHandler(
+    IAgvActionRepository agvActionRepository,
+    IAgvTypeRepository agvTypeRepository,
+    IMapper mapper,
+    IBus bus,
+    ILogger<FactSheetRequestHandler> logger) :
     IConsumer<AddOrUpdateFactSheet>
 {
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AddOrUpdateFactSheet> context)
     {
-        var (agvCorrelationId, factSheet) = context.Message;
+        (var agvCorrelationId, var factSheet, string factsheetRawJson) = context.Message;
+
+        var agvType = mapper.Map<AgvType>(factSheet) with { RawData = factsheetRawJson };
+        var agvTypeInfo = mapper.Map<AgvTypeInfo>(agvType);
+
+        if (await agvTypeRepository.ExistsAsync(agvType.AgvTypeIdentifier))
+        {
+            throw new AgvTypeAlreadyExistsException(agvType.AgvTypeIdentifier);
+        }
+
+        await agvTypeRepository.AddAsync(agvType);
+        await bus.Publish(new AgvTypeCreated(agvType.Id, agvTypeInfo));
 
         try
         {

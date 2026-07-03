@@ -105,6 +105,7 @@ public static class HostBuilderExtension
                 services.AddTransient<IAgvActionRepository, EfAgvActionRepository>();
                 services.AddTransient<IAgvRepository, EfAgvRepository>();
                 services.AddTransient<ILifRepository, EfLifRepository>();
+                services.AddTransient<IAgvTypeRepository, EfAgvTypeRepository>();
 
                 //Services
                 services.AddHostedService<InitializationProvider>();

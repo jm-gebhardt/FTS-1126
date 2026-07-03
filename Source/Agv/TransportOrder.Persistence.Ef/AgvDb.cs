@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain;
+using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef;
@@ -8,6 +8,9 @@ public class AgvDb : IAgvDb
 {
     /// <inheritdoc cref="IAgvDb"/>>
     public IAgvDataRepository Data { get; }
+
+    /// <inheritdoc cref="IAgvDb"/>>
+    public IAgvTypeRepository AgvTypes { get; }
 
     /// <inheritdoc cref="IAgvDb"/>>
     public IAgvErrorRepository Errors { get; }
@@ -35,7 +38,8 @@ public class AgvDb : IAgvDb
 
     /// <inheritdoc cref="IAgvDb"/>>
     public AgvDb(IAgvDataRepository data,
-        IAgvErrorRepository errors, 
+        IAgvTypeRepository agvTypes,
+        IAgvErrorRepository errors,
         ICargoRepository cargos,
         IGraphRepository graphs,
         IAgvRepository agvs,
@@ -45,6 +49,7 @@ public class AgvDb : IAgvDb
         IMaintenanceLogRepository maintenanceLogs)
     {
         Data = data;
+        AgvTypes = agvTypes;
         Errors = errors;
         Cargos = cargos;
         Graphs = graphs;
@@ -52,7 +57,7 @@ public class AgvDb : IAgvDb
         AgvSettings = settings;
         Zones = zones;
         Positions = positions;
-        MaintenanceLogs=maintenanceLogs;
+        MaintenanceLogs = maintenanceLogs;
     }
 
     /// <inheritdoc cref="IAgvDb"/>>

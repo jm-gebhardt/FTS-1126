@@ -170,6 +170,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
         services.AddTransient<IAgvRepository, AgvRepository>();
         services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
+        services.AddTransient<IAgvTypeRepository, EfAgvTypeRepository>();
         services.AddTransient<IStationRepository, EfStationRepository>();
         services.AddTransient<IZoneRepository, EfZoneRepository>();
         services.AddTransient<IQueueRepository, EfQueueRepository>();

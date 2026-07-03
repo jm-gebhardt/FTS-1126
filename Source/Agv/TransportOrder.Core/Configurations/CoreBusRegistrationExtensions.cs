@@ -97,6 +97,12 @@ public static class CoreBusRegistrationExtensions
     private static void RegisterCoreAgvHandlers(IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         busRegistrationConfigurator.AddConsumer<AgvDataEventHandler>();
+        busRegistrationConfigurator.AddConsumer<AgvTypeEventHandler>();
+        busRegistrationConfigurator.AddConsumer<AgvTypeCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<AddOrUpdateAgvType, AgvTypeCommandHandler>(c);
+        });
         busRegistrationConfigurator.AddConsumer<AgvPositionReceivedEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvPositionChangedEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvStatusRequestHandler>();

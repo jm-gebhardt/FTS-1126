@@ -19,6 +19,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             ValidationException => HttpStatusCode.BadRequest,
             FileUploadException => HttpStatusCode.BadRequest,
             LifDeletionFailedException => HttpStatusCode.BadRequest,
+            AgvTypeAlreadyExistsException => HttpStatusCode.Conflict,
             NodeNotAvailableException => HttpStatusCode.Conflict,
             NoNodesAvailableException => HttpStatusCode.Conflict,
             NotFoundException => HttpStatusCode.NotFound,

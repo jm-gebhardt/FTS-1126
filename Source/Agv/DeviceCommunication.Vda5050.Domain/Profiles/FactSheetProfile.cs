@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.FactSheet;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Profiles;
@@ -33,6 +34,19 @@ public class FactSheetProfile : Profile
                 Array.Empty<AgvData.Sensor>()
             ))
             .ForAllMembers(opt => opt.Ignore());
+
+        CreateMap<Factsheet, AgvType>()
+            .ConstructUsing(f => new AgvType(
+                $"{f.Manufacturer}.{f.TypeSpecification.SeriesName}",
+                f.Manufacturer,
+                f.TypeSpecification.SeriesName,
+                f.PhysicalParameters.Length,
+                f.PhysicalParameters.Width,
+                string.Empty,
+                true))
+            .ForAllMembers(opt => opt.Ignore());
+
+        CreateMap<AgvType, AgvTypeInfo>();
 
         CreateMap<FactsheetAction, AgvAction>()
             .ForMember(a => a.AgvSerialNumber, opt => opt.Ignore());

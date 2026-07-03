@@ -131,4 +131,5 @@ public static class LogCodes
     public const int SystemQueueFillQuantityUpdated = 517;
     public const int SystemBackgroundAddedOrUpdated = 518;
     public const int SystemBackgroundDeleted = 519;
+    public const int SystemAgvTypeCreated = 520;
 }

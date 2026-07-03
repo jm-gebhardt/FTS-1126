@@ -8,4 +8,5 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.FactSheet;
 /// </summary>
 /// <param name="CorrelationId">The correlation id of the agv.</param>
 /// <param name="FactSheet">The fact sheet.</param>
-public record AddOrUpdateFactSheet(Guid CorrelationId, Factsheet FactSheet): CorrelatedBy<Guid>;
+/// <param name="RawJson">The raw fact sheet JSON.</param>
+public record AddOrUpdateFactSheet(Guid CorrelationId, Factsheet FactSheet, string RawJson = "") : CorrelatedBy<Guid>;

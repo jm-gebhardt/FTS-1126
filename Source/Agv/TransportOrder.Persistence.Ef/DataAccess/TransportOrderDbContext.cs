@@ -32,6 +32,7 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new ActionGroupEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvTypeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvErrorEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvGraphEntityConfiguration());
         modelBuilder.ApplyConfiguration(new GraphEdgeEntityConfiguration());

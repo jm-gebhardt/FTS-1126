@@ -15,6 +15,11 @@ public interface IAgvDb : IUnitOfWork
     IAgvDataRepository Data { get; }
 
     /// <summary>
+    /// Gets the <see cref="IAgvTypeRepository"/>.
+    /// </summary>
+    IAgvTypeRepository AgvTypes { get; }
+
+    /// <summary>
     /// Gets the <see cref="IAgvErrorRepository"/>.
     /// </summary>
     IAgvErrorRepository Errors { get; }
