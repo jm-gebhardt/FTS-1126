@@ -46,3 +46,4 @@ stages:
     entryPointProjectName: 'Statistics'
     openApiEnabled: false
     buildOutputPath: 'Source/artifacts'
+    skipResharper: true
