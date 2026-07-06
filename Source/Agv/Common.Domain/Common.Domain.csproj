@@ -10,6 +10,9 @@
         <PackageReference Include="FluentValidation" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="tinyspline" />
+        <PackageReference Include="System.IO.Hashing" />
+        <PackageReference Include="SkiaSharp" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />

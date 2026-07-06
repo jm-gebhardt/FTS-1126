@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 
@@ -12,6 +13,7 @@ public abstract class GraphGeneratorBase : IGraphGenerator
     /// <summary>
     /// The map generator
     /// </summary>
+    [PublicAPI]
     protected IMapGenerator MapGenerator { get; }
 
     /// <inheritdoc />

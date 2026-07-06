@@ -1,4 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Services;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.Map;
@@ -65,6 +67,30 @@ public record Map
                 field.IsCustom = true;
             }
         }
+    }
+
+    /// <summary>
+    /// Stable identity for the single default map instance, derived from the reserved name "default".
+    /// </summary>
+    public static readonly Guid DefaultMapId = DefaultMapName.ToGuid();
+    
+    private static string DefaultMapName => "default";
+    
+    /// <summary>
+    /// Create a default map seed (used only at first-time initialization).
+    /// </summary>
+    public static Map CreateDefaultMap()
+    {
+        List<GraphNode> nodes = [new() { X = 0, Y = 0 }, new() { X = 1, Y = 1 }];
+        var generator = new GeneratedMapGenerator(TimeProvider.System);
+        var map = generator.Generate(DefaultMapId, DefaultMapName, new Common.Domain.Models.Graphs.Graph { Nodes = nodes });
+        byte[] mapValue = Convert.FromBase64String(map.ImageData);
+        return new Map(DefaultMapId, DefaultMapName, new MapBackground(Guid.NewGuid(), map.Resolution, map.XOffset, map.YOffset, map.Width, map.Height, mapValue), DateTime.UtcNow)
+        {
+            Nodes = [],
+            Edges = [],
+            MapAgvs = []
+        };
     }
 
     /// <summary>

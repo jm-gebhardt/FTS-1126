@@ -33,18 +33,12 @@
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Quartz" />
-        <Content Include="Resources\KarisExport\ExportConfiguration.yaml">
+        <Content Include="Resources\BackgroundImages\Global_1.08_11_-71.png">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-      <Content Include="Resources\BackgroundImages\Charge Park_1.16_11_-71.png">
-	      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="Resources\BackgroundImages\Global_1.08_11_-71.png">
-	      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="Resources\BackgroundImages\Stations_1.13_63.3_-71.png">
-	      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
+         <Content Include="Resources\KarisExport\ExportConfiguration.yaml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+     </ItemGroup>
 
 </Project>

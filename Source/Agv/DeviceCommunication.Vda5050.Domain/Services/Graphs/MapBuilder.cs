@@ -1,6 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helpers;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;

@@ -1,9 +1,9 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
-using System.IO.Hashing;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Crc32 = System.IO.Hashing.Crc32;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helpers;
+namespace Gebhardt.Acc.Common.Domain.Services;
 
 /// <summary>
 /// Helper methods for computing map geometry and generating background images for <see cref="Map"/> instances.
@@ -43,21 +43,21 @@ public static class MapHelper
     /// <summary>
     /// Compute pixel dimensions, resolution, and coordinate offsets from a set of nodes.
     /// </summary>
-    internal static (int Width, int Height, float Resolution, float XOffset, float YOffset) ComputeMapGeometry(
-        IReadOnlyList<GraphNode> nodes, float? minX=null, float? maxX=null, float? minY=null, float? maxY=null)
+    public static (int Width, int Height, float Resolution, float XOffset, float YOffset) ComputeMapGeometry(
+        IReadOnlyList<GraphNode> nodes)
     {
         if (nodes.Count == 0)
         {
             return (FallbackExtent, FallbackExtent, FallbackResolution, 0f, 0f);
         }
 
-        minX = minX != null ? Math.Min(minX.Value, nodes.Min(n => n.X)): nodes.Min(n => n.X);
-        maxX = maxX != null ? Math.Max(maxX.Value, nodes.Max(n => n.X)): nodes.Max(n => n.X);
-        minY = minY != null ? Math.Min(minY.Value, nodes.Min(n => n.Y)): nodes.Min(n => n.X);
-        maxY = maxY != null ? Math.Max(maxY.Value, nodes.Max(n => n.Y)): nodes.Max(n => n.Y);
+        float minX = nodes.Min(n => n.X);
+        float maxX = nodes.Max(n => n.X);
+        float minY = nodes.Min(n => n.Y);
+        float maxY = nodes.Max(n => n.Y);
 
-        float rangeX = maxX.GetValueOrDefault() - minX.GetValueOrDefault();
-        float rangeY = maxY.GetValueOrDefault() - minY.GetValueOrDefault();
+        float rangeX = maxX - minX;
+        float rangeY = maxY - minY;
 
         float marginX = Math.Max(MarginMeters, rangeX * MarginFraction);
         float marginY = Math.Max(MarginMeters, rangeY * MarginFraction);
@@ -71,8 +71,8 @@ public static class MapHelper
         int width = Math.Max(MinPixelDimension, (int)Math.Ceiling(totalX / resolution));
         int height = Math.Max(MinPixelDimension, (int)Math.Ceiling(totalY / resolution));
 
-        float xOffset = minX.GetValueOrDefault() - marginX;
-        float yOffset = minY.GetValueOrDefault() - marginY;
+        float xOffset = marginX - minX;
+        float yOffset = marginY - minY;
 
         return (width, height, resolution, xOffset, yOffset);
     }
@@ -80,7 +80,7 @@ public static class MapHelper
     /// <summary>
     /// Generate a white PNG of the specified dimensions and return it as a Base64 string.
     /// </summary>
-    internal static string GenerateWhitePngBase64(int width, int height)
+    public static string GenerateWhitePngBase64(int width, int height)
     {
         using var output = new MemoryStream();
 

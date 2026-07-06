@@ -23,11 +23,6 @@ public interface IMapRepository
     Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false);
 
     /// <summary>
-    /// /Retrieves the dimensions of the default map of the system.
-    /// </summary>
-    Task<(string? MapName, float MinY, float MaxY, float MinX, float MaxX)> GetDefaultMap();
-
-    /// <summary>
     /// Sets (or overwrites) the custom background for a map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
@@ -84,4 +79,26 @@ public interface IMapRepository
     /// <param name="nodeId">The node id.</param>
     /// <returns>Correlation id of a map.</returns>
     Task<Guid> GetMapIdForNodeAsync(Guid nodeId);
+
+    /// <summary>
+    /// Adds a pure map, i.e. a map without node/edge or agv relations.
+    /// </summary>
+    /// <param name="map">The map.</param>
+    Task AddPureMapAsync(Map map);
+
+    /// <summary>
+    /// Atomically reads the default map, computes an update via <paramref name="computeUpdate"/>,
+    /// and persists the result. The read-modify-write is serialised so that concurrent callers
+    /// never overwrite each other's work.
+    /// </summary>
+    /// <param name="computeUpdate">
+    /// Receives the freshly-read default map and the cancellation token.
+    /// Return <c>null</c> to skip the write (nothing to update).
+    /// Otherwise return the map to persist together with the AGV correlation id.
+    /// </param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns><c>true</c> if the map was persisted, <c>false</c> otherwise.</returns>
+    Task<bool> UpdateDefaultMapLockedAsync(
+        Func<Map, CancellationToken, Task<(Map map, Guid agvCorrelationId)?>> computeUpdate,
+        CancellationToken cancellationToken);
 }

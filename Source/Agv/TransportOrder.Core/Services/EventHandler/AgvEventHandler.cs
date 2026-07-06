@@ -239,8 +239,10 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvMapReceived> context)
     {
         var map = context.Message.Map;
+
         // at the beginning the map is just related and empty.
         var agvGraph = await _agvDb.Graphs.GetAgvGraphAsync(context.Message.CorrelationId);
+
         // so take the existing nodes and edges from the agvGraph and persist it.
         await context.Publish(new SaveMap(map with { Nodes = agvGraph.Nodes, Edges = agvGraph.Edges }, context.Message.CorrelationId));
     }

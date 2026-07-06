@@ -14,6 +14,7 @@
         <PackageReference Include="Quartz" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
         <ProjectReference Include="..\Common.Filter\Common.Filter.csproj" />
         <ProjectReference Include="..\Common.Notification\Common.Notification.csproj" />
         <ProjectReference Include="..\Common\Common.csproj" />

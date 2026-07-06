@@ -1,15 +1,15 @@
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
+using Gebhardt.Acc.Common.Messages.Maps;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Graphs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Graph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Gebhardt.Acc.Common.Messages.Maps;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 
@@ -51,24 +51,14 @@ public class AgvGraphCommandHandler(IBus bus, ILifRepository lifRepository, Time
         Map map;
         try
         {
-            Response<GotDefaultMap, NoDefaultMap> response = await requestClient.GetResponse<GotDefaultMap, NoDefaultMap>(new GetDefaultMap(), context.CancellationToken);
-            if (response.Is(out Response<NoDefaultMap>? _))
-            {
-                map = MapBuilder.BuildDummyMap("map", graph, timeProvider);
-                await context.Publish(new AgvMapReceived(agvCorrelationId, serialNumber, map));
-                return;
-            }
-            if (response.Is(out Response<GotDefaultMap>? defaultMapResponse))
-            {
-                var defaultMap = defaultMapResponse.Message;
-                map = MapBuilder.BuildDummyMap(defaultMap.MapName, graph, timeProvider, defaultMap.MinX, defaultMap.MaxX, defaultMap.MinY, defaultMap.MaxY);
-                await context.Publish(new AgvMapReceived(agvCorrelationId, serialNumber, map));
-            }
+            Response<GotDefaultMap> response = await requestClient.GetResponse<GotDefaultMap>(new GetDefaultMap(), context.CancellationToken);
+            map = response.Message.Map.Extend(graph, timeProvider);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is RequestTimeoutException or RequestFaultException)
         {
+            logger.LogWarning(ex, "Could not get default map; falling back to locally generated map for AGV {AgvCorrelationId}", agvCorrelationId);
             map = MapBuilder.BuildDummyMap("map", graph, timeProvider);
-            await context.Publish(new AgvMapReceived(agvCorrelationId, serialNumber, map));
         }
+        await bus.Publish(new AgvMapReceived(agvCorrelationId, serialNumber, map));
     }
 }

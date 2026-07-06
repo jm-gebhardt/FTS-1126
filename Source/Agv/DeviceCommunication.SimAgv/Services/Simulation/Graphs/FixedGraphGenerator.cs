@@ -66,12 +66,6 @@ public class FixedGraphGenerator : GraphGeneratorBase
     private const float North = (float)Math.PI / 2f;
     private const float West = (float)Math.PI;
 
-    private const string MainMapName = "Charge Park";
-    private const string SubMapName = "Stations";
-
-    private readonly Guid _mainMapId = MainMapName.ToGuid();
-    private readonly Guid _subMapId = SubMapName.ToGuid();
-
     /// <inheritdoc />
     protected override Guid GraphId { get; } = "FixedGraph".ToGuid();
 
@@ -259,23 +253,6 @@ public class FixedGraphGenerator : GraphGeneratorBase
         {
             yield return map;
         }
-
-        List<GraphNode> nodes = globalGraph.Nodes.Where(n => n.X <= 48).ToList();
-        var graph = new Graph
-        {
-            Nodes = nodes,
-            Edges = globalGraph.Edges.Where(e => nodes.Any(n => n.Id == e.FromNodeId) && nodes.Any(n => n.Id == e.ToNodeId)).ToList()
-        };
-
-        yield return MapGenerator.Generate(_mainMapId, MainMapName, graph);
-
-        graph = new Graph()
-        {
-            Nodes = globalGraph.Nodes.Where(n => !graph.Nodes.Contains(n)).ToList(),
-            Edges = globalGraph.Edges.Where(n => !graph.Edges.Contains(n)).ToList()
-        };
-
-        yield return MapGenerator.Generate(_subMapId, SubMapName, graph);
     }
 
     private static float CalculateBezierLength(GraphNode[] nodes, string fromNode, string toNode, List<Vector2> controlPoints)

@@ -454,9 +454,12 @@ public class EfGraphRepository : IGraphRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         var efNodes = _mapper.Map<List<GraphNode>>(nodes);
 
-        // get EfAgvGraph which have at least one node in the given list
+        // get EfAgvGraph which have at least one node in the given list.
+        IQueryable<Guid> registeredAgvIds = context.Set<Domain.Models.Agv.Agv>().Select(a => a.CorrelationId);
+
         List<Guid> agvIds = await context.Set<AgvGraph>()
             .Where(agvGraph => agvGraph.Nodes.Any(efNode => efNodes.Select(n => n.Id).Contains(efNode.Id)))
+            .Where(agvGraph => registeredAgvIds.Contains(agvGraph.AgvCorrelationId))
             .Select(agvGraph => agvGraph.AgvCorrelationId)
             .Distinct()
             .ToListAsync();

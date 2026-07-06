@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Moq;
@@ -26,5 +27,58 @@ public class GraphCommandHandlerTest
         graphUpdated.CorrelationId.ShouldBe(id);
         graphUpdated.Graph.ShouldNotBeNull();
         graphUpdated.Maps.ShouldNotBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvTypeGraphUpdated_Success_CallsUpdateAndAddStations()
+    {
+        var graphs = new List<Common.Domain.Models.Graphs.Graph> { new() };
+        var fixture = new GraphCommandHandlerTestFixture();
+        fixture.GraphRepository.Setup(x => x.UpdateAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>())).ReturnsAsync(true);
+
+        await fixture.TestHarness.Bus.Publish(new AgvTypeGraphUpdated(graphs));
+        await fixture.ShouldHaveConsumedAsync<AgvTypeGraphUpdated>();
+
+        fixture.GraphRepository.Verify(x => x.UpdateAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>()), Times.Once);
+        fixture.StationRepository.Verify(x => x.AddStations(It.IsAny<IGraph>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvTypeGraphUpdated_UpdateFails_DoesNotCallAddStations()
+    {
+        var graphs = new List<Common.Domain.Models.Graphs.Graph> { new() };
+        var fixture = new GraphCommandHandlerTestFixture();
+        fixture.GraphRepository.Setup(x => x.UpdateAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>())).ReturnsAsync(false);
+
+        await fixture.TestHarness.Bus.Publish(new AgvTypeGraphUpdated(graphs));
+        await fixture.ShouldHaveConsumedAsync<AgvTypeGraphUpdated>();
+
+        fixture.StationRepository.Verify(x => x.AddStations(It.IsAny<IGraph>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvTypeGraphDeleted_Success_CallsDeleteAgvTypeGraphs()
+    {
+        var graphs = new List<Common.Domain.Models.Graphs.Graph> { new() };
+        var fixture = new GraphCommandHandlerTestFixture();
+        fixture.GraphRepository.Setup(x => x.DeleteAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>())).ReturnsAsync(true);
+
+        await fixture.TestHarness.Bus.Publish(new AgvTypeGraphDeleted(graphs));
+        await fixture.ShouldHaveConsumedAsync<AgvTypeGraphDeleted>();
+
+        fixture.GraphRepository.Verify(x => x.DeleteAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvTypeGraphDeleted_DeleteFails_DoesNotThrow()
+    {
+        var graphs = new List<Common.Domain.Models.Graphs.Graph> { new() };
+        var fixture = new GraphCommandHandlerTestFixture();
+        fixture.GraphRepository.Setup(x => x.DeleteAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>())).ReturnsAsync(false);
+
+        await fixture.TestHarness.Bus.Publish(new AgvTypeGraphDeleted(graphs));
+        await fixture.ShouldHaveConsumedAsync<AgvTypeGraphDeleted>();
+
+        fixture.GraphRepository.Verify(x => x.DeleteAgvTypeGraphsAsync(It.IsAny<ICollection<Common.Domain.Models.Graphs.Graph>>()), Times.Once);
     }
 }

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Messages.Maps;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
@@ -60,6 +61,7 @@ public static class BusRegistrationExtension
             configurator.AddConsumer<LifRequestHandler>();
             configurator.AddConsumer<AgvEventHandler>();
             configurator.AddConsumer<GraphMerger>();
+            configurator.AddRequestClient<GetDefaultMap>();
 
             return configurator;
         }

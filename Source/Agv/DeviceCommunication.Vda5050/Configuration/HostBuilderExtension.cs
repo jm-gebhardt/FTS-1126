@@ -33,6 +33,8 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Configuration;
 /// </summary>
 public static class HostBuilderExtension
 {
+    private static readonly TimeSpan _busStartTimeout = TimeSpan.FromSeconds(45);
+
     /// <summary>
     /// Extension block for <see cref="IHostBuilder"/>.
     /// </summary>
@@ -68,6 +70,12 @@ public static class HostBuilderExtension
                             //for incoming MQTT messages the raw JSON serializer/deserializer needs to be added
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
                             configurator.AddSerializer(serializerFactory, false);
+                        });
+                        services.AddOptions<MassTransitHostOptions>()
+                        .Configure(options =>
+                        {
+                            options.WaitUntilStarted = true;
+                            options.StartTimeout = _busStartTimeout;
                         });
                 }
                 catch (InvalidOperationException e)

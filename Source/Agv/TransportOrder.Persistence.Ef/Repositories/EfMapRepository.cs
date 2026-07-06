@@ -54,23 +54,6 @@ public class EfMapRepository : IMapRepository
         return maps;
     }
 
-    /// <inheritdoc/>
-    public async Task<(string? MapName, float MinY, float MaxY, float MinX, float MaxX)> GetDefaultMap()
-    {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var map = await context.Set<Map>()
-            .Include(g => g.Nodes)
-            .Include(g => g.Edges)
-            .Include(g => g.MapAgvs)
-            .AsNoTracking()
-            .FirstOrDefaultAsync();
-        if(map == null)
-        {
-            return (null, 0, 0, 0, 0);
-        }
-        return (map.MapName, map.Nodes.Min(n => n.Y), map.Nodes.Max(n => n.Y), map.Nodes.Min(n => n.X), map.Nodes.Max(n => n.X));
-    }
-
     /// <inheritdoc />
     public async Task SetCustomBackgroundAsync(Guid mapCorrelationId, MapBackground mapBackground)
     {
@@ -112,7 +95,11 @@ public class EfMapRepository : IMapRepository
     /// <inheritdoc/>
     public async Task<Map> GetMapAsync(Guid correlationId)
     {
-        var map = await Maps.Include(m => m.MapAgvs)
+        var map = await Maps
+            .Include(m => m.BaseBackground)
+            .Include(m => m.Nodes)
+            .Include(m => m.Edges)
+            .Include(m => m.MapAgvs)
             .SingleOrDefaultAsync(q => q.CorrelationId == correlationId);
         if (map == null)
         {
@@ -153,6 +140,31 @@ public class EfMapRepository : IMapRepository
     public async Task<bool> AddOrUpdateAsync(Map map, Guid agvCorrelationId, CancellationToken cancellationToken)
     {
         return await _semaphoreProvider.ExecuteLockedAsync(async () => await AddOrUpdateAsync(map, agvCorrelationId), cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<bool> UpdateDefaultMapLockedAsync(
+        Func<Map, CancellationToken, Task<(Map map, Guid agvCorrelationId)?>> computeUpdate,
+        CancellationToken cancellationToken)
+    {
+        return _semaphoreProvider.ExecuteLockedAsync(async () =>
+        {
+            var defaultMap = await GetMapAsync(Map.DefaultMapId);
+            (Map map, Guid agvCorrelationId)? result = await computeUpdate(defaultMap, cancellationToken);
+            if (result is null)
+            {
+                return false;
+            }
+            return await AddOrUpdateAsync(result.Value.map, result.Value.agvCorrelationId);
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task AddPureMapAsync(Map map)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await context.AddAsync(map);
+        await context.SaveChangesAsync();
     }
 
     /// <inheritdoc />

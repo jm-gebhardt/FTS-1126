@@ -3,6 +3,7 @@ using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Messages.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +15,8 @@ namespace Gebhardt.Acc.TransportOrder;
 /// </summary>
 public static class MassTransitHostBuilderExtensions
 {
+    private static readonly TimeSpan _busStartTimeout = TimeSpan.FromSeconds(45);
+
     /// <summary>
     /// Configured the HostBuilder to use MassTransit <paramref name="hostBuilder" />
     /// </summary>
@@ -37,6 +40,12 @@ public static class MassTransitHostBuilderExtensions
                     cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
                     cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
                 });
+                services.AddOptions<MassTransitHostOptions>()
+                    .Configure(options =>
+                    {
+                        options.WaitUntilStarted = true;
+                        options.StartTimeout = _busStartTimeout;
+                    });
                 services.ConfigureTracing(context.Configuration);
             }
             catch (InvalidOperationException e)

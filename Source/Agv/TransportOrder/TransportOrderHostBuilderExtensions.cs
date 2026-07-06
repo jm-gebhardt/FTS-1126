@@ -91,6 +91,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddHostedService<AgvPositionPersistenceService>();
         services.AddHostedService<StationOnlineSyncService>();
         services.AddHostedService<FactoryTimeZoneInitializer>();
+        services.AddHostedService<MapInitializer>();
         services.AddHostedService<Housekeeping>();
         services.AddSingleton<IConcurrentDictionaryProvider<Guid, AgvSettingsReadModel>, InMemoryAgvSettingsProvider>();
         services.AddTransient<IAgvSettingsProvider, EfAgvSettingsProvider>();
