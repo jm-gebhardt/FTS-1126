@@ -132,4 +132,5 @@ public static class LogCodes
     public const int SystemBackgroundAddedOrUpdated = 518;
     public const int SystemBackgroundDeleted = 519;
     public const int SystemAgvTypeCreated = 520;
+    public const int SystemAgvTypeAcknowledged = 521;
 }

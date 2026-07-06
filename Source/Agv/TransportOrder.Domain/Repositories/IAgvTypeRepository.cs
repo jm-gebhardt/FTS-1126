@@ -1,3 +1,4 @@
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -15,8 +16,32 @@ public interface IAgvTypeRepository
     public Task<bool> ExistsAsync(string agvTypeIdentifier);
 
     /// <summary>
+    /// Checks whether an AGV type with the given id.
+    /// </summary>
+    /// <param name="id">The AGV type id.</param>
+    /// <returns>True if an AGV type with the id exists.</returns>
+    public Task<bool> ExistsAsync(Guid id);
+
+    /// <summary>
     /// Adds a new AGV type or updates the existing one with the same identifier.
     /// </summary>
     /// <param name="agvType">The AGV type to add or update.</param>
-    public Task AddOrUpdateAsync(AgvType agvType);
+    /// <param name="cancellationToken">TThe cancellation token.</param>
+    public Task AddOrUpdateAsync(AgvType agvType, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Get an agv type by id.
+    /// </summary>
+    /// <param name="id">The id of the agv type.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>An agv type.</returns>
+    /// <exception cref="AgvTypeNotFoundException">Raised, when the agv type could not be found with the given id.</exception>
+    public Task<AgvType> GetAgvTypeAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Get all agv types .
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A collection of agv types.</returns>
+    public Task<ICollection<AgvType>> GetAllAgvTypesAsync(CancellationToken cancellationToken);
 }

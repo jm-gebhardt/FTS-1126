@@ -19,6 +19,7 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.AgvType;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
@@ -33,6 +34,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.AgvType;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.BackgroundEditor;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
@@ -102,6 +104,7 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<AddOrUpdateAgvType, AgvTypeCommandHandler>(c);
+            partitioner.PartitionMessageById<AcknowledgeAgvType, AgvTypeCommandHandler>(c);
         });
         busRegistrationConfigurator.AddConsumer<AgvPositionReceivedEventHandler>();
         busRegistrationConfigurator.AddConsumer<AgvPositionChangedEventHandler>();
@@ -401,6 +404,8 @@ public static class CoreBusRegistrationExtensions
         RegisterMediatorLogRequestHandlers(configurator);
 
         RegisterMediatorOwnedResourceHandlers(configurator);
+
+        RegisterMediatorAgvHandlers(configurator);
     }
 
     private static void RegisterMediatorGraphHandlers(IMediatorRegistrationConfigurator configurator)
@@ -463,6 +468,14 @@ public static class CoreBusRegistrationExtensions
     {
         configurator.AddConsumer<ZoneRequestHandler>();
         configurator.AddRequestClient<GetZones>();
+    }
+
+    private static void RegisterMediatorAgvHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddConsumer<AgvTypeRequestHandler>();
+        configurator.AddRequestClient<RequestAgvTypeAcknowledgement>();
+        configurator.AddRequestClient<GetAgvType>();
+        configurator.AddRequestClient<GetAllAgvTypes>();
     }
 
     private static void RegisterMediatorActionGroupHandlers(IMediatorRegistrationConfigurator configurator)

@@ -47,6 +47,11 @@ public static class AuthorizationPolicies
     /// </summary>
     public const string QueueRepair = "QueueRepair";
 
+    /// <summary>
+    /// Policy name for allowing to use agv type management endpoints.
+    /// </summary>
+    public const string AgvTypeFull = "AgvTypeFull";
+
     private static class ClaimTypes
     {
         public const string ResourceAccess = "resource_access";
@@ -63,7 +68,8 @@ public static class AuthorizationPolicies
         new(NodePropertiesUpdate, "fm-nodeProperties-update", ClaimTypes.ResourceAccess),
         new(MaintenanceLogFullAccess, "fm-maintenanceLogs-full", ClaimTypes.ResourceAccess),
         new(QueueFullAccess, "fm-queues-full", ClaimTypes.ResourceAccess),
-        new(QueueRepair, "fm-queues-repair", ClaimTypes.ResourceAccess)
+        new(QueueRepair, "fm-queues-repair", ClaimTypes.ResourceAccess),
+        new(AgvTypeFull, "fm-agv-type-full", ClaimTypes.ResourceAccess)
     ];
 
     private static void AddNewPolicy(this AuthorizationOptions options, Policy newPolicy)
