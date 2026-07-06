@@ -17,9 +17,9 @@ public class RoutingEdge : RoutingResource
     /// <summary>
     /// Length in meters
     /// </summary>
-    public double Length { get; }  //decide which length is used for rotations
+    public double Length { get; }  //does length exist without trajectory?, decide which length is used for rotations
 
-    //public double DrivingTime { get; }
+    //public double DrivingTime { get; } // create method to calculate driving time based on length and max speed, maybe also consider acceleration and deceleration
 
     // actions? -> feedback from Andreas
 }
