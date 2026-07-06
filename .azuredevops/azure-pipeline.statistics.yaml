@@ -35,7 +35,7 @@ resources:
 stages:
 - template: backend-template-2.yml@templates
   parameters:
-    buildTarget: './Agv/Statistics/Statistics.sln'
+    buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics/Statistics.sln'
     publishNuget: false
     publishDocker: false
     useNerdbankVersioning: true
@@ -47,3 +47,4 @@ stages:
     openApiEnabled: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
+    skipVulnerabilityCheck: false
