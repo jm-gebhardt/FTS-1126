@@ -307,7 +307,7 @@ public static class CoreBusRegistrationExtensions
                     {
                         // Retry once of the cargo has not been updated yet
                         // Used to compensate race conditions on events of updated messages 
-                        r.Interval(3, TimeSpan.FromSeconds(5));
+                        r.Interval(6, TimeSpan.FromSeconds(5));
                         r.Handle<CargoStateMismatchException>();
                     });
                 }
