@@ -3,6 +3,7 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.BackgroundEditor;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.LogEntry;
+using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.OwnedResource;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Trigger;
@@ -68,5 +69,9 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new BackgroundLayerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OwnedFilterTemplateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ResourceBoundingBoxEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewGraphEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewEdgeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewNodeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewStationEntityConfiguration());
     }
 }

@@ -1,0 +1,23 @@
+﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
+
+/// <summary>
+/// 
+/// </summary>
+public class NewEdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
+{
+    /// <inheritdoc/>
+    public void Configure(EntityTypeBuilder<Edge> builder)
+    {
+        builder.HasKey(e => e.Id);
+        builder.HasOne(e => e.StartNode);
+        builder.HasOne(e => e.EndNode);
+        builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
+        builder.HasMany(e => e.Children);
+        builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
+    }
+}
