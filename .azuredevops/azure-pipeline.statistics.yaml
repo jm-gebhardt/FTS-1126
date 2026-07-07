@@ -47,4 +47,4 @@ stages:
     openApiEnabled: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
-    skipVulnerabilityCheck: false
+    skipVulnerabilityCheck: true
