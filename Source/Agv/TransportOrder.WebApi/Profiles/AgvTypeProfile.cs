@@ -1,11 +1,8 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvType;
 using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles;
 
@@ -18,6 +15,9 @@ public class AgvTypeProfile : Profile
     /// <inheritdoc/>
     public AgvTypeProfile()
     {
-        CreateMap<AgvType, AgvTypeDto>();
+        CreateMap<AgvTypeReadModel, AgvTypeDto>();
+        CreateMap<AgvTypeInfo, AgvTypeDto>()
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.HasGraph, o => o.Ignore());
     }
 }

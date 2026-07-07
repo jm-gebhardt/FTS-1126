@@ -16,7 +16,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Provides a handler for AGV type related commands.
 /// </summary>
 [UsedImplicitly]
-public class AgvTypeCommandHandler(IAgvDb agvDb, IMapper mapper, ILoggingService loggingService, ILogger<AgvTypeCommandHandler> logger) : 
+public class AgvTypeCommandHandler(IAgvDb agvDb, IMapper mapper, ILoggingService loggingService, ILogger<AgvTypeCommandHandler> logger) :
     IConsumer<AddOrUpdateAgvType>,
     IConsumer<AcknowledgeAgvType>
 {
@@ -37,6 +37,7 @@ public class AgvTypeCommandHandler(IAgvDb agvDb, IMapper mapper, ILoggingService
 
         logger.LogInformation("Created AGV type {AgvTypeIdentifier}", info.AgvTypeIdentifier);
         await loggingService.LogSystem(logger, LogCodes.SystemAgvTypeCreated, "AGV type created", $"AGV type {info.AgvTypeIdentifier} was created", new Dictionary<string, object?> { { LogLabels.AgvTypeIdentifier, agvType.AgvTypeIdentifier } });
+        await context.Publish(new AgvTypeAdded(agvType.Id, info));
     }
 
     /// <inheritdoc/>
@@ -46,10 +47,10 @@ public class AgvTypeCommandHandler(IAgvDb agvDb, IMapper mapper, ILoggingService
 
         agvType.Acknowledge();
         await agvDb.AgvTypes.AddOrUpdateAsync(agvType, context.CancellationToken);
-        
+
         logger.LogInformation("Acknowledged AGV type {AgvTypeIdentifier}", agvType.AgvTypeIdentifier);
-        await loggingService.LogSystem(logger, LogCodes.SystemAgvTypeAcknowledged, "AGV type acknowledged", $"AGV type {agvType.AgvTypeIdentifier} was acknowledged", new Dictionary<string, object?>{{LogLabels.AgvTypeIdentifier, agvType.AgvTypeIdentifier}});
-        
+        await loggingService.LogSystem(logger, LogCodes.SystemAgvTypeAcknowledged, "AGV type acknowledged", $"AGV type {agvType.AgvTypeIdentifier} was acknowledged", new Dictionary<string, object?> { { LogLabels.AgvTypeIdentifier, agvType.AgvTypeIdentifier } });
+
         await context.Publish(new AgvTypeAcknowledged(agvType.Id));
     }
 }

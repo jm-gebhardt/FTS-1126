@@ -17,6 +17,7 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
@@ -720,6 +721,10 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         agv.GraphExists = true;
+        if (!string.IsNullOrEmpty(context.Message.AgvTypeIdentifier))
+        {
+            agv.AgvTypeId = AgvType.IdFromIdentifier(context.Message.AgvTypeIdentifier);
+        }
 
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvGraphReceived, correlationId, null, "AGV Graph Received",
             $"AGV {agv.SerialNumber} graph has been received", new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });

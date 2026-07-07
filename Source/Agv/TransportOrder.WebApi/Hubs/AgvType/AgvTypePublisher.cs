@@ -12,4 +12,11 @@ public class AgvTypePublisher(IHubBroadcaster<AgvTypeHub, IAgvTypeClient> hubBro
         hubBroadcaster.Broadcast(c => c.AgvTypeAcknowledged(dto));
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc/>
+    public Task SendAgvTypeCreated(AgvTypeDto agvType)
+    {
+        hubBroadcaster.Broadcast(c => c.AgvTypeCreated(agvType));
+        return Task.CompletedTask;
+    }
 }

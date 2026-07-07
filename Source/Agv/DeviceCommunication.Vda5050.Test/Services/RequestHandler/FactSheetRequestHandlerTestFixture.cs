@@ -14,26 +14,41 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.RequestHandler;
 
 public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdateFactSheet, FactSheetRequestHandler, MockConsumer>
 {
+    public const string Manufacturer = "TestManufacturer";
+    public const string SeriesName = "TestSeries";
+    public const string AgvTypeIdentifier = $"{Manufacturer}.{SeriesName}";
+    public const string SerialNumber = "SN-001";
+    public const double Length = 1.5;
+    public const double Width = 2.0;
+
     private readonly Mock<IAgvActionRepository> _agvActionRepository = new();
     private readonly Mock<IAgvTypeRepository> _agvTypeRepository = new();
+
+    public AgvType? AddedAgvType { get; private set; }
 
     protected override IEnumerable<Profile> GetProfiles()
     {
         return [new FactSheetProfile(), new AgvActionProfile()];
     }
 
-    public FactSheetRequestHandlerTestFixture()
+    public FactSheetRequestHandlerTestFixture(bool existingAgvType = false)
     {
         AddServices(s => s.AddTransient(_ => _agvActionRepository.Object));
         AddServices(s => s.AddTransient(_ => _agvTypeRepository.Object));
-        _agvTypeRepository.Setup(x => x.ExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
+        _agvTypeRepository.Setup(x => x.ExistsAsync(It.IsAny<string>())).ReturnsAsync(existingAgvType);
         _agvTypeRepository
             .Setup(x => x.AddAsync(It.IsAny<AgvType>()))
+            .Callback<AgvType>(a => AddedAgvType = a)
             .Returns(Task.CompletedTask);
         _agvActionRepository
             .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
         base.Build();
+    }
+
+    public static FactSheetRequestHandlerTestFixture WithExistingAgvType()
+    {
+        return new FactSheetRequestHandlerTestFixture(true);
     }
 
     public FactSheetRequestHandlerTestFixture WithAddOrUpdateActionsThrows()

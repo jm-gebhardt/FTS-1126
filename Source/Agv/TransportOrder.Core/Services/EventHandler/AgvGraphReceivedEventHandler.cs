@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
@@ -41,6 +42,8 @@ public class AgvGraphReceivedEventHandler : IConsumer<AgvGraphReceived>
             await context.Publish(new GraphMissing(agvGraph.AgvCorrelationId), context.CancellationToken);
             return;
         }
+
+        await context.Publish(new SetAgvGraphExist(agvGraph.AgvCorrelationId, context.Message.AgvTypeIdentifier));
 
         if (result.AnyChanges)
         {

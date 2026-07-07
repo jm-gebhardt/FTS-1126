@@ -26,6 +26,11 @@ public interface IAgvRepository
     Task<ICollection<Agv>> GetAllAgvsWithGraphAsync();
 
     /// <summary>
+    /// Get the distinct AGV type ids of all AGVs that have a graph.
+    /// </summary>
+    Task<IReadOnlySet<Guid>> GetTypeIdsWithGraphAsync();
+
+    /// <summary>
     /// Get list of AGVs that are ready to be assigned to an order
     /// </summary>
     Task<ICollection<Agv>> GetIdleAgvsAsync();

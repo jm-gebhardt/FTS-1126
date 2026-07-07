@@ -39,7 +39,6 @@ public class AgvEventHandler :
     IConsumer<AgvMapReceived>,
     IConsumer<AgvErrorStatusReceived>,
     IConsumer<AgvStatusReceived>,
-    IConsumer<AgvGraphChanged>,
     IConsumer<AgvLastWillReceived>,
     IConsumer<AgvPreparedForStartingAction>,
     IConsumer<AgvLoadStatusReceived>,
@@ -262,15 +261,6 @@ public class AgvEventHandler :
     public async Task Consume(ConsumeContext<AgvStatusReceived> context)
     {
         await context.Publish(new UpdateAgvStatus(context.Message.CorrelationId, context.Message.SerialNumber, context.Message.AgvStatus));
-    }
-
-    /// <summary>
-    /// Handles the <see cref="AgvGraphChanged"/> event.
-    /// </summary>
-    public async Task Consume(ConsumeContext<AgvGraphChanged> context)
-    {
-        _logger.LogInformation("{MessageType} {AgvCorrelationId}", nameof(AgvGraphChanged), context.Message.CorrelationId);
-        await context.Publish(new SetAgvGraphExist(context.Message.CorrelationId));
     }
 
     /// <summary>

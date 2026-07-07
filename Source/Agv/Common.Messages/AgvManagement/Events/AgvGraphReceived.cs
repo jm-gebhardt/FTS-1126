@@ -28,15 +28,22 @@ public record AgvGraphReceived : CorrelatedBy<Guid>, IAgv
     public AgvGraph Graph { get; }
 
     /// <summary>
+    /// The identifier of the AGV type this graph belongs to, or null if unknown.
+    /// </summary>
+    public string? AgvTypeIdentifier { get; }
+
+    /// <summary>
     /// Build message.
     /// </summary>
     /// <param name="correlationId">Unique AGV Correlation ID</param>
     /// <param name="serialNumber">The serial number of the agv</param>
     /// <param name="graph">AGV graph</param>
-    public AgvGraphReceived(Guid correlationId, string serialNumber, AgvGraph graph)
+    /// <param name="agvTypeIdentifier">The identifier of the AGV type this graph belongs to, or null if unknown.</param>
+    public AgvGraphReceived(Guid correlationId, string serialNumber, AgvGraph graph, string? agvTypeIdentifier = null)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
         Graph = graph;
+        AgvTypeIdentifier = agvTypeIdentifier;
     }
 }

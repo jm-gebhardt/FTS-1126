@@ -203,6 +203,11 @@ public class Agv : IAgv
     public bool ZonesExist { get; set; }
 
     /// <summary>
+    /// The id of the AGV type this agv belongs to, set once the agv has received a graph.
+    /// </summary>
+    public Guid? AgvTypeId { get; set; }
+
+    /// <summary>
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null.
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>

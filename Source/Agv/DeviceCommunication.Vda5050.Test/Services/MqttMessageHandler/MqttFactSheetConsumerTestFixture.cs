@@ -54,4 +54,15 @@ public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
     {
         _agvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>()), times);
     }
+
+    public MqttFactSheetConsumerTestFixture WithExistingAgvType()
+    {
+        _agvTypeRepository.Setup(x => x.ExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
+        return this;
+    }
+
+    public void VerifyAgvTypeAdded(Times times)
+    {
+        _agvTypeRepository.Verify(x => x.AddAsync(It.IsAny<AgvType>()), times);
+    }
 }

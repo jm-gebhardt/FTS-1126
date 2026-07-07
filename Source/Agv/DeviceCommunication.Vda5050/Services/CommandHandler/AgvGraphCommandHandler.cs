@@ -40,7 +40,7 @@ public class AgvGraphCommandHandler(IBus bus, ILifRepository lifRepository, Time
         var graph = layouts.ToAgvGraph(agvCorrelationId, vehicleTypeId, edgeBuilder);
 
         logger.LogInformation("Publishing graph for AGV {AgvSerialNumber}/{AgvCorrelationId}", serialNumber, agvCorrelationId);
-        await context.Publish(new AgvGraphReceived(agvCorrelationId, serialNumber, graph), context.CancellationToken);
+        await context.Publish(new AgvGraphReceived(agvCorrelationId, serialNumber, graph, vehicleTypeId), context.CancellationToken);
 
         await BuildMap(context, agvCorrelationId, serialNumber, graph);
     }

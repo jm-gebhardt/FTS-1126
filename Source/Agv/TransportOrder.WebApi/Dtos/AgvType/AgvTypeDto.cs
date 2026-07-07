@@ -1,7 +1,4 @@
 ﻿using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvType;
 
@@ -45,4 +42,9 @@ public record AgvTypeDto
     /// Whether the AGV type has been acknowledged (confirmed) by an operator.
     /// </summary>
     public bool Acknowledged { get; set; }
+
+    /// <summary>
+    /// Whether at least one AGV of this type has a graph.
+    /// </summary>
+    public bool HasGraph { get; set; }
 }

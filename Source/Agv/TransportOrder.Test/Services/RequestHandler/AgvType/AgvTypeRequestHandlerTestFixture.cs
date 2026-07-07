@@ -13,6 +13,7 @@ public class AgvTypeRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTes
 {
     public readonly Mock<IAgvDb> AgvDb = new();
     private readonly List<TransportOrder.Domain.Models.AgvTypes.AgvType> _agvTypes = new();
+    private readonly HashSet<Guid> _graphedTypeIds = [];
 
     public AgvTypeRequestHandlerTestFixture()
     {
@@ -26,11 +27,18 @@ public class AgvTypeRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTes
         AgvDb.Setup(x => x.AgvTypes.GetAgvTypeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Guid id, CancellationToken _) => _agvTypes.SingleOrDefault(a => a.Id == id) ?? throw new AgvTypeNotFoundException(id));
         AgvDb.Setup(x => x.AgvTypes.GetAllAgvTypesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => _agvTypes.ToList());
+        AgvDb.Setup(x => x.Agvs.GetTypeIdsWithGraphAsync()).ReturnsAsync(() => _graphedTypeIds);
     }
 
     public AgvTypeRequestHandlerTestFixture<TRequest, TConsumer> WithAgvTypes(params TransportOrder.Domain.Models.AgvTypes.AgvType[] agvTypes)
     {
         _agvTypes.AddRange(agvTypes);
+        return this;
+    }
+
+    public AgvTypeRequestHandlerTestFixture<TRequest, TConsumer> WithGraphedTypeIdentifiers(params string[] identifiers)
+    {
+        _graphedTypeIds.UnionWith(identifiers.Select(TransportOrder.Domain.Models.AgvTypes.AgvType.IdFromIdentifier));
         return this;
     }
 

@@ -2,6 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
+using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.AgvType;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.AgvType;
 using JetBrains.Annotations;
@@ -19,6 +20,9 @@ public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeReques
     IConsumer<GetAgvType>,
     IConsumer<GetAllAgvTypes>
 {
+    private static AgvTypeReadModel ToReadModel(AgvType agvType, IReadOnlySet<Guid> typeIdsWithGraph) =>
+        new(agvType.Id, agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, typeIdsWithGraph.Contains(agvType.Id));
+
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestAgvTypeAcknowledgement> context)
     {
@@ -38,15 +42,18 @@ public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeReques
     public async Task Consume(ConsumeContext<GetAgvType> context)
     {
         var agvType = await agvDb.AgvTypes.GetAgvTypeAsync(context.Message.CorrelationId, context.CancellationToken);
+        IReadOnlySet<Guid> typeIdsWithGraph = await agvDb.Agvs.GetTypeIdsWithGraphAsync();
 
-        await context.RespondAsync(new GotAgvType(context.Message.CorrelationId, agvType));
+        await context.RespondAsync(new GotAgvType(context.Message.CorrelationId, ToReadModel(agvType, typeIdsWithGraph)));
     }
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetAllAgvTypes> context)
     {
         ICollection<AgvType> agvTypes = await agvDb.AgvTypes.GetAllAgvTypesAsync(context.CancellationToken);
+        IReadOnlySet<Guid> typeIdsWithGraph = await agvDb.Agvs.GetTypeIdsWithGraphAsync();
+        List<AgvTypeReadModel> readModels = agvTypes.Select(agvType => ToReadModel(agvType, typeIdsWithGraph)).ToList();
 
-        await context.RespondAsync(new GotAgvTypes(context.Message.CorrelationId, agvTypes));
+        await context.RespondAsync(new GotAgvTypes(context.Message.CorrelationId, readModels));
     }
 }

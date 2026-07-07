@@ -62,6 +62,17 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlySet<Guid>> GetTypeIdsWithGraphAsync()
+    {
+        List<Guid> ids = await Agvs
+            .Where(a => a.GraphExists && a.AgvTypeId != null)
+            .Select(a => a.AgvTypeId!.Value)
+            .Distinct()
+            .ToListAsync();
+        return ids.ToHashSet();
+    }
+
+    /// <inheritdoc />
     public async Task<bool> HasOnlineAgvs()
     {
         return await Agvs.AnyAsync(a => a.GraphExists && a.IsOnline);

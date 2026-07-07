@@ -1,5 +1,3 @@
-
-
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
@@ -20,18 +18,22 @@ public class FactSheetRequestHandlerTest
 {
     private static AddOrUpdateFactSheet BuildMessage(
         Guid? agvCorrelationId = null,
-        string serialNumber = "SN-001",
-        ICollection<FactsheetAction>? agvActions = null) =>
-        new(
+        string serialNumber = FactSheetRequestHandlerTestFixture.SerialNumber,
+        ICollection<FactsheetAction>? agvActions = null,
+        string rawJson = "")
+    {
+        return new AddOrUpdateFactSheet(
             agvCorrelationId ?? Guid.NewGuid(),
             new Factsheet
             {
                 SerialNumber = serialNumber,
-                Manufacturer = "TestManufacturer",
-                TypeSpecification = new TypeSpecification { SeriesName = "TestSeries" },
-                PhysicalParameters = new PhysicalParameters(),
+                Manufacturer = FactSheetRequestHandlerTestFixture.Manufacturer,
+                TypeSpecification = new TypeSpecification { SeriesName = FactSheetRequestHandlerTestFixture.SeriesName },
+                PhysicalParameters = new PhysicalParameters { Length = FactSheetRequestHandlerTestFixture.Length, Width = FactSheetRequestHandlerTestFixture.Width },
                 ProtocolFeatures = new ProtocolFeatures { AgvActions = agvActions ?? [] }
-            });
+            },
+            rawJson);
+    }
 
     [TestMethod]
     public async Task Consume_FactSheetWithNoActions_PublishesAgvDataReceived()
@@ -43,7 +45,7 @@ public class FactSheetRequestHandlerTest
 
         var published = await fixture.GetFirstPublishedMessageAsync<AgvDataReceived>();
         published.CorrelationId.ShouldBe(agvCorrelationId);
-        published.SerialNumber.ShouldBe("SN-001");
+        published.SerialNumber.ShouldBe(FactSheetRequestHandlerTestFixture.SerialNumber);
     }
 
     [TestMethod]
@@ -56,7 +58,7 @@ public class FactSheetRequestHandlerTest
 
         var published = await fixture.GetFirstPublishedMessageAsync<AgvAddedOrUpdated>();
         published.CorrelationId.ShouldBe(agvCorrelationId);
-        published.SerialNumber.ShouldBe("SN-001");
+        published.SerialNumber.ShouldBe(FactSheetRequestHandlerTestFixture.SerialNumber);
     }
 
     [TestMethod]
@@ -67,7 +69,7 @@ public class FactSheetRequestHandlerTest
         await fixture.GetResponseAsync<Success>(BuildMessage());
 
         (await fixture.TestHarness.Published.Any<AgvInstantActionDefinitionReceived>()).ShouldBeFalse();
-        fixture.VerifyActionsStored("SN-001", Times.Never());
+        fixture.VerifyActionsStored(FactSheetRequestHandlerTestFixture.SerialNumber, Times.Never());
     }
 
     [TestMethod]
@@ -126,7 +128,30 @@ public class FactSheetRequestHandlerTest
         MediatorTestFixture<AddOrUpdateFactSheet, FactSheetRequestHandler, MockConsumer> fixture = new FactSheetRequestHandlerTestFixture()
             .WithAddOrUpdateActionsThrows();
 
-        await MediatorShould.ThrowRequestExceptionAsync<InvalidFactsheetException>(
-            async () => await fixture.GetResponseAsync<Success>(BuildMessage(agvActions: actions)));
+        await MediatorShould.ThrowRequestExceptionAsync<InvalidFactsheetException>(async () => await fixture.GetResponseAsync<Success>(BuildMessage(agvActions: actions)));
+    }
+
+    [TestMethod]
+    public async Task Consume_FactSheet_StoresAcknowledgedAgvTypeWithRawData()
+    {
+        const string rawJson = """{"manufacturer":"TestManufacturer","physicalParameters":{"length":1.5}}""";
+        var fixture = new FactSheetRequestHandlerTestFixture();
+
+        await fixture.GetResponseAsync<Success>(BuildMessage(rawJson: rawJson));
+
+        fixture.AddedAgvType.ShouldNotBeNull();
+        fixture.AddedAgvType.AgvTypeIdentifier.ShouldBe(FactSheetRequestHandlerTestFixture.AgvTypeIdentifier);
+        fixture.AddedAgvType.Length.ShouldBe(FactSheetRequestHandlerTestFixture.Length);
+        fixture.AddedAgvType.Width.ShouldBe(FactSheetRequestHandlerTestFixture.Width);
+        fixture.AddedAgvType.RawData.ShouldBe(rawJson);
+        fixture.AddedAgvType.Acknowledged.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvTypeAlreadyExists_ThrowsAgvTypeAlreadyExistsException()
+    {
+        var fixture = FactSheetRequestHandlerTestFixture.WithExistingAgvType();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvTypeAlreadyExistsException>(async () => await fixture.GetResponseAsync<Success>(BuildMessage()));
     }
 }

@@ -52,7 +52,7 @@ public class AgvTypeRequestHandlerTest
         Response<GotAgvType> response = await fixture.GetResponseAsync<GotAgvType>(new GetAgvType(agvType.Id));
 
         response.Message.CorrelationId.ShouldBe(agvType.Id);
-        response.Message.AgvType.ShouldBe(agvType);
+        response.Message.AgvType.Id.ShouldBe(agvType.Id);
     }
 
     [TestMethod]
@@ -91,7 +91,7 @@ public class AgvTypeRequestHandlerTest
         Response<GotAgvTypes> response = await fixture.GetResponseAsync<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()));
 
         response.Message.AgvTypes.Count.ShouldBe(2);
-        response.Message.AgvTypes.ShouldContain(agvType1);
-        response.Message.AgvTypes.ShouldContain(agvType2);
+        response.Message.AgvTypes.ShouldContain(a => a.Id == agvType1.Id);
+        response.Message.AgvTypes.ShouldContain(a => a.Id == agvType2.Id);
     }
 }

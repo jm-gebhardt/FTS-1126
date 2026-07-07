@@ -1,4 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.Messages.Events.AgvType;
+﻿using AutoMapper;
+using Gebhardt.Acc.TransportOrder.Messages.Events.AgvType;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvType;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.AgvType;
 using JetBrains.Annotations;
 using MassTransit;
@@ -9,9 +11,17 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 /// Broadcasts agv type related updates
 /// </summary>
 [UsedImplicitly]
-public class AgvTypeChangedConsumer(IAgvTypePublisher publisher):
+public class AgvTypeChangedConsumer(IAgvTypePublisher publisher, IMapper mapper) :
+    IConsumer<AgvTypeAdded>,
     IConsumer<AgvTypeAcknowledged>
 {
+    /// <inheritdoc/>
+    public Task Consume(ConsumeContext<AgvTypeAdded> context)
+    {
+        var dto = mapper.Map<AgvTypeDto>(context.Message.AgvType) with { Id = context.Message.CorrelationId };
+        return publisher.SendAgvTypeCreated(dto);
+    }
+
     /// <inheritdoc/>
     public Task Consume(ConsumeContext<AgvTypeAcknowledged> context)
     {

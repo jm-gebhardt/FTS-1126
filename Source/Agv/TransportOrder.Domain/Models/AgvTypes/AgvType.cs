@@ -37,7 +37,7 @@ public record AgvType : IAgvType
     /// <inheritdoc cref="AgvType"/>
     public AgvType(string agvTypeIdentifier, string manufacturer, string seriesName, double length, double width, bool acknowledged)
     {
-        Id = agvTypeIdentifier.ToGuid();
+        Id = IdFromIdentifier(agvTypeIdentifier);
         AgvTypeIdentifier = agvTypeIdentifier;
         Manufacturer = manufacturer;
         SeriesName = seriesName;
@@ -53,6 +53,13 @@ public record AgvType : IAgvType
         Manufacturer = null!;
         SeriesName = null!;
     }
+
+    /// <summary>
+    /// Derives the AGV type id from its identifier.
+    /// </summary>
+    /// <param name="agvTypeIdentifier">The AGV type identifier.</param>
+    /// <returns>The id derived from the identifier.</returns>
+    public static Guid IdFromIdentifier(string agvTypeIdentifier) => agvTypeIdentifier.ToGuid();
 
     /// <summary>
     /// Acknowledge the agv type.

@@ -27,7 +27,7 @@ public interface IAgvTypeRepository
     /// </summary>
     /// <param name="agvType">The AGV type to add or update.</param>
     /// <param name="cancellationToken">TThe cancellation token.</param>
-    public Task AddOrUpdateAsync(AgvType agvType, CancellationToken cancellationToken);
+    public Task AddOrUpdateAsync(AgvType agvType, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get an agv type by id.
@@ -36,12 +36,12 @@ public interface IAgvTypeRepository
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>An agv type.</returns>
     /// <exception cref="AgvTypeNotFoundException">Raised, when the agv type could not be found with the given id.</exception>
-    public Task<AgvType> GetAgvTypeAsync(Guid id, CancellationToken cancellationToken);
+    public Task<AgvType> GetAgvTypeAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get all agv types .
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A collection of agv types.</returns>
-    public Task<ICollection<AgvType>> GetAllAgvTypesAsync(CancellationToken cancellationToken);
+    public Task<ICollection<AgvType>> GetAllAgvTypesAsync(CancellationToken cancellationToken = default);
 }

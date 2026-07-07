@@ -2,6 +2,7 @@
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 using Moq;
+using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.MqttMessageHandler;
 
@@ -29,7 +30,7 @@ public class MqttFactSheetConsumerTest
     {
         var fixture = new MqttFactSheetConsumerTestFixture();
 
-        var message = MqttFactSheetGenerator.Generate(actions:null);
+        var message = MqttFactSheetGenerator.Generate(actions: null);
 
         await fixture.PublishMqttMessageAsync(message);
 
@@ -55,5 +56,31 @@ public class MqttFactSheetConsumerTest
         fixture.VerifyActionsUpdated(Times.Once());
         fixture.VerifyDataUpdated();
         fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttFactSheet_NewAgvType_AddsUnacknowledgedTypeAndPublishesAgvTypeCreated()
+    {
+        var fixture = new MqttFactSheetConsumerTestFixture();
+        var message = MqttFactSheetGenerator.Generate();
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        fixture.VerifyAgvTypeAdded(Times.Once());
+        var created = await fixture.GetFirstPublishedMessageAsync<AgvTypeCreated>();
+        created.AgvType.AgvTypeIdentifier.ShouldBe($"{message.Manufacturer}.{message.TypeSpecification.SeriesName}");
+        created.AgvType.Acknowledged.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttFactSheet_ExistingAgvType_DoesNotAddOrPublishAgvTypeCreated()
+    {
+        var fixture = new MqttFactSheetConsumerTestFixture().WithExistingAgvType();
+        var message = MqttFactSheetGenerator.Generate();
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        fixture.VerifyAgvTypeAdded(Times.Never());
+        await fixture.ShouldNotHavePublishedAsync<AgvTypeCreated>();
     }
 }

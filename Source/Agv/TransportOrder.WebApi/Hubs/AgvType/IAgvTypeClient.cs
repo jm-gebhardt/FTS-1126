@@ -16,4 +16,11 @@ public interface IAgvTypeClient
     /// <param name="agvTypeAcknowledgement">The agv type acknowledgement.</param>
     [SignalRMethod(nameof(AgvTypeAcknowledged))]
     Task AgvTypeAcknowledged(AgvTypeAcknowledgedDto agvTypeAcknowledgement);
+
+    /// <summary>
+    /// A new agv type has been created.
+    /// </summary>
+    /// <param name="agvType">The created agv type.</param>
+    [SignalRMethod(nameof(AgvTypeCreated))]
+    Task AgvTypeCreated(AgvTypeDto agvType);
 }

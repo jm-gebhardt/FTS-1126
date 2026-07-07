@@ -726,7 +726,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
         var agvSaga = context.Saga;
         if (agvSaga.AgvGraph != null)
         {
-            await context.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.SerialNumber, agvSaga.AgvGraph));
+            await context.Publish(new AgvGraphReceived(agvSaga.CorrelationId, agvSaga.SerialNumber, agvSaga.AgvGraph, agvSaga.AgvData?.Type));
         }
     }
 
