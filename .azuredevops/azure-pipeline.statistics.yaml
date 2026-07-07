@@ -37,7 +37,7 @@ stages:
   parameters:
     buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics/Statistics.sln'
     publishNuget: false
-    publishDocker: false
+    publishDocker: true
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
     testTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics.Test/**/*.csproj'
