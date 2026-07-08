@@ -38,7 +38,7 @@ stages:
     buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics/Statistics.sln'
     publishNuget: false
     publishDocker: true
-    dockerImageName: 'gebhardt/acc/statistics'
+    dockerImageName: 'fleet-management/statistics'
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
     testTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics.Test/**/*.csproj'
