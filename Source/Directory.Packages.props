@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
     <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
