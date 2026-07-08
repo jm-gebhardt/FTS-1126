@@ -31,6 +31,13 @@ resources:
     type: git
     name: Architecture/Gebhardt.Platform.CI
     ref: preview
+# Approved OpenAPI baselines. Alias must match the template's 'platformContractsResourceAlias'
+# (default 'platform-contracts'). The repo lives in the 'StoreWare Platform' project, matching
+# the template's 'platformContractsProject' default used for PR creation.
+  - repository: platform-contracts
+    type: git
+    name: StoreWare Platform/platform-contracts
+    ref: refs/heads/main
 
 stages:
 - template: backend-template-2.yml@templates
@@ -46,6 +53,7 @@ stages:
     servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
     openApiEnabled: true
+    openApiProjectTarget: './Agv/Statistics/Statistics.csproj'
     runContractPromotion: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
