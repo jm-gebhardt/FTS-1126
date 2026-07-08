@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
         <AssemblyName>Gebhardt.Acc.Statistics</AssemblyName>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
