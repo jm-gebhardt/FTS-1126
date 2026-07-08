@@ -45,7 +45,8 @@ stages:
     nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
     servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
-    openApiEnabled: false
+    openApiEnabled: true
+    runContractPromotion: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
     skipVulnerabilityCheck: true
