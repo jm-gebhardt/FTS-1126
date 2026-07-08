@@ -53,7 +53,7 @@ stages:
     servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
     openApiEnabled: true
-    openApiProjectTarget: './Agv/Statistics/Statistics.csproj'
+    openApiProjectTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics/Statistics.csproj'
     runContractPromotion: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
