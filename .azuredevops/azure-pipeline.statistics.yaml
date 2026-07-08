@@ -47,13 +47,13 @@ stages:
     publishDocker: true
     dockerImageName: 'fleet-management/statistics'
     useNerdbankVersioning: true
-    workingDirectory: '$(Build.Repository.LocalPath)/Source/Agv'
+    workingDirectory: '$(Build.Repository.LocalPath)/Source'
     testTarget: '$(Build.Repository.LocalPath)/Source/Agv/Statistics.Test/**/*.csproj'
     nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
-    servicePublishProject: './Statistics/Statistics.csproj'
+    servicePublishProject: './Agv/Statistics/Statistics.csproj'
     entryPointProjectName: 'Statistics'
     openApiEnabled: true
-    openApiProjectTarget: './Statistics/Statistics.csproj'
+    openApiProjectTarget: './Agv/Statistics/Statistics.csproj'
     runContractPromotion: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
