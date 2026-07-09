@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.MqttMessageHandler;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -44,6 +45,6 @@ public class MqttStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCon
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper([typeof(CargoProfile).Assembly]);
     }
 }

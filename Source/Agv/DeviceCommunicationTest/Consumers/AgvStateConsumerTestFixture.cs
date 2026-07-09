@@ -20,7 +20,7 @@ public class AgvStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCons
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper([typeof(Gebhardt.Acc.DeviceCommunication.KarisAgv.Profiles.WifiStatusProfile).Assembly]);
     }
 
     public AgvStateConsumerTestFixture WithAgvInformation(AgvInformation agvInformation)

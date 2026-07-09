@@ -37,7 +37,10 @@ public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper([
+            typeof(Vda5050.Messages.Profiles.AgvTypeProfile).Assembly,
+            typeof(Vda5050.Domain.Profiles.FactSheetProfile).Assembly
+        ]);
     }
 
     public void VerifyDataUpdated()

@@ -11,11 +11,12 @@ public class AgvTypeCommandHandlerTest
     [TestMethod]
     public async Task Consume_NewAgvType_UpsertsAndLogsSystem()
     {
+        const string agvTypeIdentifier = AgvTypeCommandHandlerTestFixture.AgvTypeIdentifier;
         var fixture = new AgvTypeCommandHandlerTestFixture();
 
         await fixture.PublishMessageAsync(new AddOrUpdateAgvType(
-            AgvTypeCommandHandlerTestFixture.AgvTypeIdentifier.ToGuid(),
-            AgvTypeGenerator.GenerateAgvTypeInfo()));
+            agvTypeIdentifier.ToGuid(),
+            AgvTypeGenerator.GenerateAgvTypeInfo(agvTypeIdentifier)));
 
         fixture.VerifyAgvTypeUpserted(Times.Once());
         fixture.VerifySystemLogged(Times.Once());
@@ -29,7 +30,7 @@ public class AgvTypeCommandHandlerTest
 
         await fixture.PublishMessageAsync(new AddOrUpdateAgvType(
             agvTypeIdentifier.ToGuid(),
-            AgvTypeGenerator.GenerateAgvTypeInfo()));
+            AgvTypeGenerator.GenerateAgvTypeInfo(agvTypeIdentifier)));
 
         fixture.VerifyAgvTypeUpserted(Times.Once());
         fixture.VerifySystemLogged(Times.Never());
