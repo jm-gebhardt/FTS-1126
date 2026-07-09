@@ -210,6 +210,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GetGraphRequestHandler>();
         busRegistrationConfigurator.AddRequestClient<GetGraph>();
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<StationTypeRequestHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxEventHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxCommandHandler>(c =>
         {

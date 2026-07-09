@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.TestPlanRunner.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Shouldly;
 
 namespace TestPlanRunner.Test.Domain.Validators;
@@ -11,7 +12,7 @@ public class TestPlanValidatorTest
     {
         var fixture = new TestPlanValidatorTestFixture();
 
-        var testPlan = new TestPlan{ Steps = [new TestPlanStep { StepType = StepType.Pick }] };
+        var testPlan = new TestPlan { Steps = [new TestPlanStep { StepType = StepType.Pick }] };
 
         fixture.Validator.Validate(testPlan).IsValid.ShouldBeFalse();
     }
@@ -29,7 +30,7 @@ public class TestPlanValidatorTest
     [TestMethod]
     public void Validate_IterationsNegative_Invalid()
     {
-        var fixture = new TestPlanValidatorTestFixture().WithStations(["station"]);
+        var fixture = new TestPlanValidatorTestFixture().WithTypedStation("station", AgvGraph.NodeType.Pick);
 
         var testPlan = new TestPlan
         {
@@ -44,7 +45,7 @@ public class TestPlanValidatorTest
     [TestMethod]
     public void Validate_IterationsZero_Valid()
     {
-        var fixture = new TestPlanValidatorTestFixture().WithStations(["station"]);
+        var fixture = new TestPlanValidatorTestFixture().WithTypedStation("station", AgvGraph.NodeType.Pick);
 
         var testPlan = new TestPlan
         {
@@ -59,7 +60,7 @@ public class TestPlanValidatorTest
     [TestMethod]
     public void Validate_ValidTestPlan_Valid()
     {
-        var fixture = new TestPlanValidatorTestFixture().WithStations(["station"]);
+        var fixture = new TestPlanValidatorTestFixture().WithTypedStation("station", AgvGraph.NodeType.Pick);
 
         var testPlan = new TestPlan
         {

@@ -56,6 +56,11 @@ public class SetTestPlanHandler(
         IRequestClient<GetStationLabels>? requestClient = bus.CreateRequestClient<GetStationLabels>(timeout: TimeSpan.FromSeconds(30));
         Response<GotStationLabels> response = await requestClient.GetResponse<GotStationLabels>(new GetStationLabels(), cancellationToken);
         stationProvider.Update(response.Message.Labels);
+
+        IRequestClient<GetStationTypes>? stationsClient = bus.CreateRequestClient<GetStationTypes>(timeout: TimeSpan.FromSeconds(30));
+        Response<GotStationTypes> stationsResponse = await stationsClient.GetResponse<GotStationTypes>(new GetStationTypes(), cancellationToken);
+        stationProvider.UpdateStationTypes(stationsResponse.Message.Stations);
+
         await validator.ValidateAndThrowAsync(testPlan, cancellationToken);
     }
 }
