@@ -11,23 +11,23 @@ public class AgvTypeRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTes
     where TRequest : class
     where TConsumer : class, IConsumer
 {
-    public readonly Mock<IAgvDb> AgvDb = new();
+    private readonly Mock<IAgvDb> _agvDb = new();
     private readonly List<TransportOrder.Domain.Models.AgvTypes.AgvType> _agvTypes = new();
     private readonly HashSet<Guid> _graphedTypeIds = [];
 
     public AgvTypeRequestHandlerTestFixture()
     {
         SetupAgvTypeRepositoryMock();
-        AddServices(s => s.AddTransient<IAgvDb>(_ => AgvDb.Object));
+        AddServices(s => s.AddTransient<IAgvDb>(_ => _agvDb.Object));
     }
 
     private void SetupAgvTypeRepositoryMock()
     {
-        AgvDb.Setup(x => x.AgvTypes.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => _agvTypes.Any(a => a.Id == id));
-        AgvDb.Setup(x => x.AgvTypes.GetAgvTypeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _agvDb.Setup(x => x.AgvTypes.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => _agvTypes.Any(a => a.Id == id));
+        _agvDb.Setup(x => x.AgvTypes.GetAgvTypeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Guid id, CancellationToken _) => _agvTypes.SingleOrDefault(a => a.Id == id) ?? throw new AgvTypeNotFoundException(id));
-        AgvDb.Setup(x => x.AgvTypes.GetAllAgvTypesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => _agvTypes.ToList());
-        AgvDb.Setup(x => x.Agvs.GetTypeIdsWithGraphAsync()).ReturnsAsync(() => _graphedTypeIds);
+        _agvDb.Setup(x => x.AgvTypes.GetAllAgvTypesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => _agvTypes.ToList());
+        _agvDb.Setup(x => x.Agvs.GetTypeIdsWithGraphAsync()).ReturnsAsync(() => _graphedTypeIds);
     }
 
     public AgvTypeRequestHandlerTestFixture<TRequest, TConsumer> WithAgvTypes(params TransportOrder.Domain.Models.AgvTypes.AgvType[] agvTypes)

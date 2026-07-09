@@ -1,6 +1,6 @@
-﻿using System.Text.Json.Serialization;
-using Gebhardt.Acc.Common.Messages.Filters;
+﻿using Gebhardt.Acc.Common.Messages.Filters;
 using Gebhardt.Acc.Common.Services;
+using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Core.Observability;
 using Gebhardt.Core.Observability.Options;
 using JetBrains.Annotations;
@@ -32,14 +32,14 @@ public static class ServiceCollectionExtensions
             Action<IBusRegistrationContext, IRabbitMqBusFactoryConfigurator>? rabbitMqConfiguration = null
         )
         {
-            // Enable serialization/deserialization of enum values as string.
+            // Enable serialization/deserialization of enum values as string and honor [JsonEnumNamingPolicy] on enums.
             if (!SystemTextJsonMessageSerializer.Options.Converters.IsReadOnly)
             {
-                SystemTextJsonMessageSerializer.Options.Converters.Add(new JsonStringEnumConverter());
+                SystemTextJsonMessageSerializer.Options.Converters.Add(new AnnotatedEnumConverterFactory());
             }
             else
             {
-                Console.WriteLine($"Warning: Could not add {nameof(JsonStringEnumConverter)} during MassTransit service configuration.");
+                Console.WriteLine($"Warning: Could not add {nameof(AnnotatedEnumConverterFactory)} during MassTransit service configuration.");
             }
 
             string sectionName = ConfigurationTypeManager.Instance.GetSectionName<MassTransitConfiguration>();

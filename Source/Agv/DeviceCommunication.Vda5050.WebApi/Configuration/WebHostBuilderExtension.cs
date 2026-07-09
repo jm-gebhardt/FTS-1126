@@ -15,7 +15,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
-using System.Text.Json.Serialization;
+using Gebhardt.Acc.Common.Utilities;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Configuration;
 
@@ -52,7 +52,7 @@ public static class WebHostBuilderExtension
                 services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddControllers()
                     .AddApplicationPart(executingAssembly)
-                    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+                    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Insert(0, new AnnotatedEnumConverterFactory()); });
 
                 var config = context.Configuration.GetSection("KEYCLOAK");
                 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

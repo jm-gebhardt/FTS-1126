@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Utilities;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -183,6 +184,8 @@ public enum MqttLocalizationType
 /// <summary>
 /// Navigation / path planning type supported by the AGV.
 /// </summary>
+[JsonConverter(typeof(AnnotatedEnumConverterFactory))]
+[JsonEnumNamingPolicy(JsonKnownNamingPolicy.SnakeCaseUpper)]
 [PublicAPI]
 public enum MqttNavigationType
 {

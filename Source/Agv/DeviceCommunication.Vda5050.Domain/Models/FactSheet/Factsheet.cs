@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using JetBrains.Annotations;
 
@@ -130,6 +132,8 @@ public enum LocalizationType
 }
 
 /// <summary>Navigation / path planning type supported by the AGV.</summary>
+[JsonConverter(typeof(AnnotatedEnumConverterFactory))]
+[JsonEnumNamingPolicy(JsonKnownNamingPolicy.SnakeCaseUpper)]
 [PublicAPI]
 public enum NavigationType
 {
