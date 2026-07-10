@@ -33,8 +33,8 @@
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Only update together, check which opentelemetry version corresponds to the Gebhart.Core.Observability packages -->
-    <PackageVersion Include="Gebhardt.Core.Observability" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Observability" Version="10.3.10" />
+    <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.3.10" />
     <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.15.1-beta.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.16.0" />
@@ -50,7 +50,7 @@
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.10" />
     <!-- ====================================== -->
     <PackageVersion Include="System.IO.Hashing" Version="9.0.17" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.5" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
@@ -59,10 +59,10 @@
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.6.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.9" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.19.1" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.18.1" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.18.1" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.18.1" />
-    <PackageVersion Include="Quartz" Version="3.18.1" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.18.2" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.18.2" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.18.2" />
+    <PackageVersion Include="Quartz" Version="3.18.2" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
@@ -104,7 +104,7 @@
     <PackageVersion Include="NSwag.Annotations" Version="14.7.1" />
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.7.1" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.7.1" />
-    <PackageVersion Include="MQTTnet" Version="5.1.0.1559" />
+    <PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
     <PackageVersion Include="Polly" Version="8.7.0" />
     <!-- ====================================== -->
   </ItemGroup>

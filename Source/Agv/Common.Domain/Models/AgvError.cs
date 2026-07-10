@@ -206,6 +206,18 @@ public record AgvError : CorrelatedBy<Guid>
     }
 
     /// <summary>
+    /// True, if the error is an order mismatch error.
+    /// </summary>
+    public bool IsOrderMismatchError()
+    {
+        var orderMismatchError = new OrderMismatchError(CorrelationId, ErrorReceived);
+        return ErrorType == orderMismatchError.ErrorType &&
+               ErrorCategory == orderMismatchError.ErrorCategory &&
+               ErrorFlag == orderMismatchError.ErrorFlag &&
+               ErrorLevel == orderMismatchError.ErrorLevel;
+    }
+
+    /// <summary>
     /// True, if the error is a resource blocking error.
     /// </summary>
     public bool IsResourceError()

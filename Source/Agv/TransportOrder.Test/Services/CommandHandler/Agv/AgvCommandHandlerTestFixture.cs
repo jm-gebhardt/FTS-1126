@@ -227,6 +227,12 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         return this;
     }
 
+    public AgvCommandHandlerTestFixture WithStartedActionGroupForAgv(ActionGroup? actionGroup)
+    {
+        _actionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        return this;
+    }
+
     public AgvCommandHandlerTestFixture WithSetCargoReturnValue(Guid agvCorrelationId, IReadOnlyCollection<Cargo> cargos, bool returnValue)
     {
         AgvDb.Setup(x => x.Cargos.SetCargoAsync(agvCorrelationId, cargos)).ReturnsAsync(returnValue);
