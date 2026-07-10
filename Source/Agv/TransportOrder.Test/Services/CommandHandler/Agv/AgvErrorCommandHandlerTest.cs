@@ -71,8 +71,24 @@ public class AgvErrorCommandHandlerTest
         errorChanged.NewErrors.Count.ShouldBe(1);
         errorChanged.ResolvedErrors.Count.ShouldBe(0);
         errorChanged.Errors.ShouldContain(e => e.CorrelationId == errorStatus.Errors.Last().CorrelationId);
-        fixture.AgvDbMock.Verify(x => x.Errors.AddAndUpdateAgvErrorAsync(It.Is<List<AgvError>>(l => l.Count == 0), It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), Times.Once);
+        fixture.AgvDbMock.Verify(x => x.Errors.AddAndUpdateAgvErrorAsync(It.IsAny<List<AgvError>>(), It.IsAny<List<AgvError>>(), It.IsAny<Guid>()), Times.Never);
         await fixture.ShouldNotHavePublishedAsync<AgvErrorReceived>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateSystemAgvErrors_OnlyWifiMessageWithResolvedError_AddAndUpdateAgvErrorCalled()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        List<AgvError> existingErrors = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId).Errors;
+        var wifiErrorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorType: "WIFI", errorLevel: ErrorLevel.Information);
+        var fixture = new AgvErrorCommandHandlerTestFixture()
+            .WithActiveAgvErrors(existingErrors)
+            .WithAgv(agv)
+            .WithActionGroups([]);
+
+        await fixture.PublishMessageAsync(new UpdateSystemAgvErrors(Guid.NewGuid(), wifiErrorStatus.Errors, [existingErrors[0]], new AgvPosition(true, 1, 1, 1, 0)));
+
+        fixture.AgvDbMock.Verify(x => x.Errors.AddAndUpdateAgvErrorAsync(It.Is<List<AgvError>>(l => l.Count == 0), It.Is<List<AgvError>>(l => l.Count == 1), It.IsAny<Guid>()), Times.Once);
     }
 
     [TestMethod]
