@@ -75,6 +75,7 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
+    - template: ../.azuredevops/templates/free-disk-space.steps.yaml
     - task: UseDotNet@2
       displayName: 'Install .NET 10 SDK'
       inputs:
@@ -88,6 +89,8 @@ stages:
         projects: '$(SourceDirectory)/$(Build.Target)'
         feedsToUse: 'config'
         nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
+    - script: df -h
+      displayName: 'Disk usage before tests'
     - task: DotNetCoreCLI@2
       displayName: 'Run All tests'
       inputs:
@@ -95,6 +98,9 @@ stages:
         projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
         publishTestResults: true
         arguments: '--configuration $(Build.Configuration) --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+    - script: df -h
+      condition: always()
+      displayName: 'Disk usage after tests'
     - task: CopyFiles@2
       displayName: 'Copy coverage report'
       inputs:
