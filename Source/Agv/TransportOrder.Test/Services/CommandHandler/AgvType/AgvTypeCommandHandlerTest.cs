@@ -29,7 +29,7 @@ public class AgvTypeCommandHandlerTest
 
         await fixture.PublishMessageAsync(new AddOrUpdateAgvType(
             agvTypeIdentifier.ToGuid(),
-            AgvTypeGenerator.GenerateAgvTypeInfo()));
+            AgvTypeGenerator.GenerateAgvTypeInfo(agvTypeIdentifier)));
 
         fixture.VerifyAgvTypeUpserted(Times.Once());
         fixture.VerifySystemLogged(Times.Never());
