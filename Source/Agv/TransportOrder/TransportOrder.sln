@@ -28,6 +28,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Domain", "..\Common.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Messages", "..\Common.Messages\Common.Messages.csproj", "{075FEE36-7478-4212-BF64-891230081618}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Persistence.Ef", "..\Common.Persistence.Ef\Common.Persistence.Ef.csproj", "{35C546E6-F6DC-4598-9EEB-28858E113ECC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Testing", "..\Common.Testing\Common.Testing.csproj", "{A33B5238-CF2A-4F13-A834-3988B09ECD45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +94,13 @@ Global
 		{075FEE36-7478-4212-BF64-891230081618}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{075FEE36-7478-4212-BF64-891230081618}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{075FEE36-7478-4212-BF64-891230081618}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35C546E6-F6DC-4598-9EEB-28858E113ECC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35C546E6-F6DC-4598-9EEB-28858E113ECC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35C546E6-F6DC-4598-9EEB-28858E113ECC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35C546E6-F6DC-4598-9EEB-28858E113ECC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
