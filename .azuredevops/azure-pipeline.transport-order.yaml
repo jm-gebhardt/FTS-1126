@@ -44,7 +44,7 @@ stages:
     buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder/TransportOrder.sln'
     publishNuget: false
     publishDocker: true
-    dockerImageName: 'fleet-management/TransportOrder'
+    dockerImageName: 'fleet-management/transport-order'
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
     testTarget: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder.Test/**/*.csproj'
