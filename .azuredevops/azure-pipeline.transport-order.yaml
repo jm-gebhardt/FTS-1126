@@ -29,7 +29,7 @@ resources:
   - repository: templates
     type: git
     name: Architecture/Gebhardt.Platform.CI
-    ref: preview
+    ref: main
 # Approved OpenAPI baselines. Alias must match the template's 'platformContractsResourceAlias'
 # (default 'platform-contracts'). The repo lives in the 'StoreWare Platform' project, matching
 # the template's 'platformContractsProject' default used for PR creation.
@@ -44,7 +44,7 @@ stages:
     buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder/TransportOrder.sln'
     publishNuget: false
     publishDocker: true
-    dockerImageName: 'fleet-management/transport-order'
+    dockerImageName: 'gebhardt/fleet-manager/transport-order'
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
     testTarget: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder.Test/**/*.csproj'
