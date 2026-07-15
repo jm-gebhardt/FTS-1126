@@ -1,8 +1,11 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
 /// 
 /// </summary>
+[UsedImplicitly]
 public class Trajectory
 {
     // handels NURBS

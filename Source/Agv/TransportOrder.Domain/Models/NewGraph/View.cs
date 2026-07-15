@@ -21,15 +21,18 @@ public class View
     /// <summary>
     /// 
     /// </summary>
+    [UsedImplicitly]
     public IReadOnlyCollection<Node> Nodes { get; } = [];
 
     /// <summary>
     /// 
     /// </summary>
+    [UsedImplicitly]
     public IReadOnlyCollection<Edge> Edges { get; } = [];
 
     /// <summary>
     /// 
     /// </summary>
+    [UsedImplicitly]
     public IReadOnlyCollection<Station> Stations { get; } = [];
 }

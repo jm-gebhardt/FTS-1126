@@ -32,6 +32,7 @@ public abstract class RoutingResource
     /// <summary>
     /// Collection of routing resources that cannot be used simultaneously with this resource.
     /// </summary>
+    [UsedImplicitly]
     public IReadOnlyCollection<RoutingResource> ConflictingResources => _conflictingResources;
 
     /// <inheritdoc cref="RoutingResource"/> 
@@ -45,6 +46,7 @@ public abstract class RoutingResource
     /// <summary>
     /// Adds a routing resource to the collection of conflicting resources.
     /// </summary>
+    [UsedImplicitly]
     public void AddConflictingResource(RoutingResource resource)
     {
         _conflictingResources.Add(resource);

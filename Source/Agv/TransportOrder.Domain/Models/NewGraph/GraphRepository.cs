@@ -15,12 +15,14 @@ public class GraphRepository
     /// <param name="nodeId"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
+    [UsedImplicitly]
     public Node GetNodeById(Guid nodeId)
     {
         throw new InvalidOperationException();
     }
 
     ///
+    [UsedImplicitly]
     public Node GetNodeByName(string nodeName)
     {
         throw new InvalidOperationException();
@@ -31,6 +33,7 @@ public class GraphRepository
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
+    [UsedImplicitly]
     public Station[] GetChargingStations()
     {
         throw new InvalidOperationException();
@@ -41,6 +44,7 @@ public class GraphRepository
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
+    [UsedImplicitly]
     public string[] GetLevelIds()
     {
         throw new InvalidOperationException();
@@ -52,7 +56,8 @@ public class GraphRepository
     /// <param name="levelId"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public (Node[] Nodes, Edge[] Edges, Station[] Stations) GetLevel(string levelId)
+    [UsedImplicitly]
+    public (Node[] Nodes, Edge[] Edges, Station[] Stations) GetLevel([UsedImplicitly]string levelId)
     {
         throw new InvalidOperationException();
     }

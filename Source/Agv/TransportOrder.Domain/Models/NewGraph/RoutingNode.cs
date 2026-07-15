@@ -25,11 +25,13 @@ public class RoutingNode : RoutingResource
     /// <summary>
     /// Collection of incoming edges to this routing node.
     /// </summary>
+    [UsedImplicitly]
     public IReadOnlyCollection<RoutingEdge> IncomingEdges => _incomingEdges;
 
     /// <summary>
     /// Collection of outgoing edges from this routing node.
     /// </summary>
+    [UsedImplicitly]
     public IReadOnlyCollection<RoutingEdge> OutgoingEdges => _outgoingEdges;
 
     /// <inheritdoc cref="RoutingNode"/>
@@ -39,11 +41,13 @@ public class RoutingNode : RoutingResource
         Theta = theta;
     }
 
+    [UsedImplicitly]
     internal void AddIncomingEdge(RoutingEdge routingEdge)
     {
         _incomingEdges.Add(routingEdge);
     }
 
+    [UsedImplicitly]
     internal void AddOutgoingEdge(RoutingEdge routingEdge)
     {
         _outgoingEdges.Add(routingEdge);    
