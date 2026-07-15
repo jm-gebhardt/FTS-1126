@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
 /// A node in the routing graph. Each routing node has an associated AGV type, a load state, and a theta value.
@@ -11,11 +13,13 @@ public class RoutingNode : RoutingResource
     /// <summary>
     /// The load state of the routing node.
     /// </summary>
+    [UsedImplicitly]
     public LoadState LoadState { get; }
 
     /// <summary>
     /// The theta value of the routing node, which may represent the orientation of the AGV.
     /// </summary>
+    [UsedImplicitly]
     public double Theta { get; }
 
     /// <summary>

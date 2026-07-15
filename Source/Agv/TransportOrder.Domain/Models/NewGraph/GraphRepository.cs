@@ -1,29 +1,57 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using JetBrains.Annotations;
 
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+
+/// <summary>
+/// 
+/// </summary>
+[UsedImplicitly]
 public class GraphRepository
 {
     // methods to create, update, remove and query the graph resources. for example:
-
-    public Node? GetNodeById(Guid nodeId)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="nodeId"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public Node GetNodeById(Guid nodeId)
     {
         throw new InvalidOperationException();
     }
 
-    public Node? GetNodeByName(string nodeName)
+    ///
+    public Node GetNodeByName(string nodeName)
     {
         throw new InvalidOperationException();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public Station[] GetChargingStations()
     {
         throw new InvalidOperationException();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public string[] GetLevelIds()
     {
         throw new InvalidOperationException();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="levelId"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public (Node[] Nodes, Edge[] Edges, Station[] Stations) GetLevel(string levelId)
     {
         throw new InvalidOperationException();

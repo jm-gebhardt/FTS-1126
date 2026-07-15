@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
 /// Represents a resource in the routing graph. Each resource has a unique identifier, an associated AGV type, and a reference to its parent graph resource. 
@@ -10,6 +12,7 @@ public abstract class RoutingResource
     /// <summary>
     /// Unique identifier of the routing resource.
     /// </summary>
+    [UsedImplicitly]
     public Guid Id { get; }
 
     //public Guid ParentId { get; } needed for DB?
@@ -17,11 +20,13 @@ public abstract class RoutingResource
     /// <summary>
     /// Reference to the parent graph resource that this routing resource belongs to.
     /// </summary>
+    [UsedImplicitly]
     public GraphResource Parent { get; }
 
     /// <summary>
     /// AgvType associated with this routing resource.
     /// </summary>
+    [UsedImplicitly]
     public AgvType AgvType { get; }
 
     /// <summary>

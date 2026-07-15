@@ -1,5 +1,8 @@
 ﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
+/// <summary>
+/// 
+/// </summary>
 public class Trajectory
 {
     // handels NURBS
