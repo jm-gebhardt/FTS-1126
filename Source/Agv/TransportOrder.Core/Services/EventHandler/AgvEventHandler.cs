@@ -52,7 +52,10 @@ public class AgvEventHandler :
     IConsumer<SwitchChargingAgvsFailed>,
     IConsumer<AgvSetToPushOrJoystickMode>,
     IConsumer<AgvRemovedFromZones>,
-    IConsumer<VehicleActionStatusChanged>
+    IConsumer<VehicleActionStatusChanged>,
+    IConsumer<NewAgvDiscovered>,
+    IConsumer<AgvVehicleTypeChanged>,
+    IConsumer<InvalidAgvConfigurationReceived>
 {
     private readonly ILogger<AgvEventHandler> _logger;
     private readonly IActionGroupRepository _actionGroupRepository;
@@ -538,5 +541,23 @@ public class AgvEventHandler :
                 {LogLabels.ActionType, actionType},
                 {LogLabels.ActionStatus, actionStatus}
             });
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<NewAgvDiscovered> context)
+    {
+        await context.Publish(new CreateAgv(context.Message.CorrelationId, context.Message.SerialNumber, context.Message.AgvTypeId, context.Message.HasValidConfiguration));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<AgvVehicleTypeChanged> context)
+    {
+        await context.Publish(new UpdateAgvType(context.Message.CorrelationId, context.Message.SerialNumber, context.Message.NewTypeId, context.Message.NewVehicleType, context.Message.HasValidConfiguration, context.Message.NeedsConfirmation));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<InvalidAgvConfigurationReceived> context)
+    {
+        await context.Publish(new InvalidateAgv(context.Message.CorrelationId, context.Message.SerialNumber));
     }
 }

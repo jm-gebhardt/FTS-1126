@@ -19,6 +19,15 @@ public class EfAgvTypeRepository(IDbContextFactory<DeviceCommunicationVda5050DbC
     }
 
     /// <inheritdoc/>
+    public async Task<AgvType?> GetAgvTypeAsync(string agvTypeIdentifier)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<AgvType>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(a => a.AgvTypeIdentifier == agvTypeIdentifier);
+    }
+
+    /// <inheritdoc/>
     public async Task AddAsync(AgvType agvType)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();

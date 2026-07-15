@@ -52,7 +52,7 @@ public class ActionEventHandlerTest
         await fixture.PublishMessageAsync(new ActionCompletedByAgv(agv.CurrentOrder!.Value, agv.CorrelationId));
 
         var published = await fixture.GetFirstPublishedMessageAsync<ClearAgvCurrentOrder>();
-        published.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        published.CorrelationId.ShouldBe(agv.CorrelationId);
     }
 
     [TestMethod]
@@ -65,6 +65,6 @@ public class ActionEventHandlerTest
         await fixture.PublishMessageAsync(new ActionAbortedByAgv(agv.CurrentOrder!.Value, agv.CorrelationId));
 
         var published = await fixture.GetFirstPublishedMessageAsync<ClearAgvCurrentOrder>();
-        published.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        published.CorrelationId.ShouldBe(agv.CorrelationId);
     }
 }

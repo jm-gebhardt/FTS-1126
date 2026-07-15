@@ -92,7 +92,11 @@ public class AgvCommandHandler :
     IConsumer<RemoveAgvFromQueue>,
     IConsumer<RemoveAgvFromZones>,
     IConsumer<TryRemoveQueueBlocking>,
-    IConsumer<RefreshAgvInformation>
+    IConsumer<RefreshAgvInformation>,
+    IConsumer<CreateAgv>,
+    IConsumer<UpdateAgvType>,
+    IConsumer<InvalidateAgv>,
+    IConsumer<AcknowledgeAgvTypeChange>
 {
     private readonly ILogger<AgvCommandHandler> _logger;
     private readonly ISemaphoreProvider<IAgvsSemaphore> _agvsSemaphore;
@@ -155,7 +159,7 @@ public class AgvCommandHandler :
     {
         var (agvCorrelationId, initiator) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         if (agv.IsLocked)
         {
@@ -223,7 +227,7 @@ public class AgvCommandHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         if (agv.IsLocked)
         {
@@ -386,7 +390,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<AgvErrorChanged> context)
     {
         (var correlationId, List<AgvError> errors, _, _) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();
 
@@ -718,12 +722,12 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<SetAgvGraphExist> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
 
         agv.GraphExists = true;
-        if (!string.IsNullOrEmpty(context.Message.AgvTypeIdentifier))
+        if (!string.IsNullOrEmpty(context.Message.AgvTypeIdentifier) && agv.AgvTypeId == null)
         {
-            agv.AgvTypeId = AgvType.IdFromIdentifier(context.Message.AgvTypeIdentifier);
+           agv.UpdateType(AgvType.IdFromIdentifier(context.Message.AgvTypeIdentifier), false, true);
         }
 
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvGraphReceived, correlationId, null, "AGV Graph Received",
@@ -741,7 +745,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<GoOffline> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
 
         bool wasOnline = agv.IsOnline;
         agv.GoOffline();
@@ -887,7 +891,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<UpdateAgvData> context)
     {
         var (correlationId, agvData) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
         await _agvDb.Data.AddOrUpdateAsync(agvData);
         agv.DataExist = true;
         var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
@@ -905,7 +909,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateAgvSettingsGroupReference> context)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId, context.CancellationToken);
         var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
         agv.AgvSettingsGroup = settingsGroup.Id;
         await _agvDb.Agvs.UpdateAgvAsync(agv);
@@ -1005,7 +1009,7 @@ public class AgvCommandHandler :
     {
         (var agvCorrelationId, string? initiatingUser, MaintenanceReason? maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
         agv.PrepareMaintenanceMode(maintenanceReason, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv);
@@ -1211,7 +1215,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<HandleAgvActionStartFailure> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
         bool hasStartedAction = await _actionGroupRepository.HasStartedActionAsync(agv.CorrelationId);
         if (!hasStartedAction)
         {
@@ -1225,7 +1229,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<PrepareAgvForStartingAction> context)
     {
         var (action, agvCorrelationId) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         if (!agv.TryTransitionToBusy(false, ignoreError: true))
         {
@@ -1303,7 +1307,7 @@ public class AgvCommandHandler :
         if (hadCargo != hasCargo)
         {
             await context.Publish(new HasCargoChanged(agvCorrelationId, hasCargo));
-            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
             await context.Publish(new CheckAgvLoad(agvCorrelationId));
             string cargoState = hasCargo ? "loaded" : "unloaded";
             await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvCargoUpdated, agvCorrelationId, null, "Cargo Updated",
@@ -1422,7 +1426,7 @@ public class AgvCommandHandler :
         var agvCorrelationId = context.Message.CorrelationId;
         ICollection<AgvZone> zones = context.Message.AgvZones;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
         agv.ZonesExist = true;
         await _agvDb.Agvs.UpdateAgvAsync(agv);
 
@@ -1435,7 +1439,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<RemoveAgvFromAllZones> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         if (agv.IsOnline)
         {
@@ -1453,7 +1457,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<RemoveAgvFromZone> context)
     {
         (var agvCorrelationId, string zoneId, _) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         if (agv.IsOnline)
         {
@@ -1494,7 +1498,7 @@ public class AgvCommandHandler :
 
     private async Task TransitionToIdleAsync(IPublishEndpoint publishEndpoint, Guid agvCorrelationId, bool? isQueueing, CancellationToken cancellationToken)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
         if (isQueueing.HasValue)
         {
             agv.IsQueueing = isQueueing.Value;
@@ -1505,7 +1509,7 @@ public class AgvCommandHandler :
     private async Task TransitionToIdleAsync(IPublishEndpoint publishEndpoint, Agv agv, CancellationToken cancellationToken)
     {
         bool stateChanged = agv.TransitionToIdle();
-        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv, cancellationToken))
         {
             _logger.LogDebug("Could not update agv {AgvCorrelationId}", agv.CorrelationId);
             return;
@@ -1773,7 +1777,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<LeaveQueue> context)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId, context.CancellationToken);
         agv.IsQueueing = false;
         await _agvDb.Agvs.UpdateAgvAsync(agv);
     }
@@ -1791,7 +1795,7 @@ public class AgvCommandHandler :
             _logger.LogWarning("Agv {AgvCorrelationId} can not start automatic actions in mode {AgvMode} or is offline {IsAgvOffline}, not switching with charging agv {ChargingAgvCorrelationId}", nonChargingAgv.CorrelationId, nonChargingAgv.Mode, !nonChargingAgv.IsOnline, chargingAgvId);
             return;
         }
-        var chargingAgv = await _agvDb.Agvs.GetAgvAsync(chargingAgvId);
+        var chargingAgv = await _agvDb.Agvs.GetAgvAsync(chargingAgvId, context.CancellationToken);
 
         _logger.LogInformation("Try switching charging agv {AgvCorrelationId} with non-charging agv {NonChargingAgvCorrelationId}", chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
 
@@ -2003,7 +2007,7 @@ public class AgvCommandHandler :
         var message = context.Message;
         var agvCorrelationId = message.CorrelationId;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         bool removed = false;
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
@@ -2059,7 +2063,7 @@ public class AgvCommandHandler :
     {
         (var agvCorrelationId, ICollection<string> removedZones) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
         if (agv.AgvStatus?.ZoneIds?.Count > 0)
         {
             _logger.LogInformation("Remove zones {Zones} from status of agv {AgvCorrelationId}", string.Join(",", removedZones), agvCorrelationId);
@@ -2090,7 +2094,7 @@ public class AgvCommandHandler :
     {
         var (agvCorrelationId, refreshType) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         switch (refreshType)
         {
@@ -2114,5 +2118,82 @@ public class AgvCommandHandler :
         {
             _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
         }
+    }
+
+    /// <inheritdoc cref="AgvCommandHandler"/>
+    public async Task Consume(ConsumeContext<CreateAgv> context)
+    {
+        (var correlationId, string agvSerialNumber, Guid? agvTypeId, bool hasValidConfiguration) = context.Message;
+        var agv = await _agvDb.Agvs.TryGetAgvAsync(correlationId);
+        bool isNewAgv = agv == null;
+        if (isNewAgv)
+        {
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvDiscovered, correlationId, null, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered",
+                new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
+            await _notificationSender.SendAgvNotification(
+                "Agv discovered",
+                "Agv {agv} was discovered.",
+                new Dictionary<string, string> { { "agv", agvSerialNumber } },
+                [new NotificationLink("Agv", NotificationLinkResource.Agv, correlationId)]
+            );
+            agv = new Agv(correlationId, agvSerialNumber, hasValidConfiguration);
+            var settingsGroup =  await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
+            agv.AgvSettingsGroup = settingsGroup.Id;
+        }
+
+        agv!.UpdateType(agvTypeId, false, hasValidConfiguration);
+        if (!hasValidConfiguration)
+        {
+            await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvTypeUpdated, correlationId, null, "AGV configuration invalid", $"AGV {agvSerialNumber} received invalid configuration",
+                new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
+        }
+        await _agvDb.Agvs.AddAgvAsync(agv);
+
+        var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
+        if (isNewAgv)
+        {
+            await context.Publish(new AgvDiscovered(agvMessageContent));
+        }
+    }
+
+    /// <inheritdoc cref="AgvCommandHandler"/>
+    public async Task Consume(ConsumeContext<UpdateAgvType> context)
+    {
+        (var correlationId, string agvSerialNumber, var newAgvTypeId, string newAgvType, bool hasValidConfiguration, bool needsConfirmation) = context.Message;
+        
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
+
+        agv.UpdateType(newAgvTypeId, needsConfirmation, hasValidConfiguration);
+
+        await _agvDb.Agvs.UpdateAgvAsync(agv, context.CancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvTypeUpdated, correlationId, null, "AGV type updated", $"New type {newAgvType} for AGV {agvSerialNumber} set, needs confirmation {needsConfirmation} ",
+            new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber }, {LogLabels.AgvTypeIdentifier, newAgvType}, {LogLabels.NeedsConfirmation, needsConfirmation} });
+
+        if (!hasValidConfiguration)
+        {
+            await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvConfigurationInvalid, correlationId, null, "AGV configuration invalid", $"AGV {agvSerialNumber} received invalid configuration",
+                new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
+        }
+    }
+
+    /// <inheritdoc cref="AgvCommandHandler"/>
+    public async Task Consume(ConsumeContext<InvalidateAgv> context)
+    {
+        (var correlationId, string agvSerialNumber) = context.Message;
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
+        agv.Invalidate();
+        await _agvDb.Agvs.UpdateAgvAsync(agv, context.CancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvConfigurationInvalid, correlationId, null, "AGV configuration invalid", $"AGV {agvSerialNumber} received invalid configuration",
+            new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
+    }
+
+    /// <inheritdoc cref="AgvCommandHandler"/>
+    public async Task Consume(ConsumeContext<AcknowledgeAgvTypeChange> context)
+    {
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId, context.CancellationToken);
+        agv.AcknowledgeTypeChange();
+        await _agvDb.Agvs.UpdateAgvAsync(agv, context.CancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvTypeChangeAcknowledged, agv.CorrelationId, null, "AGV type change acknowledged", $"AGV {agv.SerialNumber} type change acknowledged",
+            new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
     }
 }

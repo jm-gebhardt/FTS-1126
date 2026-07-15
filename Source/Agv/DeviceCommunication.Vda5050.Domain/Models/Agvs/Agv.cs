@@ -50,6 +50,11 @@ public class Agv
     /// </summary>
     public string? ProtocolMajorVersion { get; set; }
 
+    /// <summary>
+    /// True, if the agv has been published to the fleetmanager.
+    /// </summary>
+    public bool PublishedToFleetManager { get; set; }
+
     /// <inheritdoc cref="Agv"/>
     public Agv(Guid correlationId, string manufacturer, string seriesName, string serialNumber)
     {

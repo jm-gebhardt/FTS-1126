@@ -135,7 +135,7 @@ public class ActionCommandHandler :
         var (action, agvCorrelationId) = context.Message;
         var cancellationToken = context.CancellationToken;
 
-        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.CorrelationId);
         bool agvActionCanBeStarted = await _actionCommandHelper.CheckAgvActionCanBeStarted(context, action, assignedAgv, actionGroup);
         if (agvActionCanBeStarted)
@@ -210,7 +210,7 @@ public class ActionCommandHandler :
         var actionGroupId = context.Message.ActionGroupId;
 
         Task<Domain.Models.ActionGroup.ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
-        Task<Agv> agvTask = _agvDb.Agvs.GetAgvAsync(agvId);
+        Task<Agv> agvTask = _agvDb.Agvs.GetAgvAsync(agvId, context.CancellationToken);
         Task<AgvData?> agvDataTask = _agvDb.Data.GetAgvDataAsync(agvId);
         var actionGroup = await actionGroupTask;
 
@@ -252,7 +252,7 @@ public class ActionCommandHandler :
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
 
         if (!await _actionGroupRepository.HasNotStartedActionsAsync(agvCorrelationId))
         {
@@ -329,7 +329,7 @@ public class ActionCommandHandler :
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
 
         if (agv.IsLocked)
         {
@@ -435,7 +435,7 @@ public class ActionCommandHandler :
             await context.Publish(new FreeNode(parkNode.Id, true), cancellationToken);
             return;
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
 
         var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
             groupCorrelationId,
@@ -478,7 +478,7 @@ public class ActionCommandHandler :
     {
         var (groupCorrelationId, agvCorrelationId, queueNode) = context.Message;
         var cancellationToken = context.CancellationToken;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
 
         var actionGroup = new Domain.Models.ActionGroup.ActionGroup(
             groupCorrelationId,
@@ -526,7 +526,7 @@ public class ActionCommandHandler :
 
         bool triggeredByWebApi = initiator == ActionGroupCreator.TransportOrderWebApi;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
 
         bool agvModeProhibitsCreation = agv.IsLocked || ((!agv.CanStartAutomaticAction || agv.HasPendingModeSwitch) && !triggeredByWebApi);
 
@@ -699,7 +699,7 @@ public class ActionCommandHandler :
 
         if (actionGroupMessageContent.AssignedAgv != null && actionGroup.IsQueued)
         {
-            var agv = await _agvDb.Agvs.GetAgvAsync(actionGroupMessageContent.AssignedAgv.Value);
+            var agv = await _agvDb.Agvs.GetAgvAsync(actionGroupMessageContent.AssignedAgv.Value, cancellationToken);
             await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderAgvAssigned, actionGroupMessageContent.AssignedAgv.Value,
                 actionGroup.CorrelationId, "AGV Assigned",
                 $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
@@ -741,7 +741,7 @@ public class ActionCommandHandler :
 
         if (actionGroupMessageContent.AssignedAgv != null)
         {
-            var agv = await _agvDb.Agvs.GetAgvAsync(actionGroupMessageContent.AssignedAgv.Value);
+            var agv = await _agvDb.Agvs.GetAgvAsync(actionGroupMessageContent.AssignedAgv.Value, cancellationToken);
             await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderAgvAssigned, actionGroupMessageContent.AssignedAgv.Value,
                 actionGroup.CorrelationId, "AGV Assigned",
                 $"Order {actionGroup.OrderId} was assigned to {agv.SerialNumber}",
@@ -760,7 +760,7 @@ public class ActionCommandHandler :
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(correlationId);
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == correlationId);
         if (action.ActionType is ActionType.Pick or ActionType.Drop && context.Message.Creator == ActionGroupCreator.TransportOrder)
         {
@@ -868,7 +868,7 @@ public class ActionCommandHandler :
             await context.RespondAsync(new AbortActionGroupFailed("Action group abortion failed, all actions completed."));
             return;
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!);
+        var agv = await _agvDb.Agvs.GetAgvAsync((Guid) actionGroup.AssignedAgv!, context.CancellationToken);
         actionGroup = await _actionGroupRepository.UpdateActionAndGroupStateAsync(action, agv, ActionState.Aborted, abortReason.ToReason(), _timeProvider.GetUtcNow());
 
         if (actionGroup is { IsQueueingOrder: true, OrderId: QueuingOrderId } && agv.IsQueueing)
@@ -1025,7 +1025,7 @@ public class ActionCommandHandler :
             _logger.LogWarning("Can not pause action group {ActionGroupId} because it is in state {ActionGroupState}", actionGroupId, actionGroup.State);
             return;
         }
-        var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.GetValueOrDefault());
+        var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.GetValueOrDefault(), context.CancellationToken);
         var activeAction = actionGroup.FirstNotCompletedAction;
         ActionState? actionState = activeAction?.State;
         actionGroup.PauseActionGroup(pauseReason.ToReason(), _timeProvider.GetUtcNow());
@@ -1127,7 +1127,7 @@ public class ActionCommandHandler :
 
         if (shouldUpdateAction)
         {
-            agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value);
+            agv = await _agvDb.Agvs.GetAgvAsync(assignedAgv!.Value, cancellationToken);
             var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.Value);
             route = await _routeService.GetRouteAsync(agv, targetNodeId, null, agvData, cancellationToken);
             // Nodes will be overwritten, check before update if the start of the action was a station
@@ -1209,7 +1209,7 @@ public class ActionCommandHandler :
             await context.Publish(new CancelActionGroup(actionGroupId, CancelReason.External));
             return;
         }
-        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
+        var assignedAgv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value, context.CancellationToken);
         //if action group was queueing order, set AGV free of queuing
         if (actionGroup.OrderId.Equals(QueuingOrderId))
         {
@@ -1471,7 +1471,7 @@ public class ActionCommandHandler :
                 actionGroup.Priority = Priority.Resume;
             }
 
-            var agvToAssign = context.Message.AssignedAgv != null ? await _agvDb.Agvs.GetAgvAsync(context.Message.AssignedAgv.Value) : null;
+            var agvToAssign = context.Message.AssignedAgv != null ? await _agvDb.Agvs.GetAgvAsync(context.Message.AssignedAgv.Value, context.CancellationToken) : null;
             if (agvToAssign == null)
             {
                 ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();

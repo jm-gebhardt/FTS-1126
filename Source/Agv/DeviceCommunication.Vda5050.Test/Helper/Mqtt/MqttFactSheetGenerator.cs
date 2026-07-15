@@ -10,16 +10,14 @@ public static class MqttFactSheetGenerator
     /// <summary>
     /// Generate fact sheet for agv.
     /// </summary>
-    /// <param name="serialNumber">Serial number of the agv.</param>
-    /// <param name="actions">Optional actions the agv can run.</param>
-    public static MqttFactsheet Generate(string serialNumber = "agv01", ICollection<MqttAgvAction>? actions = null)
+    public static MqttFactsheet Generate(string serialNumber = "agv01", ICollection<MqttAgvAction>? actions = null, string seriesName = "series", float width =1)
     {
         return new MqttFactsheet
         {
             SerialNumber = serialNumber,
-            TypeSpecification = new MqttTypeSpecification { SeriesName = "series", AgvClass = MqttAgvClass.Carrier, MaxLoadMass = 100 },
-            VehicleConfig = new MqttVehicleConfig { Network = new MqttNetworkConfig { LocalIpAddress = "127.0.0.1" }, Versions = [new MqttVehicleVersion() { Key = "softwareVersion", Value = "1.0.0" }] },
-            PhysicalParameters = new MqttPhysicalParameters { AccelerationMax = 1.0, SpeedMax = 1.5, Width = 1.0, Length = 1.0 },
+            TypeSpecification = new MqttTypeSpecification { SeriesName = seriesName, AgvClass = MqttAgvClass.Carrier, MaxLoadMass = 100 },
+            VehicleConfig = new MqttVehicleConfig { Network = new MqttNetworkConfig { LocalIpAddress = "127.0.0.1" }, Versions = [new MqttVehicleVersion { Key = "softwareVersion", Value = "1.0.0" }] },
+            PhysicalParameters = new MqttPhysicalParameters { AccelerationMax = 1.0, SpeedMax = 1.5, Width = width, Length = 1.0 },
             ProtocolFeatures = new MqttProtocolFeatures { AgvActions = actions ?? [] }
         };
     }

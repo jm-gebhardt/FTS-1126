@@ -1,4 +1,5 @@
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Agv;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Graph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using JetBrains.Annotations;
@@ -13,7 +14,10 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.EventHandler;
 [UsedImplicitly]
 public class AgvEventHandler(
     IAgvRepository agvRepository,
-    ILogger<AgvEventHandler> logger) : IConsumer<AgvAddedOrUpdated>
+    ILogger<AgvEventHandler> logger) : 
+    IConsumer<AgvAddedOrUpdated>,
+    IConsumer<AgvDiscovered>,
+    IConsumer<AgvTypeChanged>
 {
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AgvAddedOrUpdated> context)
@@ -27,5 +31,17 @@ public class AgvEventHandler(
             serialNumber, agvCorrelationId, agv.VehicleTypeId);
 
         await context.Publish(new PublishAgvGraph(agv.CorrelationId, agv.SerialNumber, agv.VehicleTypeId));
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AgvDiscovered> context)
+    {
+        await context.Publish(new AddAgv(context.Message.CorrelationId, context.Message.Agv, context.Message.AgvTypeId, context.Message.HasValidConfiguration));
+    }
+
+    /// <inheritdoc />
+    public async Task Consume(ConsumeContext<AgvTypeChanged> context)
+    {
+        await context.Publish(new UpdateAgvType(context.Message.CorrelationId, context.Message.NewTypeId, context.Message.Agv, context.Message.HasValidConfiguration, context.Message.NeedsConfirmation));
     }
 }

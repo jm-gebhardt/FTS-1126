@@ -20,6 +20,9 @@ public record AgvDto : DatedMessage
     /// <summary>The CorrelationId of the agv.</summary>
     public Guid CorrelationId { get; init; }
 
+    /// <summary>Id of agv type.</summary>
+    public Guid? AgvTypeId { get; init; }
+
     /// <summary>The serial number of the agv.</summary>
     public string SerialNumber { get; init; }
 
@@ -84,6 +87,11 @@ public record AgvDto : DatedMessage
     public float TotalLifetime { get; init; }
 
     /// <summary>
+    /// True, if the type change has been confirmed. Only applicable if it needs confirmation.
+    /// </summary>
+    public bool? TypeChangeConfirmed { get; init; }
+
+    /// <summary>
     /// The last maintenance of the agv.
     /// </summary>
     public MaintenanceDto? LastMaintenance { get; init; }
@@ -109,6 +117,8 @@ public record AgvDto : DatedMessage
     /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
     /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
     /// <param name="lastMaintenance">Last maintenance information.</param>
+    /// <param name="agvTypeId">The id of the agv type.</param>
+    /// <param name="typeChangeConfirmed">The type change confirmation state.</param>
     [PublicAPI]
     public AgvDto(Guid correlationId,
         string serialNumber,
@@ -130,7 +140,9 @@ public record AgvDto : DatedMessage
         List<string> stations,
         float totalDistance,
         float totalLifetime,
-        MaintenanceDto? lastMaintenance)
+        MaintenanceDto? lastMaintenance,
+        Guid? agvTypeId = null,
+        bool? typeChangeConfirmed = null)
     {
         CorrelationId = correlationId;
         SerialNumber = serialNumber;
@@ -153,6 +165,8 @@ public record AgvDto : DatedMessage
         TotalDistance = totalDistance;
         TotalLifetime = totalLifetime;
         LastMaintenance = lastMaintenance;
+        AgvTypeId = agvTypeId;
+        TypeChangeConfirmed = typeChangeConfirmed;
     }
 
     /// <summary>

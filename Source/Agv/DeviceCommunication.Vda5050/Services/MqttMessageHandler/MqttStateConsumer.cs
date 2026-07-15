@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
@@ -38,15 +39,22 @@ public class MqttStateConsumer : IConsumer<MqttState>
     {
         _stateParser.Parse(context.Message);
         _logger.LogDebug("Received {MessageType} from {AgvId}", nameof(MqttState), _stateParser.SerialNumber);
-
         await SendAgvStatusAsync(context);
         await SendAgvPositionAsync(context);
         await SendAgvErrorStatusAsync(context);
         await SendAgvLoadStatusAsync(context);
-        await SendOrderStatusAsync(context);
+        var agv = await _agvRepository.GetRequiredAgvAsync(_stateParser.CorrelationId);
+        await SendOrderStatusAsync(context, agv);
         if (!await _factSheetRequestCache.HasAgvRequestedFactSheet(_stateParser.CorrelationId))
         {
+            // First state message
             await context.Publish(new RequestAgvData(_stateParser.CorrelationId, _stateParser.SerialNumber));
+            string? routingKey = context.RoutingKey();
+            if (routingKey != null && agv.InterfaceName == null)
+            {
+                agv.SetCommunicationSpecification(routingKey);
+            }
+            await context.Publish(new AgvDiscovered(agv.CorrelationId, agv, null));
         }
     }
 
@@ -86,7 +94,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
         await context.Publish(new AgvLoadStatusReceived(_stateParser.CorrelationId, _stateParser.Cargos));
     }
 
-    private async Task SendOrderStatusAsync(ConsumeContext<MqttState> context)
+    private async Task SendOrderStatusAsync(ConsumeContext<MqttState> context, Agv agv)
     {
         if (context.Message.OrderId == string.Empty)
         {
@@ -94,7 +102,6 @@ public class MqttStateConsumer : IConsumer<MqttState>
         }
         try
         {
-            var agv = await _agvRepository.GetRequiredAgvAsync(_stateParser.CorrelationId);
             if (agv.CurrentOrder == null)
             {
                 _logger.LogInformation("Not sending order state, agv {AgvCorrelationId} has no current order", _stateParser.CorrelationId);

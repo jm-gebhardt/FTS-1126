@@ -40,7 +40,7 @@ public interface IAgvRepository
     /// </summary>
     /// <returns>Agv object.</returns>
     /// <exception cref="AgvNotFoundException">If the agv with the given correlation id does not exist.</exception>
-    Task<Agv> GetAgvAsync(Guid correlationId);
+    Task<Agv> GetAgvAsync(Guid correlationId, CancellationToken cancellationToken=default);
 
     /// <summary>
     /// Get an online AGV.
@@ -52,7 +52,7 @@ public interface IAgvRepository
     /// Get specific AGV
     /// </summary>
     /// <returns>Agv object or null.</returns>
-    Task<Agv?> TryGetAgvAsync(Guid correlationId);
+    Task<Agv?> TryGetAgvAsync(Guid correlationId, CancellationToken cancellationToken=default);
 
     /// <summary>
     /// Checks if the agv matching the correlation id exists.
@@ -98,7 +98,8 @@ public interface IAgvRepository
     /// Update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>
-    Task<bool> UpdateAgvAsync(Agv agv);
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task<bool> UpdateAgvAsync(Agv agv, CancellationToken cancellationToken=default);
 
     /// <summary>
     /// Add an agv.

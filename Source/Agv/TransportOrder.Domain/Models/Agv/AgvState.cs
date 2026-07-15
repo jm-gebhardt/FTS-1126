@@ -18,6 +18,11 @@ public enum AgvState
     Discovered,
 
     /// <summary>
+    /// Invalid configuration
+    /// </summary>
+    InvalidConfiguration,
+
+    /// <summary>
     /// Idle
     /// </summary>
     Idle,
@@ -44,8 +49,9 @@ public static class AgvStateExtensions
     {
         switch (newState)
         {
-            case AgvState.Discovered when oldState is AgvState.Initial:
-            case AgvState.Idle when oldState is AgvState.Discovered or AgvState.Busy or AgvState.Idle:
+            case AgvState.Discovered when oldState is AgvState.Initial or AgvState.InvalidConfiguration:
+            case AgvState.Idle when oldState is AgvState.Discovered or AgvState.Busy or AgvState.Idle or AgvState.InvalidConfiguration:
+            case AgvState.InvalidConfiguration when oldState is AgvState.Discovered or AgvState.Idle or AgvState.Busy or AgvState.Initial or AgvState.InvalidConfiguration:
             case AgvState.Busy when oldState is AgvState.Idle:
                 break;
 

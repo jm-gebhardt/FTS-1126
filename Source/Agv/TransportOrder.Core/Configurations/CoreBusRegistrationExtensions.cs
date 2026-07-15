@@ -142,6 +142,7 @@ public static class CoreBusRegistrationExtensions
             partitioner.PartitionMessageById<RemoveAgvFromZones, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RemoveAgvFromQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<RefreshAgvInformation, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<AcknowledgeAgvTypeChange, AgvCommandHandler>(c);
 
             c.Message<UpdateAgvData>(x =>
             {
@@ -582,6 +583,8 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<TriggerAddingMaintenanceLog>();
         configurator.AddRequestClient<GetMaintenanceLogsForAgv>();
         configurator.AddRequestClient<GetMaintenanceLogsForAgvs>();
+
+        configurator.AddRequestClient<RequestAgvTypeChangeAcknowledgement>();
     }
 
     private static void RegisterMediatorRoutingRequestHandlers(IMediatorRegistrationConfigurator configurator)

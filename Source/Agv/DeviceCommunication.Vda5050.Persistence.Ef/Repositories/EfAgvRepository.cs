@@ -51,21 +51,21 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     }
 
     /// <inheritdoc cref="IAgvRepository"/>
-    public async Task AddOrUpdateAsync(Agv agv)
+    public async Task AddOrUpdateAsync(Agv agv, CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         DbSet<Agv> dbSet = context.Set<Agv>();
         if (agvCache.ConcurrentDict.ContainsKey(agv.CorrelationId))
         {
             agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
             dbSet.Update(agv);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
             return;
         }
         if (agvCache.ConcurrentDict.TryAdd(agv.CorrelationId, agv))
         {
             dbSet.Add(agv);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 

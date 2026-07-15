@@ -47,7 +47,8 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         new ActionProfile(),
         new RestrictedAreaProfile(),
         new PolygonPointProfile(),
-        new LogEntryProfile()
+        new LogEntryProfile(),
+        new AgvTypeProfile()
     ];
 
     public ConsumerHubTestFixture(params Action<IServiceCollection>[] services)

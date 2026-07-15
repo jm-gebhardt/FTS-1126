@@ -23,4 +23,11 @@ public interface IAgvTypeClient
     /// <param name="agvType">The created agv type.</param>
     [SignalRMethod(nameof(AgvTypeCreated))]
     Task AgvTypeCreated(AgvTypeDto agvType);
+
+    /// <summary>
+    /// Agv type has been updated.
+    /// </summary>
+    /// <param name="agvTypeUpdatedMessage">The agv type updated message.</param>
+    [SignalRMethod(nameof(AgvTypeUpdated))]
+    Task AgvTypeUpdated(AgvTypeUpdatedDto agvTypeUpdatedMessage);
 }

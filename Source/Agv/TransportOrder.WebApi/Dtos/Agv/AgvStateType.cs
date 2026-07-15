@@ -19,6 +19,11 @@ public enum AgvStateType
     Discovered,
 
     /// <summary>
+    /// Invalid configuration
+    /// </summary>
+    InvalidConfiguration,
+
+    /// <summary>
     /// Idle
     /// </summary>
     Idle,

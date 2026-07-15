@@ -61,7 +61,9 @@ public class AgvProfile : Profile
                     src.AgvStatus?.StationIds?.ToList() ?? [],
                     src.AgvStatus?.TotalDistance ?? 0,
                     src.AgvStatus?.TotalLifetime ?? 0,
-                    ctx.Mapper.Map<Maintenance>(lastMaintenance)
+                    ctx.Mapper.Map<Maintenance>(lastMaintenance),
+                    src.AgvTypeId,
+                    src.TypeChangeConfirmed
                 );
                 return agv;
             });

@@ -279,6 +279,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient = GetRequestClient<RemoveAgvFromStation>();
         IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient = GetRequestClient<TriggerAddingMaintenanceLog>();
         IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient = GetRequestClient<GetMaintenanceLogsForAgv>();
+        IRequestClient<RequestAgvTypeChangeAcknowledgement> acknowledgeAgvTypeChangeClient = GetRequestClient<RequestAgvTypeChangeAcknowledgement>();
 
         var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper, ActionGroupRepository.Object);
         var controller = new AgvController(new Mock<ILogger<AgvController>>().Object,
@@ -320,6 +321,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             removeAgvFromStationClient,
             addMaintenanceLogClient,
             getMaintenanceLogsClient,
+            acknowledgeAgvTypeChangeClient,
             loggingService
         )
         {

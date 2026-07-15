@@ -33,5 +33,6 @@ public static class LogLabels
     public const string OriginalActionType = "OriginalActionType";
     public const string BackgroundName = "BackgroundName";
     public const string AgvTypeIdentifier = "AgvTypeIdentifier";
+    public const string NeedsConfirmation = "NeedsConfirmation";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

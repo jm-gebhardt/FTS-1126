@@ -32,7 +32,8 @@ public interface IAgvRepository
     /// Add or update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>
-    Task AddOrUpdateAsync(Agv agv);
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task AddOrUpdateAsync(Agv agv, CancellationToken cancellationToken);
 
     /// <summary>
     /// Get agv by the id of the current order.

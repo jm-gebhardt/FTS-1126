@@ -85,6 +85,7 @@ public class AgvController : Controller
     private readonly IMapper _mapper;
     private readonly ILogger<AgvController> _logger;
     private readonly ILoggingService _loggingService;
+    private readonly IRequestClient<RequestAgvTypeChangeAcknowledgement> _acknowledgeAgvTypeChangeClient;
 
     /// <summary>
     /// Init controller
@@ -129,6 +130,7 @@ public class AgvController : Controller
         IRequestClient<RemoveAgvFromStation> removeAgvFromStationClient,
         IRequestClient<TriggerAddingMaintenanceLog> addMaintenanceLogClient,
         IRequestClient<GetMaintenanceLogsForAgv> getMaintenanceLogsClient,
+        IRequestClient<RequestAgvTypeChangeAcknowledgement> acknowledgeAgvTypeChangeClient,
         ILoggingService loggingService
     )
     {
@@ -171,6 +173,7 @@ public class AgvController : Controller
         _removeAgvFromStationClient = removeAgvFromStationClient;
         _addMaintenanceLogClient = addMaintenanceLogClient;
         _getMaintenanceLogsClient = getMaintenanceLogsClient;
+        _acknowledgeAgvTypeChangeClient = acknowledgeAgvTypeChangeClient;
         _loggingService = loggingService;
     }
 
@@ -930,5 +933,27 @@ public class AgvController : Controller
     {
         Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv(correlationId, maintenanceType));
         return Ok(_mapper.Map<List<AgvMaintenanceLogDto>>(response.Message.MaintenanceLogs));
+    }
+
+    /// <summary>
+    /// Acknowledge the agv type change.
+    /// </summary>
+    /// <param name="correlationId">The agv correlation id.</param>
+    /// <param name="cancellationToken">The cancellation token of the request.</param>
+    /// <response code="200">Ok</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Agv with given correlationId not found or current agv type not found.</response>
+    [HttpPatch]
+    [Route("/agv/{correlationId:guid}/acknowledgeTypeChange")]
+    public async Task<ActionResult> AcknowledgeTypeChange([FromRoute] Guid correlationId, CancellationToken cancellationToken)
+    {
+        string? email = User.GetEmail();
+        if (email == null)
+        {
+            return Unauthorized();
+        }
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, email }, { LogLabels.Operation, LogCodes.AgvTypeChangeAcknowledged } });
+        await _acknowledgeAgvTypeChangeClient.GetResponse<Success>(new RequestAgvTypeChangeAcknowledgement(correlationId), cancellationToken);
+        return Ok();
     }
 }

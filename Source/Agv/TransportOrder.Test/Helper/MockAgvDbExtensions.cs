@@ -41,7 +41,7 @@ public static class MockAgvDbExtensions
         {
             repoMock.Setup(s => s.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
 
-            repoMock.Setup(r => r.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+            repoMock.Setup(r => r.Agvs.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) =>
             {
                 try
                 {
@@ -52,7 +52,7 @@ public static class MockAgvDbExtensions
                     throw new AgvNotFoundException(c);
                 }
             });
-            repoMock.Setup(r => r.Agvs.TryGetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return agvs.FirstOrDefault(a => a.CorrelationId == c); });
+            repoMock.Setup(r => r.Agvs.TryGetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) => { return agvs.FirstOrDefault(a => a.CorrelationId == c); });
 
             repoMock.Setup(r => r.Agvs.Count).Returns(agvs.Count);
             repoMock.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));

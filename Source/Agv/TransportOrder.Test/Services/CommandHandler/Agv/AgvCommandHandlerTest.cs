@@ -2557,4 +2557,138 @@ public class AgvCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<RequestAgvGraph>();
         agv.AgvGraphRequestedLastTime.ShouldNotBeNull();
     }
+
+    [TestMethod]
+    public async Task Consume_CreateAgv_NewAgv_CreatesAgvAndPublishesAgvDiscovered()
+    {
+        var correlationId = Guid.NewGuid();
+        const string serialNumber = "agv1";
+        var agvTypeId = Guid.NewGuid();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithoutAgv();
+
+        await fixture.PublishMessageAsync(new CreateAgv(correlationId, serialNumber, agvTypeId));
+
+        fixture.AgvDb.Verify(r => r.Agvs.AddAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) =>
+            a.CorrelationId == correlationId && a.SerialNumber == serialNumber && a.AgvTypeId == agvTypeId)), Times.Once());
+
+        var discovered = await fixture.GetFirstPublishedMessageAsync<AgvDiscovered>();
+        discovered.Agv.CorrelationId.ShouldBe(correlationId);
+        discovered.Agv.SerialNumber.ShouldBe(serialNumber);
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateAgv_ExistingAgv_UpdatesTypeWithoutPublishingAgvDiscovered()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var newAgvTypeId = Guid.NewGuid();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new CreateAgv(agv.CorrelationId, agv.SerialNumber, newAgvTypeId));
+
+        agv.AgvTypeId.ShouldBe(newAgvTypeId);
+        fixture.AgvDb.Verify(r => r.Agvs.AddAgvAsync(agv), Times.Once());
+        await fixture.ShouldNotHavePublishedAsync<AgvDiscovered>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateAgv_InvalidConfiguration_MarksAgvInvalidConfiguration()
+    {
+        var correlationId = Guid.NewGuid();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .WithoutAgv();
+
+        await fixture.PublishMessageAsync(new CreateAgv(correlationId, "agv1", null, false));
+
+        fixture.AgvDb.Verify(r => r.Agvs.AddAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) =>
+            a.CorrelationId == correlationId && a.CurrentAgvState == AgvState.InvalidConfiguration)), Times.Once());
+        await fixture.ShouldHavePublishedAsync<AgvDiscovered>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvType_ValidConfiguration_UpdatesAgvType()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var newTypeId = Guid.NewGuid();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new UpdateAgvType(agv.CorrelationId, agv.SerialNumber, newTypeId, "manufacturer.series"));
+
+        agv.AgvTypeId.ShouldBe(newTypeId);
+        agv.CurrentAgvState.ShouldBe(AgvState.Idle);
+        fixture.AgvDb.Verify(r => r.Agvs.UpdateAgvAsync(agv, It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvType_NeedsConfirmation_SetsTypeChangeConfirmedFalse()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var newTypeId = Guid.NewGuid();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new UpdateAgvType(agv.CorrelationId, agv.SerialNumber, newTypeId, "manufacturer.series", true, true));
+
+        agv.TypeChangeConfirmed.ShouldBe(false);
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvType_InvalidConfiguration_InvalidatesAgv()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var newTypeId = Guid.NewGuid();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new UpdateAgvType(agv.CorrelationId, agv.SerialNumber, newTypeId, "manufacturer.series", false));
+
+        agv.CurrentAgvState.ShouldBe(AgvState.InvalidConfiguration);
+    }
+
+    [TestMethod]
+    public async Task Consume_InvalidateAgv_InvalidatesAgvAndPersists()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new InvalidateAgv(agv.CorrelationId, agv.SerialNumber));
+
+        agv.CurrentAgvState.ShouldBe(AgvState.InvalidConfiguration);
+        fixture.AgvDb.Verify(r => r.Agvs.UpdateAgvAsync(agv, It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_AcknowledgeAgvTypeChange_NeedsConfirmationPending_SetsTypeChangeConfirmedAndTransitionsToIdle()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.UpdateType(agv.AgvTypeId, true, true);
+        agv.TypeChangeConfirmed.ShouldBe(false);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new AcknowledgeAgvTypeChange(agv.CorrelationId));
+
+        agv.TypeChangeConfirmed.ShouldBe(true);
+        agv.CurrentAgvState.ShouldBe(AgvState.Idle);
+        fixture.AgvDb.Verify(r => r.Agvs.UpdateAgvAsync(agv, It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Consume_AcknowledgeAgvTypeChange_AgvWasInvalidConfiguration_TransitionsToIdle()
+    {
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.UpdateType(agv.AgvTypeId, true, false);
+        agv.CurrentAgvState.ShouldBe(AgvState.InvalidConfiguration);
+        var fixture = new AgvCommandHandlerTestFixture()
+            .AddAgvs([agv]);
+
+        await fixture.PublishMessageAsync(new AcknowledgeAgvTypeChange(agv.CorrelationId));
+
+        agv.TypeChangeConfirmed.ShouldBe(true);
+        agv.CurrentAgvState.ShouldBe(AgvState.Idle);
+        fixture.AgvDb.Verify(r => r.Agvs.UpdateAgvAsync(agv, It.IsAny<CancellationToken>()), Times.Once());
+    }
 }

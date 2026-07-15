@@ -55,6 +55,9 @@ public static class LogCodes
     public const int AllAgvsOffline = 340;
     public const int AgvCargoMismatch = 341;
     public const int RouteCalculationFailed = 342;
+    public const int AgvTypeUpdated = 343;
+    public const int AgvConfigurationInvalid = 344;
+    public const int AgvTypeChangeAcknowledged = 345;
 
     // Order
     public const int OrderCreated = 100;

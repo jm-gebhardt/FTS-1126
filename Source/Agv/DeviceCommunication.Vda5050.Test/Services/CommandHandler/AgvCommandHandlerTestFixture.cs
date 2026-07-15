@@ -13,7 +13,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture()
     {
-        AgvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>())).Verifiable();
+        AgvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>())).Verifiable();
         AddServices(sc => sc.AddTransient(_ => AgvRepository.Object));
         Build();
     }

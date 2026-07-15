@@ -85,9 +85,9 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<Agv> GetAgvAsync(Guid correlationId)
+    public async Task<Agv> GetAgvAsync(Guid correlationId, CancellationToken cancellationToken = default)
     {
-        var agv = await TryGetAgvAsync(correlationId);
+        var agv = await TryGetAgvAsync(correlationId, cancellationToken);
         if (agv == null)
         {
             throw new AgvNotFoundException(correlationId);
@@ -102,10 +102,10 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<Agv?> TryGetAgvAsync(Guid correlationId)
+    public async Task<Agv?> TryGetAgvAsync(Guid correlationId, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var agv = await context.Set<Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var agv = await context.Set<Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync(cancellationToken);
         return agv;
     }
 
@@ -181,12 +181,12 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> UpdateAgvAsync(Agv agv)
+    public async Task<bool> UpdateAgvAsync(Agv agv, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DbSet<Agv> dbSet = dbContext.Set<Agv>();
         dbSet.Update(agv);
-        return await dbContext.SaveChangesAsync() > 0;
+        return await dbContext.SaveChangesAsync(cancellationToken) > 0;
     }
 
     /// <inheritdoc />

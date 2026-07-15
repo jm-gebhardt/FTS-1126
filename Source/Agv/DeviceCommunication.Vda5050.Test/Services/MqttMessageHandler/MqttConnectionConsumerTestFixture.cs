@@ -17,13 +17,13 @@ public class MqttConnectionConsumerTestFixture: MqttConsumerTestFixture<MqttConn
         {
             sc.AddTransient(_ => _agvRepository.Object);
         });
-        _agvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>())).Verifiable();
+        _agvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>())).Verifiable();
         Build();
     }
 
     public void VerifyAgvUpdated(Times times)
     {
-        _agvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>()), times);
+        _agvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>()), times);
     }
 
     public MqttConnectionConsumerTestFixture AddAgv(Agv agv)

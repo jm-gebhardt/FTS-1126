@@ -16,4 +16,10 @@ public interface IAgvTypePublisher
     /// Publishes a newly created agv type to all clients.
     /// </summary>
     Task SendAgvTypeCreated(AgvTypeDto agvType);
+
+    /// <summary>
+    /// Publishes agv type updated to all clients.
+    /// </summary>
+    /// <param name="agvType">The agv type.</param>
+    Task SendAgvTypeUpdated(AgvTypeDto agvType);
 }

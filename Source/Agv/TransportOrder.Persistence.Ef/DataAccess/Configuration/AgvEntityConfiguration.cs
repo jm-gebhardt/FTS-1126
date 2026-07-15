@@ -12,6 +12,8 @@ public class AgvEntityConfiguration : IEntityTypeConfiguration<Agv>
     public void Configure(EntityTypeBuilder<Agv> builder)
     {
         builder.HasKey(g => g.CorrelationId);
+        builder.Property(g => g.AgvTypeId);
+        builder.Property(g => g.TypeChangeConfirmed);
         builder.Property(e => e.SerialNumber).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Description);
         builder.ConfigureAllProperties(p =>

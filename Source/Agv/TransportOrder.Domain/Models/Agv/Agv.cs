@@ -38,6 +38,16 @@ public class Agv : IAgv
     public AgvMode Mode { get; init; }
 
     /// <summary>
+    /// The id of the agv type.
+    /// </summary>
+    public Guid? AgvTypeId { get; private set; }
+
+    /// <summary>
+    /// True, if the type change has been confirmed. Only applicable if it needs confirmation.
+    /// </summary>
+    public bool? TypeChangeConfirmed { get; private set; }
+
+    /// <summary>
     /// The time span an agv can be offline without assigned nodes or action groups being cleared.
     /// </summary>
     public static TimeSpan OfflineTolerance => TimeSpan.FromMinutes(5);
@@ -203,11 +213,6 @@ public class Agv : IAgv
     public bool ZonesExist { get; set; }
 
     /// <summary>
-    /// The id of the AGV type this agv belongs to, set once the agv has received a graph.
-    /// </summary>
-    public Guid? AgvTypeId { get; set; }
-
-    /// <summary>
     /// Time that has to pass before resending a request telegram in case AgvGraph or AgvData are still null.
     /// </summary>
     /// <remarks>Interval indicated in seconds</remarks>
@@ -312,6 +317,16 @@ public class Agv : IAgv
         Mode = new AgvMode(ModeType.Normal, CorrelationId);
     }
 
+    /// <inheritdoc cref="Agv"/>
+    public Agv(Guid correlationId, string serialNumber, bool hasValidConfiguration)
+    {
+        CorrelationId = correlationId;
+        SerialNumber = serialNumber;
+        CurrentAgvState = hasValidConfiguration? AgvState.Discovered : AgvState.InvalidConfiguration;
+        Name = SerialNumber;
+        Mode = new AgvMode(ModeType.Normal, CorrelationId);
+    }
+
     /// <summary>
     /// Agv ctor used for serialization.
     /// </summary>
@@ -357,6 +372,42 @@ public class Agv : IAgv
     {
         CurrentAgvState = CurrentAgvState.TransitionTo(AgvState.Discovered);
         GraphExists = graphExists;
+    }
+
+    /// <summary>
+    /// Set agv configuration to invalid.
+    /// </summary>
+    public void Invalidate()
+    {
+        CurrentAgvState = CurrentAgvState.TransitionTo(AgvState.InvalidConfiguration);
+    }
+
+    /// <summary>
+    /// Update the type of the agv.
+    /// </summary>
+    /// <param name="agvType">The new agv type.</param>
+    /// <param name="needsConfirmation">True, if the type change needs confirmation.</param>
+    /// <param name="isValid">True, if the new type configuration is valid.</param>
+    public void UpdateType(Guid? agvType, bool needsConfirmation, bool isValid)
+    {
+        AgvTypeId = agvType;
+        if (needsConfirmation)
+        {
+            TypeChangeConfirmed = false;
+        }
+        if (!isValid)
+        {
+            Invalidate();
+        }
+    }
+
+    /// <summary>
+    /// Acknowledge the type change of the agv.
+    /// </summary>
+    public void AcknowledgeTypeChange()
+    {
+        TypeChangeConfirmed = true;
+        TransitionToIdle();
     }
 
     /// <summary>

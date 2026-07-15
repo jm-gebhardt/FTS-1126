@@ -17,7 +17,7 @@ public class ActionCommandHandlerTestFixture: MassTransitConsumerTestFixture<Act
 
     public ActionCommandHandlerTestFixture()
     {
-        _agvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>())).Verifiable();
+        _agvRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>())).Verifiable();
         AddServices(sc =>
         {
             sc.AddSingleton(_ => _orderBuilder.Object);
@@ -40,6 +40,6 @@ public class ActionCommandHandlerTestFixture: MassTransitConsumerTestFixture<Act
 
     public void VerifyAgvUpdated()
     {
-        _agvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>()), Times.Once);
+        _agvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

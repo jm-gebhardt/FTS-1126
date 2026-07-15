@@ -29,6 +29,9 @@ public record Agv : IAgv
 
     /// <summary>Current State</summary>
     public AgvState CurrentState { get; init; }
+   
+    /// <summary>Id of agv type.</summary>
+    public Guid? AgvTypeId { get; init; }
 
     /// <summary>Time of the last state transition</summary>
     public DateTime TimeOfStateTransition { get; init; }
@@ -83,6 +86,11 @@ public record Agv : IAgv
     public float TotalLifetime { get; init; }
 
     /// <summary>
+    /// True, if the type change has been confirmed. Only applicable if it needs confirmation.
+    /// </summary>
+    public bool? TypeChangeConfirmed { get; init; }
+
+    /// <summary>
     /// The last maintenance of the agv.
     /// </summary>
     public Maintenance? LastMaintenance { get; init; }
@@ -108,6 +116,8 @@ public record Agv : IAgv
     /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
     /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
     /// <param name="lastMaintenance">The last maintenance of the agv.</param>
+    /// <param name="agvTypeId">The id of the agv type.</param>
+    /// <param name="typeChangeConfirmed">The type change confirmation state.</param>
     [PublicAPI]
     public Agv(
         Guid correlationId,
@@ -130,7 +140,9 @@ public record Agv : IAgv
         List<string> stations,
         float totalDistance,
         float totalLifetime,
-        Maintenance? lastMaintenance = null
+        Maintenance? lastMaintenance = null,
+        Guid? agvTypeId = null,
+        bool? typeChangeConfirmed = null
     )
     {
         CorrelationId = correlationId;
@@ -154,6 +166,8 @@ public record Agv : IAgv
         TotalDistance = totalDistance;
         TotalLifetime = totalLifetime;
         LastMaintenance = lastMaintenance;
+        AgvTypeId = agvTypeId;
+        TypeChangeConfirmed = typeChangeConfirmed;
     }
 
     /// <summary>

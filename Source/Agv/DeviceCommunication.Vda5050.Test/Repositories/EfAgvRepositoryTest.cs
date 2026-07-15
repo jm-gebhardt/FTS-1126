@@ -22,7 +22,7 @@ public class EfAgvRepositoryTest
         var agv = AgvGenerator.Generate(Guid.NewGuid());
         var fixture = new AgvRepositoryTestFixture();
 
-        await fixture.Repository.AddOrUpdateAsync(agv);
+        await fixture.Repository.AddOrUpdateAsync(agv, CancellationToken.None);
 
         (await fixture.Repository.GetAgvAsync(agv.CorrelationId))?.CorrelationId.ShouldBe(agv.CorrelationId);
     }

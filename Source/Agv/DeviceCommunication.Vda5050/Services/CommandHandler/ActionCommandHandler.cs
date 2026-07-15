@@ -39,7 +39,7 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
         
         agv.CurrentOrder = action.CorrelationId;
         agv.CurrentFleetManagerActionId = action.CorrelationId;
-        await agvRepository.AddOrUpdateAsync(agv);
+        await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
 
         logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, agv.CurrentOrder, agv.SerialNumber, action.Target.Node?.Name);
@@ -67,7 +67,7 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
         {
             agv.CurrentOrder = action.CorrelationId;
             agv.CurrentFleetManagerActionId = action.CorrelationId;
-            await agvRepository.AddOrUpdateAsync(agv);
+            await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
 
             logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
                 action.CorrelationId, agv.CurrentOrder, agv.SerialNumber, action.Target.Node?.Name);
@@ -77,7 +77,7 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
 
         order.OrderId = agv.CurrentOrder!.Value.ToString();
         agv.CurrentFleetManagerActionId = action.CorrelationId;
-        await agvRepository.AddOrUpdateAsync(agv);
+        await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
 
         logger.LogInformation("Sent update of transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, agv.CurrentOrder, agv.SerialNumber, action.Target.Node?.Name);
@@ -128,7 +128,7 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
         if (abortedActionCorrelationId == null && agv.CurrentOrder == null)
         {
             agv.CurrentOrder = action.CorrelationId;
-            await agvRepository.AddOrUpdateAsync(agv);
+            await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
 
             logger.LogInformation("Sent transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
                 action.CorrelationId, agv.CurrentOrder, agv.SerialNumber, action.Target.Node?.Name);
@@ -138,7 +138,7 @@ public class ActionCommandHandler(ILogger<ActionCommandHandler> logger, IOrderBu
 
         order.OrderId = agv.CurrentOrder!.Value.ToString();
         agv.CurrentFleetManagerActionId = action.CorrelationId;
-        await agvRepository.AddOrUpdateAsync(agv);
+        await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
         logger.LogInformation("Sent update of transport order: {OrderId} for AGV:{AssignedAgv}/{AgvId} at target: {TargetNodeId}",
             action.CorrelationId, agv.CurrentOrder, agv.SerialNumber, action.Target.Node?.Name);
         await context.Publish(new OrderUpdateRequested(abortedActionCorrelationId!.Value, order, action.CorrelationId ));

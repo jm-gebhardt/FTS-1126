@@ -639,4 +639,55 @@ public class AgvEventHandlerTest
 
         await fixture.ShouldNotHavePublishedAsync<UpdateErrorStatus>();
     }
+
+    [TestMethod]
+    public async Task Consume_NewAgvDiscovered_PublishesCreateAgv()
+    {
+        var correlationId = Guid.NewGuid();
+        const string serialNumber = "agv1";
+        var agvTypeId = Guid.NewGuid();
+        var fixture = new AgvEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync(new NewAgvDiscovered(correlationId, serialNumber, agvTypeId, false));
+
+        var created = await fixture.GetFirstPublishedMessageAsync<CreateAgv>();
+        created.CorrelationId.ShouldBe(correlationId);
+        created.SerialNumber.ShouldBe(serialNumber);
+        created.AgvTypeId.ShouldBe(agvTypeId);
+        created.HasValidConfiguration.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvVehicleTypeChanged_PublishesUpdateAgvType()
+    {
+        var correlationId = Guid.NewGuid();
+        const string serialNumber = "agv1";
+        var newTypeId = Guid.NewGuid();
+        const string newVehicleType = "manufacturer.series";
+        var fixture = new AgvEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync(new AgvVehicleTypeChanged(correlationId, serialNumber, newTypeId, newVehicleType, false, true));
+
+        var updated = await fixture.GetFirstPublishedMessageAsync<UpdateAgvType>();
+        updated.CorrelationId.ShouldBe(correlationId);
+        updated.SerialNumber.ShouldBe(serialNumber);
+        updated.AgvTypeId.ShouldBe(newTypeId);
+        updated.AgvTypeName.ShouldBe(newVehicleType);
+        updated.HasValidConfiguration.ShouldBeFalse();
+        updated.NeedsConfirmation.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_InvalidAgvConfigurationReceived_PublishesInvalidateAgv()
+    {
+        var correlationId = Guid.NewGuid();
+        const string serialNumber = "agv1";
+        var fixture = new AgvEventHandlerTestFixture();
+
+        await fixture.PublishMessageAsync(new InvalidAgvConfigurationReceived(correlationId, serialNumber));
+
+        var invalidated = await fixture.GetFirstPublishedMessageAsync<InvalidateAgv>();
+        invalidated.CorrelationId.ShouldBe(correlationId);
+        invalidated.SerialNumber.ShouldBe(serialNumber);
+    }
 }

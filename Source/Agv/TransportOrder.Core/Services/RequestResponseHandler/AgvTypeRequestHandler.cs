@@ -3,7 +3,9 @@ using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.AgvType;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.AgvType;
 using JetBrains.Annotations;
 using MassTransit;
@@ -18,7 +20,8 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeRequestHandler> logger) :
     IConsumer<RequestAgvTypeAcknowledgement>,
     IConsumer<GetAgvType>,
-    IConsumer<GetAllAgvTypes>
+    IConsumer<GetAllAgvTypes>,
+    IConsumer<RequestAgvTypeChangeAcknowledgement>
 {
     private static AgvTypeReadModel ToReadModel(AgvType agvType, IReadOnlySet<Guid> typeIdsWithGraph) =>
         new(agvType.Id, agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, typeIdsWithGraph.Contains(agvType.Id));
@@ -55,5 +58,15 @@ public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeReques
         List<AgvTypeReadModel> readModels = agvTypes.Select(agvType => ToReadModel(agvType, typeIdsWithGraph)).ToList();
 
         await context.RespondAsync(new GotAgvTypes(context.Message.CorrelationId, readModels));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<RequestAgvTypeChangeAcknowledgement> context)
+    {
+        var agv = await agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        await agvDb.AgvTypes.ExistsAsync(agv.AgvTypeId.GetValueOrDefault());
+
+        await bus.Publish(new AcknowledgeAgvTypeChange(agv.CorrelationId), context.CancellationToken);
+        await context.RespondAsync(new Success());
     }
 }

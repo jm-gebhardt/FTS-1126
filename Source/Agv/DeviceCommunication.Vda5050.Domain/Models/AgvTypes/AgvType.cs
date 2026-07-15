@@ -60,4 +60,26 @@ public record AgvType : IAgvType
         SeriesName = null!;
         RawData = null!;
     }
+
+    /// <summary>
+    /// Checks whether this AGV type is compatible with <paramref name="other"/>, i.e.
+    /// whether type-defining properties are equal.
+    /// </summary>
+    /// <param name="other">The AGV type to compare against.</param>
+    /// <returns>True if both AGV types describe the same AGV configuration.</returns>
+    public bool IsCompatibleWith(AgvType? other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+        if (other is null)
+        {
+            return false;
+        }
+        return string.Equals(Manufacturer, other.Manufacturer)
+               && string.Equals(SeriesName, other.SeriesName)
+               && Length.Equals(other.Length)
+               && Width.Equals(other.Width);
+    }
 }

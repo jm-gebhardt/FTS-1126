@@ -33,7 +33,7 @@ public class MqttConnectionConsumer(ILogger<MqttConnectionConsumer> logger, IAgv
             if (routingKey != null)
             {
                 agv.SetCommunicationSpecification(routingKey);
-                await agvRepository.AddOrUpdateAsync(agv);
+                await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
             }
             return;
         }

@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Agv;
 
@@ -6,4 +7,4 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Agv;
 /// Command to clear the current order reference from an AGV.
 /// </summary>
 [PublicAPI]
-public record ClearAgvCurrentOrder(Guid AgvCorrelationId);
+public record ClearAgvCurrentOrder(Guid CorrelationId) : CorrelatedBy<Guid>;

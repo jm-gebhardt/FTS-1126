@@ -81,8 +81,8 @@ public class AgvTypeRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAllAgvTypes_MultipleAgvTypes_ReturnsAllAgvTypes()
     {
-        var agvType1 = CreateAgvType();
-        var agvType2 = CreateAgvType("AGV2");
+        var agvType1 = CreateAgvType("manufacturer.series");
+        var agvType2 = CreateAgvType("manufacturer.anotherseries");
         AgvTypeRequestHandlerTestFixture<GetAllAgvTypes, AgvTypeRequestHandler> fixture =
             new AgvTypeRequestHandlerTestFixture<GetAllAgvTypes, AgvTypeRequestHandler>()
                 .WithAgvTypes(agvType1, agvType2)

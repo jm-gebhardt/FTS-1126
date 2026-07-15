@@ -32,7 +32,7 @@ public record AgvType : IAgvType
     public double Width { get; init; }
 
     /// <inheritdoc/>
-    public bool Acknowledged { get; private set; }
+    public bool Acknowledged { get; set; }
 
     /// <inheritdoc cref="AgvType"/>
     public AgvType(string agvTypeIdentifier, string manufacturer, string seriesName, double length, double width, bool acknowledged)

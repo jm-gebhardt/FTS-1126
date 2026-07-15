@@ -15,6 +15,13 @@ public interface IAgvTypeRepository
     public Task<bool> ExistsAsync(string agvTypeIdentifier);
 
     /// <summary>
+    /// Get an agv type by its identifier.
+    /// </summary>
+    /// <param name="agvTypeIdentifier">The AGV type identifier.</param>
+    /// <returns>The agv type, if it exists, else null.</returns>
+    public Task<AgvType?> GetAgvTypeAsync(string agvTypeIdentifier);
+
+    /// <summary>
     /// Adds a new AGV type.
     /// </summary>
     /// <param name="agvType">The AGV type to add.</param>

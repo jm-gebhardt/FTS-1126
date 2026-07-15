@@ -41,6 +41,11 @@ public class GetAgvBatteryRequestHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         var agvSettings = _mapper.Map<AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
+        if(agv.AgvStatus == null)
+        {
+            await context.RespondAsync(new GotAgvBattery(new AgvBatteryStatus() { CorrelationId = agv.CorrelationId}, agvSettings));
+            return;
+        }
         var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
         var agvBatteryStatus = new AgvBatteryStatus(agvStatus);
 
@@ -62,6 +67,10 @@ public class GetAgvBatteryRequestHandler :
         List<(AgvBatteryStatus agvBatteryStatus, AgvSettings agvSettings)> batteryStatus = agvs.Select(agv =>
         {
             var agvSettings = _mapper.Map<AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
+            if (agv.AgvStatus == null)
+            {
+                return (new AgvBatteryStatus() { CorrelationId = agv.CorrelationId }, agvSettings);
+            }
             var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
             var agvBatteryStatus = new AgvBatteryStatus(agvStatus);
             return (agvBatteryStatus, agvSettings);
