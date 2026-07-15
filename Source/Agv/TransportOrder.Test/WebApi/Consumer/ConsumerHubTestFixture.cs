@@ -72,7 +72,11 @@ public class ConsumerHubTestFixture<TConsumer, THubContext> : MassTransitConsume
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
-        collection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        collection.ConfigureAutoMapper([
+            typeof(AgvProfile).Assembly,
+            typeof(TransportOrder.Messages.Profiles.AgvProfile).Assembly,
+            typeof(LogEntryProfile).Assembly
+        ]);
         return this;
     }
 }

@@ -14,6 +14,6 @@ public class MqttOrderConsumerTestFixture : MqttConsumerTestFixture<MqttOrderCon
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper([typeof(Vda5050.Simulator.Messages.Profiles.OrderProfile).Assembly]);
     }
 }

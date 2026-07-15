@@ -91,7 +91,11 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
-        serviceCollection.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        serviceCollection.ConfigureAutoMapper([
+            typeof(TransportOrder.WebApi.Profiles.AgvProfile).Assembly,
+            typeof(AgvProfile).Assembly,
+            typeof(TransportOrder.Domain.Profiles.LogEntryProfile).Assembly
+        ]);
     }
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyGraphRepository()
@@ -109,7 +113,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
 
     public AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> WithEmptyAgvDataRepository()
     {
-        _agvDb.AddAgvData((AgvData?) null);
+        _agvDb.AddAgvData((AgvData?)null);
         return this;
     }
 
@@ -120,7 +124,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             List<GraphNode> nodes = [];
             foreach (var nodeLock in nodeLocks)
             {
-                var node = new GraphNode()
+                var node = new GraphNode
                 {
                     Id = nodeLock.NodeId,
                     Lock = nodeLock
@@ -158,7 +162,7 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         _actionGroupRetrievalService.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
-        IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(correlationId: a.CorrelationId));
+        IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(a.CorrelationId));
 
         _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.AgvCorrelationId)).ToList());
 
