@@ -29,5 +29,6 @@ public class AgvErrorEntityConfiguration : IEntityTypeConfiguration<AgvError>
 
         builder.HasIndex(e => e.ErrorResolved)
             .HasFilter("[ErrorResolved] IS NULL");
+        builder.HasIndex(e => e.ErrorReceived);
     }
 }
