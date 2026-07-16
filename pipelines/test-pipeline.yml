@@ -3,7 +3,7 @@ trigger:
   branches:
     include:
     - master
-
+    - develop
 variables:
 - name: 'SourceDirectory'
   value: 'Source/Agv'
