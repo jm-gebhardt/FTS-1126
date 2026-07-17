@@ -30,6 +30,12 @@ fi
 AZURE_TOKEN="${AZURE_ARTIFACTS_TOKEN}"
 CURRENT_DATE=$(date +%Y-%m-%d)
 BRANCH_PREFIX="feature/bump-dependencies"
+# Target the branch that trigger this scheduled run, defaulting to master
+TARGET_BRANCH="${BUILD_SOURCEBRANCH#refs/heads/}"
+TARGET_BRANCH="${TARGET_BRANCH:-master}"
+# Slugify for the working branch name (e.g. release/1.2 -> release-1.2)
+BRANCH_SLUG="${TARGET_BRANCH//\//-}"
+SOURCE_BRANCH_NAME="${BRANCH_PREFIX}-${BRANCH_SLUG}-${CURRENT_DATE}"
 
 SOLUTION_DIRS=("${SOURCE_DIR}/Agv" "${SOURCE_DIR}/Agv.IntegrationTest")
 DIRECTORY_PACKAGES_PROPS_FILE="${SOURCE_DIR}/Directory.Packages.props"
@@ -145,7 +151,7 @@ function run_outdated_in_dir() {
 #########################################################################
 echo "##[section]Create a new feature branch."
 configure_git
-switch_to_new_git_branch "${BRANCH_PREFIX}-${CURRENT_DATE}"
+switch_to_new_git_branch "${SOURCE_BRANCH_NAME}"
 
 #########################################################################
 # Setup
@@ -190,7 +196,7 @@ echo "${AZURE_TOKEN}" | az devops login
 git remote set-url "origin" "${REPOSITORY_URL}"
 
 echo "##[debug]Looking for existing pull requests and branches to clean up."
-EXISTING_PRS=$(az repos pr list --status active --query "[?contains(sourceRefName, '${BRANCH_PREFIX}')]" -o json)
+EXISTING_PRS=$(az repos pr list --status active --query "[?contains(sourceRefName, '${BRANCH_PREFIX}') && targetRefName=='refs/heads/${TARGET_BRANCH}']" -o json)
 
 for PR in $(echo "${EXISTING_PRS}" | jq -r '.[] | @base64'); do
     _jq() {
@@ -237,7 +243,7 @@ echo "##[debug]Creating a commit and pushing the branch to the server."
 git add -A
 git commit -m "Bump dependencies"
 
-GIT_PUSH_RESPONSE=$(git push --porcelain -u origin "HEAD:${BRANCH_PREFIX}-${CURRENT_DATE}")
+GIT_PUSH_RESPONSE=$(git push --porcelain -u origin "HEAD:${SOURCE_BRANCH_NAME}")
 echo "$GIT_PUSH_RESPONSE"
 if [[ "$GIT_PUSH_RESPONSE" == *"rejected"* ]]; then
   echo "##[error]Git push was rejected. Please abandon the old pull request first."
@@ -277,8 +283,8 @@ import json, sys
 body = sys.stdin.read()
 ids = '${REVIEWER_IDS:-}'.split()
 pr = {
-    'sourceRefName': 'refs/heads/${BRANCH_PREFIX}-${CURRENT_DATE}',
-    'targetRefName': 'refs/heads/master',
+    'sourceRefName': 'refs/heads/${SOURCE_BRANCH_NAME}',
+    'targetRefName': 'refs/heads/${TARGET_BRANCH}',
     'title': 'Bump dependencies - ${CURRENT_DATE}',
     'description': body,
     'reviewers': [{'id': i} for i in ids]

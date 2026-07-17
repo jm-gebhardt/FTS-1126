@@ -6,6 +6,7 @@ schedules:
   branches:
     include:
     - master
+    - develop
   batch: true
   displayName: Daily dependency check
 
