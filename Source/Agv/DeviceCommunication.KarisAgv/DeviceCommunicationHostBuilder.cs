@@ -150,6 +150,7 @@ public static class DeviceCommunicationHostBuilder
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationDbContext>.MigrationTableName);
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
                 }
             })
             .ConfigureWebHost(host =>
@@ -165,11 +166,11 @@ public static class DeviceCommunicationHostBuilder
                         app.UseRouting();
                         app.UseEndpoints(endpoints =>
                         {
-                            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
+                            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions
                             {
                                 Predicate = _ => true
                             });
-                            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions()
+                            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions
                             {
                                 Predicate = _ => true,
                                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse

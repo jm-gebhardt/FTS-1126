@@ -104,7 +104,7 @@ public static class TransportOrderHostBuilderExtensions
                 m.MigrationsHistoryTable(IDbContext<TransportOrderDbContext>.MigrationTableName);
                 m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
             });
-            builder.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>());
+            builder.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>(), new EfCommandMetricsInterceptor());
         });
 
         services.AddHealthChecks()

@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
-namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler.Metrics;
 
 /// <summary>
 /// Handles events that are relevant for metrics collection.

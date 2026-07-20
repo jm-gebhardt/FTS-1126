@@ -17,6 +17,7 @@ using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 using Gebhardt.Acc.WCSCommunication.WcsApi.SimulationMode;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,10 +57,8 @@ public static class WcsCommunicationHostBuilder
                     services.AddDbContextFactory<WcsHostDbContext>(builder =>
                     {
                         string? connectionString = context.Configuration.GetConnectionString(WcsHostDbContext.ConfigSectionName);
-                        builder.UseSqlServer(connectionString, m =>
-                        {
-                            m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                        });
+                        builder.UseSqlServer(connectionString, m => { m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery); });
+                        builder.AddInterceptors(new EfCommandMetricsInterceptor());
                     });
                     services.AddHostedService<PollingBackgroundService<WcsOrderHandler>>();
                     services.AddSingleton<WcsOrderHandler>();
@@ -75,10 +74,7 @@ public static class WcsCommunicationHostBuilder
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                 })
-                .Configure(app =>
-                {
-                    app.UseMetricServer();
-                });
+                .Configure(app => { app.UseMetricServer(); });
         });
 
         hostBuilder.ConfigureServices((context, services) =>
@@ -91,6 +87,7 @@ public static class WcsCommunicationHostBuilder
                     m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName);
                     m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 });
+                builder.AddInterceptors(new EfCommandMetricsInterceptor());
             });
             services.AddTransient<IHostOrderRepository, HostOrderRepository>();
             services.ConfigureServicesMassTransit(context.Configuration, x =>

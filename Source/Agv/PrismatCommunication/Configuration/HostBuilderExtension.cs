@@ -43,34 +43,34 @@ public static class HostBuilderExtension
         /// Add MassTransit configuration.
         /// </summary>
         public IHostBuilder AddMassTransit(ILogger initialLogger, SimulateOptions? simulateOptions = null)
-    {
-        hostBuilder.ConfigureServices((context, services) =>
         {
-            try
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                services.AddSingleton(TimeProvider.System);
-                services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(simulateOptions != null); }, rabbitMqConfiguration: (ctx, cfg) =>
+                try
                 {
-                    cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
-                    cfg.UseConsumeFilter<ActionGroupEventConsumeFilter>(ctx);
-                });
-                services.AddOptions<MassTransitHostOptions>()
-                    .Configure(options =>
+                    services.AddSingleton(TimeProvider.System);
+                    services.ConfigureServicesMassTransit(context.Configuration, x => { x.AddBusConsumers(simulateOptions != null); }, rabbitMqConfiguration: (ctx, cfg) =>
                     {
-                        options.WaitUntilStarted = true;
-                        options.StartTimeout = _busStartTimeout;
+                        cfg.UseConsumeFilter<ActionGroupTracingConsumeFilters>(ctx);
+                        cfg.UseConsumeFilter<ActionGroupEventConsumeFilter>(ctx);
                     });
-                services.ConfigureTracing(context.Configuration);
-            }
-            catch (InvalidOperationException e)
-            {
-                initialLogger.LogError(e, "MassTransit could not be started");
-                throw;
-            }
-        });
+                    services.AddOptions<MassTransitHostOptions>()
+                        .Configure(options =>
+                        {
+                            options.WaitUntilStarted = true;
+                            options.StartTimeout = _busStartTimeout;
+                        });
+                    services.ConfigureTracing(context.Configuration);
+                }
+                catch (InvalidOperationException e)
+                {
+                    initialLogger.LogError(e, "MassTransit could not be started");
+                    throw;
+                }
+            });
 
-        return hostBuilder;
-    }
+            return hostBuilder;
+        }
 
         /// <summary>
         /// Add service specific configurations.
@@ -78,77 +78,78 @@ public static class HostBuilderExtension
         /// <param name="simulateOptions">The <see cref="SimulateOptions"/> if in simulation mode.</param>
         /// <param name="logger">Logger instance</param>
         public IHostBuilder AddPrismatCommunication(SimulateOptions? simulateOptions, ILogger logger)
-    {
-        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-
-        hostBuilder.ConfigureServices((context, services) =>
         {
-            services.AddConfigurationTypeManager();
+            ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
-            void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                string? connectionString = context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName);
-                builder.UseSqlServer(connectionString, m =>
+                services.AddConfigurationTypeManager();
+
+                void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
                 {
-                    m.MigrationsHistoryTable(IDbContext<PrismatCommunicationDbContext>.MigrationTableName);
-                    m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                });
-            }
+                    string? connectionString = context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName);
+                    builder.UseSqlServer(connectionString, m =>
+                    {
+                        m.MigrationsHistoryTable(IDbContext<PrismatCommunicationDbContext>.MigrationTableName);
+                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
+                }
 
-            services.AddHostedService<InitializationProvider>();
-            services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
+                services.AddHostedService<InitializationProvider>();
+                services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
 
-            services.AddDbContextFactory<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
+                services.AddDbContextFactory<PrismatCommunicationDbContext>(ConfigureDbContextOptions);
 
-            services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
-            services.AddTransient<ISystemStatusRepository, EfSystemStatusRepository>();
-            services.AddTransient<ITelegramRepository, EfTelegramRepository>();
-            services.TryAddCustomerConfiguration();
-            services.AddSingleton<ObservableConcurrentQueue<PrismatTelegram>>();
-            services.AddSingleton<TelegramQueuePersistenceService>();
+                services.AddTransient<IHostOrderRepository, EfHostOrderRepository>();
+                services.AddTransient<ISystemStatusRepository, EfSystemStatusRepository>();
+                services.AddTransient<ITelegramRepository, EfTelegramRepository>();
+                services.TryAddCustomerConfiguration();
+                services.AddSingleton<ObservableConcurrentQueue<PrismatTelegram>>();
+                services.AddSingleton<TelegramQueuePersistenceService>();
 
-            // Housekeeping
-            services.AddTransient<IHousekeepingConfigurationRepository, EfHousekeepingConfigurationRepository>();
-            services.AddTransient<IHousekeepingAction, HostOrderHousekeepingAction>();
-            services.AddTransient<HousekeepingJob>();
-            services.AddHostedService<Housekeeping>();
+                // Housekeeping
+                services.AddTransient<IHousekeepingConfigurationRepository, EfHousekeepingConfigurationRepository>();
+                services.AddTransient<IHousekeepingAction, HostOrderHousekeepingAction>();
+                services.AddTransient<HousekeepingJob>();
+                services.AddHostedService<Housekeeping>();
 
-            // Filters
-            services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
-            services.AddSingleton<ISignificanceChecker<ActionGroupCompleted>, ActionGroupEventSignificanceChecker<ActionGroupCompleted>>();
-            services.AddSingleton<UnTimedInMemoryFilter<ActionGroupCompleted>>();
+                // Filters
+                services.AddSingleton<ISemaphoreProvider, SemaphoreProvider>();
+                services.AddSingleton<ISignificanceChecker<ActionGroupCompleted>, ActionGroupEventSignificanceChecker<ActionGroupCompleted>>();
+                services.AddSingleton<UnTimedInMemoryFilter<ActionGroupCompleted>>();
 
-            services.AddSingleton<ISignificanceChecker<ActionGroupStarted>, ActionGroupEventSignificanceChecker<ActionGroupStarted>>();
-            services.AddSingleton<UnTimedInMemoryFilter<ActionGroupStarted>>();
+                services.AddSingleton<ISignificanceChecker<ActionGroupStarted>, ActionGroupEventSignificanceChecker<ActionGroupStarted>>();
+                services.AddSingleton<UnTimedInMemoryFilter<ActionGroupStarted>>();
 
-            services.AddSingleton<ISignificanceChecker<PickActionCompleted>, ActionGroupEventSignificanceChecker<PickActionCompleted>>();
-            services.AddSingleton<UnTimedInMemoryFilter<PickActionCompleted>>();
+                services.AddSingleton<ISignificanceChecker<PickActionCompleted>, ActionGroupEventSignificanceChecker<PickActionCompleted>>();
+                services.AddSingleton<UnTimedInMemoryFilter<PickActionCompleted>>();
 
-            if (simulateOptions == null)
-            {
-                services.TryAddPrismatApi(context.Configuration);
-                services.AddSingleton<IHostCommunicator, TelegramHostCommunicator>();
-                return;
-            }
+                if (simulateOptions == null)
+                {
+                    services.TryAddPrismatApi(context.Configuration);
+                    services.AddSingleton<IHostCommunicator, TelegramHostCommunicator>();
+                    return;
+                }
 
-            services.AddSingleton<IHostCommunicator, SimulationHostCommunicator>();
-            services.AddSingleton(_ => simulateOptions);
+                services.AddSingleton<IHostCommunicator, SimulationHostCommunicator>();
+                services.AddSingleton(_ => simulateOptions);
 
-            if (!simulateOptions.NoAplLoopOrders)
-            {
-                logger.LogInformation("Simulation configuration: Creating APL loop orders");
-                services.AddHostOrderCreator<LongLoopSimulator>()
-                    .AddHostOrderCreator<LongLoopInputSimulator>();
-            }
-            if (!simulateOptions.NoAklLoopOrders)
-            {
-                logger.LogInformation("Simulation configuration: Creating AKL loop orders");
-                services.AddHostOrderCreator<ShortLoopSimulator>()
-                    .AddHostOrderCreator<InputLoopSimulator>();
-            }
-        });
-        return hostBuilder;
-    }
+                if (!simulateOptions.NoAplLoopOrders)
+                {
+                    logger.LogInformation("Simulation configuration: Creating APL loop orders");
+                    services.AddHostOrderCreator<LongLoopSimulator>()
+                        .AddHostOrderCreator<LongLoopInputSimulator>();
+                }
+                if (!simulateOptions.NoAklLoopOrders)
+                {
+                    logger.LogInformation("Simulation configuration: Creating AKL loop orders");
+                    services.AddHostOrderCreator<ShortLoopSimulator>()
+                        .AddHostOrderCreator<InputLoopSimulator>();
+                }
+            });
+            return hostBuilder;
+        }
     }
 
     /// <summary>
