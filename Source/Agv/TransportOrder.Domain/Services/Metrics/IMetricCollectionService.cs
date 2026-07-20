@@ -53,4 +53,23 @@ public interface IMetricCollectionService
     /// <param name="actionType">The type of the completed action.</param>
     /// <param name="targetNodeId">The id of the target node.</param>
     Task CollectStationOrderCompletionMetrics(ActionType actionType, Guid targetNodeId);
+
+    /// <summary>
+    /// Record the time an action was dispatched to an agv.
+    /// </summary>
+    /// <param name="actionCorrelationId">The correlation id of the dispatched action.</param>
+    void RecordActionDispatched(Guid actionCorrelationId);
+
+    /// <summary>
+    /// Record the latency between an action being dispatched and the agv reporting it started.
+    /// </summary>
+    /// <param name="actionCorrelationId">The correlation id of the started action.</param>
+    /// <param name="agvCorrelationId">The correlation id of the agv.</param>
+    void RecordActionStarted(Guid actionCorrelationId, Guid agvCorrelationId);
+
+    /// <summary>
+    /// Discard a recorded dispatch time for an action that will not report a start.
+    /// </summary>
+    /// <param name="actionCorrelationId">The correlation id of the action.</param>
+    void DiscardDispatched(Guid actionCorrelationId);
 }

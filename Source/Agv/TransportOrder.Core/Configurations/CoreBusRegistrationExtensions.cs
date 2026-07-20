@@ -14,6 +14,7 @@ using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.BoundingBox;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -88,6 +89,7 @@ public static class CoreBusRegistrationExtensions
         RegisterTriggerHandlers(busRegistrationConfigurator);
 
         busRegistrationConfigurator.AddConsumer<MetricsCollectionEventHandler>();
+        busRegistrationConfigurator.AddConsumer<ActionStartLatencyEventHandler>();
         busRegistrationConfigurator.AddConsumer<LogEntryEventHandler>();
         busRegistrationConfigurator.AddConsumer<LogEntryCommandHandler>();
 

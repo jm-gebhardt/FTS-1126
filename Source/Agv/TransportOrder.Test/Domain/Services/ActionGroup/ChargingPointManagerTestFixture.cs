@@ -30,6 +30,7 @@ public class ChargingPointManagerTestFixture
     private static readonly string _node05 = _sources[2];
     private static readonly string _node06 = _destinations[2];
     public const string AgvSerialNumber = "AGV001";
+    public const string LockedChargerName = "Charge-Locked";
 
     public AgvGraph AgvGraph { get; private set; } = null!;
 
@@ -125,7 +126,7 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithChargingPointManager()
     {
-        _agvDb.AddAgvData((AgvData?) null);
+        _agvDb.AddAgvData((AgvData?)null);
         ChargingPointManager = new ChargingPointManager(_agvDb.Object, NodeRepository.Object, RouteService.Object, new Mock<ILogger<ChargingPointManager>>().Object, new SemaphoreProvider<IChargingSemaphore>(new Mock<ILogger<SemaphoreProvider<IChargingSemaphore>>>().Object));
         return this;
     }
@@ -146,6 +147,13 @@ public class ChargingPointManagerTestFixture
     {
         RouteService.WithRouteLowestCostNode(Agv, availableNodes, node);
         return this;
+    }
+
+    public static GraphNode GenerateLockedChargingNode()
+    {
+        var node = NodeGenerator.GenerateChargingNode(LockedChargerName);
+        node.Lock = new NodeLock(node, NodeLockState.Free, true, null, DateTime.UtcNow);
+        return node;
     }
 
     public void SetupGraphRepository(AgvGraph graph)

@@ -34,6 +34,7 @@ public class ActionGroupEntityConfiguration : IEntityTypeConfiguration<ActionGro
         builder.Property(e => e.OrderId).HasMaxLength(DbStringLimits.OrderId);
         builder.Property(e => e.CanRunDoppelspiel);
         builder.Property(e => e.ConsideredForDoppelspielDate);
+        builder.HasIndex(e => e.CreatedDate);
 
         // Reasons is just an information, we will never want to query it, so we can simply store it as json without introducing new tables
         builder.Property(g => g.Reasons).HasJsonConversion();

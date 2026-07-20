@@ -78,6 +78,20 @@ public static class PrometheusMetricCollector
     public static readonly ConcurrentDictionary<Guid, DateTime> AgvOfflineSince = new();
 
     /// <summary>
+    /// The latency between the fleet manager dispatching an action and the agv reporting it started.
+    /// </summary>
+    public static readonly Histogram AgvActionStartLatencyHistogram = Prometheus.Metrics.CreateHistogram(MetricNameConfiguration.AgvActionStartLatency, "Latency between fleetmanager dispatching an action and the agv reporting it started [s]", new HistogramConfiguration
+    {
+        LabelNames = [MetricLabelConfiguration.Id],
+        Buckets = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1, 2, 5, 10, 30]
+    });
+
+    /// <summary>
+    /// Tracks when each action was dispatched for start-latency calculation.
+    /// </summary>
+    public static readonly ConcurrentDictionary<Guid, DateTimeOffset> ActionDispatchedAt = new();
+
+    /// <summary>
     /// The safety field violation by agv counter.
     /// </summary>
     public static readonly Counter AgvSafetyFieldViolationCounter = Prometheus.Metrics.CreateCounter(MetricNameConfiguration.AgvSafetyFieldViolationCount, "Safety field violation count", new CounterConfiguration

@@ -25,6 +25,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 
@@ -59,6 +60,7 @@ public static class TestPlanRunnerHostBuilder
                     string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString,
                         options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
                 });
 
                 // Parsers
@@ -79,7 +81,7 @@ public static class TestPlanRunnerHostBuilder
                 services.AddSingleton<IAgvRepository, AgvRepository>(); // captive (ITestPlanManager is singleton)
                 services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
                 services.AddSingleton<IAgvRoutePlanCacheProvider, AgvRoutePlanCache>();
-                services.AddSingleton<IAgvRouteRetrievalService, AgvRouteRetrievalService>();// captive (ITestStepCancellationEvaluator is singleton)
+                services.AddSingleton<IAgvRouteRetrievalService, AgvRouteRetrievalService>(); // captive (ITestStepCancellationEvaluator is singleton)
                 services.AddSingleton<ITestPlanManager, TestPlanManager>();
                 services.AddSingleton<ITestStepCancellationEvaluator, TestStepCancellationEvaluator>();
                 services.AddSingleton<TestPlanFileWatcher>();

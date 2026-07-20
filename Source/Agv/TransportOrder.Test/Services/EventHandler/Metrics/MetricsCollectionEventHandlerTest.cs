@@ -12,7 +12,7 @@ using Moq;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using AgvStatusGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvStatusGenerator;
 
-namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler.Metrics;
 
 [TestClass]
 public class MetricsCollectionEventHandlerTest

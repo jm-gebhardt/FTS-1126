@@ -58,10 +58,11 @@ public abstract class BaseNodePicker
     /// <param name="agv"></param>
     /// <param name="agvData"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
+    /// <param name="ignoreLocked">Flag to include locked nodes as candidates.</param>
     /// <param name="ignoredNodeIds">Node ids to ignore.</param>
-    protected async Task<GraphNode> PickNode(Agv agv, AgvData? agvData, Guid? startNodeId = null, params Guid[] ignoredNodeIds)
+    protected async Task<GraphNode> PickNode(Agv agv, AgvData? agvData, Guid? startNodeId = null, bool ignoreLocked = false, params Guid[] ignoredNodeIds)
     {
-        IEnumerable<GraphNode> availableNodes = (await GetAvailableNodes(agv)).Where(n => !ignoredNodeIds.Contains(n.Id));
+        IEnumerable<GraphNode> availableNodes = (await GetAvailableNodes(agv, ignoreLocked)).Where(n => !ignoredNodeIds.Contains(n.Id));
 
         var node = await SelectBestNode(availableNodes, agv, agvData, startNodeId);
 
@@ -79,10 +80,10 @@ public abstract class BaseNodePicker
         return AgvDb.Graphs.HasAnyNodeOfTypeAsync(agvCorrelationId, nodeType);
     }
 
-    private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Agv agv)
+    private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Agv agv, bool ignoreLocked)
     {
         IEnumerable<GraphNode> nodes = await AgvDb.Graphs.GetNodesAsync(agv.CorrelationId, NodeFilter);
-        List<GraphNode> availableNodes = nodes.Where(n => n.IsFree).ToList();
+        List<GraphNode> availableNodes = nodes.Where(n => n.IsFree && (ignoreLocked || !n.IsLocked)).ToList();
         if (availableNodes.Count == 0)
         {
             throw new NoNodesAvailableException(Description);

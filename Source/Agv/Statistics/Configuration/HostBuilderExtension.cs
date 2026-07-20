@@ -72,49 +72,49 @@ public static class HostBuilderExtension
         /// Add MassTransit configuration.
         /// </summary>
         public IHostBuilder AddMassTransit(ILogger initialLogger)
-    {
-        hostBuilder.ConfigureServices((context, services) =>
         {
-            try
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                services.AddHostedService<InitialGridProvider>();
-                services.AddHostedService<Housekeeping>();
-                services.ConfigureServicesMassTransit(context.Configuration, x =>
+                try
                 {
-                    x.AddBusConsumers();
-
-                    x.AddMediator(c => c.AddMediatorConsumers());
-                }, rabbitMqConfiguration: (ctx, cfg) =>
-                {
-                    cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
-
-                    cfg.ReceiveEndpoint("agv-events", e =>
+                    services.AddHostedService<InitialGridProvider>();
+                    services.AddHostedService<Housekeeping>();
+                    services.ConfigureServicesMassTransit(context.Configuration, x =>
                     {
-                        // we need one queue and one partitioner for the AGVs, to ensure that all messages for the same AGV are processed in order
-                        var partitioner = e.CreatePartitioner(16);
+                        x.AddBusConsumers();
 
-                        ConfigureGridPositionAttachedEventHandler<AgvPositionReceivedHandler, AgvPositionReceived>(e, ctx, partitioner);
-                        ConfigureGridPositionAttachedEventHandler<AgvErrorEventHandler, AgvErrorReceived>(e, ctx, partitioner);
-                        ConfigureGridPositionAttachedEventHandler<WifiMetricsEventHandler, AgvWifiMetricsReceived>(e, ctx, partitioner);
+                        x.AddMediator(c => c.AddMediatorConsumers());
+                    }, rabbitMqConfiguration: (ctx, cfg) =>
+                    {
+                        cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx);
+
+                        cfg.ReceiveEndpoint("agv-events", e =>
+                        {
+                            // we need one queue and one partitioner for the AGVs, to ensure that all messages for the same AGV are processed in order
+                            var partitioner = e.CreatePartitioner(16);
+
+                            ConfigureGridPositionAttachedEventHandler<AgvPositionReceivedHandler, AgvPositionReceived>(e, ctx, partitioner);
+                            ConfigureGridPositionAttachedEventHandler<AgvErrorEventHandler, AgvErrorReceived>(e, ctx, partitioner);
+                            ConfigureGridPositionAttachedEventHandler<WifiMetricsEventHandler, AgvWifiMetricsReceived>(e, ctx, partitioner);
+                        });
                     });
-                });
-            }
-            catch (InvalidOperationException e)
-            {
-                initialLogger.LogError(e, "MassTransit could not be started");
-                throw;
-            }
-        });
+                }
+                catch (InvalidOperationException e)
+                {
+                    initialLogger.LogError(e, "MassTransit could not be started");
+                    throw;
+                }
+            });
 
-        return hostBuilder;
-    }
+            return hostBuilder;
+        }
 
         /// <summary>
         /// Add service specific configurations.
         /// </summary>
         public IHostBuilder AddStatistics()
-    {
-        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+        {
+            ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
         hostBuilder.ConfigureServices((context, services) =>
         {
@@ -144,18 +144,43 @@ public static class HostBuilderExtension
             services.AddTransient<IGridCellStayRepository, EfGridCellStayRepository>();
             services.AddTransient<IMapGridCellRepository, EfMapGridCellRepository>();
             services.AddTransient<IAgvWifiMetricsRepository, EfAgvWifiMetricsRepository>();
+            hostBuilder.ConfigureServices((context, services) =>
+            {
+                services.AddConfigurationTypeManager();
+                services.AddSingleton<SqlPrintInterceptor>();
+                services.AddDbContext<StatisticsDbContext>((sp, o) =>
+                {
+                    o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
+                        m =>
+                        {
+                            m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
+                            m.EnableRetryOnFailure();
+                            m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        });
+                    o.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>(), new EfCommandMetricsInterceptor());
+                });
+                services.AddTransient<IStatisticsDb, EfStatisticsDb>();
+                services.AddTransient<IMapRepository, EfMapRepository>();
+                services.AddTransient<IHouseKeepingRepository, EfHousekeepingRepository>();
+                services.AddTransient<IGridRepository, EfGridRepository>();
+                services.AddTransient<IAgvFieldViolationRepository, EfAgvFieldViolationRepository>();
+                services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
+                services.AddTransient<IGridCellRepository, EfGridCellRepository>();
+                services.AddTransient<IGridCellStayRepository, EfGridCellStayRepository>();
+                services.AddTransient<IMapGridCellRepository, EfMapGridCellRepository>();
+                services.AddTransient<IAgvWifiMetricsRepository, EfAgvWifiMetricsRepository>();
 
-            services.AddSingleton(typeof(ICache<,>), typeof(Cache<,>));
-            services.AddAgvScopedCache<Guid>(1000, false);
-            services.AddAgvScopedCache<AgvWifiMetricsReceived>(20);
-            services.AddAgvScopedCache<AgvErrorReceived>(20);
+                services.AddSingleton(typeof(ICache<,>), typeof(Cache<,>));
+                services.AddAgvScopedCache<Guid>(1000, false);
+                services.AddAgvScopedCache<AgvWifiMetricsReceived>(20);
+                services.AddAgvScopedCache<AgvErrorReceived>(20);
+                
+                services.AddHealthChecks()
+                    .AddDbContextCheck<StatisticsDbContext>(failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
 
-            services.AddHealthChecks()
-                .AddDbContextCheck<StatisticsDbContext>(failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
-
-            RegisterFilters(services);
-        });
-        return hostBuilder;
-    }
+                RegisterFilters(services);
+            });
+            return hostBuilder;
+        }
     }
 }

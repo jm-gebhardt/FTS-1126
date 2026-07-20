@@ -379,4 +379,53 @@ public class PrometheusMetricCollectionServiceTest
         PrometheusMetricCollector.StationPickCounter.WithLabels(station.Id.ToString()).Value.ShouldBe(pickCount);
         PrometheusMetricCollector.StationDropCounter.WithLabels(station.Id.ToString()).Value.ShouldBe(dropCount);
     }
+
+    [TestMethod]
+    public void RecordActionStarted_AfterDispatch_LatencyObservedAndEntryRemoved()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var actionId = Guid.NewGuid();
+        var agvId = Guid.NewGuid();
+        var dispatchedAt = DateTimeOffset.UtcNow;
+        const double latencySeconds = 0.3;
+        const double tolerance = 0.0001;
+
+        fixture.TimeProvider.SetNow(dispatchedAt);
+        fixture.Service.RecordActionDispatched(actionId);
+        fixture.TimeProvider.SetNow(dispatchedAt.AddSeconds(latencySeconds));
+        fixture.Service.RecordActionStarted(actionId, agvId);
+
+        var child = PrometheusMetricCollector.AgvActionStartLatencyHistogram.WithLabels(agvId.ToString());
+        child.Count.ShouldBe(1);
+        child.Sum.ShouldBe(latencySeconds, tolerance);
+        PrometheusMetricCollector.ActionDispatchedAt.ContainsKey(actionId).ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void RecordActionStarted_WithoutPriorDispatch_NotObserved()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var actionId = Guid.NewGuid();
+        var agvId = Guid.NewGuid();
+
+        fixture.Service.RecordActionStarted(actionId, agvId);
+
+        PrometheusMetricCollector.AgvActionStartLatencyHistogram.WithLabels(agvId.ToString()).Count.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public void DiscardDispatched_AfterDispatch_StartNotObserved()
+    {
+        var fixture = new PrometheusMetricCollectionServiceTestFixture();
+        var actionId = Guid.NewGuid();
+        var agvId = Guid.NewGuid();
+
+        fixture.TimeProvider.SetNow(DateTimeOffset.UtcNow);
+        fixture.Service.RecordActionDispatched(actionId);
+        fixture.Service.DiscardDispatched(actionId);
+        fixture.Service.RecordActionStarted(actionId, agvId);
+
+        PrometheusMetricCollector.ActionDispatchedAt.ContainsKey(actionId).ShouldBeFalse();
+        PrometheusMetricCollector.AgvActionStartLatencyHistogram.WithLabels(agvId.ToString()).Count.ShouldBe(0);
+    }
 }

@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
 
 /// <inheritdoc cref="IMetricCollectionService"/>>
 [PublicAPI]
-public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository, IStationRepository stationRepository) : IMetricCollectionService
+public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupRepository actionGroupRepository, IStationRepository stationRepository, TimeProvider timeProvider) : IMetricCollectionService
 {
     /// <inheritdoc cref="IMetricCollectionService"/>>
     public async Task CollectOrderCompletionMetrics(Models.ActionGroup.ActionGroup actionGroup, Guid? lastNodeId = null)
@@ -251,5 +251,29 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
             default:
                 throw new ArgumentOutOfRangeException(nameof(actionType), actionType, null);
         }
+    }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public void RecordActionDispatched(Guid actionCorrelationId)
+    {
+        PrometheusMetricCollector.ActionDispatchedAt[actionCorrelationId] = timeProvider.GetUtcNow();
+    }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public void RecordActionStarted(Guid actionCorrelationId, Guid agvCorrelationId)
+    {
+        if (!PrometheusMetricCollector.ActionDispatchedAt.TryRemove(actionCorrelationId, out var dispatchedAt))
+        {
+            return;
+        }
+
+        double latencySeconds = (timeProvider.GetUtcNow() - dispatchedAt).TotalSeconds;
+        PrometheusMetricCollector.AgvActionStartLatencyHistogram.WithLabels(agvCorrelationId.ToString()).Observe(latencySeconds);
+    }
+
+    /// <inheritdoc cref="IMetricCollectionService"/>>
+    public void DiscardDispatched(Guid actionCorrelationId)
+    {
+        PrometheusMetricCollector.ActionDispatchedAt.TryRemove(actionCorrelationId, out _);
     }
 }

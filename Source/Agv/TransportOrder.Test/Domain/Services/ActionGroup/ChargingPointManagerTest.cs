@@ -212,6 +212,51 @@ public class ChargingPointManagerTest
     }
 
     [TestMethod]
+    public async Task ReserveChargerAsync_WhenOnlyChargerIsLocked_ThrowsWithoutSelectingNode()
+    {
+        var lockedCharger = ChargingPointManagerTestFixture.GenerateLockedChargingNode();
+        var availableNodes = new List<GraphNode>
+        {
+            lockedCharger
+        };
+
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new ChargingPointManagerTestFixture()
+            .WithAgv(agv)
+            .WithAvailableNodes(availableNodes)
+            .WithNode(lockedCharger)
+            .WithChargingPointManager()
+            .WithNodeLocker(true);
+
+        await Should.ThrowAsync<NoChargeStationAvailableException>(async () => await fixture.ChargingPointManager.ReserveChargerAsync(agv));
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<IList<GraphNode>>(), It.IsAny<AgvData>(), It.IsAny<Guid?>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task ReserveChargerAsync_WhenChargerIsLockedAndIgnoreLocked_ReservesLockedCharger()
+    {
+        var lockedCharger = ChargingPointManagerTestFixture.GenerateLockedChargingNode();
+        var availableNodes = new List<GraphNode>
+        {
+            lockedCharger
+        };
+
+        var agv = AgvGenerator.GenerateIdleAgv();
+        var fixture = new ChargingPointManagerTestFixture()
+            .WithAgv(agv)
+            .WithAvailableNodes(availableNodes)
+            .WithLowestCostNode(availableNodes, lockedCharger)
+            .WithNode(lockedCharger)
+            .WithChargingPointManager()
+            .WithNodeLocker(true);
+
+        var reservedCharger = await fixture.ChargingPointManager.ReserveChargerAsync(agv, ignoreLocked: true);
+        reservedCharger.ShouldNotBeNull();
+        reservedCharger.Name.ShouldBe(ChargingPointManagerTestFixture.LockedChargerName);
+        fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
+    }
+
+    [TestMethod]
     public async Task ReserveChargerAsync_WhenMoreThanOneAvailableChargerNodes_ReserveNearestAvailableNode()
     {
         var availableNodes = new List<GraphNode>

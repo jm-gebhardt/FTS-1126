@@ -56,6 +56,11 @@ internal static class MetricNameConfiguration
     internal const string AgvSafetyFieldViolationDuration = "ACC_AGV_SAFETYFIELD_VIOLATION_DURATION";
 
     /// <summary>
+    /// Metric name for <see cref="PrometheusMetricCollector.AgvActionStartLatencyHistogram"/>.
+    /// </summary>
+    internal const string AgvActionStartLatency = "ACC_AGV_ACTION_START_LATENCY_SECONDS";
+
+    /// <summary>
     /// Metric name for <see cref="PrometheusMetricCollector.StationJamStateCounter"/>.
     /// </summary>
     internal const string StationJamStateCount = "ACC_STATION_JAMSTATE_COUNT";
