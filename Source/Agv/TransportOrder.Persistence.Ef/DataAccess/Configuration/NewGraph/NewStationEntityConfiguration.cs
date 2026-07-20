@@ -13,6 +13,7 @@ public class NewStationEntityConfiguration : IEntityTypeConfiguration<Station>
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<Station> builder)
     {
+        builder.ToTable("New" + nameof(Station));
         builder.HasKey(e => e.Id);
         builder.Property(e => e.X);
         builder.Property(e => e.Y);

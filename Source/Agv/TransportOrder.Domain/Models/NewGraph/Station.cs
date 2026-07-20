@@ -38,4 +38,11 @@ public class Station : GraphResource
         Y = y;
         Theta = theta;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public Station() : base(Guid.NewGuid(), null, null)
+    {
+    }
 }

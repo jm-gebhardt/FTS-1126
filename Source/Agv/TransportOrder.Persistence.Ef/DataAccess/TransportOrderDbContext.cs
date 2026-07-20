@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.BackgroundEditor;
@@ -69,6 +70,8 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new BackgroundLayerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OwnedFilterTemplateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ResourceBoundingBoxEntityConfiguration());
+        modelBuilder.Ignore<GraphResource>();
+        modelBuilder.Ignore<RoutingResource>();
         modelBuilder.ApplyConfiguration(new NewGraphEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewNodeEntityConfiguration());

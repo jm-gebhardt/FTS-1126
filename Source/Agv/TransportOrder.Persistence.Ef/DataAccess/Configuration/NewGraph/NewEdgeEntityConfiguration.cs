@@ -13,11 +13,12 @@ public class NewEdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<Edge> builder)
     {
+        builder.ToTable("New" + nameof(Edge));
         builder.HasKey(e => e.Id);
         builder.HasOne(e => e.StartNode);
         builder.HasOne(e => e.EndNode);
         builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
-        builder.HasMany(e => e.Children);
+        builder.Ignore(e => e.Children);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
     }
 }

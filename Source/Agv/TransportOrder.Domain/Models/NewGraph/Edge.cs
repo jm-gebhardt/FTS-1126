@@ -21,4 +21,13 @@ public class Edge : GraphResource
         StartNode = startNode;
         EndNode = endNode;
     }
+
+    /// <summary>
+    /// Efcore
+    /// </summary>
+    public Edge(): base(Guid.NewGuid(), null, null)
+    {
+        StartNode = null!;
+        EndNode = null!;
+    }
 }

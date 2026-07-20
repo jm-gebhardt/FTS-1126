@@ -37,4 +37,11 @@ public class Node : GraphResource
         Y = y;
         LevelId = levelId;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public Node() : base(Guid.NewGuid(), null, null)
+    {
+    }
 }
