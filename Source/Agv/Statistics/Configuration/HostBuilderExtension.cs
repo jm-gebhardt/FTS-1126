@@ -33,7 +33,8 @@ namespace Gebhardt.Acc.Statistics.Configuration;
 /// </summary>
 public static class HostBuilderExtension
 {
-    private static void ConfigureGridPositionAttachedEventHandler<THandler, TMessage>(IRabbitMqReceiveEndpointConfigurator e, IBusRegistrationContext ctx, IPartitioner partitioner)
+    private static void ConfigureGridPositionAttachedEventHandler<THandler, TMessage>(
+        IRabbitMqReceiveEndpointConfigurator e, IBusRegistrationContext ctx, IPartitioner partitioner)
         where THandler : class, IConsumer
         where TMessage : class, IAgvSerialNumber, IWithAgvPosition, IMessageCreatedDate
     {
@@ -52,7 +53,8 @@ public static class HostBuilderExtension
         services.AddSingleton<ISignificanceChecker<AgvPosition>, AgvPositionSignificanceChecker>();
         services.AddTransient<IMessageFilter<AgvPositionReceived>, AgvPositionReceivedKeyedFilter>();
         // Wi-Fi metrics
-        services.AddSingleton(new WifiConfiguration(3, 10, 3) { MinInterval = TimeSpan.Zero, MaxInterval = TimeSpan.MaxValue });
+        services.AddSingleton(new WifiConfiguration(3, 10, 3)
+            { MinInterval = TimeSpan.Zero, MaxInterval = TimeSpan.MaxValue });
         services.AddSingleton<ISignificanceChecker<WifiMetrics>, WifiMetricsSignificanceChecker>();
         services.AddTransient<IMessageFilter<AgvWifiMetricsReceived>, AgvWifiMetricsReceivedKeyedFilter>();
 
@@ -93,9 +95,12 @@ public static class HostBuilderExtension
                             // we need one queue and one partitioner for the AGVs, to ensure that all messages for the same AGV are processed in order
                             var partitioner = e.CreatePartitioner(16);
 
-                            ConfigureGridPositionAttachedEventHandler<AgvPositionReceivedHandler, AgvPositionReceived>(e, ctx, partitioner);
-                            ConfigureGridPositionAttachedEventHandler<AgvErrorEventHandler, AgvErrorReceived>(e, ctx, partitioner);
-                            ConfigureGridPositionAttachedEventHandler<WifiMetricsEventHandler, AgvWifiMetricsReceived>(e, ctx, partitioner);
+                            ConfigureGridPositionAttachedEventHandler<AgvPositionReceivedHandler, AgvPositionReceived>(
+                                e, ctx, partitioner);
+                            ConfigureGridPositionAttachedEventHandler<AgvErrorEventHandler, AgvErrorReceived>(e, ctx,
+                                partitioner);
+                            ConfigureGridPositionAttachedEventHandler<WifiMetricsEventHandler, AgvWifiMetricsReceived>(
+                                e, ctx, partitioner);
                         });
                     });
                 }
@@ -116,48 +121,24 @@ public static class HostBuilderExtension
         {
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
 
-        hostBuilder.ConfigureServices((context, services) =>
-        {
-            string? sqlServerConnectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
-                                                ?? context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName);
-
-            services.AddConfigurationTypeManager();
-            services.AddSingleton<SqlPrintInterceptor>();
-            services.AddDbContext<StatisticsDbContext>((sp, o) =>
-            {
-                o.UseSqlServer(sqlServerConnectionString,
-                    m =>
-                    {
-                        m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
-                        m.EnableRetryOnFailure();
-                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    });
-                o.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>());
-            });
-            services.AddTransient<IStatisticsDb, EfStatisticsDb>();
-            services.AddTransient<IMapRepository, EfMapRepository>();
-            services.AddTransient<IHouseKeepingRepository, EfHousekeepingRepository>();
-            services.AddTransient<IGridRepository, EfGridRepository>();
-            services.AddTransient<IAgvFieldViolationRepository, EfAgvFieldViolationRepository>();
-            services.AddTransient<IAgvErrorRepository, EfAgvErrorRepository>();
-            services.AddTransient<IGridCellRepository, EfGridCellRepository>();
-            services.AddTransient<IGridCellStayRepository, EfGridCellStayRepository>();
-            services.AddTransient<IMapGridCellRepository, EfMapGridCellRepository>();
-            services.AddTransient<IAgvWifiMetricsRepository, EfAgvWifiMetricsRepository>();
             hostBuilder.ConfigureServices((context, services) =>
             {
+                string? sqlServerConnectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                                    ?? context.Configuration.GetConnectionString(StatisticsDbContext
+                                                        .ConfigSectionName);
+
                 services.AddConfigurationTypeManager();
                 services.AddSingleton<SqlPrintInterceptor>();
                 services.AddDbContext<StatisticsDbContext>((sp, o) =>
                 {
-                    o.UseSqlServer(context.Configuration.GetConnectionString(StatisticsDbContext.ConfigSectionName),
+                    o.UseSqlServer(sqlServerConnectionString,
                         m =>
                         {
                             m.MigrationsHistoryTable(IDbContext<StatisticsDbContext>.MigrationTableName);
                             m.EnableRetryOnFailure();
                             m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                         });
-                    o.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>(), new EfCommandMetricsInterceptor());
+                    o.AddInterceptors(sp.GetRequiredService<SqlPrintInterceptor>());
                 });
                 services.AddTransient<IStatisticsDb, EfStatisticsDb>();
                 services.AddTransient<IMapRepository, EfMapRepository>();
@@ -169,18 +150,18 @@ public static class HostBuilderExtension
                 services.AddTransient<IGridCellStayRepository, EfGridCellStayRepository>();
                 services.AddTransient<IMapGridCellRepository, EfMapGridCellRepository>();
                 services.AddTransient<IAgvWifiMetricsRepository, EfAgvWifiMetricsRepository>();
-
                 services.AddSingleton(typeof(ICache<,>), typeof(Cache<,>));
                 services.AddAgvScopedCache<Guid>(1000, false);
                 services.AddAgvScopedCache<AgvWifiMetricsReceived>(20);
                 services.AddAgvScopedCache<AgvErrorReceived>(20);
-                
+
                 services.AddHealthChecks()
-                    .AddDbContextCheck<StatisticsDbContext>(failureStatus: HealthStatus.Unhealthy, tags: new[] { "ready" });
+                    .AddDbContextCheck<StatisticsDbContext>(failureStatus: HealthStatus.Unhealthy,
+                        tags: ["ready"]);
 
                 RegisterFilters(services);
             });
             return hostBuilder;
-        })
+        }
     }
 }
