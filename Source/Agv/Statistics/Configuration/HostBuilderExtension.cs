@@ -181,6 +181,6 @@ public static class HostBuilderExtension
                 RegisterFilters(services);
             });
             return hostBuilder;
-        }
+        })
     }
 }
