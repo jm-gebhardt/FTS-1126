@@ -20,11 +20,11 @@ resources:
     name: Architecture/Gebhardt.Platform.CI
     ref: main
 # Approved OpenAPI baselines. Alias must match the template's 'platformContractsResourceAlias'
-# (default 'platform-contracts'). The repo lives in the 'StoreWare Platform' project, matching
+# (default 'platform-contracts'). The repo lives in the 'Gebhardt Software Platform' project, matching
 # the template's 'platformContractsProject' default used for PR creation.
   - repository: platform-contracts
     type: git
-    name: StoreWare Platform/platform-contracts
+    name: Gebhardt Software Platform/platform-contracts
     ref: refs/heads/main
 
 stages:

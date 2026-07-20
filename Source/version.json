@@ -3,6 +3,7 @@
   "version": "0.1",
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
+    "^refs/heads/master$",
     "^refs/heads/develop$",
     "^refs/heads/release/.*$"
   ],
