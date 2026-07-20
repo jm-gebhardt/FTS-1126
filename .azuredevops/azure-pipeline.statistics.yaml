@@ -4,22 +4,10 @@ trigger:
     include:
     - master # to be removed when branch name is changed to main
     - main
-    - develop
-    - release/*
-    - hotfix/*
   paths:
     include:
-    - Source/Agv/Statistics/**
-    - Source/Agv/Statistics.Domain/**
-    - Source/Agv/Statistics.Messages/**
-    - Source/Agv/Statistics.Persistence.Ef/**
-    - Source/Agv/Statistics.WebApi/**
-    - Source/Agv/Statistics.Test/**
-    - Source/Agv/Common/**
-    - Source/Agv/Common.Domain/**
-    - Source/Agv/Common.Messages/**
-    - Source/Agv/Common.Persistence.Ef/**
-    - Source/Agv/Common.WebApi/**
+    - Source/Agv/Statistics**
+    - Source/Agv/Common**
     - Source/Directory.Build.props
     - Source/Directory.Packages.props
 

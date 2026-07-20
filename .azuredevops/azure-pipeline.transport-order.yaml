@@ -4,21 +4,10 @@ trigger:
     include:
     - master # to be removed when branch name is changed to main
     - main
-    - develop
-    - release/*
-    - hotfix/*
   paths:
     include:
-    - Source/Agv/TransportOrder/**
-    - Source/Agv/TransportOrder.Core/**
-    - Source/Agv/TransportOrder.Domain/**
-    - Source/Agv/TransportOrder.Messages/**
-    - Source/Agv/TransportOrder.Persistence.Ef/**
-    - Source/Agv/TransportOrder.Routing/**
-    - Source/Agv/TransportOrder.WebApi/**
-    - Source/Agv/TransportOrder.Test/**
-    - Source/Agv/Common/Filter/**
-    - Source/Agv/Common.Notification/**
+    - Source/Agv/TransportOrder**
+    - Source/Agv/Common**
     - Source/Directory.Build.props
     - Source/Directory.Packages.props
 
