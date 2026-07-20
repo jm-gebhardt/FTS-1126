@@ -105,6 +105,7 @@ public static class HostBuilderExtension
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationVda5050DbContext>.MigrationTableName);
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
                 });
                 services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 

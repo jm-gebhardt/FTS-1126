@@ -87,6 +87,7 @@ public static class HostBuilderExtension
                         m.MigrationsHistoryTable(IDbContext<StationCommunicationDbContext>.MigrationTableName);
                         m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
                 });
                 if (simulateOptions != null)
                 {

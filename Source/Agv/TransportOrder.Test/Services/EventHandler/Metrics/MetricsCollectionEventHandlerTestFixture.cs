@@ -2,7 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler.Metrics;
 using Gebhardt.Acc.TransportOrder.Domain.Profiles;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
@@ -11,7 +11,7 @@ using Moq;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
-namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler.Metrics;
 
 public class MetricsCollectionEventHandlerTestFixture : MassTransitConsumerTestFixture<MetricsCollectionEventHandler>
 {

@@ -735,7 +735,7 @@ public class AgvCommandHandler :
         agv.GraphExists = true;
         if (!string.IsNullOrEmpty(context.Message.AgvTypeIdentifier) && agv.AgvTypeId == null)
         {
-           agv.UpdateType(AgvType.IdFromIdentifier(context.Message.AgvTypeIdentifier), false, true);
+            agv.UpdateType(AgvType.IdFromIdentifier(context.Message.AgvTypeIdentifier), false, true);
         }
 
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvGraphReceived, correlationId, null, "AGV Graph Received",
@@ -939,8 +939,11 @@ public class AgvCommandHandler :
         await _notificationSender.SendAgvNotification(
             "Agv set to user mode",
             "Agv {agv} was set to mode {mode} by user {user}.",
-            new Dictionary<string, string> { { "agv", agv.SerialNumber }, 
-                { "user", initiatingUser ?? "" }, {"mode", agv.Mode.PendingType.ToString() ?? "" } },
+            new Dictionary<string, string>
+            {
+                { "agv", agv.SerialNumber },
+                { "user", initiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" }
+            },
             [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]);
 
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvModeChangePending, agv.CorrelationId, null, "AGV Mode Change Pending",
@@ -978,7 +981,7 @@ public class AgvCommandHandler :
         await _notificationSender.SendAgvNotification(
             "Agv set to user mode",
             "Agv {agv} was set to mode {mode} by user {user}.",
-            new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", initiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } }, 
+            new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", initiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } },
             [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
         );
 
@@ -1025,7 +1028,7 @@ public class AgvCommandHandler :
 
         await _notificationSender.SendAgvNotification(
             "Agv set to user mode",
-            "Agv {agv} was set to mode {mode} by user {user}.", 
+            "Agv {agv} was set to mode {mode} by user {user}.",
             new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", initiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } },
             [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
         );
@@ -1064,7 +1067,7 @@ public class AgvCommandHandler :
 
         await _notificationSender.SendAgvNotification(
             "Agv set to user mode",
-            "Agv {agv} was set to mode {mode} by user {user}.", 
+            "Agv {agv} was set to mode {mode} by user {user}.",
             new Dictionary<string, string> { { "agv", agv.SerialNumber }, { "user", agv.Mode.InitiatingUser ?? "" }, { "mode", agv.Mode.PendingType.ToString() ?? "" } },
             [new NotificationLink("Agv", NotificationLinkResource.Agv, agv.CorrelationId)]
         );
@@ -1578,7 +1581,7 @@ public class AgvCommandHandler :
         await _notificationSender.SendAgvNotification(
             "Agv discovered",
             "Agv {agv} was discovered.",
-            new Dictionary<string, string> { { "agv", agvSerialNumber } }, 
+            new Dictionary<string, string> { { "agv", agvSerialNumber } },
             [new NotificationLink("Agv", NotificationLinkResource.Agv, correlationId)]
         );
 
@@ -2145,7 +2148,7 @@ public class AgvCommandHandler :
                 [new NotificationLink("Agv", NotificationLinkResource.Agv, correlationId)]
             );
             agv = new Agv(correlationId, agvSerialNumber, hasValidConfiguration);
-            var settingsGroup =  await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
+            var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
             agv.AgvSettingsGroup = settingsGroup.Id;
         }
 
@@ -2168,14 +2171,14 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<UpdateAgvType> context)
     {
         (var correlationId, string agvSerialNumber, var newAgvTypeId, string newAgvType, bool hasValidConfiguration, bool needsConfirmation) = context.Message;
-        
+
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
 
         agv.UpdateType(newAgvTypeId, needsConfirmation, hasValidConfiguration);
 
         await _agvDb.Agvs.UpdateAgvAsync(agv, context.CancellationToken);
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvTypeUpdated, correlationId, null, "AGV type updated", $"New type {newAgvType} for AGV {agvSerialNumber} set, needs confirmation {needsConfirmation} ",
-            new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber }, {LogLabels.AgvTypeIdentifier, newAgvType}, {LogLabels.NeedsConfirmation, needsConfirmation} });
+            new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber }, { LogLabels.AgvTypeIdentifier, newAgvType }, { LogLabels.NeedsConfirmation, needsConfirmation } });
 
         if (!hasValidConfiguration)
         {

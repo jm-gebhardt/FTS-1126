@@ -105,6 +105,10 @@ public class TestPlanFileWatcher : IPollable
         IRequestClient<GetStationLabels>? requestClient = _bus.CreateRequestClient<GetStationLabels>(timeout: TimeSpan.FromSeconds(30));
         Response<GotStationLabels> response = await requestClient.GetResponse<GotStationLabels>(new GetStationLabels(), cancellationToken);
         _stationProvider.Update(response.Message.Labels);
+
+        IRequestClient<GetStationTypes>? stationsClient = _bus.CreateRequestClient<GetStationTypes>(timeout: TimeSpan.FromSeconds(30));
+        Response<GotStationTypes> stationsResponse = await stationsClient.GetResponse<GotStationTypes>(new GetStationTypes(), cancellationToken);
+        _stationProvider.UpdateStationTypes(stationsResponse.Message.Stations);
     }
 
     private async Task ProcessFileAsync(string filePath, CancellationToken cancellationToken)

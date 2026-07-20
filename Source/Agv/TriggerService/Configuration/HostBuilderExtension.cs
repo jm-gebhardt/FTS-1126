@@ -31,55 +31,56 @@ public static class HostBuilderExtension
         /// Add MassTransit configuration.
         /// </summary>
         public IHostBuilder AddMassTransit(ILogger initialLogger)
-    {
-        hostBuilder.ConfigureServices((context, services) =>
         {
-            try
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                services.ConfigureServicesMassTransit(context.Configuration, x =>
+                try
                 {
-                    x.AddBusConsumers();
+                    services.ConfigureServicesMassTransit(context.Configuration, x =>
+                    {
+                        x.AddBusConsumers();
 
-                    x.AddMediator(c => c.AddMediatorConsumers());
-                }, rabbitMqConfiguration: (ctx, cfg) => { cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx); });
-            }
-            catch (InvalidOperationException e)
-            {
-                initialLogger.LogError(e, "MassTransit could not be started");
-                throw;
-            }
-        });
+                        x.AddMediator(c => c.AddMediatorConsumers());
+                    }, (ctx, cfg) => { cfg.UseConsumeFilter<AgvTracingConsumeFilters>(ctx); });
+                }
+                catch (InvalidOperationException e)
+                {
+                    initialLogger.LogError(e, "MassTransit could not be started");
+                    throw;
+                }
+            });
 
-        return hostBuilder;
-    }
+            return hostBuilder;
+        }
 
         /// <summary>
         /// Add service specific configurations.
         /// </summary>
         public IHostBuilder AddTriggerService(ILogger initialLogger)
-    {
-        hostBuilder.ConfigureServices((context, services) =>
         {
-            var config = services.AddTriggerServiceConfiguration(context.Configuration);
-            services.RegisterTriggerDependencies(initialLogger, config);
-            services.AddHostedService<TriggerConfigurator>();
-            services.AddSingleton<ITriggerManager, TriggerManager>();
-            services.AddTransient<ReflectionService>();
-            services.AddSingleton<ITriggerRepository, EfTriggerRepository>();
-            // -  database
-            services.AddDbContextFactory<TriggerServiceDbContext>(builder =>
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                string? connectionString = context.Configuration.GetConnectionString(TriggerServiceDbContext.ConfigSectionName);
-
-                builder.UseSqlServer(connectionString, m =>
+                var config = services.AddTriggerServiceConfiguration(context.Configuration);
+                services.RegisterTriggerDependencies(initialLogger, config);
+                services.AddHostedService<TriggerConfigurator>();
+                services.AddSingleton<ITriggerManager, TriggerManager>();
+                services.AddTransient<ReflectionService>();
+                services.AddSingleton<ITriggerRepository, EfTriggerRepository>();
+                // -  database
+                services.AddDbContextFactory<TriggerServiceDbContext>(builder =>
                 {
-                    m.MigrationsHistoryTable(IDbContext<TriggerServiceDbContext>.MigrationTableName);
-                    m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    string? connectionString = context.Configuration.GetConnectionString(TriggerServiceDbContext.ConfigSectionName);
+
+                    builder.UseSqlServer(connectionString, m =>
+                    {
+                        m.MigrationsHistoryTable(IDbContext<TriggerServiceDbContext>.MigrationTableName);
+                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
                 });
             });
-        });
-        return hostBuilder;
-    }
+            return hostBuilder;
+        }
     }
 
     /// <summary>

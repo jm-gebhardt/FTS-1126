@@ -114,8 +114,13 @@ public class AgvErrorCommandHandler :
         if (changed)
         {
             List<AgvError> wifiInformation = newErrors.Where(e => e.IsWifiMessage()).ToList();
-            await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrors.Where(e => !e.IsWifiMessage()).ToList(), resolvedErrors, correlationId);
-            await LogErrors(newErrors, agv);
+            List<AgvError> newErrorsWithoutWifiInfo = newErrors.Where(e => !e.IsWifiMessage()).ToList();
+            if(newErrorsWithoutWifiInfo.Count > 0 || resolvedErrors.Count > 0)
+            {
+                await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrorsWithoutWifiInfo, resolvedErrors, correlationId);
+                await LogErrors(newErrors, agv);
+            }
+           
             IReadOnlyList<AgvError> allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
             await publishEndpoint.Publish(new AgvErrorChanged(correlationId, [..allErrors.ToList(), ..wifiInformation], newErrors, resolvedErrors));
         }

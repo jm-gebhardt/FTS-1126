@@ -14,6 +14,7 @@ using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
+using Gebhardt.Acc.TransportOrder.Core.Services.EventHandler.Metrics;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.BoundingBox;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -90,6 +91,7 @@ public static class CoreBusRegistrationExtensions
         RegisterTriggerHandlers(busRegistrationConfigurator);
 
         busRegistrationConfigurator.AddConsumer<MetricsCollectionEventHandler>();
+        busRegistrationConfigurator.AddConsumer<ActionStartLatencyEventHandler>();
         busRegistrationConfigurator.AddConsumer<LogEntryEventHandler>();
         busRegistrationConfigurator.AddConsumer<LogEntryCommandHandler>();
 
@@ -220,6 +222,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GetGraphRequestHandler>();
         busRegistrationConfigurator.AddRequestClient<GetGraph>();
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<StationTypeRequestHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxEventHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxCommandHandler>(c =>
         {
@@ -317,7 +320,7 @@ public static class CoreBusRegistrationExtensions
                     {
                         // Retry once of the cargo has not been updated yet
                         // Used to compensate race conditions on events of updated messages 
-                        r.Interval(3, TimeSpan.FromSeconds(5));
+                        r.Interval(6, TimeSpan.FromSeconds(5));
                         r.Handle<CargoStateMismatchException>();
                     });
                 }
