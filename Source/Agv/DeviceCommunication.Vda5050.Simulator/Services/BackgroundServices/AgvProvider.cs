@@ -1,6 +1,8 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using MassTransit;
@@ -12,7 +14,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.Background
 /// <summary>
 /// Provides a service to generate simulated agvs.
 /// </summary>
-public class AgvProvider(Options options, ILogger<AgvProvider> logger, IBus bus) : BackgroundService
+public class AgvProvider(Options options, ILogger<AgvProvider> logger, IAgvCache agvCache, IBus bus) : BackgroundService
 {
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -20,10 +22,17 @@ public class AgvProvider(Options options, ILogger<AgvProvider> logger, IBus bus)
         ICollection<GraphNode>? graphNodes = await TryGetExistingGraphNodesAsync(stoppingToken);
 
         logger.LogInformation("Creating {Agvs} with base serial number {Base}", options.Agvs, options.SerialNumberBase);
-        IEnumerable<Task> tasks = options.SimulatedSerialNumbers().Select(serialNumber => bus.Publish(
-            new CreateAgv(new AgvConfiguration(serialNumber, options.MapId, options.Manufacturer), graphNodes),
-            stoppingToken));
+        IEnumerable<Task> tasks = options.SimulatedSerialNumbers().Select(serialNumber => CreateAgv(graphNodes, serialNumber, stoppingToken));
         await Task.WhenAll(tasks);
+    }
+
+    private async Task CreateAgv(ICollection<GraphNode>? graphNodes, string serialNumber,  CancellationToken stoppingToken)
+    {
+        var config = new AgvConfiguration(serialNumber, options.MapId, options.Manufacturer);
+        await agvCache.AddOrUpdateAsync(config.CorrelationId, AgvOperatingMode.Automatic);
+        await bus.Publish(
+            new CreateAgv(config, graphNodes),
+            stoppingToken);
     }
 
     private async Task<ICollection<GraphNode>?> TryGetExistingGraphNodesAsync(CancellationToken cancellationToken)

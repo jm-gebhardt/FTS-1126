@@ -143,4 +143,11 @@ public interface IAgvClient
     /// <param name="logEntry">The new log entry.</param>
     [SignalRMethod("BatteryLogCreated")]
     Task BatteryLogCreated(LogEntryCreatedDto logEntry);
+
+    /// <summary>
+    /// Publishes the agv operation mode change to all clients.
+    /// </summary>
+    /// <param name="agv">The new agv.</param>
+    [SignalRMethod(nameof(AgvOperationModeChanged))]
+    Task AgvOperationModeChanged(AgvDto agv);
 }

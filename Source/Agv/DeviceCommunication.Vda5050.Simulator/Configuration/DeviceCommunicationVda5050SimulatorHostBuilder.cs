@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -26,7 +27,9 @@ public static class DeviceCommunicationVda5050SimulatorHostBuilder
             .AddSimulator(args, initialLogger)
             .ConfigureWebHost(host =>
             {
-                host.UseKestrel().ConfigureAppConfiguration((_, config) =>
+                host.UseKestrel()
+                    .AddSimulatorWebApi()
+                    .ConfigureAppConfiguration((_, config) =>
                     {
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
@@ -34,6 +37,7 @@ public static class DeviceCommunicationVda5050SimulatorHostBuilder
                     .Configure(app =>
                     {
                         app.UseMetricServer();
+                        app.UseSimulatorWebApi();
                         app.UseDeveloperExceptionPage();
                     });
             });

@@ -1,4 +1,3 @@
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;

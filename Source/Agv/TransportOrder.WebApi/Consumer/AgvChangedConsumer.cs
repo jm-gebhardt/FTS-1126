@@ -28,7 +28,8 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     IConsumer<AgvStationsChanged>,
     IConsumer<AgvMaintained>,
     IConsumer<MaintenanceLogCreated>,
-    IConsumer<LogEntryCreated>
+    IConsumer<LogEntryCreated>,
+    IConsumer<AgvOperatingModeChanged>
 {
     private readonly ILogger<AgvChangedConsumer> _logger;
     private readonly IAgvPublisher _agvPublisher;
@@ -187,5 +188,11 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
         {
             await _agvPublisher.SendBatteryLogEntryCreated(logEntry.AgvCorrelationId.GetValueOrDefault(), _mapper.Map<LogEntry>(logEntry));
         }
+    }
+
+    /// <inheritdoc cref="AgvChangedConsumer"/>>
+    public Task Consume(ConsumeContext<AgvOperatingModeChanged> context)
+    {
+        return _agvPublisher.SendOperationModeChanged(context.Message.Agv);
     }
 }

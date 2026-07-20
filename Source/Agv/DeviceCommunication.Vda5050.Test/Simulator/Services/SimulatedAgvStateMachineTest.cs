@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
@@ -233,7 +234,7 @@ public class SimulatedAgvStateMachineTest
         var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
 
         await fixture.PublishMessageAsync(new CreateAgv(config));
-        var newPosition = new AgvPosition(true, 5.0f, 10.0f, 0, 0);
+        var newPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X= 5, Y= 10, Z=0, Theta = 0, PositionInitialized = true };
         await fixture.PublishMessageAsync(new UpdatePosition(config.CorrelationId, newPosition, "node1"));
 
         var saga = fixture.GetSaga(config);
@@ -313,5 +314,194 @@ public class SimulatedAgvStateMachineTest
         saga2.Configuration.SerialNumber.ShouldBe("simagv2");
         saga1.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
         saga2.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateAgv_PublishesMqttStateWithAutomaticOperatingMode()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>();
+        state.OperatingMode.ShouldBe(MqttOperatingMode.Automatic);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetToPosition_UpdatesSagaPosition()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        var newPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true };
+        await fixture.PublishMessageAsync(new SetToPosition(config.CorrelationId, newPosition));
+
+        var saga = fixture.GetSaga(config);
+        saga.CurrentPosition.X.ShouldBe(5.0f);
+        saga.CurrentPosition.Y.ShouldBe(10.0f);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetToPosition_ResetsLastNodeId()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        
+        var initialPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 0, Y = 0, Z = 0, Theta = 0, PositionInitialized = true };
+        await fixture.PublishMessageAsync(new UpdatePosition(config.CorrelationId, initialPosition, "node1"));
+        fixture.GetSaga(config).LastNodeId.ShouldBe("node1");
+
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        var newPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true };
+        await fixture.PublishMessageAsync(new SetToPosition(config.CorrelationId, newPosition));
+
+        var saga = fixture.GetSaga(config);
+        saga.LastNodeId.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_SetToPosition_PublishesMqttVisualizationWithNewPosition()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        var newPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true };
+        await fixture.PublishMessageAsync(new SetToPosition(config.CorrelationId, newPosition));
+
+        ICollection<MqttVisualization> visualizations = fixture.GetPublishedMessages<MqttVisualization>();
+        visualizations.Count.ShouldBeGreaterThanOrEqualTo(2);
+        visualizations.Last().AgvPosition!.X.ShouldBe(5.0f);
+        visualizations.Last().AgvPosition!.Y.ShouldBe(10.0f);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetToPosition_PublishesMqttState()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        var newPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true };
+
+        await fixture.PublishMessageAsync(new SetToPosition(config.CorrelationId, newPosition));
+
+        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        states.Count.ShouldBeGreaterThanOrEqualTo(2);
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchOperatingMode_UpdatesSagaOperatingMode()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
+        // resulting MqttState to be sure the mutation has actually happened.
+        await fixture.GetFirstPublishedMessageAsync<MqttState>(occurrenceNumber: 2);
+
+        var saga = fixture.GetSaga(config);
+        saga.OperatingMode.ShouldBe(AgvOperatingMode.Manual);
+        saga.IsInAutomaticMode.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchOperatingMode_ToManual_FromBusyMoving_TransitionsToIdle()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new StartOrder(config.CorrelationId, CreateOrder(["A", "B"])));
+        fixture.GetSaga(config).CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.BusyMoving));
+
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
+        // resulting MqttState to be sure the mutation has actually happened.
+        await fixture.GetFirstPublishedMessageAsync<MqttState>(occurrenceNumber: 3);
+
+        var saga = fixture.GetSaga(config);
+        saga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchOperatingMode_ToManual_ClearsCurrentOrder()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new StartOrder(config.CorrelationId, CreateOrder(["A", "B"])));
+
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
+        // resulting MqttState to be sure the mutation has actually happened.
+        await fixture.GetFirstPublishedMessageAsync<MqttState>(occurrenceNumber: 3);
+
+        var saga = fixture.GetSaga(config);
+        saga.CurrentOrder.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchOperatingMode_ToAutomatic_FromIdle_StaysIdle()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Automatic));
+        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
+        // resulting MqttState to be sure the mutation has actually happened.
+        await fixture.GetFirstPublishedMessageAsync<MqttState>(occurrenceNumber: 2);
+
+        var saga = fixture.GetSaga(config);
+        saga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+        saga.IsInAutomaticMode.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchOperatingMode_PublishesMqttStateWithMappedOperatingMode()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(occurrenceNumber: 2);
+        state.OperatingMode.ShouldBe(MqttOperatingMode.Manual);
+    }
+
+    [TestMethod]
+    public async Task Consume_SwitchOperatingMode_BackToAutomatic_ClearsMobileRobotNotAvailableError()
+    {
+        var config = CreateConfiguration("simagv-mode-error");
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
+        var position = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 0, Y = 0, Z = 0, Theta = 0, PositionInitialized = true };
+        await fixture.PublishMessageAsync(new UpdatePosition(config.CorrelationId, position));
+        fixture.GetSaga(config).Error.ShouldNotBeNull();
+        fixture.GetSaga(config).Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+
+        await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Automatic));
+        // SwitchOperatingMode's handler awaits an IAgvCache write before mutating the saga, so the
+        // message is marked "consumed" before that mutation completes. Wait for the MqttState this
+        // handler publishes as its final step to be sure the saga has actually been updated.
+        await fixture.GetFirstPublishedMessageAsync<MqttState>(occurrenceNumber: 3);
+
+        var saga = fixture.GetSaga(config);
+        saga.Error.ShouldBeNull();
     }
 }

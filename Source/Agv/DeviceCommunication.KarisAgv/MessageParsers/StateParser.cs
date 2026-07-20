@@ -136,7 +136,8 @@ public class StateParser(ILogger logger, IMapper mapper)
             state.ZoneIds,
             state.StationIds,
             state.OperatingData?.TotalDistance ?? 0,
-            state.OperatingData?.TotalLifetime ?? 0);
+            state.OperatingData?.TotalLifetime ?? 0,
+            operatingMode: mapper.Map<AgvOperatingMode>(state.OperatingMode));
     }
 
     private bool GetBusy(MqttState state)

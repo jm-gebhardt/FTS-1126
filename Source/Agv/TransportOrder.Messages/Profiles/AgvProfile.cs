@@ -22,6 +22,7 @@ public class AgvProfile : Profile
             .ForMember(nameof(Agv.IsDisturbed), opt => opt.MapFrom(src => src.Disturbed))
             .ForMember(nameof(Agv.IsAutomatic), opt => opt.MapFrom(src => src.Automatic))
             .ForMember(nameof(Agv.IsCharging), opt => opt.MapFrom(src => src.Charging))
+            .ForMember(nameof(Agv.OperatingMode), opt => opt.MapFrom(src => src.OperatingMode))
             .ForMember(nameof(Agv.Zones), opt => opt.MapFrom(src => src.ZoneIds));
 
         CreateMap<AgvSettingsReadModel, AgvSettings>()
@@ -63,7 +64,8 @@ public class AgvProfile : Profile
                     src.AgvStatus?.TotalLifetime ?? 0,
                     ctx.Mapper.Map<Maintenance>(lastMaintenance),
                     src.AgvTypeId,
-                    src.TypeChangeConfirmed
+                    src.TypeChangeConfirmed,
+                    src.AgvStatus?.OperatingMode ?? AgvOperatingMode.Automatic
                 );
                 return agv;
             });

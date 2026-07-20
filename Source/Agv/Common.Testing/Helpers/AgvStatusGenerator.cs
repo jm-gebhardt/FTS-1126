@@ -22,7 +22,8 @@ public static class AgvStatusGenerator
         ICollection<string>? zoneIds = null,
         ICollection<string>? stationIds = null,
         float totalDistance = 0,
-        float totalLifetime = 0
+        float totalLifetime = 0,
+        AgvOperatingMode operatingMode = AgvOperatingMode.Automatic
     )
     {
         return new AgvStatus(agvCorrelationId ?? Guid.NewGuid(),
@@ -41,7 +42,8 @@ public static class AgvStatusGenerator
             zoneIds,
             stationIds,
             totalDistance,
-            totalLifetime);
+            totalLifetime,
+            operatingMode);
     }
 
     public static AgvStatus Generate(
@@ -61,7 +63,8 @@ public static class AgvStatusGenerator
         ICollection<string>? zoneIds = null,
         ICollection<string>? stationIds = null,
         float totalDistance = 0,
-        float totalLifetime = 0
+        float totalLifetime = 0,
+        AgvOperatingMode operatingMode = AgvOperatingMode.Automatic
     )
     {
         return new AgvStatus(agvCorrelationId,
@@ -80,6 +83,7 @@ public static class AgvStatusGenerator
             zoneIds,
             stationIds,
             totalDistance,
-            totalLifetime);
+            totalLifetime,
+            operatingMode);
     }
 }

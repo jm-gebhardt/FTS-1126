@@ -441,6 +441,8 @@ public class AgvCommandHandler :
 
         bool? wasDisturbed = oldStatus?.Disturbed;
         bool? wasAutomatic = oldStatus?.Automatic;
+        bool wasAutomaticMode = oldStatus?.OperatingMode == AgvOperatingMode.Automatic;
+        bool isAutomaticMode = agvStatus.OperatingMode == AgvOperatingMode.Automatic;
 
         bool zoneIdsChanged;
         if ((oldStatus == null || oldStatus.ZoneIds.IsNullOrEmpty()) && agvStatus.ZoneIds.IsNullOrEmpty())
@@ -545,7 +547,7 @@ public class AgvCommandHandler :
 
         bool shouldUpdate = stationIdsChanged || zoneIdsChanged || batteryStatusChanged || batteryChargeChanged || lastNodeIdChanged || operatingDataChanged
                             || isReady != wasReady || agv.IsOnline != wasOnline || wasDisturbed != agvStatus.Disturbed || wasAutomatic != agvStatus.Automatic
-                            || graphRequested || dataRequested || zonesRequested;
+                            || graphRequested || dataRequested || zonesRequested || wasAutomaticMode != isAutomaticMode;
 
         if (shouldUpdate)
         {
@@ -571,6 +573,12 @@ public class AgvCommandHandler :
         await TryUpdateOrderMismatchWarning(context, agv, oldStatus, agv.AgvStatus!);
 
         await TryAutoAccept(context, agv, context.CancellationToken);
+        if (wasAutomaticMode != isAutomaticMode)
+        {
+            agv.AgvStatus = agvStatus;
+            var messageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
+            await context.Publish(new AgvOperatingModeChanged(agv.CorrelationId, messageContent));
+        }
     }
 
     private async Task TryUpdateOrderMismatchWarning(IPublishEndpoint context, Agv agv, AgvStatus? oldStatus, AgvStatus newStatus)
@@ -610,9 +618,9 @@ public class AgvCommandHandler :
         await context.PublishSystemAgvErrorsAsync(agv.CorrelationId, activeErrors, updatedErrors, position.AgvPosition);
     }
 
-    private static async Task PublishAgvZonesChanged(IPublishEndpoint context, Guid agvId, ICollection<string>? zones)
+    private static async Task PublishAgvZonesChanged(IPublishEndpoint context, Guid agvCorrelationId, ICollection<string>? zones)
     {
-        await context.Publish(new AgvZonesChanged(agvId, zones ?? []));
+        await context.Publish(new AgvZonesChanged(agvCorrelationId, zones ?? []));
     }
 
     private async Task PublishAgvStatusUpdateEvents(IPublishEndpoint context,

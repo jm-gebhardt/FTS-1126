@@ -200,4 +200,12 @@ public class AgvPublisher : IAgvPublisher
         _hubBroadcaster.Broadcast(c => c.BatteryLogCreated(dto));
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc/>
+    public Task SendOperationModeChanged(Messages.MessageContent.Agv agv)
+    {
+        var dto = _mapper.Map<AgvDto>(agv);
+        _hubBroadcaster.Broadcast(c => c.AgvOperationModeChanged(dto));
+        return Task.CompletedTask;
+    }
 }

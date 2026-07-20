@@ -20,6 +20,9 @@ public record FilteredAgvDto
     /// <inheritdoc cref="AgvStatus.Automatic"/>
     public bool IsAutomatic { get; init; }
 
+    /// <inheritdoc cref="AgvStatus.OperatingMode"/>
+    public AgvOperatingMode OperatingMode { get; init; }
+
     /// <inheritdoc cref="AgvStatus.Charging"/>
     public bool IsCharging { get; init; }
 

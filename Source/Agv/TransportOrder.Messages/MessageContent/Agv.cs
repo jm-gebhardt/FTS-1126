@@ -18,6 +18,11 @@ public record Agv : IAgv
     /// <summary>AGV is in automatic mode</summary>
     public bool IsAutomatic { get; init; }
 
+    /// <summary>
+    /// The agv operating mode.
+    /// </summary>
+    public AgvOperatingMode OperatingMode { get; init; }
+
     /// <inheritdoc />    
     public Guid CorrelationId { get; init; }
 
@@ -118,6 +123,7 @@ public record Agv : IAgv
     /// <param name="lastMaintenance">The last maintenance of the agv.</param>
     /// <param name="agvTypeId">The id of the agv type.</param>
     /// <param name="typeChangeConfirmed">The type change confirmation state.</param>
+    /// <param name="operatingMode">The operating mode.</param>
     [PublicAPI]
     public Agv(
         Guid correlationId,
@@ -142,7 +148,8 @@ public record Agv : IAgv
         float totalLifetime,
         Maintenance? lastMaintenance = null,
         Guid? agvTypeId = null,
-        bool? typeChangeConfirmed = null
+        bool? typeChangeConfirmed = null,
+        AgvOperatingMode operatingMode = AgvOperatingMode.Automatic
     )
     {
         CorrelationId = correlationId;
@@ -168,6 +175,7 @@ public record Agv : IAgv
         LastMaintenance = lastMaintenance;
         AgvTypeId = agvTypeId;
         TypeChangeConfirmed = typeChangeConfirmed;
+        OperatingMode = operatingMode;
     }
 
     /// <summary>

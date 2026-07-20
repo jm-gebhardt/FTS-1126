@@ -517,7 +517,8 @@ public class Agv : IAgv
                 newStatus.StationIds,
                 // use old operating data if it is not considered significant
                 operatingDataTotalDistanceChanged ? newStatus.TotalDistance : AgvStatus.TotalDistance,
-                operatingDataTotalLifetimeChanged ? newStatus.TotalLifetime : AgvStatus.TotalLifetime
+                operatingDataTotalLifetimeChanged ? newStatus.TotalLifetime : AgvStatus.TotalLifetime,
+                newStatus.OperatingMode
             );
         }
 

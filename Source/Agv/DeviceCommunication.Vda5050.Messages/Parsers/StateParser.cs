@@ -119,7 +119,8 @@ public class StateParser(ILogger logger, IMapper mapper)
              -1f,
              -1f,
             GetDisturbed(state),
-            !string.IsNullOrEmpty(state.LastNodeId) ? state.LastNodeId.ToGuid() : null);
+            !string.IsNullOrEmpty(state.LastNodeId) ? state.LastNodeId.ToGuid() : null,
+            operatingMode: mapper.Map<AgvOperatingMode>(state.OperatingMode));
     }
 
     private bool GetBusy(MqttState state)

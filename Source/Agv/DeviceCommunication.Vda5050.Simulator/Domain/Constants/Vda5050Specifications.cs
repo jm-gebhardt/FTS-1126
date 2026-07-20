@@ -43,6 +43,11 @@ public static class Vda5050Specifications
         public const string OrderUpdateError = "orderUpdateError";
         public const string ValidationError = "validationError";
     }
+
+    public static class OrderWarnings
+    {
+        public const string MobileRobotNotAvailable = "MOBILE_ROBOT_NOT_AVAILABLE";
+    }
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 

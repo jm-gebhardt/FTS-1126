@@ -1305,6 +1305,97 @@ public class AgvCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_UpdateAgvStatus_OperatingModeChangedFromAutomaticToManual_PublishesAgvOperatingModeChanged()
+    {
+        var fixture = new AgvCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetOnline();
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var currentAgStatus = agv.AgvStatus!;
+        var agvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId, 50, 0, batteryTemperature: 20, estimatedFullyChargedTime: currentAgStatus.EstimatedFullyChargedTime, lastBatteryReplacement: currentAgStatus.LastBatteryReplacement, operatingMode: AgvOperatingMode.Manual);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
+
+        var operatingModeChanged = await fixture.PublishAndGetFirstMessageAsync<UpdateAgvStatus, AgvOperatingModeChanged>(updateAgvStatus);
+
+        operatingModeChanged.CorrelationId.ShouldBe(agv.CorrelationId);
+        operatingModeChanged.Agv.OperatingMode.ShouldBe(AgvOperatingMode.Manual);
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_OperatingModeChangedFromManualToAutomatic_PublishesAgvOperatingModeChanged()
+    {
+        var fixture = new AgvCommandHandlerTestFixture();
+        var oldStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(Guid.NewGuid(), "orderId", false, true, 100, false, false,
+            batteryVoltage: 50, batteryCurrent: 0, batteryTemperature: 20,
+            estimatedFullyChargedTime: DateTime.UtcNow.AddMinutes(5), lastBatteryReplacement: DateTime.UtcNow.AddMinutes(-5),
+            operatingMode: AgvOperatingMode.Manual);
+        var agv = AgvGenerator.GenerateIdleAgv(oldStatus);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var currentAgStatus = agv.AgvStatus!;
+        var agvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId, 50, 0, batteryTemperature: 20, estimatedFullyChargedTime: currentAgStatus.EstimatedFullyChargedTime, lastBatteryReplacement: currentAgStatus.LastBatteryReplacement, operatingMode: AgvOperatingMode.Automatic);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
+
+        var operatingModeChanged = await fixture.PublishAndGetFirstMessageAsync<UpdateAgvStatus, AgvOperatingModeChanged>(updateAgvStatus);
+
+        operatingModeChanged.CorrelationId.ShouldBe(agv.CorrelationId);
+        operatingModeChanged.Agv.OperatingMode.ShouldBe(AgvOperatingMode.Automatic);
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_OperatingModeUnchangedAutomatic_DoesNotPublishAgvOperatingModeChanged()
+    {
+        var fixture = new AgvCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetOnline();
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var currentAgStatus = agv.AgvStatus!;
+        var agvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId, 50, 0, batteryTemperature: 20, estimatedFullyChargedTime: currentAgStatus.EstimatedFullyChargedTime, lastBatteryReplacement: currentAgStatus.LastBatteryReplacement, operatingMode: AgvOperatingMode.Automatic);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+
+        await fixture.ShouldNotHavePublishedAsync<AgvOperatingModeChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_OperatingModeChangedBetweenNonAutomaticModes_DoesNotPublishAgvOperatingModeChanged()
+    {
+        var fixture = new AgvCommandHandlerTestFixture();
+        var oldStatus = new TransportOrder.Domain.Models.Agv.AgvStatus(Guid.NewGuid(), "orderId", false, true, 100, false, false,
+            batteryVoltage: 50, batteryCurrent: 0, batteryTemperature: 20,
+            estimatedFullyChargedTime: DateTime.UtcNow.AddMinutes(5), lastBatteryReplacement: DateTime.UtcNow.AddMinutes(-5),
+            operatingMode: AgvOperatingMode.Manual);
+        var agv = AgvGenerator.GenerateIdleAgv(oldStatus);
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var currentAgStatus = agv.AgvStatus!;
+        var agvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId, 50, 0, batteryTemperature: 20, estimatedFullyChargedTime: currentAgStatus.EstimatedFullyChargedTime, lastBatteryReplacement: currentAgStatus.LastBatteryReplacement, operatingMode: AgvOperatingMode.Semiautomatic);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
+        await fixture.PublishMessageAsync(updateAgvStatus);
+
+        await fixture.ShouldNotHavePublishedAsync<AgvOperatingModeChanged>();
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvStatus_OperatingModeChangedFromAutomaticToManual_UpdatesAgvEvenWithoutOtherChanges()
+    {
+        var fixture = new AgvCommandHandlerTestFixture();
+        var agv = AgvGenerator.GenerateIdleAgv();
+        agv.SetOnline();
+        fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
+
+        var currentAgStatus = agv.AgvStatus!;
+        var agvStatus = AgvStatusGenerator.Generate(agv.CorrelationId, currentAgStatus.OrderId, currentAgStatus.Busy, currentAgStatus.Automatic, currentAgStatus.BatteryCharge, currentAgStatus.Charging, currentAgStatus.Disturbed, currentAgStatus.LastNodeId, 50, 0, batteryTemperature: 20, estimatedFullyChargedTime: currentAgStatus.EstimatedFullyChargedTime, lastBatteryReplacement: currentAgStatus.LastBatteryReplacement, operatingMode: AgvOperatingMode.Manual);
+        var updateAgvStatus = new UpdateAgvStatus(agv.CorrelationId, agv.SerialNumber, agvStatus);
+
+        await fixture.PublishMessageAsync(updateAgvStatus);
+
+        fixture.VerifyAgvUpdated(Times.Once());
+    }
+
+    [TestMethod]
     public async Task Consume_UpdateCargo_CargoChanged_PublishesHasCargoChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();

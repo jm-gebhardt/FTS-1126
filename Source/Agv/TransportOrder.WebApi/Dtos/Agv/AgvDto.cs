@@ -1,4 +1,5 @@
-﻿using Gebhardt.Acc.Common.Messages;
+﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Messages;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using JetBrains.Annotations;
@@ -16,6 +17,11 @@ public record AgvDto : DatedMessage
 
     /// <summary>Agv is in automatic mode.</summary>
     public bool IsAutomatic { get; init; }
+
+    /// <summary>
+    /// The current agv operating mode.
+    /// </summary>
+    public AgvOperatingMode OperatingMode { get; init; }
 
     /// <summary>The CorrelationId of the agv.</summary>
     public Guid CorrelationId { get; init; }

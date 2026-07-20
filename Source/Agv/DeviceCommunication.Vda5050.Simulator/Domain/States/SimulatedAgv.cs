@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
@@ -11,6 +12,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using AgvPosition = Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.AgvPosition;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 
@@ -134,12 +136,23 @@ public class SimulatedAgv : SagaStateMachineInstance
     public ICollection<Load> Loads { get; } = [];
 
     /// <summary>
+    /// The current operating mode.
+    /// </summary>
+    public AgvOperatingMode OperatingMode { get; private set; }
+
+    /// <summary>
+    /// True if the agv is in operating mode <see cref="AgvOperatingMode.Automatic"/>.
+    /// </summary>
+    public bool IsInAutomaticMode => OperatingMode == AgvOperatingMode.Automatic;
+
+    /// <summary>
     /// Current error.
     /// </summary>
     public AgvError? Error { get; private set; }
 
     private readonly INurbsEdgeBuilder _edgeBuilder;
     private readonly bool _generateError;
+    private readonly IAgvCache _agvCache;
 
     /// <inheritdoc cref="SimulatedAgv"/>
     public SimulatedAgv(Guid correlationId,
@@ -152,6 +165,7 @@ public class SimulatedAgv : SagaStateMachineInstance
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
         INurbsEdgeBuilder edgeBuilder,
+        IAgvCache agvCache,
         string? currentState = null,
         bool generateError = false)
     {
@@ -167,9 +181,11 @@ public class SimulatedAgv : SagaStateMachineInstance
         StateHeaderId = stateHeaderId;
         VisualizationHeaderId = visualizationHeaderId;
         ConnectionHeaderId = connectionHeaderId;
-        CurrentPosition = new AgvPosition(true, 0, 0, 0, InitialTheta);
+        CurrentPosition = new AgvPosition(){MapId = configuration.MapId, PositionInitialized = true, Theta = InitialTheta};
         _edgeBuilder = edgeBuilder;
         _generateError = generateError;
+        OperatingMode = AgvOperatingMode.Automatic;
+        _agvCache = agvCache;
     }
 
     /// <summary>
@@ -179,9 +195,55 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// <param name="lastNodeId">The last node id.</param>
     public void InitPosition(AgvPosition position, string? lastNodeId = null)
     {
+        if (!IsInAutomaticMode)
+        {
+            GenerateAvailabilityError();
+            return;
+        }
         CurrentPosition = position;
         LastNodeId = lastNodeId;
         LastNodeSequenceId = 0;
+    }
+
+    /// <summary>
+    /// Set the agv to the given position.
+    /// </summary>
+    /// <param name="position">The new position.</param>
+    public void SetPosition(AgvPosition position)
+    {
+        if (IsInAutomaticMode)
+        {
+            GenerateAvailabilityError();
+            return;
+        }
+        CurrentPosition = position;
+        LastNodeId = null;
+        LastNodeSequenceId = 0;
+    }
+
+    /// <summary>
+    /// Switch the operating mode of the agv.
+    /// </summary>
+    /// <param name="operatingMode"></param>
+    public async Task SwitchOperatingMode(AgvOperatingMode operatingMode)
+    {
+        await _agvCache.AddOrUpdateAsync(CorrelationId, operatingMode);
+        OperatingMode = operatingMode;
+        if (!IsInAutomaticMode)
+        {
+            if (CurrentOrder?.CurrentAction != null)
+            {
+                AbortOrder(CurrentOrder.CurrentAction.ActionId);
+            }
+            CurrentOrder = null;
+            LastNodeId = null;
+            LastNodeSequenceId = 0;
+            return;
+        }
+        if (string.Equals(Error?.ErrorType, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable))
+        {
+            Error = null;
+        }
     }
 
     /// <summary>
@@ -219,8 +281,17 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// </summary>
     public void StopCharging(ILogger? logger = null)
     {
+        if (!IsInAutomaticMode)
+        {
+            return;
+        }
         Charging = false;
         CurrentOrder?.FinishCurrentChargingAction(_timeProvider.GetUtcNow().DateTime, logger);
+    }
+
+    private void GenerateAvailabilityError()
+    {
+        Error = new AgvError(CorrelationId, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, "Receival of an order while not in ‘AUTOMATIC’", null, ErrorLevel.Warning, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, ErrorCategory.General, null, _timeProvider.GetUtcNow().DateTime, ErrorFlag.Agv, AgvErrorSource.Agv);
     }
 
     /// <summary>
@@ -228,6 +299,11 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// </summary>
     public void StartOrder(Order order, ILogger? logger = null)
     {
+        if (!IsInAutomaticMode)
+        {
+            GenerateAvailabilityError();
+            return;
+        }
         var now = _timeProvider.GetUtcNow().DateTime;
         _processedDropActionIds.Clear();
         CurrentOrder = order;
@@ -264,6 +340,11 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// </summary>
     public void UpdateOrder(Order order, ILogger? logger = null)
     {
+        if (!IsInAutomaticMode)
+        {
+            GenerateAvailabilityError();
+            return;
+        }
         var now = _timeProvider.GetUtcNow().DateTime;
         var previousOrder = CurrentOrder;
         CurrentOrder = order;

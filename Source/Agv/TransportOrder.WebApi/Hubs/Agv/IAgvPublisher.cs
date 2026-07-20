@@ -138,4 +138,10 @@ public interface IAgvPublisher
     /// <param name="correlationId">The agv correlation id.</param>
     /// <param name="logEntry">The last agv log entry.</param>
     Task SendBatteryLogEntryCreated(Guid correlationId, LogEntry logEntry);
+
+    /// <summary>
+    /// Publishes the agv operation mode change to all clients.
+    /// </summary>
+    /// <param name="agv">The agv.</param>
+    Task SendOperationModeChanged(Messages.MessageContent.Agv agv);
 }

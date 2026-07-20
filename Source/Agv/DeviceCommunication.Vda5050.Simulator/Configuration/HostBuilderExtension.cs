@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.BackgroundServices;
@@ -58,6 +59,7 @@ public static class HostBuilderExtension
                                     });
                                 })
                                   .InMemoryRepository();
+                            configurator.AddMediator(c => c.AddMediator());
                             configurator.AddQuartzConsumers(options => options.QueueName = QuartzQueueName);
                         }
                         ,
@@ -115,6 +117,7 @@ public static class HostBuilderExtension
                     // convert time zones using converter that can handle Windows/Linux differences
                     q.UseTimeZoneConverter();
                 });
+                services.AddSingleton<IAgvCache, AgvCache>();
                 services.AddTransient<INurbsEdgeBuilder, TinySplineEdgeBuilder>();
                 // Sequence counters for topics wise header id incrementation for messages sent by the agv.
                 services.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));

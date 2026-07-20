@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
@@ -74,6 +75,16 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// </summary>
     public Event<GraphUpdated> GraphUpdatedEvent { get; private set; } = null!;
 
+    /// <summary>
+    /// <see cref="SwitchOperatingMode"/> received.
+    /// </summary>
+    public Event<SwitchOperatingMode> OperatingModeEvent { get; private set; } = null!;
+
+    /// <summary>
+    /// <see cref="SetToPosition"/> received.
+    /// </summary>
+    public Event<SetToPosition> SetPositionEvent { get; private set; } = null!;
+
     #region Schedules
     /// <summary>
     /// Internal message to schedule sending status update
@@ -124,6 +135,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         ISequenceCounter<IStateHeaderId> stateHeaderId,
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
+        IAgvCache agvCache,
         IMapper mapper, INurbsEdgeBuilder edgeBuilder)
     {
         _options = options;
@@ -134,7 +146,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         SignalPositionIntervalMs = options.VisualizationUpdateInterval;
         StatusUpdateIntervalMs = options.StateUpdateInterval;
 
-        SetSagaFactory(stateHeaderId, visualizationHeaderId, connectionHeaderId);
+        SetSagaFactory(stateHeaderId, visualizationHeaderId, connectionHeaderId, agvCache);
         SetScheduler();
         InstanceState(x => x.CurrentState);
 
@@ -148,6 +160,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         DuringAny(StopChargingHandler());
         DuringAny(StartOrderHandler());
         DuringAny(UpdateOrderHandler());
+        DuringAny(SetPositionHandler());
+        DuringAny(SwitchOperatingModeHandler());
         SetCompletedWhenFinalized(); // Delete when finalized
     }
 
@@ -162,7 +176,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// </summary>
     private void SetSagaFactory(ISequenceCounter<IStateHeaderId> stateHeaderId,
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
-        ISequenceCounter<IConnectionHeaderId> connectionHeaderId)
+        ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
+        IAgvCache agvCache)
     {
         Event(() => CreateAgvEvent, e =>
             {
@@ -177,7 +192,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                         stateHeaderId,
                         visualizationHeaderId,
                         connectionHeaderId,
-                        _edgeBuilder);
+                        _edgeBuilder, agvCache);
                     SetUpdateIntervals();
                     return saga;
                 });
@@ -251,6 +266,18 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
+    private EventActivityBinder<SimulatedAgv, SwitchOperatingMode> SwitchOperatingModeHandler()
+    {
+        return When(OperatingModeEvent)
+            .ThenAsync( async c =>
+            {
+                _logger.LogInformation("{MessageType} {CorrelationId} received", nameof(SwitchOperatingMode), c.Saga.CorrelationId);
+                await c.Saga.SwitchOperatingMode(c.Message.OperatingMode);
+            })
+            .If(c => !c.Saga.IsInAutomaticMode, t => t.TransitionTo(Idle))
+            .ThenAsync(PublishState);
+    }
+
     private TimeSpan GetStatusUpdateInterval(SagaConsumeContext<SimulatedAgv> context)
     {
         return TimeSpan.FromMilliseconds(StatusUpdateIntervalMs);
@@ -266,12 +293,24 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         return When(UpdatePositionEvent)
             .Then(c =>
             {
-                _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
+                _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId} received", nameof(UpdatePosition), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
                 c.Saga.InitPosition(c.Message.Position, c.Message.LastNodeId);
             })
             .ThenAsync(PublishVisualization)
             .If(c => c.Saga.CurrentOrder?.State?.NewBaseRequest is true, t => t.ThenAsync(PublishState))
             .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
+    }
+
+    private EventActivityBinder<SimulatedAgv, SetToPosition> SetPositionHandler()
+    {
+        return When(SetPositionEvent)
+            .Then(c =>
+            {
+                _logger.LogTrace("{MessageType} {AgvId} / {CorrelationId} received", nameof(SetToPosition), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.SetPosition(c.Message.Position);
+            })
+            .ThenAsync(PublishVisualization)
+            .ThenAsync(PublishState);
     }
 
     private EventActivityBinder<SimulatedAgv, StartOrder> StartOrderHandler()
@@ -319,7 +358,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .Then(c =>
             {
                 _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(StartCharging), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
-                c.Saga.Charging = true;
+                if (c.Saga.IsInAutomaticMode)
+                {
+                    c.Saga.Charging = true;
+                }
             })
             .ThenAsync(PublishState)
             .ThenAsync(PublishVisualization)
@@ -397,7 +439,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             LastNodeSequenceId = context.Saga.LastNodeSequenceId,
             NewBaseRequest = context.Saga.CurrentOrder?.State?.NewBaseRequest,
             Driving = false,
-            OperatingMode = MqttOperatingMode.Automatic,
+            OperatingMode = _mapper.Map<MqttOperatingMode>(context.Saga.OperatingMode),
             NodeStates = context.Saga.CurrentOrder?.CurrentRoute.Nodes.Select(n => new MqttNodeState { NodeDescription = n.NodeDescription, NodeId = n.NodeId, Released = n.Released }).ToList() ?? [],
             EdgeStates = context.Saga.CurrentOrder?.CurrentRoute.Edges.Select(e => new MqttEdgeState { EdgeDescription = e.EdgeDescription, EdgeId = e.EdgeId, Released = e.Released }).ToList() ?? [],
             AgvPosition = new MqttAgvPosition

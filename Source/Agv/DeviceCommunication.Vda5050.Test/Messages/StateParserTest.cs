@@ -16,7 +16,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Messages;
 [TestClass]
 public class StateParserTest
 {
-    private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile(), new MqttErrorProfile(), new OrderProfile());
+    private readonly IMapper _mapper = MappingHelper.GetMapper(new CargoProfile(), new MqttErrorProfile(), new OrderProfile(), new MqttStateProfile());
     private readonly Mock<ILogger> _logger = new();
 
     private static void ValidateAgvStatus(AgvStatus agvStatus, MqttState state)
@@ -26,6 +26,7 @@ public class StateParserTest
         agvStatus.BatteryCharge.ShouldBe(state.BatteryState.BatteryCharge);
         agvStatus.Charging.ShouldBe(state.BatteryState.Charging);
         agvStatus.BatteryVoltage.ShouldBe(state.BatteryState.BatteryVoltage ?? 0d);
+        agvStatus.OperatingMode.ToString().ShouldBe(state.OperatingMode.ToString(), StringCompareShould.IgnoreCase);
     }
 
     private static void ValidateAgvPosition(AgvPosition agvPosition, MqttAgvPosition mqttPosition)

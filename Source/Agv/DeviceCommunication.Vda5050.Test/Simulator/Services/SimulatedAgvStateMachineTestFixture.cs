@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.StateMachines;
@@ -43,6 +44,7 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
             sc.AddSingleton(_options);
             sc.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));
             sc.AddTransient<INurbsEdgeBuilder>(_ => new Mock<INurbsEdgeBuilder>().Object);
+            sc.AddTransient<IAgvCache>(_ => new Mock<IAgvCache>().Object);
         });
         base.Build();
         return this;

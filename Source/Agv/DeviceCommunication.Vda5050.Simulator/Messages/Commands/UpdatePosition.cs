@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;

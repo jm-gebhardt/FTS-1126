@@ -43,6 +43,11 @@ public record AgvStatus
     public bool Automatic { get; }
 
     /// <summary>
+    /// The agv operating mode.
+    /// </summary>
+    public AgvOperatingMode OperatingMode { get; init; }
+
+    /// <summary>
     /// Battery charge [%].
     /// </summary>
     /// <remarks>
@@ -133,6 +138,7 @@ public record AgvStatus
     /// <param name="stationIds">The ids of the stations the agv reserved, if any.</param>
     /// <param name="totalDistance">Total distance driven by AGV since commissioning [km].</param>
     /// <param name="totalLifetime">Total lifetime driven by AGV since commissioning [h].</param>
+    /// <param name="operatingMode">The operating mode.</param>
     [JsonConstructor]
     public AgvStatus(Guid correlationId,
         string? orderId,
@@ -150,7 +156,8 @@ public record AgvStatus
         ICollection<string>? zoneIds = null,
         ICollection<string>? stationIds = null,
         float totalDistance = 0,
-        float totalLifetime = 0
+        float totalLifetime = 0,
+        AgvOperatingMode operatingMode = AgvOperatingMode.Automatic
     ) : this()
     {
         CorrelationId = correlationId;
@@ -174,6 +181,7 @@ public record AgvStatus
         StationIds = stationIds;
         TotalDistance = totalDistance;
         TotalLifetime = totalLifetime;
+        OperatingMode = operatingMode;
     }
 
     /// <summary>
@@ -190,6 +198,7 @@ public record AgvStatus
         Disturbed = false;
         TotalDistance = 0;
         TotalLifetime = 0;
+        OperatingMode = AgvOperatingMode.Automatic;
     }
 
     /// <summary>

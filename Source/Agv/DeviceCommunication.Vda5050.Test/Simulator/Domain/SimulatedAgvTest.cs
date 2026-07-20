@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
@@ -9,6 +10,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
 using Moq;
 using Shouldly;
+using AgvPosition = Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.AgvPosition;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Domain;
 
@@ -28,14 +30,15 @@ public class SimulatedAgvTest
         public override DateTimeOffset GetUtcNow() => _now;
     }
 
-    private SimulatedAgv CreateAgv(
+    private async Task<SimulatedAgv> CreateAgv(
         int initialBatteryCharge = 50,
         double chargeRate = 0.1,
         double dischargeRate = 0.1,
         float speed = 1.0f,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        AgvOperatingMode operatingMode = AgvOperatingMode.Automatic)
     {
-        return new SimulatedAgv(
+        var agv = new SimulatedAgv(
             Guid.NewGuid(),
             new AgvConfiguration("AGV-001", Speed: speed),
             initialBatteryCharge,
@@ -45,8 +48,11 @@ public class SimulatedAgvTest
             new Mock<ISequenceCounter<IStateHeaderId>>().Object,
             new Mock<ISequenceCounter<IVisualizationHeaderId>>().Object,
             new Mock<ISequenceCounter<IConnectionHeaderId>>().Object,
-            new Mock<INurbsEdgeBuilder>().Object
+            new Mock<INurbsEdgeBuilder>().Object,
+            new Mock<IAgvCache>().Object
         );
+        await agv.SwitchOperatingMode(operatingMode);
+        return agv;
     }
 
     /// <summary>
@@ -85,21 +91,21 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void Constructor_SetsIsOnlineToTrue()
+    public async Task Constructor_SetsIsOnlineToTrue()
     {
-        CreateAgv().IsOnline.ShouldBeTrue();
+        (await CreateAgv()).IsOnline.ShouldBeTrue();
     }
 
     [TestMethod]
-    public void Constructor_SetsBatteryChargeToInitialValue()
+    public async Task Constructor_SetsBatteryChargeToInitialValue()
     {
-        CreateAgv(initialBatteryCharge: 75).SimulatedBatteryCharge.ShouldBe(75);
+       (await CreateAgv(initialBatteryCharge: 75)).SimulatedBatteryCharge.ShouldBe(75);
     }
 
     [TestMethod]
-    public void Constructor_SetsCurrentPositionToOrigin()
+    public async Task Constructor_SetsCurrentPositionToOrigin()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
         agv.CurrentPosition.X.ShouldBe(0f);
         agv.CurrentPosition.Y.ShouldBe(0f);
@@ -118,48 +124,49 @@ public class SimulatedAgvTest
             new Mock<ISequenceCounter<IVisualizationHeaderId>>().Object,
             new Mock<ISequenceCounter<IConnectionHeaderId>>().Object,
             new Mock<INurbsEdgeBuilder>().Object,
+            new Mock<IAgvCache>().Object,
             currentState: "Idle");
 
         agv.CurrentState.ShouldBe("Idle");
     }
 
     [TestMethod]
-    public void InitPosition_UpdatesCurrentPosition()
+    public async Task InitPosition_UpdatesCurrentPosition()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
-        agv.InitPosition(new AgvPosition(true, 5, 10, 0, 0));
+        agv.InitPosition(new AgvPosition {X= 5, Y= 10, Z=0, Theta = 0, PositionInitialized = true});
 
         agv.CurrentPosition.X.ShouldBe(5f);
         agv.CurrentPosition.Y.ShouldBe(10f);
     }
 
     [TestMethod]
-    public void InitPosition_SetsLastNodeId()
+    public async Task InitPosition_SetsLastNodeId()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
-        agv.InitPosition(new AgvPosition(true, 0, 0, 0, 0), "node-5");
+        agv.InitPosition(new AgvPosition { X= 0, Y= 0, Z=0, Theta = 0, PositionInitialized = true }, "node-5");
 
         agv.LastNodeId.ShouldBe("node-5");
     }
 
     [TestMethod]
-    public void InitPosition_ResetsLastNodeSequenceIdToZero()
+    public async Task InitPosition_ResetsLastNodeSequenceIdToZero()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
         agv.LastNodeSequenceId = 6;
 
-        agv.InitPosition(new AgvPosition(true, 0, 0, 0, 0));
+        agv.InitPosition(new AgvPosition{ X = 0, Y = 0, Z = 0, Theta = 0, PositionInitialized = true });
 
         agv.LastNodeSequenceId.ShouldBe(0);
     }
 
     [TestMethod]
-    public void UpdateStatus_WhenCharging_IncreasesBatteryByChargeRate()
+    public async Task UpdateStatus_WhenCharging_IncreasesBatteryByChargeRate()
     {
         // 10 s × 1.0 %/s = +10 % → 50 + 10 = 60
-        var agv = CreateAgv(initialBatteryCharge: 50, chargeRate: 1.0);
+        var agv = await CreateAgv(initialBatteryCharge: 50, chargeRate: 1.0);
         agv.Charging = true;
 
         agv.UpdateStatus(10);
@@ -168,10 +175,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void UpdateStatus_WhenNotCharging_ReducesBatteryByDischargeRate()
+    public async Task UpdateStatus_WhenNotCharging_ReducesBatteryByDischargeRate()
     {
         // 10 s × 1.0 %/s = −10 % → 50 − 10 = 40
-        var agv = CreateAgv(initialBatteryCharge: 50, dischargeRate: 1.0);
+        var agv = await CreateAgv(initialBatteryCharge: 50, dischargeRate: 1.0);
         agv.Charging = false;
 
         agv.UpdateStatus(10);
@@ -180,9 +187,9 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void UpdateStatus_WhenCharging_ClampsAtMaxCharge()
+    public async Task UpdateStatus_WhenCharging_ClampsAtMaxCharge()
     {
-        var agv = CreateAgv(initialBatteryCharge: 99, chargeRate: 10.0);
+        var agv = await CreateAgv(initialBatteryCharge: 99, chargeRate: 10.0);
         agv.Charging = true;
 
         agv.UpdateStatus(10); // +100 % → clamped to 100
@@ -191,9 +198,9 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void UpdateStatus_WhenDischarging_ClampsAtZero()
+    public async Task UpdateStatus_WhenDischarging_ClampsAtZero()
     {
-        var agv = CreateAgv(initialBatteryCharge: 5, dischargeRate: 10.0);
+        var agv = await CreateAgv(initialBatteryCharge: 5, dischargeRate: 10.0);
         agv.Charging = false;
 
         agv.UpdateStatus(10); // −100 % → clamped to 0
@@ -202,9 +209,9 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void StartOrder_SetsCurrentOrder()
+    public async Task StartOrder_SetsCurrentOrder()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
         var order = CreateOrder(["A", "B"]);
 
         agv.StartOrder(order);
@@ -214,9 +221,9 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void StartOrder_SetsLastNodeIdToFirstNode()
+    public async Task StartOrder_SetsLastNodeIdToFirstNode()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
         agv.StartOrder(CreateOrder(["A", "B", "C"]));
 
@@ -224,12 +231,12 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void StartOrder_PopulatesPendingActionStatesAsWaiting()
+    public async Task StartOrder_PopulatesPendingActionStatesAsWaiting()
     {
         var action = new OrderAction(Vda5050Specifications.ActionTypes.Pick, null, BlockingType.NONE, []);
         var node = new OrderNode { NodeId = "A", SequenceId = 0, Released = true, Actions = [action] };
         var order = new Order { OrderId = "o1", FullRoute = new Route([node], []) };
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
         agv.StartOrder(order);
 
@@ -238,9 +245,9 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void UpdateOrder_SetsCurrentOrder()
+    public async Task UpdateOrder_SetsCurrentOrder()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
         var order = CreateOrder(["A", "B"]);
 
         agv.UpdateOrder(order);
@@ -249,10 +256,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void UpdateOrder_WhileMidEdge_ContinuesFromCurrentPositionInsteadOfRestarting()
+    public async Task UpdateOrder_WhileMidEdge_ContinuesFromCurrentPositionInsteadOfRestarting()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
 
         var initialOrder = CreateOrder(["A", "B", "C"], edgeLength: 10);
         agv.StartOrder(initialOrder);
@@ -275,17 +282,17 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_WhenCurrentOrderIsNull_DoesNothing()
+    public async Task ProceedOrder_WhenCurrentOrderIsNull_DoesNothing()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
         Should.NotThrow(() => agv.ProceedOrder());
     }
 
     [TestMethod]
-    public void ProceedOrder_WhenOrderHasNoStartTime_DoesNothing()
+    public async Task ProceedOrder_WhenOrderHasNoStartTime_DoesNothing()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
         agv.StartOrder(CreateOrder(["A", "B"]));
         agv.CurrentOrder!.StartTime = null;
         var positionBefore = agv.CurrentPosition;
@@ -296,11 +303,11 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_MidEdge_UpdatesCurrentPositionAlongEdge()
+    public async Task ProceedOrder_MidEdge_UpdatesCurrentPositionAlongEdge()
     {
         // A(0,0)→B(10,0), edge 10 m at 1 m/s = 10 s. At t=5 s → X=5.
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
 
         timeProvider.Advance(TimeSpan.FromSeconds(5));
@@ -311,11 +318,11 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_AfterFirstEdge_UpdatesLastNodeId()
+    public async Task ProceedOrder_AfterFirstEdge_UpdatesLastNodeId()
     {
         // Three nodes, each edge 10 s. At t=15 s the AGV has passed A→B and is on B→C.
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B", "C"], edgeLength: 10));
 
         timeProvider.Advance(TimeSpan.FromSeconds(15));
@@ -325,10 +332,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_WhileEdgeActionRuns_HoldsPositionOnEdgeInsteadOfSnappingBackToStartNode()
+    public async Task ProceedOrder_WhileEdgeActionRuns_HoldsPositionOnEdgeInsteadOfSnappingBackToStartNode()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
 
         var nodeA = new OrderNode { NodeId = "A", SequenceId = 0, Released = true, NodePosition = new OrderNodePosition { X = 0, Y = 0 } };
         var nodeB = new OrderNode { NodeId = "B", SequenceId = 2, Released = true, NodePosition = new OrderNodePosition { X = 10, Y = 0 } };
@@ -355,10 +362,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_WhenChargingAndAgvMovesToDifferentNode_StopsCharging()
+    public async Task ProceedOrder_WhenChargingAndAgvMovesToDifferentNode_StopsCharging()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
         agv.Charging = true;
 
@@ -370,10 +377,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_WhenChargingAndAgvStaysOnSameNode_KeepsCharging()
+    public async Task ProceedOrder_WhenChargingAndAgvStaysOnSameNode_KeepsCharging()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
         agv.Charging = true;
 
@@ -385,10 +392,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void ProceedOrder_WithStartChargingAction_DoesNotAutoFinishAfter10Seconds()
+    public async Task ProceedOrder_WithStartChargingAction_DoesNotAutoFinishAfter10Seconds()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
         var startChargingAction = new OrderAction(Vda5050Specifications.ActionTypes.StartCharging, null, BlockingType.NONE, []);
         var node = new OrderNode { NodeId = "CHARGER", SequenceId = 0, Released = true, Actions = [startChargingAction] };
         var order = new Order { OrderId = "charge-1", FullRoute = new Route([node], []) };
@@ -408,10 +415,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void UpdateStatus_WhenChargingReachesMaxCharge_FinishesStartChargingAction()
+    public async Task UpdateStatus_WhenChargingReachesMaxCharge_FinishesStartChargingAction()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(initialBatteryCharge: 95, chargeRate: 10.0, timeProvider: timeProvider);
+        var agv = await CreateAgv(initialBatteryCharge: 95, chargeRate: 10.0, timeProvider: timeProvider);
         var startChargingAction = new OrderAction(Vda5050Specifications.ActionTypes.StartCharging, null, BlockingType.NONE, []);
         var node = new OrderNode { NodeId = "CHARGER", SequenceId = 0, Released = true, Actions = [startChargingAction] };
         agv.StartOrder(new Order { OrderId = "charge-1", FullRoute = new Route([node], []) });
@@ -427,10 +434,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void StopCharging_WhileStartChargingIsRunning_FinishesActionAndStopsCharging()
+    public async Task StopCharging_WhileStartChargingIsRunning_FinishesActionAndStopsCharging()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
         var startChargingAction = new OrderAction(Vda5050Specifications.ActionTypes.StartCharging, null, BlockingType.NONE, []);
         var node = new OrderNode { NodeId = "CHARGER", SequenceId = 0, Released = true, Actions = [startChargingAction] };
         agv.StartOrder(new Order { OrderId = "charge-1", FullRoute = new Route([node], []) });
@@ -446,18 +453,18 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void FinishOrder_WhenCurrentOrderIsNull_DoesNothing()
+    public async Task FinishOrder_WhenCurrentOrderIsNull_DoesNothing()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
         Should.NotThrow(() => agv.FinishOrder());
     }
 
     [TestMethod]
-    public void FinishOrder_WhenActionStillRunning_KeepsCurrentOrder()
+    public async Task FinishOrder_WhenActionStillRunning_KeepsCurrentOrder()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(timeProvider: timeProvider);
+        var agv = await CreateAgv(timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
         agv.CurrentOrder!.PendingActionStates.Add(new OrderActionState
         {
@@ -472,10 +479,10 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void FinishOrder_WhenAllActionsDone_ClearsCurrentOrder()
+    public async Task FinishOrder_WhenAllActionsDone_ClearsCurrentOrder()
     {
         var timeProvider = new FakeTimeProvider(_baseTime);
-        var agv = CreateAgv(timeProvider: timeProvider);
+        var agv = await CreateAgv(timeProvider: timeProvider);
         agv.StartOrder(CreateOrder(["A", "B"], edgeLength: 10));
         timeProvider.Advance(TimeSpan.FromSeconds(20));
 
@@ -485,17 +492,17 @@ public class SimulatedAgvTest
     }
 
     [TestMethod]
-    public void AbortOrder_WhenCurrentOrderIsNull_DoesNothing()
+    public async Task AbortOrder_WhenCurrentOrderIsNull_DoesNothing()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
 
         Should.NotThrow(() => agv.AbortOrder("cancel-1"));
     }
 
     [TestMethod]
-    public void AbortOrder_AddsCancelOrderActionStateAsFinished()
+    public async Task AbortOrder_AddsCancelOrderActionStateAsFinished()
     {
-        var agv = CreateAgv();
+        var agv = await CreateAgv();
         agv.StartOrder(CreateOrder(["A", "B"]));
 
         agv.AbortOrder("cancel-1");
@@ -504,5 +511,205 @@ public class SimulatedAgvTest
             .Single(s => s.ActionType == Vda5050Specifications.ActionTypes.CancelOrder);
         cancelState.ActionId.ShouldBe("cancel-1");
         cancelState.ActionStatus.ShouldBe(VehicleActionStatus.Finished);
+    }
+
+    [TestMethod]
+    public async Task Constructor_SetsOperatingModeToAutomatic()
+    {
+        (await CreateAgv()).OperatingMode.ShouldBe(AgvOperatingMode.Automatic);
+    }
+
+    [TestMethod]
+    public async Task Constructor_SetsIsInAutomaticModeToTrue()
+    {
+        (await CreateAgv()).IsInAutomaticMode.ShouldBeTrue();
+    }
+
+    [DataRow(AgvOperatingMode.Manual)]
+    [DataRow(AgvOperatingMode.Semiautomatic)]
+    [DataRow(AgvOperatingMode.Teachin)]
+    [DataRow(AgvOperatingMode.Service)]
+    [TestMethod]
+    public async Task SetPosition_UpdatesCurrentPosition(AgvOperatingMode operatingMode)
+    {
+        var agv = await CreateAgv(operatingMode: operatingMode);
+
+        agv.SetPosition(new AgvPosition { X = 3, Y = 4, Z = 0, Theta = 0, PositionInitialized = true });
+
+        agv.CurrentPosition.X.ShouldBe(3f);
+        agv.CurrentPosition.Y.ShouldBe(4f);
+    }
+
+    [TestMethod]
+    public async Task SetPosition_AutomaticMode_DoesNotResetPosition()
+    {
+        var agv = await CreateAgv();
+
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.SetPosition(new AgvPosition { X = 3, Y = 4, Z = 0, Theta = 0, PositionInitialized = true });
+
+        agv.CurrentPosition.X.ShouldNotBe(3f);
+        agv.CurrentPosition.Y.ShouldNotBe(4f);
+    }
+
+    [TestMethod]
+    public async Task SetPosition_ResetsLastNodeIdAndSequenceId()
+    {
+        var agv = await CreateAgv(operatingMode: AgvOperatingMode.Manual);
+       
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.SetPosition(new AgvPosition { X = 3, Y = 4, Z = 0, Theta = 0, PositionInitialized = true });
+
+        agv.LastNodeId.ShouldBeNull();
+        agv.LastNodeSequenceId.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task SwitchOperatingMode_ToManual_SetsOperatingModeAndIsInAutomaticModeToFalse()
+    {
+        var agv = await CreateAgv();
+
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.OperatingMode.ShouldBe(AgvOperatingMode.Manual);
+        agv.IsInAutomaticMode.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task SwitchOperatingMode_ToManual_ClearsCurrentOrderAndLastNode()
+    {
+        var agv = await CreateAgv();
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.CurrentOrder.ShouldBeNull();
+        agv.LastNodeId.ShouldBeNull();
+        agv.LastNodeSequenceId.ShouldBe(0);
+    }
+
+    [TestMethod]
+    public async Task SwitchOperatingMode_ToManual_WithNoCurrentOrder_DoesNotThrow()
+    {
+        var agv = await CreateAgv();
+
+       await Should.NotThrowAsync(async () => await agv.SwitchOperatingMode(AgvOperatingMode.Manual));
+    }
+
+    [TestMethod]
+    public async Task SwitchOperatingMode_ToManual_WithRunningAction_AbortsOrderBeforeClearingIt()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var action = new OrderAction(Vda5050Specifications.ActionTypes.Pick, null, BlockingType.NONE, []);
+        var node = new OrderNode { NodeId = "A", SequenceId = 0, Released = true, Actions = [action] };
+        var order = new Order { OrderId = "o1", FullRoute = new Route([node], []) };
+        agv.StartOrder(order);
+        agv.ProceedOrder();
+        agv.CurrentOrder!.CurrentAction.ShouldNotBeNull();
+        var runningOrder = agv.CurrentOrder;
+
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.CurrentOrder.ShouldBeNull();
+        runningOrder.PendingActionStates
+            .Single(s => s.ActionType == Vda5050Specifications.ActionTypes.CancelOrder)
+            .ActionStatus.ShouldBe(VehicleActionStatus.Finished);
+    }
+
+    [TestMethod]
+    public async Task SwitchOperatingMode_BackToAutomatic_ClearsMobileRobotNotAvailableError()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+        agv.StartOrder(CreateOrder(["A", "B"]));
+        agv.Error.ShouldNotBeNull();
+
+        await agv.SwitchOperatingMode(AgvOperatingMode.Automatic);
+
+        agv.Error.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task SwitchOperatingMode_ToManualThenAutomatic_RestoresIsInAutomaticMode()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        await agv.SwitchOperatingMode(AgvOperatingMode.Automatic);
+
+        agv.IsInAutomaticMode.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task InitPosition_WhenNotInAutomaticMode_DoesNotUpdatePosition()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+        var positionBefore = agv.CurrentPosition;
+
+        agv.InitPosition(new AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true });
+
+        agv.CurrentPosition.ShouldBe(positionBefore);
+    }
+
+    [TestMethod]
+    public async Task InitPosition_WhenNotInAutomaticMode_GeneratesAvailabilityError()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.InitPosition(new AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true });
+
+        agv.Error.ShouldNotBeNull();
+        agv.Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+    }
+
+    [TestMethod]
+    public async Task StartOrder_WhenNotInAutomaticMode_DoesNotSetCurrentOrder()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.CurrentOrder.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task StartOrder_WhenNotInAutomaticMode_GeneratesAvailabilityError()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.Error.ShouldNotBeNull();
+        agv.Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+    }
+
+    [TestMethod]
+    public async Task UpdateOrder_WhenNotInAutomaticMode_DoesNotSetCurrentOrder()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.UpdateOrder(CreateOrder(["A", "B"]));
+
+        agv.CurrentOrder.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public async Task UpdateOrder_WhenNotInAutomaticMode_GeneratesAvailabilityError()
+    {
+        var agv = await CreateAgv();
+        await agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.UpdateOrder(CreateOrder(["A", "B"]));
+
+        agv.Error.ShouldNotBeNull();
+        agv.Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
     }
 }
