@@ -15,9 +15,10 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.RequestRes
 /// Handles requests for simulated agv management
 /// </summary>
 [UsedImplicitly]
-public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logger, IAgvCache agvCache, IBus bus):
+public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logger, IAgvCache agvCache, IBus bus, IAgvStateCache stateCache) :
     IConsumer<RequestOperatingModeSwitch>,
-    IConsumer<RequestSetToPosition>
+    IConsumer<RequestSetToPosition>,
+    IConsumer<RequestAgvState>
 {
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestOperatingModeSwitch> context)
@@ -46,5 +47,18 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
         logger.LogInformation("SetPosition to position to {Position} requested for agv {AgvCorrelationId}", position, agvCorrelationId);
         await bus.Publish(new SetToPosition(agvCorrelationId, position), context.CancellationToken);
         await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<RequestAgvState> context)
+    {
+        var agvCorrelationId = context.Message.CorrelationId;
+        if (!await agvCache.ExistsAsync(agvCorrelationId))
+        {
+            throw new AgvNotFoundException(agvCorrelationId);
+        }
+
+        var state = await stateCache.TryGetAsync(agvCorrelationId);
+        await context.RespondAsync(new AgvStateResponse(state));
     }
 }

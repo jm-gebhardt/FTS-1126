@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.WebApi.Hubs;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.TransportOrder.Domain;

@@ -22,14 +22,14 @@ public record AgvPositionConfiguration : FilterConfiguration
     private const double DefaultPositionDeviationRangeThreshold = 0.1;
 
     /// <summary>Thresholds for <see cref="AgvPosition"/> comparison.</summary>
-    /// <param name="PositionThreshold">Used for X/Y/Z [m].</param>
-    /// <param name="ThetaThreshold">Used Theta [rad].</param>
-    /// <param name="DeviationRangeThreshold">Used for DeviationRange property [m].</param>
-    public AgvPositionConfiguration(double PositionThreshold = DefaultPositionThreshold, double ThetaThreshold = DefaultPositionRotationThreshold, double DeviationRangeThreshold = DefaultPositionDeviationRangeThreshold)
+    /// <param name="positionThreshold">Used for X/Y/Z [m].</param>
+    /// <param name="thetaThreshold">Used Theta [rad].</param>
+    /// <param name="deviationRangeThreshold">Used for DeviationRange property [m].</param>
+    public AgvPositionConfiguration(double positionThreshold = DefaultPositionThreshold, double thetaThreshold = DefaultPositionRotationThreshold, double deviationRangeThreshold = DefaultPositionDeviationRangeThreshold)
     {
-        this.PositionThreshold = PositionThreshold;
-        this.ThetaThreshold = ThetaThreshold;
-        this.DeviationRangeThreshold = DeviationRangeThreshold;
+        PositionThreshold = positionThreshold;
+        ThetaThreshold = thetaThreshold;
+        DeviationRangeThreshold = deviationRangeThreshold;
     }
 
     /// <summary>Used for X/Y/Z [m].</summary>

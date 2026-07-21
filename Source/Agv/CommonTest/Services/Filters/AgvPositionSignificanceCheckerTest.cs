@@ -14,9 +14,9 @@ public class AgvPositionSignificanceCheckerTest
     public void Setup()
     {
         _config = new AgvPositionConfiguration(
-            PositionThreshold: 0.5f,
-            ThetaThreshold: 0.1f,
-            DeviationRangeThreshold: 0.2f
+            positionThreshold: 0.5f,
+            thetaThreshold: 0.1f,
+            deviationRangeThreshold: 0.2f
         );
         _checker = new AgvPositionSignificanceChecker(_config);
     }

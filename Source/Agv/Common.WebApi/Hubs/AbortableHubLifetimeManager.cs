@@ -1,8 +1,8 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs;
+namespace Gebhardt.Acc.Common.WebApi.Hubs;
 
 /// <summary>
 /// A hub lifetime manager that supports explicitly aborting client connections.
@@ -39,7 +39,10 @@ public class AbortableHubLifetimeManager<THub> : DefaultHubLifetimeManager<THub>
     /// <summary>
     /// Gets all connection IDs
     /// </summary>
-    public IEnumerable<string> GetAllConnectionIds() => _connections.Keys;
+    public IEnumerable<string> GetAllConnectionIds()
+    {
+        return _connections.Keys;
+    }
 
     /// <summary>
     /// Abruptly terminates the transport for the given connection.

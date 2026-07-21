@@ -20,6 +20,7 @@ public static class MediatorRegistrationExtension
             configurator.AddConsumer<SimulatedAgvRequestHandler>();
             configurator.AddRequestClient<RequestOperatingModeSwitch>();
             configurator.AddRequestClient<RequestSetToPosition>();
+            configurator.AddRequestClient<RequestAgvState>();
             return configurator;
         }
     }

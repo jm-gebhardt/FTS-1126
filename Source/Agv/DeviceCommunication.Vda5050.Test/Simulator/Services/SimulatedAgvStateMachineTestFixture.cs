@@ -13,7 +13,7 @@ using Moq;
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
 
 public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null)
-    : BaseStateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgv>(inactivityTimeout: inactivityTimeout)
+    : BaseStateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgv>(inactivityTimeout)
 {
     private Options _options = new()
     {
@@ -45,6 +45,7 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
             sc.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));
             sc.AddTransient<INurbsEdgeBuilder>(_ => new Mock<INurbsEdgeBuilder>().Object);
             sc.AddTransient<IAgvCache>(_ => new Mock<IAgvCache>().Object);
+            sc.AddTransient<IAgvStateCache>(_ => new Mock<IAgvStateCache>().Object);
         });
         base.Build();
         return this;

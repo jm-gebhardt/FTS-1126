@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.MqttMessageHandlers;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Consumer;
 using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
@@ -29,6 +30,7 @@ public static class BusRegistrationConfigurator
         // ReSharper disable once UnusedMethodReturnValue.Global
         public IBusRegistrationConfigurator AddConsumers()
         {
+            configurator.AddConsumer<SimulatedAgvStateChangedConsumer>();
             return configurator;
         }
     }

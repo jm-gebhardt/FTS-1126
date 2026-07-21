@@ -8,9 +8,10 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.Common.Services.Significance;
 using Gebhardt.Acc.Common.WebApi;
+using Gebhardt.Acc.Common.WebApi.Constants;
 using Gebhardt.Acc.Common.WebApi.Swagger;
-using Gebhardt.Acc.TransportOrder.WebApi.Constants;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers;
+using Gebhardt.Acc.Common.WebApi.Hubs;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.ActionGroup;
@@ -31,7 +32,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
@@ -221,12 +221,6 @@ public static class WebHostBuilderExtensions
     {
         options.OperationFilter<ActionGroupFilterExample>();
         options.OperationFilter<LogEntryFilterExample>();
-    }
-
-    private static void AddHub<THub>(this IServiceCollection services) where THub : Hub
-    {
-        services.AddSingleton<IAbortableHubLifetimeManager<THub>, AbortableHubLifetimeManager<THub>>();
-        services.AddSingleton<HubLifetimeManager<THub>>(sp => (HubLifetimeManager<THub>)sp.GetRequiredService<IAbortableHubLifetimeManager<THub>>());
     }
 
     /// <summary>

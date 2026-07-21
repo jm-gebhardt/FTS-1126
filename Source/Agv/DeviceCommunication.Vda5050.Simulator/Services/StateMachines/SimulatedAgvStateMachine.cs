@@ -9,6 +9,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using JetBrains.Annotations;
@@ -127,6 +128,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     private readonly TimeProvider _timeProvider;
     private readonly IMapper _mapper;
     private readonly INurbsEdgeBuilder _edgeBuilder;
+    private readonly IAgvStateCache _stateCache;
 
     /// <inheritdoc/>
     public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger,
@@ -136,13 +138,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
         IAgvCache agvCache,
-        IMapper mapper, INurbsEdgeBuilder edgeBuilder)
+        IMapper mapper, INurbsEdgeBuilder edgeBuilder, IAgvStateCache stateCache)
     {
         _options = options;
         _logger = logger;
         _timeProvider = timeProvider;
         _mapper = mapper;
         _edgeBuilder = edgeBuilder;
+        _stateCache = stateCache;
         SignalPositionIntervalMs = options.VisualizationUpdateInterval;
         StatusUpdateIntervalMs = options.StateUpdateInterval;
 
@@ -269,7 +272,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     private EventActivityBinder<SimulatedAgv, SwitchOperatingMode> SwitchOperatingModeHandler()
     {
         return When(OperatingModeEvent)
-            .ThenAsync( async c =>
+            .ThenAsync(async c =>
             {
                 _logger.LogInformation("{MessageType} {CorrelationId} received", nameof(SwitchOperatingMode), c.Saga.CorrelationId);
                 await c.Saga.SwitchOperatingMode(c.Message.OperatingMode);
@@ -413,11 +416,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     {
         context.Saga.StateHeaderId.Increase();
         context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, _logger);
-        string actionStatesSummary = context.Saga.CurrentOrder == null
-            ? "(no order)"
-            : context.Saga.CurrentOrder.PendingActionStates.Count == 0
-                ? "(empty)"
-                : string.Join(",", context.Saga.CurrentOrder.PendingActionStates.Select(a => $"{a.ActionType}#{a.ActionId[..Math.Min(8, a.ActionId.Length)]}={a.ActionStatus}"));
+        string actionStatesSummary = context.Saga.CurrentOrder == null ? "(no order)" :
+            context.Saga.CurrentOrder.PendingActionStates.Count == 0 ? "(empty)" : string.Join(",", context.Saga.CurrentOrder.PendingActionStates.Select(a => $"{a.ActionType}#{a.ActionId[..Math.Min(8, a.ActionId.Length)]}={a.ActionStatus}"));
         _logger.LogInformation("PublishState {Agv}: orderId={OrderId} updateId={OrderUpdateId} lastNodeId={LastNodeId} actionStates=[{ActionStates}] loads={LoadCount}",
             context.Saga.Configuration.SerialNumber,
             context.Saga.CurrentOrder?.OrderId ?? "(none)",
@@ -425,7 +425,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             context.Saga.LastNodeId ?? "(null)",
             actionStatesSummary,
             context.Saga.Loads.Count);
-        await context.PublishMqtt(new MqttState
+        var state = new MqttState
         {
             HeaderId = context.Saga.StateHeaderId.Current,
             Timestamp = _timeProvider.GetUtcNow(),
@@ -464,7 +464,10 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             {
                 EStop = MqttEStop.None, FieldViolation = false
             }
-        }, context.Saga.Configuration.GetRoutingKey(Vda5050Specifications.Subtopics.State), context.CancellationToken);
+        };
+        await context.PublishMqtt(state, context.Saga.Configuration.GetRoutingKey(Vda5050Specifications.Subtopics.State), context.CancellationToken);
+        await _stateCache.AddOrUpdateAsync(context.Saga.CorrelationId, state);
+        await context.Publish(new SimulatedAgvStateChanged(context.Saga.CorrelationId, state), context.CancellationToken);
         context.Saga.CurrentOrder?.State?.NewBaseRequest = null;
         context.Saga.FinishOrder(_logger);
     }

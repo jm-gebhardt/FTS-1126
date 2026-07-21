@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.WebApi.Hubs;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.RestrictedArea;

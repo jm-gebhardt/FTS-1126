@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs;
+namespace Gebhardt.Acc.Common.WebApi.Hubs;
 
 /// <summary>
 /// Interface for managing SignalR hub connections with support for aborting client connections.

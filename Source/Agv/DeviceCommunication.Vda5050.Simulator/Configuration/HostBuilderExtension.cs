@@ -43,10 +43,10 @@ public static class HostBuilderExtension
                 try
                 {
                     services.ConfigureServicesMassTransit(context.Configuration,
-                        busRegistrationConfiguration: configurator =>
+                        configurator =>
                         {
                             configurator.AddMqttConsumers();
-                            configurator.AddConsumers(); 
+                            configurator.AddConsumers();
                             configurator.AddSagaStateMachine<SimulatedAgvStateMachine, SimulatedAgv>(c =>
                                 {
                                     c.Message<StartOrder>(m =>
@@ -58,13 +58,13 @@ public static class HostBuilderExtension
                                         });
                                     });
                                 })
-                                  .InMemoryRepository();
+                                .InMemoryRepository();
                             configurator.AddMediator(c => c.AddMediator());
                             configurator.AddQuartzConsumers(options => options.QueueName = QuartzQueueName);
                         }
                         ,
                         // ReSharper disable once UnusedParameter.Local
-                        rabbitMqConfiguration: (registrationContext, configurator) =>
+                        (registrationContext, configurator) =>
                         {
                             //for outgoing MQTT messages the message topology needs to be configured
                             configurator.AddMqttMessages();
@@ -101,7 +101,7 @@ public static class HostBuilderExtension
                 .WithParsed(o => { simulationOptions = o; });
 
             initialLogger.LogInformation("Simulating {NAgvs} agvs", simulationOptions?.Agvs);
-            
+
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
             hostBuilder.ConfigureServices((_, services) =>
             {
@@ -118,6 +118,7 @@ public static class HostBuilderExtension
                     q.UseTimeZoneConverter();
                 });
                 services.AddSingleton<IAgvCache, AgvCache>();
+                services.AddSingleton<IAgvStateCache, AgvStateCache>();
                 services.AddTransient<INurbsEdgeBuilder, TinySplineEdgeBuilder>();
                 // Sequence counters for topics wise header id incrementation for messages sent by the agv.
                 services.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));

@@ -1,9 +1,9 @@
-﻿using System.Collections.Concurrent;
-using Gebhardt.Acc.TransportOrder.WebApi.Constants;
+using System.Collections.Concurrent;
+using Gebhardt.Acc.Common.WebApi.Constants;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs;
+namespace Gebhardt.Acc.Common.WebApi.Hubs;
 
 /// <inheritdoc/>
 public class HubBroadcaster<THub, TClient> : IHubBroadcaster<THub, TClient>

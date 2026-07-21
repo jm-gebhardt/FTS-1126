@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 
-namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs;
+namespace Gebhardt.Acc.Common.WebApi.Hubs;
 
 /// <summary>
 /// Provides methods to broadcast messages to all connected clients of a SignalR hub without awaiting or blocking.

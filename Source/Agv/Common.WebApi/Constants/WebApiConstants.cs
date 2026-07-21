@@ -1,4 +1,4 @@
-﻿namespace Gebhardt.Acc.TransportOrder.WebApi.Constants;
+﻿namespace Gebhardt.Acc.Common.WebApi.Constants;
 
 /// <summary>
 /// Provides constants for SignalR configuration in the Web API.

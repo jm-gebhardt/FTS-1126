@@ -17,7 +17,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Controllers;
 [ApiController]
 [Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
-public class SimulatedAgvController(ILogger<SimulatedAgvController> logger, IRequestClient<RequestOperatingModeSwitch> operatingModeClient, IRequestClient<RequestSetToPosition> moveRequestClient, IMapper mapper) : Controller
+public class SimulatedAgvController(ILogger<SimulatedAgvController> logger, IRequestClient<RequestOperatingModeSwitch> operatingModeClient, IRequestClient<RequestSetToPosition> moveRequestClient, IRequestClient<RequestAgvState> stateClient, IMapper mapper) : Controller
 {
     /// <summary>
     /// Switch the operating mode of an agv.
@@ -51,5 +51,27 @@ public class SimulatedAgvController(ILogger<SimulatedAgvController> logger, IReq
     {
         await moveRequestClient.GetResponse<Success>(new RequestSetToPosition(correlationId, mapper.Map<AgvPosition>(position)), cancellationToken);
         return Ok();
+    }
+
+    /// <summary>
+    /// Get the latest VDA5050 state of an agv.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <response code="200">The latest VDA5050 state.</response>
+    /// <response code="204">The agv has not published a state yet.</response>
+    /// <response code="404">Agv not found.</response>
+    [HttpGet]
+    [Route("agv/{correlationId:guid}/state")]
+    public async Task<IActionResult> GetState([FromRoute] Guid correlationId, CancellationToken cancellationToken)
+    {
+        Response<AgvStateResponse> response = await stateClient.GetResponse<AgvStateResponse>(new RequestAgvState(correlationId), cancellationToken);
+        if (response.Message.State == null)
+        {
+            return NoContent();
+        }
+
+        var dto = mapper.Map<Vda5050StateDto>(response.Message.State) with { CorrelationId = correlationId };
+        return Ok(dto);
     }
 }

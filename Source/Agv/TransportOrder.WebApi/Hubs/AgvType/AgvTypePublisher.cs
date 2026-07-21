@@ -1,4 +1,5 @@
 ﻿using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvType;
+using Gebhardt.Acc.Common.WebApi.Hubs;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Hubs.AgvType;
 
