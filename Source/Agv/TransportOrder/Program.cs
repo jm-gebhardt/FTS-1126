@@ -34,9 +34,10 @@ try
     var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, simulationOptions != null);
 
     var host = hostBuilder.Build();
-
-    using (var scope = host.Services.CreateScope())
+    var environment = host.Services.GetRequiredService<IHostEnvironment>();
+    if (!environment.IsEnvironment("SwaggerCli"))
     {
+        using var scope = host.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
         dbContext.SetCommandTimeOut();
         await dbContext.Database.MigrateAsync();
