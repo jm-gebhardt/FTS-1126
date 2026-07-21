@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.TransportOrder;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -50,4 +51,53 @@ catch (Exception ex)
 {
     initialLogger.LogError(ex, "Unhandled exception");
     return 1;
+}
+
+/// <summary>
+/// This entry point is create to allow swaggercli open api docs generation
+/// </summary>
+public partial class Program
+{
+    /// <summary>
+    /// Creates the host builder for the application.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    [PublicAPI]
+    public static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        var initialLogger = InitialLogger.Create<Program>();
+
+        var swaggerCli = string.Equals(
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            "SwaggerCli",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (swaggerCli)
+        {
+            var options = new ProductionOptions();
+            return TransportOrderHostBuilder.CreateHostBuilder(args, options, initialLogger, isSimulation: false);
+        }
+
+        ProductionOptions? productionOptions = null;
+        SimulationOptions? simulationOptions = null;
+
+        Parser.Default.ParseArguments<ProductionOptions, SimulationOptions>(args)
+            .WithParsed<ProductionOptions>(options => { productionOptions = options; })
+            .WithParsed<SimulationOptions>(options => { simulationOptions = options; });
+
+        if (productionOptions != null)
+        {
+            return TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions, initialLogger, isSimulation: false);
+        }
+
+        if (simulationOptions != null)
+        {
+            return TransportOrderHostBuilder.CreateHostBuilder(args, simulationOptions, initialLogger, isSimulation: true);
+        }
+
+        throw new InvalidOperationException(
+            "No valid host mode was provided. Expected ProductionOptions or SimulationOptions.");
+    }
 }
