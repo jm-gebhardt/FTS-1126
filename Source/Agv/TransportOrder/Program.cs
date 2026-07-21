@@ -3,16 +3,30 @@ using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.TransportOrder;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
-using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-var initialLogger = InitialLogger.Create<Program>();
+var initialLogger = InitialLogger.Create<Gebhardt.Acc.TransportOrder.Program>();
 
 try
 {
+    var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli", StringComparison.OrdinalIgnoreCase);
+
+    if (swaggerCli)
+    {
+        var swaggerHostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, new ProductionOptions(), initialLogger, isSimulation: false);
+        swaggerHostBuilder.UseDefaultServiceProvider((_, providerOptions) =>
+        {
+            providerOptions.ValidateScopes = false;
+            providerOptions.ValidateOnBuild = false;
+        });
+
+        _ = swaggerHostBuilder.Build();
+        return 0;
+    }
+
     ProductionOptions? productionOptions = null;
     SimulationOptions? simulationOptions = null;
     Parser.Default.ParseArguments<ProductionOptions, SimulationOptions>(args)
@@ -35,8 +49,7 @@ try
     var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, simulationOptions != null);
 
     var host = hostBuilder.Build();
-    var environment = host.Services.GetRequiredService<IHostEnvironment>();
-    if (!environment.IsEnvironment("SwaggerCli"))
+    if (!swaggerCli)
     {
         using var scope = host.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
@@ -51,53 +64,4 @@ catch (Exception ex)
 {
     initialLogger.LogError(ex, "Unhandled exception");
     return 1;
-}
-
-/// <summary>
-/// This entry point is create to allow swaggercli open api docs generation
-/// </summary>
-public partial class Program
-{
-    /// <summary>
-    /// Creates the host builder for the application.
-    /// </summary>
-    /// <param name="args"></param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    [PublicAPI]
-    public static IHostBuilder CreateHostBuilder(string[] args)
-    {
-        var initialLogger = InitialLogger.Create<Program>();
-
-        var swaggerCli = string.Equals(
-            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-            "SwaggerCli",
-            StringComparison.OrdinalIgnoreCase);
-
-        if (swaggerCli)
-        {
-            var options = new ProductionOptions();
-            return TransportOrderHostBuilder.CreateHostBuilder(args, options, initialLogger, isSimulation: false);
-        }
-
-        ProductionOptions? productionOptions = null;
-        SimulationOptions? simulationOptions = null;
-
-        Parser.Default.ParseArguments<ProductionOptions, SimulationOptions>(args)
-            .WithParsed<ProductionOptions>(options => { productionOptions = options; })
-            .WithParsed<SimulationOptions>(options => { simulationOptions = options; });
-
-        if (productionOptions != null)
-        {
-            return TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions, initialLogger, isSimulation: false);
-        }
-
-        if (simulationOptions != null)
-        {
-            return TransportOrderHostBuilder.CreateHostBuilder(args, simulationOptions, initialLogger, isSimulation: true);
-        }
-
-        throw new InvalidOperationException(
-            "No valid host mode was provided. Expected ProductionOptions or SimulationOptions.");
-    }
 }
