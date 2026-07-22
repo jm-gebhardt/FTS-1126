@@ -70,8 +70,6 @@ public static class WebHostBuilderExtensions
 
         webHostBuilder.ConfigureServices((context, services) =>
         {
-            var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli", StringComparison.OrdinalIgnoreCase);
-
             services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddTransient<ITriggerPublisher, TriggerPublisher>();
@@ -198,10 +196,6 @@ public static class WebHostBuilderExtensions
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
-                if (!swaggerCli)
-                {
-                    options.IncludeXmlComments();
-                }
             });
             IdentityModelEventSource.ShowPII = true;
 

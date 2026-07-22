@@ -24,9 +24,7 @@ public static class MassTransitHostBuilderExtensions
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
-            var swaggerCli = context.HostingEnvironment.IsEnvironment("SwaggerCli")
-                             || string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli", StringComparison.OrdinalIgnoreCase)
-                             || string.Equals(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"), "SwaggerCli", StringComparison.OrdinalIgnoreCase);
+            var swaggerCli = context.HostingEnvironment.IsEnvironment("SwaggerCli");
 
             if (swaggerCli)
             {
