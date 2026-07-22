@@ -36,7 +36,7 @@ try
     var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, simulationOptions != null);
 
     var host = hostBuilder.Build();
-    if (swaggerCli)
+    if (!swaggerCli)
     {
         using var scope = host.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
