@@ -13,7 +13,7 @@ public class RestApiGroup : ApiGroup
     public const string GroupName = "rest";
 
     /// <inheritdoc />
-    public override string Name => Version + GroupName;
+    public override string Name => $"{Version}-{GroupName}";
 
     /// <inheritdoc />
     public override string Title => "REST API";

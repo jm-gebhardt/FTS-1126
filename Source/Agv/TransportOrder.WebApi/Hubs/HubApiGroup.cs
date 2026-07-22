@@ -13,7 +13,7 @@ public class HubApiGroup : ApiGroup
     public const string GroupName = "signalr";
 
     /// <inheritdoc />
-    public override string Name => Version + GroupName;
+    public override string Name => $"{Version}-{GroupName}";
 
     /// <inheritdoc />
     public override string Title => "SignalR Hub";

@@ -14,19 +14,6 @@ try
 {
     var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli");
 
-    if (swaggerCli)
-    {
-        var swaggerHostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, new ProductionOptions(), initialLogger, isSimulation: false);
-        swaggerHostBuilder.UseDefaultServiceProvider((_, providerOptions) =>
-        {
-            providerOptions.ValidateScopes = false;
-            providerOptions.ValidateOnBuild = false;
-        });
-
-        _ = swaggerHostBuilder.Build();
-        return 0;
-    }
-
     ProductionOptions? productionOptions = null;
     SimulationOptions? simulationOptions = null;
     Parser.Default.ParseArguments<ProductionOptions, SimulationOptions>(args)
@@ -49,10 +36,13 @@ try
     var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, simulationOptions != null);
 
     var host = hostBuilder.Build();
-    using var scope = host.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-    dbContext.SetCommandTimeOut();
-    await dbContext.Database.MigrateAsync();
+    if (swaggerCli)
+    {
+        using var scope = host.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
+        dbContext.SetCommandTimeOut();
+        await dbContext.Database.MigrateAsync();
+    }
 
     host.Run();
     return 0;
