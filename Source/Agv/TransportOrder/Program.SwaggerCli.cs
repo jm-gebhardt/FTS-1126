@@ -20,15 +20,13 @@ public partial class Program
     {
         var initialLogger = InitialLogger.Create<Program>();
 
-        var swaggerCli = string.Equals(
-            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-            "SwaggerCli",
-            StringComparison.OrdinalIgnoreCase);
+        var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli");
 
         if (swaggerCli)
         {
             var options = new ProductionOptions();
-            var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, options, initialLogger, isSimulation: false);
+            var hostBuilder =
+                TransportOrderHostBuilder.CreateHostBuilder(args, options, initialLogger, isSimulation: false);
             hostBuilder.UseDefaultServiceProvider((_, providerOptions) =>
             {
                 providerOptions.ValidateScopes = false;
@@ -46,12 +44,14 @@ public partial class Program
 
         if (productionOptions != null)
         {
-            return TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions, initialLogger, isSimulation: false);
+            return TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions, initialLogger,
+                isSimulation: false);
         }
 
         if (simulationOptions != null)
         {
-            return TransportOrderHostBuilder.CreateHostBuilder(args, simulationOptions, initialLogger, isSimulation: true);
+            return TransportOrderHostBuilder.CreateHostBuilder(args, simulationOptions, initialLogger,
+                isSimulation: true);
         }
 
         throw new InvalidOperationException(
