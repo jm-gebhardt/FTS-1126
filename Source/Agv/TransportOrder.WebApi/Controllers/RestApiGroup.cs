@@ -10,10 +10,10 @@ public class RestApiGroup : ApiGroup
     /// <summary>
     /// Api group name to be used with ApiExplorerSettings attribute
     /// </summary>
-    public const string GroupName = "v1-rest";
+    public const string GroupName = "rest";
 
     /// <inheritdoc />
-    public override string Name => GroupName;
+    public override string Name => Version + GroupName;
 
     /// <inheritdoc />
     public override string Title => "REST API";
