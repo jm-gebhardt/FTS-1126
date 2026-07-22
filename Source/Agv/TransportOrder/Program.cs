@@ -32,8 +32,8 @@ try
         initialLogger.LogError("Cannot run in both production and simulation mode");
         return 1;
     }
-
-    var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, simulationOptions != null);
+    var isSimulation = !swaggerCli && simulationOptions != null;
+    var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, isSimulation);
 
     var host = hostBuilder.Build();
     if (!swaggerCli)
