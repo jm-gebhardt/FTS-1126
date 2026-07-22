@@ -41,12 +41,12 @@ public class MqttStateConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_MqttState_FactSheetNotYetRequested_PublishesRequestAgvData()
+    public async Task Consume_MqttState_FactsheetNotYetRequested_PublishesRequestAgvData()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid());
         var fixture = new MqttStateConsumerTestFixture()
             .AddAgv(agv)
-            .SetFactSheetNotYetRequested();
+            .SetFactsheetNotYetRequested();
 
         var message = MqttStateGenerator.Generate();
 
@@ -56,7 +56,7 @@ public class MqttStateConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_MqttState_FactSheetAlreadyRequested_DoesNotPublishRequestAgvData()
+    public async Task Consume_MqttState_FactsheetAlreadyRequested_DoesNotPublishRequestAgvData()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid());
         var fixture = new MqttStateConsumerTestFixture().AddAgv(agv);

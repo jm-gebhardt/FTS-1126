@@ -18,7 +18,7 @@ public sealed class OrderActionBuilderRegistry
             StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Build the order action using fact sheet information and a build context.
+    /// Build the order action using factsheet information and a build context.
     /// </summary>
     /// <param name="agvAction">The agv action.</param>
     /// <param name="context">The build context.</param>
@@ -47,7 +47,7 @@ public sealed class OrderActionBuilderRegistry
     }
 
     /// <summary>
-    /// Build the order action directly from the graph definition without using fact sheet information.
+    /// Build the order action directly from the graph definition without using factsheet information.
     /// </summary>
     /// <param name="nodeAction">The node Action.</param>
     /// <returns>The order action.</returns>
@@ -57,7 +57,7 @@ public sealed class OrderActionBuilderRegistry
     }
 
     /// <summary>
-    /// Build the order action directly from the graph definition without using fact sheet information.
+    /// Build the order action directly from the graph definition without using factsheet information.
     /// </summary>
     /// <param name="edgeAction">The edge Action.</param>
     /// <returns>The order action.</returns>

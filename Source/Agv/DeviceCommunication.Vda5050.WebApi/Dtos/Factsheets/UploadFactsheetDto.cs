@@ -1,16 +1,16 @@
 using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.FactSheet;
+namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos.Factsheets;
 
 /// <summary>
-/// Factsheet providing basic information about a specific AGV type series.
+/// Request body for uploading an AGV factsheet.
 /// </summary>
 [PublicAPI]
-public record Factsheet
+public record UploadFactsheetDto
 {
     /// <summary>Header ID of the message.</summary>
     public int HeaderId { get; set; }
@@ -28,32 +28,30 @@ public record Factsheet
     public string SerialNumber { get; set; } = string.Empty;
 
     /// <summary>General classification and capabilities of the AGV.</summary>
-    public TypeSpecification TypeSpecification { get; set; } = new();
+    public TypeSpecificationDto TypeSpecification { get; set; } = new();
 
     /// <summary>Basic physical properties of the AGV.</summary>
-    public PhysicalParameters PhysicalParameters { get; set; } = new();
+    public PhysicalParametersDto PhysicalParameters { get; set; } = new();
 
     /// <summary>Protocol limitations of the AGV.</summary>
-    public ProtocolLimits ProtocolLimits { get; set; } = new();
+    public ProtocolLimitsDto ProtocolLimits { get; set; } = new();
 
     /// <summary>Supported features of the VDA5050 protocol.</summary>
-    public ProtocolFeatures ProtocolFeatures { get; set; } = new();
+    public ProtocolFeaturesDto ProtocolFeatures { get; set; } = new();
 
     /// <summary>Detailed definition of AGV geometry.</summary>
-    public AgvGeometry AgvGeometry { get; set; } = new();
+    public AgvGeometryDto AgvGeometry { get; set; } = new();
 
     /// <summary>Abstract specification of load capabilities.</summary>
-    public LoadSpecification LoadSpecification { get; set; } = new();
+    public LoadSpecificationDto LoadSpecification { get; set; } = new();
 
     /// <summary>Hardware and software version and network configuration of the vehicle. Optional.</summary>
-    public VehicleConfig? VehicleConfig { get; set; }
+    public VehicleConfigDto? VehicleConfig { get; set; }
 }
 
-/// <summary>
-/// General classification and capabilities of the AGV type series.
-/// </summary>
+/// <summary>General classification and capabilities of the AGV type series.</summary>
 [PublicAPI]
-public record TypeSpecification
+public record TypeSpecificationDto
 {
     /// <summary>Free text generalized series name as specified by manufacturer.</summary>
     public string SeriesName { get; set; } = string.Empty;
@@ -77,81 +75,9 @@ public record TypeSpecification
     public ICollection<NavigationType> NavigationTypes { get; set; } = [];
 }
 
-/// <summary>AGV kinematics type.</summary>
+/// <summary>Basic physical properties of the AGV.</summary>
 [PublicAPI]
-public enum AgvKinematic
-{
-    /// <summary>Differential drive.</summary>
-    Diff,
-
-    /// <summary>Omnidirectional drive.</summary>
-    Omni,
-
-    /// <summary>Three-wheel drive.</summary>
-    ThreeWheel
-}
-
-/// <summary>AGV class.</summary>
-[PublicAPI]
-public enum AgvClass
-{
-    /// <summary/>
-    Forklift,
-
-    /// <summary/>
-    Conveyor,
-
-    /// <summary/>
-    Tugger,
-
-    /// <summary/>
-    Carrier
-}
-
-/// <summary>Localization type supported by the AGV.</summary>
-[PublicAPI]
-public enum LocalizationType
-{
-    /// <summary>Natural feature localization.</summary>
-    Natural,
-
-    /// <summary>Reflector-based localization.</summary>
-    Reflector,
-
-    /// <summary>RFID-based localization.</summary>
-    Rfid,
-
-    /// <summary>Data matrix code localization.</summary>
-    Dmc,
-
-    /// <summary>Spot localization.</summary>
-    Spot,
-
-    /// <summary>Grid-based localization.</summary>
-    Grid
-}
-
-/// <summary>Navigation / path planning type supported by the AGV.</summary>
-[JsonConverter(typeof(AnnotatedEnumConverterFactory))]
-[JsonEnumNamingPolicy(JsonKnownNamingPolicy.SnakeCaseUpper)]
-[PublicAPI]
-public enum NavigationType
-{
-    /// <summary>Physically line-guided.</summary>
-    PhysicalLineGuided,
-
-    /// <summary>Virtually line-guided.</summary>
-    VirtualLineGuided,
-
-    /// <summary>Autonomous free navigation.</summary>
-    Autonomous
-}
-
-/// <summary>
-/// Basic physical properties of the AGV.
-/// </summary>
-[PublicAPI]
-public record PhysicalParameters
+public record PhysicalParametersDto
 {
     /// <summary>Minimal controlled continuous speed of the AGV in m/s.</summary>
     public double SpeedMin { get; set; }
@@ -178,26 +104,23 @@ public record PhysicalParameters
     public double Length { get; set; }
 }
 
-/// <summary>
-/// Protocol limitations of the AGV.
-/// If a parameter is not defined or set to zero there is no explicit limit for that parameter.
-/// </summary>
+/// <summary>Protocol limitations of the AGV.</summary>
 [PublicAPI]
-public record ProtocolLimits
+public record ProtocolLimitsDto
 {
     /// <summary>Maximum lengths of strings.</summary>
-    public MaxStringLens MaxStringLens { get; set; } = new();
+    public MaxStringLensDto MaxStringLens { get; set; } = new();
 
     /// <summary>Maximum lengths of arrays.</summary>
-    public MaxArrayLens MaxArrayLens { get; set; } = new();
+    public MaxArrayLensDto MaxArrayLens { get; set; } = new();
 
     /// <summary>Timing information.</summary>
-    public Timing Timing { get; set; } = new();
+    public TimingDto Timing { get; set; } = new();
 }
 
 /// <summary>Maximum lengths of string fields in the protocol.</summary>
 [PublicAPI]
-public record MaxStringLens
+public record MaxStringLensDto
 {
     /// <summary>Maximum MQTT message length.</summary>
     public int? MsgLen { get; set; }
@@ -223,60 +146,76 @@ public record MaxStringLens
 
 /// <summary>Maximum number of elements in array fields in the protocol.</summary>
 [PublicAPI]
-public record MaxArrayLens
+public record MaxArrayLensDto
 {
     /// <summary>Maximum number of nodes per order processable by the AGV.</summary>
+    [JsonPropertyName("order.nodes")]
     public int? OrderNodes { get; set; }
 
     /// <summary>Maximum number of edges per order processable by the AGV.</summary>
+    [JsonPropertyName("order.edges")]
     public int? OrderEdges { get; set; }
 
     /// <summary>Maximum number of actions per node processable by the AGV.</summary>
+    [JsonPropertyName("node.actions")]
     public int? NodeActions { get; set; }
 
     /// <summary>Maximum number of actions per edge processable by the AGV.</summary>
+    [JsonPropertyName("edge.actions")]
     public int? EdgeActions { get; set; }
 
     /// <summary>Maximum number of parameters per action processable by the AGV.</summary>
+    [JsonPropertyName("actions.actionsParameters")]
     public int? ActionsParameters { get; set; }
 
     /// <summary>Maximum number of instant actions per message processable by the AGV.</summary>
+    [JsonPropertyName("instantActions")]
     public int? InstantActions { get; set; }
 
     /// <summary>Maximum number of knots per trajectory processable by the AGV.</summary>
+    [JsonPropertyName("trajectory.knotVector")]
     public int? TrajectoryKnotVector { get; set; }
 
     /// <summary>Maximum number of control points per trajectory processable by the AGV.</summary>
+    [JsonPropertyName("trajectory.controlPoints")]
     public int? TrajectoryControlPoints { get; set; }
 
     /// <summary>Maximum number of nodeStates sent by the AGV / maximum nodes in base.</summary>
+    [JsonPropertyName("state.nodeStates")]
     public int? StateNodeStates { get; set; }
 
     /// <summary>Maximum number of edgeStates sent by the AGV / maximum edges in base.</summary>
+    [JsonPropertyName("state.edgeStates")]
     public int? StateEdgeStates { get; set; }
 
     /// <summary>Maximum number of load objects sent by the AGV.</summary>
+    [JsonPropertyName("state.loads")]
     public int? StateLoads { get; set; }
 
     /// <summary>Maximum number of actionStates sent by the AGV.</summary>
+    [JsonPropertyName("state.actionStates")]
     public int? StateActionStates { get; set; }
 
     /// <summary>Maximum number of errors sent by the AGV in one state message.</summary>
+    [JsonPropertyName("state.errors")]
     public int? StateErrors { get; set; }
 
     /// <summary>Maximum number of information objects sent by the AGV in one state message.</summary>
+    [JsonPropertyName("state.information")]
     public int? StateInformation { get; set; }
 
     /// <summary>Maximum number of error references sent by the AGV for each error.</summary>
+    [JsonPropertyName("error.errorReferences")]
     public int? ErrorReferences { get; set; }
 
     /// <summary>Maximum number of info references sent by the AGV for each information object.</summary>
+    [JsonPropertyName("information.infoReferences")]
     public int? InformationInfoReferences { get; set; }
 }
 
-/// <summary>Timing constraints for the AGV protocol communication.</summary>
+/// <summary>Timing constraints for AGV protocol communication.</summary>
 [PublicAPI]
-public record Timing
+public record TimingDto
 {
     /// <summary>Minimum interval for sending order messages to the AGV in seconds.</summary>
     public double MinOrderInterval { get; set; }
@@ -293,24 +232,18 @@ public record Timing
 
 /// <summary>Supported features of the VDA5050 protocol.</summary>
 [PublicAPI]
-public record ProtocolFeatures
+public record ProtocolFeaturesDto
 {
-    /// <summary>
-    /// List of supported and/or required optional parameters.
-    /// Optional parameters not listed here are assumed not to be supported by the AGV.
-    /// </summary>
-    public ICollection<OptionalParameter> OptionalParameters { get; set; } = [];
+    /// <summary>List of supported and/or required optional parameters.</summary>
+    public ICollection<OptionalParameterDto> OptionalParameters { get; set; } = [];
 
-    /// <summary>
-    /// List of all actions with parameters supported by this AGV,
-    /// including standard VDA5050 actions and manufacturer-specific actions.
-    /// </summary>
-    public ICollection<FactsheetAction> AgvActions { get; set; } = [];
+    /// <summary>List of all actions with parameters supported by this AGV.</summary>
+    public ICollection<FactsheetActionDto> AgvActions { get; set; } = [];
 }
 
 /// <summary>An optional protocol parameter and its support level.</summary>
 [PublicAPI]
-public record OptionalParameter
+public record OptionalParameterDto
 {
     /// <summary>Full name of the optional parameter, e.g. "order.nodes.nodePosition.allowedDeviationTheta".</summary>
     public string Parameter { get; set; } = string.Empty;
@@ -322,22 +255,9 @@ public record OptionalParameter
     public string? Description { get; set; }
 }
 
-/// <summary>Support level of an optional protocol parameter.</summary>
+/// <summary>An action type declared in the factsheet, including its parameters and applicable scopes.</summary>
 [PublicAPI]
-public enum ParameterSupport
-{
-    /// <summary>Optional parameter is supported as specified.</summary>
-    Supported,
-
-    /// <summary>Optional parameter is required for proper AGV operation.</summary>
-    Required
-}
-
-/// <summary>
-/// An action type declared in the factsheet, including its parameters and applicable scopes.
-/// </summary>
-[PublicAPI]
-public record FactsheetAction
+public record FactsheetActionDto
 {
     /// <summary>Unique actionType corresponding to action.actionType.</summary>
     public string ActionType { get; set; } = string.Empty;
@@ -349,7 +269,7 @@ public record FactsheetAction
     public ICollection<ActionScope> ActionScopes { get; set; } = [];
 
     /// <summary>List of parameters for this action. Omit or leave empty if the action has no parameters.</summary>
-    public ICollection<FactsheetActionParameter>? ActionParameters { get; set; }
+    public ICollection<FactsheetActionParameterDto>? ActionParameters { get; set; }
 
     /// <summary>Free text description of the result.</summary>
     public string? ResultDescription { get; set; }
@@ -360,7 +280,7 @@ public record FactsheetAction
 
 /// <summary>Definition of a parameter accepted by a factsheet action.</summary>
 [PublicAPI]
-public record FactsheetActionParameter
+public record FactsheetActionParameterDto
 {
     /// <summary>Key string for the parameter.</summary>
     public string Key { get; set; } = string.Empty;
@@ -377,23 +297,23 @@ public record FactsheetActionParameter
 
 /// <summary>Detailed geometry of the AGV.</summary>
 [PublicAPI]
-public record AgvGeometry
+public record AgvGeometryDto
 {
     /// <summary>List of wheels, containing wheel arrangement and geometry.</summary>
-    public ICollection<WheelDefinition>? WheelDefinitions { get; set; }
+    public ICollection<WheelDefinitionDto>? WheelDefinitions { get; set; }
 
     /// <summary>List of AGV envelope curves in 2D.</summary>
     // ReSharper disable once InconsistentNaming
-    public ICollection<Envelope2d>? Envelopes2d { get; set; }
+    public ICollection<Envelope2dDto>? Envelopes2d { get; set; }
 
     /// <summary>List of AGV envelope curves in 3D.</summary>
     // ReSharper disable once InconsistentNaming
-    public ICollection<Envelope3d>? Envelopes3d { get; set; }
+    public ICollection<Envelope3dDto>? Envelopes3d { get; set; }
 }
 
 /// <summary>Geometry and arrangement of a single wheel.</summary>
 [PublicAPI]
-public record WheelDefinition
+public record WheelDefinitionDto
 {
     /// <summary>Wheel type.</summary>
     public WheelType Type { get; set; }
@@ -405,7 +325,7 @@ public record WheelDefinition
     public bool IsActiveSteered { get; set; }
 
     /// <summary>Position of the wheel in the AGV coordinate system.</summary>
-    public WheelPosition Position { get; set; } = new();
+    public WheelPositionDto Position { get; set; } = new();
 
     /// <summary>Nominal diameter of the wheel in meters.</summary>
     public double Diameter { get; set; }
@@ -420,47 +340,30 @@ public record WheelDefinition
     public string? Constraints { get; set; }
 }
 
-/// <summary>Wheel type.</summary>
-[PublicAPI]
-public enum WheelType
-{
-    /// <summary>Drive wheel.</summary>
-    Drive,
-
-    /// <summary>Caster wheel.</summary>
-    Caster,
-
-    /// <summary>Fixed wheel.</summary>
-    Fixed,
-
-    /// <summary>Mecanum wheel.</summary>
-    Mecanum
-}
-
 /// <summary>Position of a wheel in the AGV coordinate system.</summary>
 [PublicAPI]
-public record WheelPosition
+public record WheelPositionDto
 {
-    /// <summary>X-position in the AGV coordinate system in meters.</summary>
+    /// <summary>X-position in meters.</summary>
     public double X { get; set; }
 
-    /// <summary>Y-position in the AGV coordinate system in meters.</summary>
+    /// <summary>Y-position in meters.</summary>
     public double Y { get; set; }
 
-    /// <summary>Orientation of the wheel in radians. Necessary for fixed wheels.</summary>
+    /// <summary>Orientation in radians. Necessary for fixed wheels.</summary>
     public double? Theta { get; set; }
 }
 
 /// <summary>AGV envelope curve in 2D (polygon).</summary>
 [PublicAPI]
 // ReSharper disable once InconsistentNaming
-public record Envelope2d
+public record Envelope2dDto
 {
     /// <summary>Name of the envelope curve set.</summary>
     public string Set { get; set; } = string.Empty;
 
     /// <summary>Envelope curve as a closed, non-self-intersecting x/y polygon.</summary>
-    public ICollection<PolygonPoint> PolygonPoints { get; set; } = [];
+    public ICollection<PolygonPointDto> PolygonPoints { get; set; } = [];
 
     /// <summary>Free text description of the envelope curve set.</summary>
     public string? Description { get; set; }
@@ -468,7 +371,7 @@ public record Envelope2d
 
 /// <summary>A single point in a 2D polygon.</summary>
 [PublicAPI]
-public record PolygonPoint
+public record PolygonPointDto
 {
     /// <summary>X-position of the polygon point in meters.</summary>
     public double X { get; set; }
@@ -480,7 +383,7 @@ public record PolygonPoint
 /// <summary>AGV envelope curve in 3D.</summary>
 [PublicAPI]
 // ReSharper disable once InconsistentNaming
-public record Envelope3d
+public record Envelope3dDto
 {
     /// <summary>Name of the envelope curve set.</summary>
     public string Set { get; set; } = string.Empty;
@@ -500,21 +403,18 @@ public record Envelope3d
 
 /// <summary>Abstract specification of load capabilities of the AGV.</summary>
 [PublicAPI]
-public record LoadSpecification
+public record LoadSpecificationDto
 {
-    /// <summary>
-    /// List of load positions / load handling devices.
-    /// If empty or absent, the AGV has no load handling device.
-    /// </summary>
+    /// <summary>List of load positions / load handling devices. If empty or absent, the AGV has no load handling device.</summary>
     public ICollection<string>? LoadPositions { get; set; }
 
     /// <summary>List of load sets that can be handled by the AGV.</summary>
-    public ICollection<LoadSet>? LoadSets { get; set; }
+    public ICollection<LoadSetDto>? LoadSets { get; set; }
 }
 
 /// <summary>A set of loads that the AGV can handle, with associated handling constraints.</summary>
 [PublicAPI]
-public record LoadSet
+public record LoadSetDto
 {
     /// <summary>Unique name of the load set, e.g. "DEFAULT", "SET1".</summary>
     public string SetName { get; set; } = string.Empty;
@@ -526,10 +426,10 @@ public record LoadSet
     public ICollection<string>? LoadPositions { get; set; }
 
     /// <summary>Bounding box reference as defined in state.loads[].</summary>
-    public BoundingBoxReference? BoundingBoxReference { get; set; }
+    public BoundingBoxReferenceDto? BoundingBoxReference { get; set; }
 
     /// <summary>Dimensions of the load's bounding box.</summary>
-    public LoadDimensions? LoadDimensions { get; set; }
+    public LoadDimensionsDto? LoadDimensions { get; set; }
 
     /// <summary>Maximum weight of this load type in kg.</summary>
     public double? MaxWeight { get; set; }
@@ -573,7 +473,7 @@ public record LoadSet
 
 /// <summary>Bounding box reference point for a load set.</summary>
 [PublicAPI]
-public record BoundingBoxReference
+public record BoundingBoxReferenceDto
 {
     /// <summary>X-coordinate of the reference point.</summary>
     public double X { get; set; }
@@ -590,7 +490,7 @@ public record BoundingBoxReference
 
 /// <summary>Dimensions of a load's bounding box.</summary>
 [PublicAPI]
-public record LoadDimensions
+public record LoadDimensionsDto
 {
     /// <summary>Absolute length of the load's bounding box.</summary>
     public double Length { get; set; }
@@ -604,18 +504,18 @@ public record LoadDimensions
 
 /// <summary>Hardware/software version and network configuration of the vehicle.</summary>
 [PublicAPI]
-public record VehicleConfig
+public record VehicleConfigDto
 {
     /// <summary>Array of hardware and software versions running on the vehicle.</summary>
-    public ICollection<VehicleVersion>? Versions { get; set; }
+    public ICollection<VehicleVersionDto>? Versions { get; set; }
 
     /// <summary>Network configuration of the vehicle.</summary>
-    public NetworkConfig? Network { get; set; }
+    public NetworkConfigDto? Network { get; set; }
 }
 
 /// <summary>A hardware or software version entry.</summary>
 [PublicAPI]
-public record VehicleVersion
+public record VehicleVersionDto
 {
     /// <summary>The key identifying the version component, e.g. "softwareVersion", "cameraVersion".</summary>
     public string Key { get; set; } = string.Empty;
@@ -626,7 +526,7 @@ public record VehicleVersion
 
 /// <summary>Network configuration of the vehicle.</summary>
 [PublicAPI]
-public record NetworkConfig
+public record NetworkConfigDto
 {
     /// <summary>List of DNS servers used by the vehicle.</summary>
     public ICollection<string>? DnsServers { get; set; }

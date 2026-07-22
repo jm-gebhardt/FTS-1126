@@ -124,7 +124,7 @@ public static class HostBuilderExtension
 
                 //Caches
                 services.AddSingleton<IAgvCacheProvider, AgvCache>();
-                services.AddSingleton<IFactSheetRequestCacheProvider, FactSheetRequestCache>();
+                services.AddSingleton<IFactsheetRequestCacheProvider, FactsheetRequestCache>();
                 services.AddSingleton<IOrderActionStatusCacheProvider, OrderActionStatusCache>();
 
                 //Filter

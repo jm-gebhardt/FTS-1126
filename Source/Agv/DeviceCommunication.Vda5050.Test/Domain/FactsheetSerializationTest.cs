@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain;
@@ -74,12 +74,12 @@ public class FactsheetSerializationTest
                                        }
                                      }
                                      """;
-        var factSheet = JsonSerializer.Deserialize<Factsheet>(jsonFactsheet);
+        var factsheet = JsonSerializer.Deserialize<Factsheet>(jsonFactsheet);
         
-        factSheet.ShouldNotBeNull();
-        factSheet.TypeSpecification.NavigationTypes.Count.ShouldBe(3);
-        factSheet.TypeSpecification.NavigationTypes.ShouldContain(NavigationType.VirtualLineGuided);
-        factSheet.TypeSpecification.NavigationTypes.ShouldContain(NavigationType.PhysicalLineGuided);
-        factSheet.TypeSpecification.NavigationTypes.ShouldContain(NavigationType.Autonomous);
+        factsheet.ShouldNotBeNull();
+        factsheet.TypeSpecification.NavigationTypes.Count.ShouldBe(3);
+        factsheet.TypeSpecification.NavigationTypes.ShouldContain(NavigationType.VirtualLineGuided);
+        factsheet.TypeSpecification.NavigationTypes.ShouldContain(NavigationType.PhysicalLineGuided);
+        factsheet.TypeSpecification.NavigationTypes.ShouldContain(NavigationType.Autonomous);
     }
 }

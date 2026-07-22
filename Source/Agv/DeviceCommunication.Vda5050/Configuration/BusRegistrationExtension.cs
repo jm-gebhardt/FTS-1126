@@ -30,7 +30,7 @@ public static class BusRegistrationExtension
             configurator.AddMqttConsumer<MqttConnectionConsumer>();
             configurator.AddMqttConsumer<MqttStateConsumer>();
             configurator.AddMqttConsumer<MqttVisualizationConsumer>();
-            configurator.AddMqttConsumer<MqttFactSheetConsumer>();
+            configurator.AddMqttConsumer<MqttFactsheetConsumer>();
             return configurator;
         }
 

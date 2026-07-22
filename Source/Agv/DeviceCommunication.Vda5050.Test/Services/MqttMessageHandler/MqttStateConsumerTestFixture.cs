@@ -13,18 +13,18 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.MqttMessageHand
 public class MqttStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateConsumer>
 {
     private readonly Mock<IAgvRepository> _agvRepository = new();
-    private readonly Mock<IFactSheetRequestCacheProvider> _factSheetRequestCache = new();
+    private readonly Mock<IFactsheetRequestCacheProvider> _factsheetRequestCache = new();
 
     public MqttStateConsumerTestFixture()
     {
-        _factSheetRequestCache
-            .Setup(x => x.HasAgvRequestedFactSheet(It.IsAny<Guid>()))
+        _factsheetRequestCache
+            .Setup(x => x.HasAgvRequestedFactsheet(It.IsAny<Guid>()))
             .ReturnsAsync(true);
 
         AddServices(sc =>
         {
             sc.AddTransient(_ => _agvRepository.Object);
-            sc.AddTransient(_ => _factSheetRequestCache.Object);
+            sc.AddTransient(_ => _factsheetRequestCache.Object);
         });
         Build();
     }
@@ -35,10 +35,10 @@ public class MqttStateConsumerTestFixture : MqttConsumerTestFixture<MqttStateCon
         return this;
     }
 
-    public MqttStateConsumerTestFixture SetFactSheetNotYetRequested()
+    public MqttStateConsumerTestFixture SetFactsheetNotYetRequested()
     {
-        _factSheetRequestCache
-            .Setup(x => x.HasAgvRequestedFactSheet(It.IsAny<Guid>()))
+        _factsheetRequestCache
+            .Setup(x => x.HasAgvRequestedFactsheet(It.IsAny<Guid>()))
             .ReturnsAsync(false);
         return this;
     }

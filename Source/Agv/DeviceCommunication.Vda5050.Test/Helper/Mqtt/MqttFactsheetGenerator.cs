@@ -5,10 +5,10 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Mqtt;
 /// <summary>
 /// Provides a generator for <see cref="MqttFactsheet"/> and adjoint messages.
 /// </summary>
-public static class MqttFactSheetGenerator
+public static class MqttFactsheetGenerator
 {
     /// <summary>
-    /// Generate fact sheet for agv.
+    /// Generate factsheet for agv.
     /// </summary>
     public static MqttFactsheet Generate(string serialNumber = "agv01", ICollection<MqttAgvAction>? actions = null, string seriesName = "series", float width =1)
     {

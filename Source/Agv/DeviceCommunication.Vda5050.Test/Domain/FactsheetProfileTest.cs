@@ -3,21 +3,21 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Profiles;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain;
 
 [TestClass]
-public class FactSheetProfileTest
+public class FactsheetProfileTest
 {
     private IMapper _mapper = null!;
 
     [TestInitialize]
     public void SetUp()
     {
-        _mapper = MappingHelper.GetMapper(new FactSheetProfile());
+        _mapper = MappingHelper.GetMapper(new FactsheetProfile());
     }
 
     [TestMethod]

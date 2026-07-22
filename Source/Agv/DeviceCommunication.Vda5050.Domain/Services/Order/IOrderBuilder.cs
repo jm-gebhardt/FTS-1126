@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
 public interface IOrderBuilder
 {
     /// <summary>
-    /// Build an order based on a fleet manager agv action and agv graph and fact sheet information.
+    /// Build an order based on a fleet manager agv action and agv graph and factsheet information.
     /// </summary>
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     /// <param name="routePlan">The route plan.</param>

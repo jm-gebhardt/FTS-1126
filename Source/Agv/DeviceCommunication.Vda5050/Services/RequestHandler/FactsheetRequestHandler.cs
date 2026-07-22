@@ -7,7 +7,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Factsheets;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -15,23 +15,23 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
 
 /// <summary>
-/// Handles fact sheet-related requests.
+/// Handles factsheet-related requests.
 /// </summary>
 [UsedImplicitly]
-public class FactSheetRequestHandler(
+public class FactsheetRequestHandler(
     IAgvActionRepository agvActionRepository,
     IAgvTypeRepository agvTypeRepository,
     IMapper mapper,
     IBus bus,
-    ILogger<FactSheetRequestHandler> logger) :
-    IConsumer<AddOrUpdateFactSheet>
+    ILogger<FactsheetRequestHandler> logger) :
+    IConsumer<AddOrUpdateFactsheet>
 {
     /// <inheritdoc/>
-    public async Task Consume(ConsumeContext<AddOrUpdateFactSheet> context)
+    public async Task Consume(ConsumeContext<AddOrUpdateFactsheet> context)
     {
-        (var agvCorrelationId, var factSheet, string factsheetRawJson) = context.Message;
+        (var agvCorrelationId, var factsheet, string factsheetRawJson) = context.Message;
 
-        var agvType = mapper.Map<AgvType>(factSheet) with { RawData = factsheetRawJson };
+        var agvType = mapper.Map<AgvType>(factsheet) with { RawData = factsheetRawJson };
         var agvTypeInfo = mapper.Map<AgvTypeInfo>(agvType);
 
         if (await agvTypeRepository.ExistsAsync(agvType.AgvTypeIdentifier))
@@ -44,19 +44,19 @@ public class FactSheetRequestHandler(
 
         try
         {
-            var agvData = mapper.Map<AgvData>(factSheet);
-            var actions = mapper.Map<ICollection<AgvAction>>(factSheet.ProtocolFeatures.AgvActions);
+            var agvData = mapper.Map<AgvData>(factsheet);
+            var actions = mapper.Map<ICollection<AgvAction>>(factsheet.ProtocolFeatures.AgvActions);
             foreach (var action in actions)
             {
-                action.AgvSerialNumber = factSheet.SerialNumber;
+                action.AgvSerialNumber = factsheet.SerialNumber;
             }
             if (actions.Count > 0)
             {
-                await agvActionRepository.AddOrUpdateActionsAsync(actions, factSheet.SerialNumber);
+                await agvActionRepository.AddOrUpdateActionsAsync(actions, factsheet.SerialNumber);
                 await PublishInstantActions(agvCorrelationId, actions);
             }
-            await bus.Publish(new AgvDataReceived(agvCorrelationId, factSheet.SerialNumber, agvData));
-            await bus.Publish(new AgvAddedOrUpdated(agvCorrelationId, factSheet.SerialNumber));
+            await bus.Publish(new AgvDataReceived(agvCorrelationId, factsheet.SerialNumber, agvData));
+            await bus.Publish(new AgvAddedOrUpdated(agvCorrelationId, factsheet.SerialNumber));
         }
         catch (Exception ex)
         {

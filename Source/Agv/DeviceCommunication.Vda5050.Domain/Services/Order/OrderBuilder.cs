@@ -101,7 +101,7 @@ public class OrderBuilder(
                 var context = new OrderActionContext(requiredAction.ActionParameters?.Select(p => new OrderActionParameter() { Key=p.Key, Value =p.Value}).ToList() ?? [], requiredAction.BlockingType, Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType));
                 if (definedAction != null)
                 {
-                    logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using fact sheet and graph information", requiredAction.ActionType, passed.edge.Id, actionCorrelationId, agv.CorrelationId);
+                    logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using factsheet and graph information", requiredAction.ActionType, passed.edge.Id, actionCorrelationId, agv.CorrelationId);
                     orderEdge.Actions.Add(orderActionBuilder.Build(definedAction, context));
                     continue;
                 }
@@ -184,7 +184,7 @@ public class OrderBuilder(
         var context = new OrderActionContext(requiredAction.ActionParameters?.Select(p => new OrderActionParameter { Key=p.Key, Value=p.Value}).ToList() ?? [], requiredAction.BlockingType, Vda5050Specifications.ActionTypes.IsVda5050Action(requiredAction.ActionType));
         if (definedAction != null)
         {
-            logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using fact sheet and graph information", requiredAction.ActionType, passedNode.Id, action.CorrelationId, agv.CorrelationId);
+            logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using factsheet and graph information", requiredAction.ActionType, passedNode.Id, action.CorrelationId, agv.CorrelationId);
             return orderActionBuilder.Build(definedAction, context);
         }
         logger.LogInformation("Building required action {ActionType} on node {NodeId} for action {ActionCorrelationId} of agv {AgvCorrelationId} using only graph information", requiredAction.ActionType, passedNode.Id, action.CorrelationId, agv.CorrelationId);

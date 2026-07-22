@@ -3,16 +3,16 @@
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 
 /// <summary>
-/// The fact sheet request in-memory cache.
+/// The factsheet request in-memory cache.
 /// </summary>
-public class FactSheetRequestCache : ConcurrentDictionaryProvider<Guid, bool>, IFactSheetRequestCacheProvider
+public class FactsheetRequestCache : ConcurrentDictionaryProvider<Guid, bool>, IFactsheetRequestCacheProvider
 {
     /// <summary>
     /// 
     /// </summary>
     /// <param name="agvCorrelationId"></param>
     /// <returns></returns>
-    public Task<bool> HasAgvRequestedFactSheet(Guid agvCorrelationId)
+    public Task<bool> HasAgvRequestedFactsheet(Guid agvCorrelationId)
     {
         return Task.FromResult(ConcurrentDict.GetValueOrDefault(agvCorrelationId, false));
     }

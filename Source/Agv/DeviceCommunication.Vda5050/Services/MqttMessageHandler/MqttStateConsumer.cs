@@ -23,15 +23,15 @@ public class MqttStateConsumer : IConsumer<MqttState>
     private readonly ILogger<MqttStateConsumer> _logger;
     private readonly StateParser _stateParser;
     private readonly IAgvRepository _agvRepository;
-    private readonly IFactSheetRequestCacheProvider _factSheetRequestCache;
+    private readonly IFactsheetRequestCacheProvider _factsheetRequestCache;
 
     ///<inheritdoc cref="MqttStateConsumer"/> 
-    public MqttStateConsumer(ILogger<MqttStateConsumer> logger, IMapper mapper, IAgvRepository agvRepository, IFactSheetRequestCacheProvider factSheetRequestCache)
+    public MqttStateConsumer(ILogger<MqttStateConsumer> logger, IMapper mapper, IAgvRepository agvRepository, IFactsheetRequestCacheProvider factsheetRequestCache)
     {
         _logger = logger;
         _stateParser = new StateParser(logger, mapper);
         _agvRepository = agvRepository;
-        _factSheetRequestCache = factSheetRequestCache;
+        _factsheetRequestCache = factsheetRequestCache;
     }
 
     /// <inheritdoc/> 
@@ -45,7 +45,7 @@ public class MqttStateConsumer : IConsumer<MqttState>
         await SendAgvLoadStatusAsync(context);
         var agv = await _agvRepository.GetRequiredAgvAsync(_stateParser.CorrelationId);
         await SendOrderStatusAsync(context, agv);
-        if (!await _factSheetRequestCache.HasAgvRequestedFactSheet(_stateParser.CorrelationId))
+        if (!await _factsheetRequestCache.HasAgvRequestedFactsheet(_stateParser.CorrelationId))
         {
             // First state message
             await context.Publish(new RequestAgvData(_stateParser.CorrelationId, _stateParser.SerialNumber));

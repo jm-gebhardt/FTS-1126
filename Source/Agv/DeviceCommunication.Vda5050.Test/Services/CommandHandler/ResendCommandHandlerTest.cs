@@ -37,14 +37,14 @@ public class ResendCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_RequestAgvData_AgvExists_UpdatesFactSheetRequestCache()
+    public async Task Consume_RequestAgvData_AgvExists_UpdatesFactsheetRequestCache()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), interfaceName: "uagv", protocolMajorVersion: "2");
         var fixture = new ResendCommandHandlerTestFixture().AddAgv(agv);
 
         await fixture.PublishMessageAsync(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
 
-        fixture.FactSheetRequestCache.ConcurrentDict.ContainsKey(agv.CorrelationId).ShouldBeTrue();
+        fixture.FactsheetRequestCache.ConcurrentDict.ContainsKey(agv.CorrelationId).ShouldBeTrue();
     }
 
     [TestMethod]

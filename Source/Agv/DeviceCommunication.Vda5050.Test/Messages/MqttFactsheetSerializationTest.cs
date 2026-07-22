@@ -11,8 +11,8 @@ public class MqttFactsheetSerializationTest
     [TestMethod]
     public void SerializeDeserialize_MqttFactsheet_RoundTrip()
     {
-        var mqttFactsheet = MqttFactSheetGenerator.Generate(
-            actions: [MqttFactSheetGenerator.GenerateAgvAction()]);
+        var mqttFactsheet = MqttFactsheetGenerator.Generate(
+            actions: [MqttFactsheetGenerator.GenerateAgvAction()]);
         mqttFactsheet.TypeSpecification.NavigationTypes = [MqttNavigationType.VirtualLineGuided];
 
         string jsonFactsheet = JsonSerializer.Serialize(mqttFactsheet);
@@ -34,19 +34,19 @@ public class MqttFactsheetSerializationTest
                                        }
                                      }
                                      """;
-        var factSheet = JsonSerializer.Deserialize<MqttFactsheet>(jsonFactsheet);
+        var factsheet = JsonSerializer.Deserialize<MqttFactsheet>(jsonFactsheet);
         
-        factSheet.ShouldNotBeNull();
-        factSheet.TypeSpecification.NavigationTypes.Count.ShouldBe(3);
-        factSheet.TypeSpecification.NavigationTypes.ShouldContain(MqttNavigationType.VirtualLineGuided);
-        factSheet.TypeSpecification.NavigationTypes.ShouldContain(MqttNavigationType.PhysicalLineGuided);
-        factSheet.TypeSpecification.NavigationTypes.ShouldContain(MqttNavigationType.Autonomous);
+        factsheet.ShouldNotBeNull();
+        factsheet.TypeSpecification.NavigationTypes.Count.ShouldBe(3);
+        factsheet.TypeSpecification.NavigationTypes.ShouldContain(MqttNavigationType.VirtualLineGuided);
+        factsheet.TypeSpecification.NavigationTypes.ShouldContain(MqttNavigationType.PhysicalLineGuided);
+        factsheet.TypeSpecification.NavigationTypes.ShouldContain(MqttNavigationType.Autonomous);
     }
  
     [TestMethod]
     public void Serialize_MqttFactsheet_SnakeCaseNavigationType_IsMapped()
     {
-        var mqttFactsheet = MqttFactSheetGenerator.Generate();
+        var mqttFactsheet = MqttFactsheetGenerator.Generate();
         mqttFactsheet.TypeSpecification.NavigationTypes = [MqttNavigationType.VirtualLineGuided, MqttNavigationType.PhysicalLineGuided, MqttNavigationType.Autonomous];
 
         string jsonFactsheet = JsonSerializer.Serialize(mqttFactsheet);

@@ -1,6 +1,6 @@
 using AutoMapper;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.FactSheet;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos.Factsheets;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Profiles;

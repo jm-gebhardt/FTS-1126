@@ -21,7 +21,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 public class ResendCommandHandler(
     ILogger<ResendCommandHandler> logger,
     IAgvRepository agvRepository,
-    IFactSheetRequestCacheProvider factSheetRequestCache,
+    IFactsheetRequestCacheProvider factsheetRequestCache,
     ISequenceCounter<IInstantActionsHeaderId> instantActionSequenceCounter):
      IConsumer<RequestAgvData>,
      IConsumer<RequestAgvGraph>
@@ -31,11 +31,11 @@ public class ResendCommandHandler(
     {
         var agvCorrelationId = context.Message.CorrelationId;
         string agvSerialNumber = context.Message.SerialNumber;
-        logger.LogInformation("Requesting fact sheet for agv {AgvSerialNumber}/{AgvCorrelationId}", agvSerialNumber, agvCorrelationId);
+        logger.LogInformation("Requesting factsheet for agv {AgvSerialNumber}/{AgvCorrelationId}", agvSerialNumber, agvCorrelationId);
         var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
         if(agv == null)
         {
-            logger.LogError("Can only request fact sheet for agv {AgvSerialNumber}/{AgvCorrelationId} once the agv has connected", agvSerialNumber, agvCorrelationId);
+            logger.LogError("Can only request factsheet for agv {AgvSerialNumber}/{AgvCorrelationId} once the agv has connected", agvSerialNumber, agvCorrelationId);
             return;
         }
         instantActionSequenceCounter.Increase();
@@ -56,7 +56,7 @@ public class ResendCommandHandler(
                 }
            ]
         }, agv.GetRoutingKey(Vda5050Specifications.Subtopics.InstantActions), context.CancellationToken);
-        factSheetRequestCache.ConcurrentDict.AddOrUpdate(agvCorrelationId, true, (_, _) => true);
+        factsheetRequestCache.ConcurrentDict.AddOrUpdate(agvCorrelationId, true, (_, _) => true);
     }
 
     /// <inheritdoc/>

@@ -12,14 +12,14 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.CommandHandler;
 public class ResendCommandHandlerTestFixture : MassTransitConsumerTestFixture<ResendCommandHandler>
 {
     private readonly Mock<IAgvRepository> _agvRepository = new();
-    public readonly FactSheetRequestCache FactSheetRequestCache = new();
+    public readonly FactsheetRequestCache FactsheetRequestCache = new();
 
     public ResendCommandHandlerTestFixture()
     {
         AddServices(sc =>
         {
             sc.AddTransient(_ => _agvRepository.Object);
-            sc.AddSingleton<IFactSheetRequestCacheProvider>(FactSheetRequestCache);
+            sc.AddSingleton<IFactsheetRequestCacheProvider>(FactsheetRequestCache);
             sc.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));
         });
         Build();

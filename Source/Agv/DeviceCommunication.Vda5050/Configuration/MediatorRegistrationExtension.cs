@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Factsheets;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
 using MassTransit;
 
@@ -33,8 +33,8 @@ public static class MediatorRegistrationExtension
                 var partitioner = c.CreatePartitioner(PartitionCount);
                 partitioner.PartitionMessageById<DeleteLifFile, LifRequestHandler>(c);
             });
-            configurator.AddRequestClient<AddOrUpdateFactSheet>();
-            configurator.AddConsumer<FactSheetRequestHandler>();
+            configurator.AddRequestClient<AddOrUpdateFactsheet>();
+            configurator.AddConsumer<FactsheetRequestHandler>();
             return configurator;
         }
     }

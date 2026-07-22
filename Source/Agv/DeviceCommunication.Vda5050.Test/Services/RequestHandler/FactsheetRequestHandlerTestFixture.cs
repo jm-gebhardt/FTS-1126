@@ -4,7 +4,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Profiles;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Factsheets;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Profiles;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ using Moq;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.RequestHandler;
 
-public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdateFactSheet, FactSheetRequestHandler, MockConsumer>
+public class FactsheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdateFactsheet, FactsheetRequestHandler, MockConsumer>
 {
     public const string Manufacturer = "TestManufacturer";
     public const string SeriesName = "TestSeries";
@@ -28,10 +28,10 @@ public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdat
 
     protected override IEnumerable<Profile> GetProfiles()
     {
-        return [new FactSheetProfile(), new AgvActionProfile()];
+        return [new FactsheetProfile(), new AgvActionProfile()];
     }
 
-    public FactSheetRequestHandlerTestFixture(bool existingAgvType = false)
+    public FactsheetRequestHandlerTestFixture(bool existingAgvType = false)
     {
         AddServices(s => s.AddTransient(_ => _agvActionRepository.Object));
         AddServices(s => s.AddTransient(_ => _agvTypeRepository.Object));
@@ -46,12 +46,12 @@ public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdat
         base.Build();
     }
 
-    public static FactSheetRequestHandlerTestFixture WithExistingAgvType()
+    public static FactsheetRequestHandlerTestFixture WithExistingAgvType()
     {
-        return new FactSheetRequestHandlerTestFixture(true);
+        return new FactsheetRequestHandlerTestFixture(true);
     }
 
-    public FactSheetRequestHandlerTestFixture WithAddOrUpdateActionsThrows()
+    public FactsheetRequestHandlerTestFixture WithAddOrUpdateActionsThrows()
     {
         _agvActionRepository
             .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>()))

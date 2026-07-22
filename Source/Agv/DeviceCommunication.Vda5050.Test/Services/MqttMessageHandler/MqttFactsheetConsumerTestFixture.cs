@@ -12,14 +12,14 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.MqttMessageHandler;
 
-public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFactSheetConsumer>
+public class MqttFactsheetConsumerTestFixture : MqttConsumerTestFixture<MqttFactsheetConsumer>
 {
     private readonly Mock<IAgvDataRepository> _agvDataRepository = new();
     private readonly Mock<IAgvActionRepository> _agvActionRepository = new();
     private readonly Mock<IAgvRepository> _agvRepository = new();
     private readonly Mock<IAgvTypeRepository> _agvTypeRepository = new();
 
-    public MqttFactSheetConsumerTestFixture()
+    public MqttFactsheetConsumerTestFixture()
     {
         AddServices(sc =>
         {
@@ -38,7 +38,7 @@ public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
     {
         serviceCollection.ConfigureAutoMapper([
             typeof(Vda5050.Messages.Profiles.AgvTypeProfile).Assembly,
-            typeof(Vda5050.Domain.Profiles.FactSheetProfile).Assembly
+            typeof(Vda5050.Domain.Profiles.FactsheetProfile).Assembly
         ]);
     }
 
@@ -53,9 +53,9 @@ public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
     }
 
     /// <summary>
-    /// Configures the agv repository to return an already known agv for the incoming fact sheet's serial number.
+    /// Configures the agv repository to return an already known agv for the incoming factsheet's serial number.
     /// </summary>
-    public MqttFactSheetConsumerTestFixture WithExistingAgv(bool publishedToFleetManager = true, string manufacturer = "", string seriesName = "series", string serialNumber = "agv01")
+    public MqttFactsheetConsumerTestFixture WithExistingAgv(bool publishedToFleetManager = true, string manufacturer = "", string seriesName = "series", string serialNumber = "agv01")
     {
         var agv = new Agv(serialNumber.ToGuid(), manufacturer, seriesName, serialNumber) { PublishedToFleetManager = publishedToFleetManager };
         _agvRepository.Setup(x => x.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
@@ -68,7 +68,7 @@ public class MqttFactSheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
     /// <paramref name="lookupIdentifier"/> to register it under a different identifier, e.g. to simulate the
     /// previously assigned type of an agv whose type is about to change.
     /// </summary>
-    public MqttFactSheetConsumerTestFixture WithExistingAgvType(string manufacturer = "", string seriesName = "series", double length = 1.0, double width = 1.0, bool acknowledged = true, string? lookupIdentifier = null)
+    public MqttFactsheetConsumerTestFixture WithExistingAgvType(string manufacturer = "", string seriesName = "series", double length = 1.0, double width = 1.0, bool acknowledged = true, string? lookupIdentifier = null)
     {
         string identifier = $"{manufacturer}.{seriesName}";
         var agvType = new AgvType(identifier, manufacturer, seriesName, length, width, "raw-data", acknowledged);

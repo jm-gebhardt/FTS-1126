@@ -42,64 +42,64 @@ public class FactsheetParser(ILogger logger, IMapper mapper)
     /// <summary>
     /// Parse the <see cref="MqttFactsheet"/> .
     /// </summary>
-    public void Parse(MqttFactsheet factSheet)
+    public void Parse(MqttFactsheet factsheet)
     {
-        GetSerialNumber(factSheet);
-        var agv = GetAgv(factSheet);
-        GetAgvData(factSheet, agv);
-        GetAgvActions(factSheet);
+        GetSerialNumber(factsheet);
+        var agv = GetAgv(factsheet);
+        GetAgvData(factsheet, agv);
+        GetAgvActions(factsheet);
     }
 
-    private Agv GetAgv(MqttFactsheet factSheet)
+    private Agv GetAgv(MqttFactsheet factsheet)
     {
         if (Agv == null)
         {
-            Agv = new Agv(CorrelationId, factSheet.Manufacturer, factSheet.TypeSpecification.SeriesName, SerialNumber);
+            Agv = new Agv(CorrelationId, factsheet.Manufacturer, factsheet.TypeSpecification.SeriesName, SerialNumber);
             return Agv;
         }
 
-        Agv.SeriesName = factSheet.TypeSpecification.SeriesName;
+        Agv.SeriesName = factsheet.TypeSpecification.SeriesName;
         return Agv;
     }
 
-    private void GetSerialNumber(MqttFactsheet factSheet)
+    private void GetSerialNumber(MqttFactsheet factsheet)
     {
-        SerialNumber = factSheet.SerialNumber;
+        SerialNumber = factsheet.SerialNumber;
         if (string.IsNullOrEmpty(SerialNumber))
         {
-            logger.LogError("Missing serialNumber in {MessageType} message: {FactSheet}", nameof(MqttFactsheet), factSheet);
+            logger.LogError("Missing serialNumber in {MessageType} message: {Factsheet}", nameof(MqttFactsheet), factsheet);
             throw new SerialNumberNotSetException(nameof(MqttFactsheet));
         }
     }
 
-    private void GetAgvData(MqttFactsheet factSheet, Agv agv)
+    private void GetAgvData(MqttFactsheet factsheet, Agv agv)
     {
         AgvData = new AgvData(
             agvCorrelationId: CorrelationId,
-            model: factSheet.TypeSpecification.SeriesName,
+            model: factsheet.TypeSpecification.SeriesName,
             type: agv.VehicleTypeId,
-            ipV4Address: factSheet.VehicleConfig?.Network?.LocalIpAddress ?? string.Empty,
-            softwareVersion: factSheet.VehicleConfig?.Versions != null ? factSheet.VehicleConfig!.Versions!.SingleOrDefault(v => string.Equals(v.Key, "softwareVersion", StringComparison.InvariantCultureIgnoreCase))?.Value ?? string.Empty : string.Empty,
+            ipV4Address: factsheet.VehicleConfig?.Network?.LocalIpAddress ?? string.Empty,
+            softwareVersion: factsheet.VehicleConfig?.Versions != null ? factsheet.VehicleConfig!.Versions!.SingleOrDefault(v => string.Equals(v.Key, "softwareVersion", StringComparison.InvariantCultureIgnoreCase))?.Value ?? string.Empty : string.Empty,
             batteryCapacity: -1,
-            acceleration: factSheet.PhysicalParameters.AccelerationMax,
-            maxVelocityStraight: factSheet.PhysicalParameters.SpeedMax, // maybe get minimum of load speed limits
+            acceleration: factsheet.PhysicalParameters.AccelerationMax,
+            maxVelocityStraight: factsheet.PhysicalParameters.SpeedMax, // maybe get minimum of load speed limits
             maxVelocityTurn: 1000,
             maxVelocityTurnOnSpot: 1000,
             turnOnSpotThreshold: 1000,
-            width: factSheet.PhysicalParameters.Width,
-            length: factSheet.PhysicalParameters.Length,
-            payload: (long)factSheet.TypeSpecification.MaxLoadMass,
+            width: factsheet.PhysicalParameters.Width,
+            length: factsheet.PhysicalParameters.Length,
+            payload: (long)factsheet.TypeSpecification.MaxLoadMass,
             sensors: []
         );
     }
 
-    private void GetAgvActions(MqttFactsheet factSheet)
+    private void GetAgvActions(MqttFactsheet factsheet)
     {
-        if (factSheet.ProtocolFeatures.AgvActions.Count == 0)
+        if (factsheet.ProtocolFeatures.AgvActions.Count == 0)
         {
             return;
         }
-        Actions = mapper.Map<ICollection<AgvAction>>(factSheet.ProtocolFeatures.AgvActions);
+        Actions = mapper.Map<ICollection<AgvAction>>(factsheet.ProtocolFeatures.AgvActions);
         foreach (var action in Actions)
         {
             action.AgvSerialNumber = SerialNumber;

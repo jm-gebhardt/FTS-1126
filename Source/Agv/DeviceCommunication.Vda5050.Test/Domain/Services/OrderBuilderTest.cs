@@ -298,7 +298,7 @@ public class OrderBuilderTest
     }
 
     [TestMethod]
-    public async Task BuildNodes_RequiredActionNotInFactSheet_BuildsFromGraphOnly()
+    public async Task BuildNodes_RequiredActionNotInFactsheet_BuildsFromGraphOnly()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), "agv-1");
         var pickAction = AgvGraphGenerator.GenerateNodeAction(Vda5050Specifications.ActionTypes.Pick, agvCorrelationId: agv.CorrelationId, RequirementType.Required, BlockingType.SOFT);
@@ -309,7 +309,7 @@ public class OrderBuilderTest
         action.Edges = agvGraph.Edges.Select(e => e.Id).ToList();
         action.Nodes = nodeIds.Select(n => n.ToGraphNode()).ToList();
         var fixture = new OrderBuilderTestFixture()
-            .AddActions([]) // No fact sheet actions
+            .AddActions([]) // No factsheet actions
             .AddAgv(agv)
             .AgvAgvGraph(agvGraph);
 

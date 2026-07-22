@@ -3,17 +3,17 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.FactSheet;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Profiles;
 
 /// <summary>
-/// Provides a profile for fact sheet mapping.
+/// Provides a profile for factsheet mapping.
 /// </summary>
-public class FactSheetProfile : Profile
+public class FactsheetProfile : Profile
 {
     /// <inheritdoc/>
-    public FactSheetProfile()
+    public FactsheetProfile()
     {
         CreateMap<Factsheet, AgvData>()
             .ConstructUsing(f => new AgvData(
@@ -55,13 +55,13 @@ public class FactSheetProfile : Profile
             .ForMember(a => a.IsOptional, opt => opt.MapFrom(fa => fa.IsOptional ?? false));
     }
 
-    private string GetIp4Address(Factsheet factSheet)
+    private string GetIp4Address(Factsheet factsheet)
     {
-        return factSheet.VehicleConfig?.Network?.LocalIpAddress ?? string.Empty;
+        return factsheet.VehicleConfig?.Network?.LocalIpAddress ?? string.Empty;
     }
 
-    private string GetSoftwareVersion(Factsheet factSheet)
+    private string GetSoftwareVersion(Factsheet factsheet)
     {
-        return factSheet.VehicleConfig?.Versions != null ? factSheet.VehicleConfig!.Versions!.SingleOrDefault(v => string.Equals(v.Key, "softwareVersion", StringComparison.InvariantCultureIgnoreCase))?.Value ?? string.Empty : string.Empty;
+        return factsheet.VehicleConfig?.Versions != null ? factsheet.VehicleConfig!.Versions!.SingleOrDefault(v => string.Equals(v.Key, "softwareVersion", StringComparison.InvariantCultureIgnoreCase))?.Value ?? string.Empty : string.Empty;
     }
 }

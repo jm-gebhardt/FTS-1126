@@ -19,19 +19,19 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.MqttMessageHandler;
 /// Provides handler for <see cref="MqttFactsheet"/>
 /// </summary>
 [UsedImplicitly]
-public class MqttFactSheetConsumer :
+public class MqttFactsheetConsumer :
     IConsumer<MqttFactsheet>
 {
     private readonly FactsheetParser _parser;
-    private readonly ILogger<MqttFactSheetConsumer> _logger;
+    private readonly ILogger<MqttFactsheetConsumer> _logger;
     private readonly IAgvDataRepository _agvDataRepository;
     private readonly IAgvActionRepository _agvActionRepository;
     private readonly IAgvRepository _agvRepository;
     private readonly IAgvTypeRepository _agvTypeRepository;
     private readonly IMapper _mapper;
 
-    /// <inheritdoc cref="MqttFactSheetConsumer"/>
-    public MqttFactSheetConsumer(ILogger<MqttFactSheetConsumer> logger, IAgvDataRepository agvDataRepository, IAgvActionRepository agvActionRepository, IAgvRepository agvRepository, IAgvTypeRepository agvTypeRepository, IMapper mapper)
+    /// <inheritdoc cref="MqttFactsheetConsumer"/>
+    public MqttFactsheetConsumer(ILogger<MqttFactsheetConsumer> logger, IAgvDataRepository agvDataRepository, IAgvActionRepository agvActionRepository, IAgvRepository agvRepository, IAgvTypeRepository agvTypeRepository, IMapper mapper)
     {
         _parser = new FactsheetParser(logger, mapper);
         _logger = logger;
@@ -58,7 +58,7 @@ public class MqttFactSheetConsumer :
             _parser.Agv!.SetCommunicationSpecification(routingKey);
         }
 
-        _logger.LogInformation("Fact sheet received via mqtt for agv {AgvSerialNumber}/{AgvCorrelationId}", _parser.SerialNumber, _parser.SerialNumber);
+        _logger.LogInformation("Factsheet received via mqtt for agv {AgvSerialNumber}/{AgvCorrelationId}", _parser.SerialNumber, _parser.SerialNumber);
 
         var incomingAgvType = _mapper.Map<AgvType>(context.Message);
         var existingAgvType = await _agvTypeRepository.GetAgvTypeAsync(incomingAgvType.AgvTypeIdentifier);
@@ -70,14 +70,14 @@ public class MqttFactSheetConsumer :
         bool incomingTypeIsCompatible = !incomingTypeExists || incomingAgvType.IsCompatibleWith(existingAgvType);
         if (!agvExists)
         {
-            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to fact sheet parsing, agv discovered with compatible type {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), incomingTypeIsCompatible);
+            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to factsheet parsing, agv discovered with compatible type {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), incomingTypeIsCompatible);
             agv = _parser.Agv;
             await context.Publish(new AgvDiscovered(agv!.CorrelationId, agv, incomingAgvType.Id, incomingTypeIsCompatible));
             return;
         }
         if (agvExists && !(agv?.PublishedToFleetManager ?? false))
         {
-            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to fact sheet parsing, agv type is compatible {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), incomingTypeIsCompatible);
+            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to factsheet parsing, agv type is compatible {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), incomingTypeIsCompatible);
             agv = _parser.Agv;
             await context.Publish(new AgvTypeChanged(agv!.CorrelationId, incomingAgvType.Id, agv, incomingTypeIsCompatible));
             return;
@@ -86,31 +86,31 @@ public class MqttFactSheetConsumer :
         bool agvTypeChanged = !string.Equals(agv!.VehicleTypeId, incomingAgvType.AgvTypeIdentifier, StringComparison.InvariantCultureIgnoreCase);
         if (!agvTypeChanged && !incomingTypeIsCompatible)
         {
-            _logger.LogWarning("Received fact sheet for agv {SerialNumber}/{AgvCorrelationId} that is incompatible with the existing agv type definition (no type change for agv)", agv.CorrelationId, agv.SerialNumber);
+            _logger.LogWarning("Received factsheet for agv {SerialNumber}/{AgvCorrelationId} that is incompatible with the existing agv type definition (no type change for agv)", agv.CorrelationId, agv.SerialNumber);
             await context.Publish(new InvalidAgvConfigurationReceived(agv.CorrelationId, agv.SerialNumber));
             return;
         }
 
         if (!agvTypeChanged && incomingTypeIsCompatible)
         {
-            _logger.LogDebug("Received fact sheet without change in type of agv {SerialNumber}/{AgvCorrelationId}", agv.CorrelationId, agv.SerialNumber);
+            _logger.LogDebug("Received factsheet without change in type of agv {SerialNumber}/{AgvCorrelationId}", agv.CorrelationId, agv.SerialNumber);
             return;
         }
         var priorAgvType = await _agvTypeRepository.GetAgvTypeAsync(agv.VehicleTypeId);
         bool incomingAndPriorTypeCompatible = priorAgvType == null || incomingAgvType.IsCompatibleWith(priorAgvType);
         if (agvTypeChanged && !incomingTypeExists)
         {
-            _logger.LogInformation("Received fact sheet with agv type change, new type did not exist yet, needs type change confirmation");
+            _logger.LogInformation("Received factsheet with agv type change, new type did not exist yet, needs type change confirmation");
             await context.Publish(new AgvTypeChanged(agv.CorrelationId, incomingAgvType.Id, agv, false, true));
             return;
         }
         if (agvTypeChanged && incomingTypeExists && !incomingAndPriorTypeCompatible)
         {
-            _logger.LogWarning("Incompatible agv {SerialNumber}/{AgvCorrelationId} fact sheet received via mqtt, including agv type change from {PreviousType}/{NewType}, types are compatible {IsTypeCompatible} ", agv.CorrelationId, agv.SerialNumber, agv.VehicleTypeId, incomingAgvType.AgvTypeIdentifier, incomingAndPriorTypeCompatible);
+            _logger.LogWarning("Incompatible agv {SerialNumber}/{AgvCorrelationId} factsheet received via mqtt, including agv type change from {PreviousType}/{NewType}, types are compatible {IsTypeCompatible} ", agv.CorrelationId, agv.SerialNumber, agv.VehicleTypeId, incomingAgvType.AgvTypeIdentifier, incomingAndPriorTypeCompatible);
             await context.Publish(new AgvTypeChanged(agv.CorrelationId, incomingAgvType.Id, agv, false));
             return;
         }
-        _logger.LogInformation("Received fact sheet with agv type change, new type exists and is compatible with incoming type");
+        _logger.LogInformation("Received factsheet with agv type change, new type exists and is compatible with incoming type");
         await context.Publish(new AgvTypeChanged(agv.CorrelationId, incomingAgvType.Id, agv));
     }
 

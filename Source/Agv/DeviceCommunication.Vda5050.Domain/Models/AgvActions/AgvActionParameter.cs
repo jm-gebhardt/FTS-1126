@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 
 /// <summary>
-/// Definition of a parameter accepted by an AGV action (as declared in the fact sheet).
+/// Definition of a parameter accepted by an AGV action (as declared in the factsheet).
 /// </summary>
 [PublicAPI]
 public record AgvActionParameter

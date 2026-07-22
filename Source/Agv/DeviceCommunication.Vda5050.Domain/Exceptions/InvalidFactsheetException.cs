@@ -3,10 +3,10 @@
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 
 /// <summary>
-/// Represents the exception raised when an invalid fact sheet has been uploaded.
+/// Represents the exception raised when an invalid factsheet has been uploaded.
 /// </summary>
 public class InvalidFactsheetException : FileUploadException
 {
     /// <inheritdoc/>
-    public InvalidFactsheetException(Guid agvCorrelationId, string traceBack) : base($"Invalid fact sheet for agv {agvCorrelationId}: {traceBack}"){}
+    public InvalidFactsheetException(Guid agvCorrelationId, string traceBack) : base($"Invalid factsheet for agv {agvCorrelationId}: {traceBack}"){}
 }
