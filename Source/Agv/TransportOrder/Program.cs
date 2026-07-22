@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.TransportOrder;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,20 +13,8 @@ var initialLogger = InitialLogger.Create<Program>();
 
 try
 {
-    var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli");
-
-    if (swaggerCli)
-    {
-        var swaggerHostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, new ProductionOptions(), initialLogger, isSimulation: false);
-        swaggerHostBuilder.UseDefaultServiceProvider((_, providerOptions) =>
-        {
-            providerOptions.ValidateScopes = false;
-            providerOptions.ValidateOnBuild = false;
-        });
-
-        _ = swaggerHostBuilder.Build();
-        return 0;
-    }
+    var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli", StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT"), "SwaggerCli", StringComparison.OrdinalIgnoreCase);
 
     ProductionOptions? productionOptions = null;
     SimulationOptions? simulationOptions = null;
@@ -49,11 +38,13 @@ try
     var hostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, productionOptions != null ? productionOptions! : simulationOptions!, initialLogger, simulationOptions != null);
 
     var host = hostBuilder.Build();
-    var environment = host.Services.GetRequiredService<IHostEnvironment>();
-    using var scope = host.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
-    dbContext.SetCommandTimeOut();
-    await dbContext.Database.MigrateAsync();
+    if (!swaggerCli)
+    {
+        using var scope = host.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<TransportOrderDbContext>();
+        dbContext.SetCommandTimeOut();
+        await dbContext.Database.MigrateAsync();
+    }
 
     host.Run();
     return 0;
