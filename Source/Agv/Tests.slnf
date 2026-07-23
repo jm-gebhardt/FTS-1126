@@ -1,0 +1,20 @@
+{
+  "solution": {
+    "path": "CompileAgv.sln",
+    "projects": [
+      "Common.Persistence.Ef.Test\\Common.Persistence.Ef.Test.csproj",
+      "CommonTest\\CommonTest.csproj",
+      "DeviceCommunication.Vda5050.Test\\DeviceCommunication.Vda5050.Test.csproj",
+      "DeviceCommunicationTest\\DeviceCommunicationTest.csproj",
+      "OrderTranslator.Test\\OrderTranslator.Test.csproj",
+      "PrismatCommunicationTest\\PrismatCommunicationTest.csproj",
+      "SmartLinkCommunicationTest\\SmartLinkCommunicationTest.csproj",
+      "StationCommunicationTest\\StationCommunication.Test.csproj",
+      "Statistics.Test\\Statistics.Test.csproj",
+      "TestPlanRunner.Test\\TestPlanRunner.Test.csproj",
+      "TransportOrder.Test\\TransportOrder.Test.csproj",
+      "TriggerServiceTest\\TriggerServiceTest.csproj",
+      "WCSCommunicationTest\\WCSCommunicationTest.csproj"
+    ]
+  }
+}

@@ -4,6 +4,16 @@ trigger:
     include:
     - master
     - develop
+
+parameters:
+# Coverlet instruments every assembly under test, which is a large multiplier on test time.
+# Turn this off at queue time to measure raw test duration, or to trade the coverage gate for
+# speed on runs where it is not needed. The CoverageReport job is skipped when this is false.
+- name: collectCoverage
+  displayName: 'Collect code coverage'
+  type: boolean
+  default: true
+
 variables:
 - name: 'SourceDirectory'
   value: 'Source/Agv'
@@ -15,6 +25,11 @@ variables:
   value: 'Release'
 - name: System.Debug
   value: false
+# Pin the package folder so Cache@2 has a stable, OS-independent path to restore into.
+- name: NUGET_PACKAGES
+  value: $(Pipeline.Workspace)/.nuget/packages
+- name: 'ReSharperVersion'
+  value: '2026.1.3'
 
 stages:
 ################################################
@@ -37,6 +52,13 @@ stages:
         packageType: 'sdk'
         version: '10.0.x'
         performMultiLevelLookup: true
+    - task: Cache@2
+      displayName: 'Cache NuGet packages'
+      inputs:
+        key: 'nuget | "$(Agent.OS)" | Source/Directory.Packages.props | Source/Agv/NuGet.Config'
+        restoreKeys: |
+          nuget | "$(Agent.OS)"
+        path: $(NUGET_PACKAGES)
     - task: DotNetCoreCLI@2
       displayName: 'Restoring based on NuGet.Config'
       inputs:
@@ -50,12 +72,19 @@ stages:
         command: build
         projects: '$(SourceDirectory)/$(Build.Target)'
         arguments: '--configuration $(Build.Configuration)'
+    # inspectcode re-analyses all 72 projects from cold without a persisted cache.
+    - task: Cache@2
+      displayName: 'Cache ReSharper analysis'
+      inputs:
+        key: 'jb | "$(Agent.OS)" | "$(ReSharperVersion)" | Source/Agv/CompileAgv.sln.DotSettings'
+        restoreKeys: |
+          jb | "$(Agent.OS)" | "$(ReSharperVersion)"
+          jb | "$(Agent.OS)"
+        path: $(Pipeline.Workspace)/jb-caches
     - powershell: |
         echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
-        dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
-        dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
-        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.1.3
-        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
+        dotnet tool restore
+        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json --no-build --properties:Configuration=$(Build.Configuration) --caches-home=$(Pipeline.Workspace)/jb-caches
         dotnet run $(ResharperDirectory)/check-suggestions.cs
         # Check logs.txt
         $logContent = Get-Content ./resharper-logs.txt
@@ -71,17 +100,49 @@ stages:
   ################################################
   # Run Unit Tests
   ################################################  
+  # Sharded across two agents: UnitTests was the only job on the stage critical path,
+  # so splitting it is the only thing that reduces wall-clock. TransportOrder.Test alone
+  # is 2056 of the 3423 test methods, which is why it gets a shard to itself.
   - job: UnitTests
+    strategy:
+      matrix:
+        TransportOrder:
+          testFilterFile: 'Tests.TransportOrder.slnf'
+          shardName: 'transportorder'
+        Others:
+          testFilterFile: 'Tests.Others.slnf'
+          shardName: 'others'
     pool:
       vmImage: ubuntu-latest
     steps:
     - template: ../.azuredevops/templates/free-disk-space.steps.yaml
+      parameters:
+        pruneDocker: false
+    # A test project missing from both shards would stop running silently, so fail loudly instead.
+    - bash: |
+        set -euo pipefail
+        jq -r '.solution.projects[]' Tests.slnf | sort > /tmp/all-tests.txt
+        cat Tests.TransportOrder.slnf Tests.Others.slnf | jq -r '.solution.projects[]' | sort > /tmp/sharded-tests.txt
+        if ! diff -u /tmp/all-tests.txt /tmp/sharded-tests.txt; then
+          echo "##vso[task.logissue type=error]Shards do not partition Tests.slnf. A new test project must be added to Tests.slnf AND to exactly one shard."
+          exit 1
+        fi
+        echo "OK: shards partition Tests.slnf exactly."
+      displayName: 'Verify test shards cover every test project'
+      workingDirectory: '$(SourceDirectory)'
     - task: UseDotNet@2
       displayName: 'Install .NET 10 SDK'
       inputs:
         packageType: 'sdk'
         version: '10.0.x'
         performMultiLevelLookup: true
+    - task: Cache@2
+      displayName: 'Cache NuGet packages'
+      inputs:
+        key: 'nuget | "$(Agent.OS)" | Source/Directory.Packages.props | Source/Agv/NuGet.Config'
+        restoreKeys: |
+          nuget | "$(Agent.OS)"
+        path: $(NUGET_PACKAGES)
     - task: DotNetCoreCLI@2
       displayName: 'Restoring based on NuGet.Config'
       inputs:
@@ -91,45 +152,56 @@ stages:
         nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
     - script: df -h
       displayName: 'Disk usage before tests'
+    # Tests.slnf holds only the 13 projects that actually contain [TestMethod]s; the shards
+    # partition it. The original glob matched 16 projects and ran a separate VSTest host per
+    # project, three of which (Common.Testing, PrismatCommunication.TelegramApiClient,
+    # TestPlanRunner) contain no tests at all.
     - task: DotNetCoreCLI@2
-      displayName: 'Run All tests'
+      displayName: 'Run tests ($(shardName))'
       inputs:
         command: 'test'
-        projects: '$(SourceDirectory)/**/*[Tt]est*/*.csproj'
+        projects: '$(SourceDirectory)/$(testFilterFile)'
         publishTestResults: true
-        arguments: '--configuration $(Build.Configuration) --no-restore --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+        ${{ if eq(parameters.collectCoverage, true) }}:
+          arguments: '--configuration $(Build.Configuration) --no-restore --collect:"XPlat Code Coverage" --settings=coverlet.runsettings'
+        ${{ else }}:
+          arguments: '--configuration $(Build.Configuration) --no-restore'
     - script: df -h
       condition: always()
       displayName: 'Disk usage after tests'
-    - task: CopyFiles@2
-      displayName: 'Copy coverage report'
-      inputs:
-        SourceFolder: '$(Agent.TempDirectory)'
-        contents: '**/coverage.cobertura.xml'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
-    - publish: '$(Build.ArtifactStagingDirectory)'
-      displayName: 'Publish coverage report'
-      artifact: coverageReports
+    - ${{ if eq(parameters.collectCoverage, true) }}:
+      - task: CopyFiles@2
+        displayName: 'Copy coverage report'
+        inputs:
+          SourceFolder: '$(Agent.TempDirectory)'
+          contents: '**/coverage.cobertura.xml'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      # Artifact names must be unique per shard, or the second job fails on a name collision.
+      - publish: '$(Build.ArtifactStagingDirectory)'
+        displayName: 'Publish coverage report'
+        artifact: coverageReports_$(shardName)
   ################################################
   # Coverage Report
   ################################################  
-  - job: CoverageReport
-    dependsOn:
-    - UnitTests
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - download: current
-      artifact: coverageReports
-    - task: PublishCodeCoverageResults@2
-      displayName: 'Publish code coverage report'
-      inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: '$(Pipeline.Workspace)/coverageReports/**/coverage.cobertura.xml'
-    - task: BuildQualityChecks@10
-      displayName: 'Check build quality'
-      inputs:
-        checkCoverage: true
-        coverageType: lines
-        coverageThreshold: 70
-        coverageFailOption: fixed
+  # Skipped entirely when coverage is off, otherwise it would fail the 70% gate on no data.
+  - ${{ if eq(parameters.collectCoverage, true) }}:
+    - job: CoverageReport
+      dependsOn:
+      - UnitTests
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      # No artifact filter: pulls coverageReports_* from every shard so the gate sees the union.
+      - download: current
+      - task: PublishCodeCoverageResults@2
+        displayName: 'Publish code coverage report'
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(Pipeline.Workspace)/**/coverage.cobertura.xml'
+      - task: BuildQualityChecks@10
+        displayName: 'Check build quality'
+        inputs:
+          checkCoverage: true
+          coverageType: lines
+          coverageThreshold: 70
+          coverageFailOption: fixed
