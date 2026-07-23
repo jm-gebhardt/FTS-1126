@@ -5,7 +5,6 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
-        <PackageReference Include="Gebhardt.Core.EditorConfig" PrivateAssets="all" IncludeAssets="build" />
         <PackageReference Include="Gebhardt.Core.Hosting" />
         <PackageReference Include="Gebhardt.Core.WebApi" />
         <PackageReference Include="Gebhardt.Core.EntityFrameworkCore" />

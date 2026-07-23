@@ -10,7 +10,6 @@
     <PackageVersion Include="Gebhardt.Core.Application.Testing" Version="10.4.2" />
     <PackageVersion Include="Gebhardt.Core.Architecture.Testing" Version="10.4.2" />
     <PackageVersion Include="Gebhardt.Core.Domain" Version="10.4.2" />
-    <PackageVersion Include="Gebhardt.Core.EditorConfig" Version="1.2.14" />
     <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore" Version="10.4.2" />
     <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.PostgreSql" Version="10.4.2" />
     <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.SqlServer" Version="10.4.2" />
