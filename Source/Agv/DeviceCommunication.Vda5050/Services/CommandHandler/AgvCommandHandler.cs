@@ -12,26 +12,9 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 /// </summary>
 [UsedImplicitly]
 public class AgvCommandHandler(ILogger<AgvCommandHandler> logger, IAgvRepository agvRepository) :
-    IConsumer<ClearAgvCurrentOrder>,
     IConsumer<AddAgv>,
     IConsumer<UpdateAgvType>
 {
-    /// <inheritdoc/>
-    public async Task Consume(ConsumeContext<ClearAgvCurrentOrder> context)
-    {
-        var agvCorrelationId = context.Message.CorrelationId;
-        var agv = await agvRepository.GetAgvAsync(agvCorrelationId);
-
-        if (agv == null)
-        {
-            logger.LogDebug("No Agv found for clearing agv current order for AGV {AgvCorrelationId}, skipping", agvCorrelationId);
-            return;
-        }
-        agv.ClearOrder();
-        await agvRepository.AddOrUpdateAsync(agv, context.CancellationToken);
-        logger.LogDebug("Cleared current order reference for AGV {AgvCorrelationId}", agvCorrelationId);
-    }
-
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AddAgv> context)
     {

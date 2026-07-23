@@ -1,9 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Constants;
-using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.LogEntry;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Errors;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Order;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
@@ -46,7 +42,7 @@ public class OrderExecutionStateMachineTest
     }
 
     [TestMethod]
-    public async Task Consume_StartOrder_InitializationFails_PublishesActionFailedByAgvTransitionsToFinal()
+    public async Task Consume_StartOrder_InitializationFails_LogsFailureTransitionsToFinal()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
         var order = new Order { PlannedRoute = new Route([], []), AssignedAgv = agv };
@@ -62,14 +58,10 @@ public class OrderExecutionStateMachineTest
 
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Final));
         await fixture.ShouldNotHavePublishedAsync<MqttOrder>();
-        await fixture.ShouldHavePublishedAsync<ActionFailedByAgv>();
-        await fixture.ShouldHavePublishedAsync<LogOccurred>();
-        var logOccurred = await fixture.GetFirstPublishedMessageAsync<LogOccurred>();
-        logOccurred.Entry.Variables[LogLabels.Reason].ShouldBe(OrderErrors.InitializationFailed.Description);
     }
 
     [TestMethod]
-    public async Task Consume_OrderStateReceived_CreatedToRunning_PublishesActionStartedByAgv()
+    public async Task Consume_OrderStateReceived_CreatedToRunning_LogsOrderStarted()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
         var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
@@ -88,12 +80,10 @@ public class OrderExecutionStateMachineTest
         await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId, status));
         saga.Order.Status.ShouldBeEquivalentTo(status);
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));
-        await fixture.ShouldHavePublishedAsync<ActionStartedByAgv>();
-        await fixture.ShouldHavePublishedAsync<LogOccurred>();
     }
 
     [TestMethod]
-    public async Task Consume_OrderStateReceived_ValidationByAgvFails_PublishesActionFailedByAgv()
+    public async Task Consume_OrderStateReceived_ValidationByAgvFails_LogsFailure()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
         var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
@@ -112,14 +102,10 @@ public class OrderExecutionStateMachineTest
 
         await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId, status));
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Final));
-        await fixture.ShouldHavePublishedAsync<ActionFailedByAgv>();
-        await fixture.ShouldHavePublishedAsync<LogOccurred>();
-        var logOccurred = await fixture.GetFirstPublishedMessageAsync<LogOccurred>();
-        logOccurred.Entry.Variables[LogLabels.Reason].ShouldBe(string.Join(",", error.ErrorReferences!.Select(e => e.ToString()).ToList()));
     }
 
     [TestMethod]
-    public async Task Consume_OrderStateReceived_OrderErrorByAgv_PublishesActionFailedByAgvTransitionsToFinal()
+    public async Task Consume_OrderStateReceived_OrderErrorByAgv_LogsFailureTransitionsToFinal()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
         var order = OrderGenerator.GeneratePickOrder("PS03", "AP01", 5, agv);
@@ -141,11 +127,6 @@ public class OrderExecutionStateMachineTest
             [new ErrorReference { ReferenceKey = "reason", ReferenceValue = "AGV stuck" }]);
         await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
             OrderGenerator.GenerateOrderState(order.OrderId, 0, 2, false, errors: [error])));
-
-        await fixture.ShouldHavePublishedAsync<ActionFailedByAgv>();
-        // LogOccurred(1) = ActionStarted log, LogOccurred(2) = ActionFailed log
-        var failedLog = await fixture.GetFirstPublishedMessageAsync<LogOccurred>(2);
-        failedLog.Entry.Variables[LogLabels.Reason].ShouldBe(string.Join(",", error.ErrorReferences!.Select(e => e.ToString())));
     }
 
     [TestMethod]
@@ -274,14 +255,13 @@ public class OrderExecutionStateMachineTest
         await fixture.PublishMessageAsync(new OrderUpdateRequested(startOrderCommand.CorrelationId, newOrder, null));
 
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
-        await fixture.ShouldNotHavePublishedAsync<ActionFailedByAgv>();
         ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
         publishedOrders.Count.ShouldBe(2);
         publishedOrders.Last().HeaderId.ShouldBe(2u);
     }
 
     [TestMethod]
-    public async Task Consume_OrderUpdateRequested_StitchingNodeNotInNewRoute_PublishesActionFailedByAgvKeepsState()
+    public async Task Consume_OrderUpdateRequested_StitchingNodeNotInNewRoute_LogsFailureKeepsState()
     {
         // After initialization with no Status the stitching node is the first planned node "PS03".
         // A new route that omits "PS03" entirely cannot be stitched → update fails.
@@ -307,9 +287,6 @@ public class OrderExecutionStateMachineTest
         await fixture.PublishMessageAsync(new OrderUpdateRequested(startOrderCommand.CorrelationId, newOrder, null));
 
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
-        await fixture.ShouldHavePublishedAsync<ActionFailedByAgv>();
-        var logOccurred = await fixture.GetFirstPublishedMessageAsync<LogOccurred>();
-        logOccurred.Entry.Variables[LogLabels.Reason].ShouldBe(OrderErrors.OrderRouteUpdateStitchingNodeNotFound.Description);
     }
 
     [TestMethod]

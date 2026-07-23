@@ -11,33 +11,6 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.CommandHandler;
 public class AgvCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_ClearAgvCurrentOrder_ExistingAgv_ClearsOrderAndAction()
-    {
-        var agv = AgvGenerator.Generate(Guid.NewGuid(), currentOrder: Guid.NewGuid(), currentFleetManagerActionId: Guid.NewGuid());
-        var fixture = new AgvCommandHandlerTestFixture()
-            .AddAgv(agv);
-
-        await fixture.PublishMessageAsync(new ClearAgvCurrentOrder(agv.CorrelationId));
-
-        agv.CurrentOrder.ShouldBeNull();
-        agv.CurrentFleetManagerActionId.ShouldBeNull();
-        fixture.AgvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [TestMethod]
-    public async Task Consume_ClearAgvCurrentOrder_UnknownAgv_DoesNotCallAddOrUpdate()
-    {
-        var agvId = Guid.NewGuid();
-        var fixture = new AgvCommandHandlerTestFixture()
-            .SetNoAgv(agvId);
-
-        await fixture.PublishMessageAsync(new ClearAgvCurrentOrder(agvId));
-        await fixture.ShouldHaveConsumedAsync<ClearAgvCurrentOrder>();
-
-        fixture.AgvRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [TestMethod]
     public async Task Consume_AddAgv_NewAgv_MarksPublishedToFleetManagerAndPublishesNewAgvDiscovered()
     {
         var agv = AgvGenerator.Generate(Guid.NewGuid());

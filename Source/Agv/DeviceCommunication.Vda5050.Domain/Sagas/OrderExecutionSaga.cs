@@ -106,7 +106,6 @@ public class OrderExecutionSaga : SagaStateMachineInstance, CorrelatedBy<Guid>
             return false;
         }
         Order.Route = new Route(Order.PlannedRoute.Nodes.ToList(), Order.PlannedRoute.Edges.ToList());
-        Order.Route.Release();
         Order.OrderUpdateId = 0;
         Order.UpdateState();
         return true;

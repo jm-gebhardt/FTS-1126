@@ -123,6 +123,26 @@ public class OrderTest
     }
 
     [TestMethod]
+    public void TryUpdatePlannedRoute_NewRouteHasUnreleasedHorizonNodes_KeepsThemUnreleased()
+    {
+        var order = OrderGenerator.GeneratePickOrder("APL1", "map/NODE-10", 5);
+        order.Status = OrderGenerator.GenerateOrderState(order.OrderId, order.OrderUpdateId, 2, false); // AGV at node "1"@2 -> stitching node
+        var newRoute = RouteGenerator.GenerateFromNodeIds(["1", "map/NODE-10", "map/NODE-11", "PS01"]);
+        // Only "1" -> "map/NODE-10" has actually been released by traffic management; the rest is horizon.
+        newRoute.Nodes.Single(n => n.NodeId == "map/NODE-10").Released = true;
+        newRoute.Edges.Single(e => e.EndNodeId == "map/NODE-10").Released = true;
+
+        var result = order.TryUpdatePlannedRoute(newRoute);
+
+        result.IsSuccess.ShouldBeTrue();
+        order.Route.Nodes.Single(n => n.NodeId == "map/NODE-11").Released.ShouldBeFalse();
+        order.Route.Nodes.Single(n => n.NodeId == "PS01").Released.ShouldBeFalse();
+        order.Route.Edges.Single(e => e.EndNodeId == "map/NODE-11").Released.ShouldBeFalse();
+        order.Route.Edges.Single(e => e.EndNodeId == "PS01").Released.ShouldBeFalse();
+        order.Route.Nodes.Single(n => n.NodeId == "map/NODE-10").Released.ShouldBeTrue();
+    }
+
+    [TestMethod]
     public void UpdateState_Initialized_TransitionsToCreated()
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);

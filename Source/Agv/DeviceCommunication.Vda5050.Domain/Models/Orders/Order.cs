@@ -83,6 +83,21 @@ public class Order
         return isAtTargetNode && allActionsFinished;
     }
 
+    /// <inheritdoc cref="Order"/>
+    public Order()
+    {
+    }
+
+    /// <inheritdoc cref="Order"/>
+    public Order(Agv agv, Guid orderId, Route route)
+    {
+        OrderId = orderId.ToString();
+        OrderUpdateId = 0;
+        AssignedAgv = agv;
+        PlannedRoute = route;
+        Route = new Route([], []);
+    }
+
     /// <summary>
     /// Try updating the current planned route to the new one.
     /// </summary>
@@ -107,8 +122,11 @@ public class Order
         newRoute = newRoute.RemoveBeforeNode(newStitchingNode);
         newRoute.ShiftSequenceIds(currentStitchingNode.SequenceId);
         PlannedRoute = PlannedRoute.Replace(newRoute);
-        Route = new Route(PlannedRoute.Nodes.ToList(), PlannedRoute.Edges.ToList());
-        Route.Release();
+        // Only the stitching node onward is sent on the wire: nodes/edges from the previous base
+        // must not be resent. PlannedRoute keeps the full history for future stitching lookups
+        // and IsCompleted(); Route is what actually goes out in the MqttOrder. newRoute's nodes/edges
+        // already carry the correct released/horizon split decided upstream - it must not be widened here.
+        Route = new Route(newRoute.Nodes.ToList(), newRoute.Edges.ToList());
         OrderUpdateId++;
         return Result.Success();
     }

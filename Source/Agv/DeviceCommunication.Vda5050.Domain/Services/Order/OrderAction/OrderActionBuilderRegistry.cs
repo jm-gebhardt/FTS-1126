@@ -55,14 +55,4 @@ public sealed class OrderActionBuilderRegistry
     {
         return new Models.Orders.OrderAction(nodeAction.ActionType, null, nodeAction.BlockingType, nodeAction.ActionParameters?.Select(p => new OrderActionParameter() { Key = p.Key, Value=p.Value }).ToList() ?? []);
     }
-
-    /// <summary>
-    /// Build the order action directly from the graph definition without using factsheet information.
-    /// </summary>
-    /// <param name="edgeAction">The edge Action.</param>
-    /// <returns>The order action.</returns>
-    public Models.Orders.OrderAction Build(VehicleTypeEdgePropertyAction edgeAction)
-    {
-        return new Models.Orders.OrderAction(edgeAction.ActionType, null, edgeAction.BlockingType, edgeAction.ActionParameters?.Select(p => new OrderActionParameter() { Key = p.Key, Value=p.Value}).ToList() ?? []);
-    }
 }

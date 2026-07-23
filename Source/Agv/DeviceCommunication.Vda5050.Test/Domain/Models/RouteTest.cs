@@ -7,19 +7,6 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain.Models;
 public class RouteTest
 {
     [TestMethod]
-    public void Release_ValidData_AllNodesAndEdgesReleased()
-    {
-        var route = RouteGenerator.GenerateFromNodeIds(["1", "2"]);
-        route.Nodes.All(n => n.Released).ShouldBeFalse();
-        route.Edges.All(n => n.Released).ShouldBeFalse();
-
-        route.Release();
-
-        route.Nodes.All(n => n.Released).ShouldBeTrue();
-        route.Edges.All(n => n.Released).ShouldBeTrue();
-    }
-
-    [TestMethod]
     public void ShiftSequenceIds_ValidData_SequenceIdsShifted()
     {
         const int offset = 2;

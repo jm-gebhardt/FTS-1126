@@ -1,3 +1,4 @@
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
@@ -41,11 +42,16 @@ public class OrderNode
     /// </summary>
     public ICollection<OrderAction> Actions { get; set; } = [];
 
-    /// <summary>
-    /// Release the node.
-    /// </summary>
-    public void Release()
+    /// <inheritdoc cref="OrderNode"/>
+    public OrderNode(){
+    }
+
+    /// <inheritdoc cref="OrderNode"/>
+    public OrderNode(Node graphNode, int sequenceId, bool released)
     {
-        Released = true;
+        NodeId = graphNode.NodeId;
+        SequenceId = sequenceId;
+        Released = released;
+        NodePosition = new OrderNodePosition { X = graphNode.NodePosition.X, Y = graphNode.NodePosition.Y };
     }
 }

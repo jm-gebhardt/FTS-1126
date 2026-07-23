@@ -108,14 +108,6 @@ public class OrderEdge
     /// Array of actions to be executed on this edge.
     /// </summary>
     public ICollection<OrderAction> Actions { get; set; } = [];
-
-    /// <summary>
-    /// Release the edge.
-    /// </summary>
-    public void Release()
-    {
-        Released = true;
-    }
 }
 
 /// <summary>

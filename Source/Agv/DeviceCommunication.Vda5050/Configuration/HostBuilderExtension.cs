@@ -10,8 +10,8 @@ using Gebhardt.Acc.Common.Services.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Sagas;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Routes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Filters;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
@@ -115,6 +115,7 @@ public static class HostBuilderExtension
                 services.AddTransient<IAgvRepository, EfAgvRepository>();
                 services.AddTransient<ILifRepository, EfLifRepository>();
                 services.AddTransient<IAgvTypeRepository, EfAgvTypeRepository>();
+                services.AddTransient<IRouteExecutionRepository, EfRouteExecutionRepository>();
 
                 //Services
                 services.AddHostedService<InitializationProvider>();
@@ -145,7 +146,15 @@ public static class HostBuilderExtension
                 services.AddTransient<IOrderActionBuilder, WaitForTriggerOrderActionBuilder>();
 
                 services.AddTransient<OrderActionBuilderRegistry>();
-                services.AddTransient<IOrderBuilder, OrderBuilder>();
+
+                // Route execution pipeline (RouteExecutionCoordinator needs the predefined action builders
+                // resolved by their concrete type, not just via the IOrderActionBuilder registry above).
+                services.AddTransient<PickOrderActionBuilder>();
+                services.AddTransient<DropOrderActionBuilder>();
+                services.AddTransient<StartChargingOrderActionBuilder>();
+                services.AddTransient<RouteActionMapper>();
+                services.AddTransient<IRouteStepTranslator, RouteStepTranslator>();
+                services.AddTransient<IRouteExecutionCoordinator, RouteExecutionCoordinator>();
 
                 // Sequence counters for topics wise header id incrementation for messages sent to the agv.
                 services.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));

@@ -62,15 +62,6 @@ public class Route
     }
 
     /// <summary>
-    /// Release the route.
-    /// </summary>
-    public void Release()
-    {
-        Nodes.ToList().ForEach(n => n.Release());
-        Edges.ToList().ForEach(e => e.Release());
-    }
-
-    /// <summary>
     /// Shift all sequence ids by offset.
     /// </summary>
     /// <param name="offset">The offset.</param>

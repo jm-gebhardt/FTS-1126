@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.Route.RouteSteps;
 using JetBrains.Annotations;
+using MassTransit;
 
 namespace Gebhardt.Acc.Common.Messages.Route;
 
@@ -10,7 +11,7 @@ namespace Gebhardt.Acc.Common.Messages.Route;
 /// <param name="AgvCorrelationId">The correlation identifier of the AGV.</param>
 /// <param name="RouteSteps">The steps of the updated route.</param>
 [PublicAPI]
-public record RouteUpdated(Guid RouteId, Guid AgvCorrelationId, RouteStep[] RouteSteps)
+public record RouteUpdated(Guid RouteId, Guid AgvCorrelationId, RouteStep[] RouteSteps) : CorrelatedBy<Guid>
 {
     /// <summary>
     /// The correlation identifier for Masstransit

@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.Maps;
+using Gebhardt.Acc.Common.Messages.Route;
 using Gebhardt.Acc.DeviceCommunication.Common.Services;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Agv;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
@@ -51,10 +52,21 @@ public static class BusRegistrationExtension
             {
                 var partitioner = c.CreatePartitioner(PartitionCount);
                 partitioner.PartitionMessageById<AddAgv, AgvCommandHandler>(c);
-                partitioner.PartitionMessageById<ClearAgvCurrentOrder, AgvCommandHandler>(c);
                 partitioner.PartitionMessageById<UpdateAgvType, AgvCommandHandler>(c);
             });
-            configurator.AddConsumer<ActionCommandHandler>();
+            configurator.AddConsumer<RouteEventHandler>(c =>
+            {
+                var partitioner = c.CreatePartitioner(PartitionCount);
+                c.Message<RoutePlanned>(x => x.UsePartitioner(partitioner, p => p.Message.RouteId));
+                c.Message<RouteUpdated>(x => x.UsePartitioner(partitioner, p => p.Message.RouteId));
+                c.Message<RouteStepsReleased>(x => x.UsePartitioner(partitioner, p => p.Message.RouteId));
+                c.Message<RouteAborted>(x => x.UsePartitioner(partitioner, p => p.Message.RouteId));
+            });
+            configurator.AddConsumer<RouteStepEventHandler>(c =>
+            {
+                var partitioner = c.CreatePartitioner(PartitionCount);
+                partitioner.PartitionMessageById<OrderStateReceived, RouteStepEventHandler>(c);
+            });
             configurator.AddRequestClient<StoreLayouts>();
             configurator.AddConsumer<LifCommandHandler>(c =>
             {
@@ -64,7 +76,6 @@ public static class BusRegistrationExtension
             });
             configurator.AddConsumer<AgvGraphCommandHandler>();
             configurator.AddConsumer<LayoutEventHandler>();
-            configurator.AddConsumer<ActionEventHandler>();
             configurator.AddConsumer<LifRequestHandler>();
             configurator.AddConsumer<AgvEventHandler>();
             configurator.AddConsumer<GraphMerger>();
