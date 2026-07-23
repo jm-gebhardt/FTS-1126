@@ -34,6 +34,7 @@
         <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
         <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />
         <ProjectReference Include="..\TransportOrder.Routing\TransportOrder.Routing.csproj" />
+        <ProjectReference Include="..\TransportOrder.TrafficManagement\TransportOrder.TrafficManagement.csproj" />
         <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
         <ProjectReference Include="..\TransportOrder\TransportOrder.csproj" />
     </ItemGroup>

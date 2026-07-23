@@ -37,6 +37,7 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Implementations;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -232,6 +233,8 @@ public static class TransportOrderHostBuilderExtensions
     private static void RegisterTrafficManagementServices(IServiceCollection services)
     {
         services.AddScoped<ITrafficManager, TrafficManager>();
+
+        services.AddTrafficManagementServices();
     }
 
     private static void RegisterMiscellaneousServices(IServiceCollection services)

@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
-/// 
+/// Represents a trajectory of an edge.
 /// </summary>
 [UsedImplicitly]
 public class Trajectory

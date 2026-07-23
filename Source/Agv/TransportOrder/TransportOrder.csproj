@@ -6,8 +6,8 @@
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
         <PackageReference Include="MassTransit.Prometheus" />
-        <PackageReference Include="MassTransit.EntityFrameworkCore"  />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
+        <PackageReference Include="MassTransit.EntityFrameworkCore" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -26,6 +26,7 @@
     <ItemGroup>
         <ProjectReference Include="..\TransportOrder.Core\TransportOrder.Core.csproj" />
         <ProjectReference Include="..\TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj" />
+        <ProjectReference Include="..\TransportOrder.TrafficManagement\TransportOrder.TrafficManagement.csproj" />
         <ProjectReference Include="..\TransportOrder.WebApi\TransportOrder.WebApi.csproj" />
     </ItemGroup>
 </Project>

@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Gebhardt.Acc.TransportOrder.TrafficManagement</AssemblyName>
+  </PropertyGroup>
+
+  <Import Project="..\SharedProjectSettings.csproj" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

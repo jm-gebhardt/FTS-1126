@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
-/// 
+/// Represents a view of a graph.
 /// </summary>
 [UsedImplicitly]
 public class View

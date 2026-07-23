@@ -3,7 +3,7 @@
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
-/// 
+/// Represents a repository for managing graph resources.
 /// </summary>
 [UsedImplicitly]
 public class GraphRepository
