@@ -328,4 +328,23 @@ public static class VdmaLifExtensions
         VdmaRequirementType.Conditional => RequirementType.Conditional,
         _ => RequirementType.Optional
     };
+
+    extension(double? value)
+    {
+        /// <summary>
+        /// Returns true, if theta is out of range as defined by vda 5050.
+        /// </summary>
+        public bool AngleOutOfRange()
+        {
+            return value != null && (value < -Math.PI || value > Math.PI);
+        }
+
+        /// <summary>
+        /// Returns true, if the given value is lower than zero.
+        /// </summary>
+        public bool IsNegative()
+        {
+            return value is < 0;
+        }
+    }
 }

@@ -42,6 +42,7 @@ public class LifFileEntityConfiguration: IEntityTypeConfiguration<LifFile>
         {
             fileMetaBuilder.Property(m => m.Filename).HasMaxLength(DbStringLimits.Name);
             fileMetaBuilder.Property(m => m.UploadedBy).HasMaxLength(DbStringLimits.User);
+            fileMetaBuilder.Property(m => m.ValidationResults).HasJsonConversion();
         });
 
         builder.Property(e => e.RawJson);

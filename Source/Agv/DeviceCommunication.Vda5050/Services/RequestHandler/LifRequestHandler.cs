@@ -19,6 +19,7 @@ using System.Text.Json.Serialization;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using LifLayoutCollection = Vdma.Lif.LifLayoutCollection;
+using Severity = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif.Severity;
 using ValidationException = FluentValidation.ValidationException;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
@@ -71,13 +72,25 @@ public class LifRequestHandler(
 
         ValidateFile(file);
 
+        LifFile lifFile;
         string fileName = Path.GetFileName(file.FileName);
         double fileSizeMb = file.Length / 1024.0 / 1024.0;
-        var (vdmaCollection, rawJson) = await ExtractFileContent(file);
+        var (vdmaCollection, rawJson, validationResults) = await ExtractFileContent(file);
+        if (vdmaCollection == null)
+        {
+            lifFile = new LifFile { Id = Guid.NewGuid(), MetaInformation = new LifFileMetaInformation(uploadedTimestamp, fileName, fileSizeMb, uploadedBy) {ValidationResults = validationResults}};
+            await context.RespondAsync(new LifValidationFailed(lifFile));
+            return;
+        }
         var lifLayoutCollection = vdmaCollection.ToLifLayoutCollection();
-        var lifFile = lifLayoutCollection.ToLifFile(uploadedTimestamp, fileName, fileSizeMb, uploadedBy);
+        lifFile = lifLayoutCollection.ToLifFile(uploadedTimestamp, fileName, fileSizeMb, uploadedBy);
         lifFile.RawJson = rawJson;
-
+        lifFile.MetaInformation.ValidationResults = validationResults;
+        if (validationResults.Any(v => v.Severity == Severity.Err))
+        {
+            await context.RespondAsync(new LifValidationFailed(lifFile));
+            return;
+        }
         logger.LogInformation("LIF file '{FileName}' with {LayoutCount} layout(s) uploaded", fileName, lifFile.LayoutIds.Count);
 
         IRequestClient<StoreLif>? requestClient = context.CreateRequestClient<StoreLif>(bus);
@@ -157,10 +170,11 @@ public class LifRequestHandler(
         }
     }
 
-    private async Task<(LifLayoutCollection Collection, byte[] RawJson)> ExtractFileContent(IFormFile file)
+    private async Task<(LifLayoutCollection? Collection, byte[] RawJson, ICollection<LifValidationResult>)> ExtractFileContent(IFormFile file)
     {
         LifLayoutCollection? lifLayoutCollection;
-        byte[] rawJson;
+        byte[] rawJson = [];
+        List<LifValidationResult> validationResults = [];
 
         try
         {
@@ -181,21 +195,24 @@ public class LifRequestHandler(
         }
         catch (Exception ex)
         {
-            throw new InvalidLifFileContentException(ex.Message);
+            validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, ex.Message));
+            return (null, rawJson, validationResults);
         }
 
         if (lifLayoutCollection == null)
         {
-            throw new InvalidLifFileContentException();
+            validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, "No lif layout collection"));
+            return (null, rawJson, validationResults);
         }
         var validationResult = await lifValidator.ValidateAsync(lifLayoutCollection);
         if (!validationResult.IsValid)
         {
             string errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
             logger.LogError("LIF validation failed: {Errors}", errors);
-            throw new ValidationException(validationResult.Errors);
+            List<LifValidationResult> results = validationResult.Errors.Where(e => e.CustomState is LifValidationResult).Select(e => (LifValidationResult)e.CustomState).ToList();
+            validationResults.AddRange(results);
         }
-        return (lifLayoutCollection, rawJson);
+        return (lifLayoutCollection, rawJson, validationResults);
     }
 
     private async Task ValidateLifCanBeDeleted(LifFile lif)

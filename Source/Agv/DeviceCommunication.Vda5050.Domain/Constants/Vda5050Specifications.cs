@@ -14,6 +14,8 @@ public static class Vda5050Specifications
 
     public const string LifUploadFileType = "application/json";
 
+    public const string LifMajorVersion = "1";
+
     public static class ActionTypes
     {
         public const string Pick = "pick";

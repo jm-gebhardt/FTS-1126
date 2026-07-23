@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos.Lif;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Profiles;
@@ -24,6 +24,8 @@ public class LifProfile : Profile
             .ForMember(dto => dto.Creator, opt => opt.MapFrom(l => l.LifCollectionMetaInformation.Creator))
             .ForMember(dto => dto.ExportTimestamp, opt => opt.MapFrom(l => l.LifCollectionMetaInformation.ExportTimestamp))
             .ForMember(dto => dto.LifVersion, opt => opt.MapFrom(l => l.LifCollectionMetaInformation.LifVersion))
+            .ForMember(dto => dto.ValidationResults, opt => opt.MapFrom(l => l.MetaInformation.ValidationResults))
             .ForMember(dto => dto.ProjectIdentification, opt => opt.MapFrom(l => l.LifCollectionMetaInformation.ProjectIdentification));
+        CreateMap<LifValidationResult, LifValidationResultDto>();
     }
 }

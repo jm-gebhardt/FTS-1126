@@ -81,6 +81,11 @@ public record LifFileMetaInformation
     /// </summary>
     public string UploadedBy { get; set; }
 
+    /// <summary>
+    /// Validation results.
+    /// </summary>
+    public ICollection<LifValidationResult> ValidationResults { get; set; } = [];
+
     /// <inheritdoc cref="LifFileMetaInformation"/>
     public LifFileMetaInformation(DateTime uploadTimestamp, string filename, double fileSizeMb, string uploadedBy)
     {

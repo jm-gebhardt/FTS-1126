@@ -23,4 +23,9 @@
     <ItemGroup>
       <Compile Remove="Services\Graphs\ILifGraphService.cs" />
     </ItemGroup>
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+          <_Parameter1>Gebhardt.Acc.DeviceCommunication.Vda5050.Test</_Parameter1>
+      </AssemblyAttribute>
+    </ItemGroup>
 </Project>

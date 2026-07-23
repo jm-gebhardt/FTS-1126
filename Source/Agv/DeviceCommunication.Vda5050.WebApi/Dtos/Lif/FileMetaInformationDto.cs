@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos;
+namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos.Lif;
 
 /// <summary>
 /// Lif file meta information.
@@ -57,4 +57,9 @@ public record FileMetaInformationDto
     /// Human-readable name of the project (e.g., for display purposes).
     /// </summary>
     public string ProjectIdentification { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Validation results.
+    /// </summary>
+    public ICollection<LifValidationResultDto> ValidationResults { get; set; } = [];
 }

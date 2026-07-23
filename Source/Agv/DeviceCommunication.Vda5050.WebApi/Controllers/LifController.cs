@@ -3,7 +3,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Dtos.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Policies;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -70,10 +70,21 @@ public class LifController(
         {
             return Unauthorized();
         }
-        Response<LifUploaded> response= await uploadLifClient.GetResponse<LifUploaded>(new UploadLif(DateTime.UtcNow, file, email));
-        var lifFile = mapper.Map<FileMetaInformationDto>(response.Message.LifFile);
-        logger.LogInformation("LIF file upload complete.");
-        return Ok(lifFile);
+        Response<LifUploaded, LifValidationFailed> response= await uploadLifClient.GetResponse<LifUploaded, LifValidationFailed>(new UploadLif(DateTime.UtcNow, file, email));
+        FileMetaInformationDto? lifFile;
+        if (response.Message is LifUploaded uploaded)
+        {
+            lifFile = mapper.Map<FileMetaInformationDto>(uploaded.LifFile);
+            logger.LogInformation("LIF file upload complete.");
+            return Ok(lifFile);
+        }
+        if (response.Message is LifValidationFailed wrongUpload)
+        {
+            lifFile = mapper.Map<FileMetaInformationDto>(wrongUpload.LifFile);
+            logger.LogWarning("LIF file upload failed.");
+            return BadRequest(lifFile);
+        }
+        return Conflict();
     }
 
     /// <summary>
