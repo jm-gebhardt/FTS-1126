@@ -196,6 +196,7 @@ public static class WebHostBuilderExtensions
                     }
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
+                options.IncludeXmlComments();
             });
             IdentityModelEventSource.ShowPII = true;
 
