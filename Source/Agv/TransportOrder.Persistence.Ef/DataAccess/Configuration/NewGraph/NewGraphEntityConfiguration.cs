@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
 
-/// <summary>
-/// 
-/// </summary>
+/// <inheritdoc />  
 public class NewGraphEntityConfiguration : IEntityTypeConfiguration<Graph>
 {
     /// <inheritdoc/>

@@ -7,6 +7,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 /// </summary>
 public abstract class RoutingResource
 {
+    [UsedImplicitly]
     private readonly List<RoutingResource> _conflictingResources = [];
 
     /// <summary>
@@ -15,13 +16,11 @@ public abstract class RoutingResource
     [UsedImplicitly]
     public Guid Id { get; }
 
-    //public Guid ParentId { get; } needed for DB?
-
     /// <summary>
     /// Reference to the parent graph resource that this routing resource belongs to.
     /// </summary>
     [UsedImplicitly]
-    public GraphResource Parent { get; }
+    public GraphResource Parent { get; private set; }
 
     /// <summary>
     /// AgvType associated with this routing resource.
@@ -35,12 +34,22 @@ public abstract class RoutingResource
     [UsedImplicitly]
     public IReadOnlyCollection<RoutingResource> ConflictingResources => _conflictingResources;
 
-    /// <inheritdoc cref="RoutingResource"/> 
+    /// <inheritdoc cref="RoutingResource"/>
     protected RoutingResource(Guid id, GraphResource parent, AgvType agvType)
     {
         Id = id;
         Parent = parent;
         AgvType = agvType;
+    }
+
+    /// <summary>
+    /// Efcore
+    /// </summary>
+    protected RoutingResource()
+    {
+        Id = Guid.NewGuid();
+        Parent = null!;
+        AgvType = null!;
     }
 
     /// <summary>
@@ -50,5 +59,15 @@ public abstract class RoutingResource
     public void AddConflictingResource(RoutingResource resource)
     {
         _conflictingResources.Add(resource);
+    }
+
+    /// <summary>
+    /// Attaches the parent graph resource. Not backed by an EF relation (see <c>RoutingResourceEntityConfiguration</c>) -
+    /// used by GraphRepository to assemble the aggregate after resolving Parent/Children via an explicit join.
+    /// </summary>
+    [UsedImplicitly]
+    public void AttachParent(GraphResource parent)
+    {
+        Parent = parent;
     }
 }

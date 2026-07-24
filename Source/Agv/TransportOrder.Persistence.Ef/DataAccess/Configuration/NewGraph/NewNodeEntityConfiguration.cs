@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
 
-/// <summary>
-/// 
-/// </summary>
+/// <inheritdoc/>
 public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
 {
     /// <inheritdoc/>
@@ -19,8 +17,18 @@ public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
         builder.Property(e => e.X);
         builder.Property(e => e.Y);
         builder.Ignore(e => e.Children);
-        builder.HasMany(e => e.IncomingEdges);
-        builder.HasMany(e => e.OutgoingEdges);
+
+        // Edge has two references to Node (StartNode/EndNode), so the inverse collections must be paired
+        // explicitly here - a plain HasMany() on both sides is ambiguous and produces extra shadow FKs.
+        builder.HasMany(e => e.IncomingEdges)
+            .WithOne(e => e.EndNode)
+            .HasForeignKey("EndNodeId")
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(e => e.OutgoingEdges)
+            .WithOne(e => e.StartNode)
+            .HasForeignKey("StartNodeId")
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
     }

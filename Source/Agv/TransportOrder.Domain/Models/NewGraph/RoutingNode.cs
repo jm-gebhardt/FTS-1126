@@ -7,7 +7,10 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 /// </summary>
 public class RoutingNode : RoutingResource
 {
+    [UsedImplicitly]
     private readonly List<RoutingEdge> _incomingEdges = [];
+    
+    [UsedImplicitly]
     private readonly List<RoutingEdge> _outgoingEdges = [];
 
     /// <summary>
@@ -39,6 +42,14 @@ public class RoutingNode : RoutingResource
     {
         LoadState = loadState;
         Theta = theta;
+    }
+
+    /// <summary>
+    /// Efcore
+    /// </summary>
+    public RoutingNode()
+    {
+        LoadState = null!;
     }
 
     [UsedImplicitly]

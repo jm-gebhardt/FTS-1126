@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
 
-/// <summary>
-/// 
-/// </summary>
+/// <inheritdoc/>
 public class NewStationEntityConfiguration : IEntityTypeConfiguration<Station>
 {
     /// <inheritdoc/>
@@ -21,6 +19,10 @@ public class NewStationEntityConfiguration : IEntityTypeConfiguration<Station>
         builder.Property(e => e.Theta);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
-        builder.HasMany(e => e.InteractionNodes);
+        builder.Ignore(e => e.Children);
+
+        builder.HasMany(e => e.InteractionNodes)
+            .WithMany()
+            .UsingEntity(j => j.ToTable(nameof(Station.InteractionNodes)));
     }
 }

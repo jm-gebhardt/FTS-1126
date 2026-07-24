@@ -64,4 +64,13 @@ public class RoutingEdge : RoutingResource
         MaxRotationSpeed = maxRotationSpeed;
         Trajectory = trajectory;
     }
+
+    /// <summary>
+    /// Efcore
+    /// </summary>
+    public RoutingEdge()
+    {
+        StartNode = null!;
+        EndNode = null!;
+    }
 }

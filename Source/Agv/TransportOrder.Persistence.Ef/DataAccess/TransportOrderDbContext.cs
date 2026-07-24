@@ -29,6 +29,12 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Node/Edge/Station share the abstract GraphResource base for domain modeling only - they are mapped as
+        // independent tables (see NewNode/NewEdge/NewStationEntityConfiguration), not a TPH hierarchy. Without this,
+        // EF discovers GraphResource as a shared root once it's reachable and demands the key be configured there
+        // instead of on each derived type.
+        modelBuilder.Ignore<GraphResource>();
+
         modelBuilder.ApplyConfiguration(new WaitingPointActionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new DecisionPointActionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ActionGroupEntityConfiguration());
@@ -71,11 +77,15 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new BackgroundLayerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OwnedFilterTemplateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ResourceBoundingBoxEntityConfiguration());
-        modelBuilder.Ignore<GraphResource>();
-        modelBuilder.Ignore<RoutingResource>();
         modelBuilder.ApplyConfiguration(new NewGraphEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewStationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NewAgvTypeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RoutingResourceEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RoutingNodeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RoutingEdgeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ActionRoutingEdgeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RoutingResourceConflictEntityConfiguration());
     }
 }

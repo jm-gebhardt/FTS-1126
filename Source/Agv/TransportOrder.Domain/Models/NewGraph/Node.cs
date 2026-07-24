@@ -1,10 +1,18 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
 /// Represents a node in the graph.
 /// </summary>
 public class Node : GraphResource
 {
+    [UsedImplicitly]
+    private readonly List<Edge> _incomingEdges = [];
+
+    [UsedImplicitly]
+    private readonly List<Edge> _outgoingEdges = [];
+
     /// <summary>
     /// X position on the layout in reference to the global origin.
     /// </summary>
@@ -23,12 +31,12 @@ public class Node : GraphResource
     /// <summary>
     /// Collection of incoming edges to the node.
     /// </summary>
-    public IReadOnlyCollection<Edge> IncomingEdges { get; } = [];
+    public IReadOnlyCollection<Edge> IncomingEdges => _incomingEdges;
 
     /// <summary>
     /// Collection of outgoing edges from the node.
     /// </summary>
-    public IReadOnlyCollection<Edge> OutgoingEdges { get; } = [];
+    public IReadOnlyCollection<Edge> OutgoingEdges => _outgoingEdges;
 
     /// <inheritdoc cref="Node"/>
     public Node(Guid id, string? name, string? description, double x, double y, string? levelId) : base(id, name, description)

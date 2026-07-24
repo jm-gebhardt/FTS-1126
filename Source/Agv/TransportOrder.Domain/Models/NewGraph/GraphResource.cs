@@ -5,6 +5,8 @@
 /// </summary>
 public abstract class GraphResource
 {
+    private readonly List<RoutingResource> _children = [];
+
     /// <summary>
     /// Unique identifier for the graph resource.
     /// </summary>
@@ -14,16 +16,16 @@ public abstract class GraphResource
     /// Name of the graph resource.
     /// </summary>
     public string? Name { get; }
-    
+
     /// <summary>
     /// Description of the graph resource.
     /// </summary>
     public string? Description { get; }
-    
+
     /// <summary>
     /// Collection of child routing resources.
     /// </summary>
-    public IReadOnlyCollection<RoutingResource> Children { get; } = [];
+    public IReadOnlyCollection<RoutingResource> Children => _children;
 
     /// <inheritdoc cref="GraphResource"/>
     protected GraphResource(Guid id, string? name, string? description)
@@ -31,5 +33,14 @@ public abstract class GraphResource
         Id = id;
         Name = name;
         Description = description;
+    }
+
+    /// <summary>
+    /// Attaches a child routing resource. Not backed by an EF relation (see <c>RoutingResourceEntityConfiguration</c>) -
+    /// used by GraphRepository to assemble the aggregate after resolving Parent/Children via an explicit join.
+    /// </summary>
+    public void AddChild(RoutingResource child)
+    {
+        _children.Add(child);
     }
 }

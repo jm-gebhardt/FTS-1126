@@ -5,9 +5,18 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 /// <summary>
 /// Represents a graph consisting of nodes, edges, and stations.
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public class Graph
 {
+    [UsedImplicitly]
+    private readonly List<Node> _nodes = [];
+
+    [UsedImplicitly]
+    private readonly List<Edge> _edges = [];
+    
+    [UsedImplicitly]
+    private readonly List<Station> _stations = [];
+
     /// <summary>
     /// Unique identifier of the graph.
     /// </summary>
@@ -16,15 +25,15 @@ public class Graph
     /// <summary>
     /// Collection of nodes in the graph.
     /// </summary>
-    public IReadOnlyCollection<Node> Nodes { get; } = [];
+    public IReadOnlyCollection<Node> Nodes => _nodes;
 
     /// <summary>
     /// Collection of edges in the graph.
     /// </summary>
-    public IReadOnlyCollection<Edge> Edges { get; } = [];
+    public IReadOnlyCollection<Edge> Edges => _edges;
 
     /// <summary>
     /// Collection of stations in the graph.
     /// </summary>
-    public IReadOnlyCollection<Station> Stations { get; } = [];
+    public IReadOnlyCollection<Station> Stations => _stations;
 }
