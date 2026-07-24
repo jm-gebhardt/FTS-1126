@@ -79,8 +79,18 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithMinBatteryAgvs(ICollection<Agv> agvs)
     {
-        _agvDb.Setup(x => x.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+        _agvDb.Setup(x => x.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(It.IsAny<Guid>())).ReturnsAsync(agvs);
         return this;
+    }
+
+    public void VerifyGetAgvsOnChargerCalledWith(Guid agvCorrelationId, Times? times = null)
+    {
+        _agvDb.Verify(x => x.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(agvCorrelationId), times ?? Times.Once());
+    }
+
+    public void VerifyGetNotChargingAgvsCalledWith(Guid? charger, Times? times = null)
+    {
+        _agvDb.Verify(x => x.Agvs.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(charger), times ?? Times.Once());
     }
 
     public AgvEventHandlerTestFixture WithAgv(Agv agv, bool isOnQueueHead = false)
@@ -146,6 +156,12 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
                 }
                 return charger.ToGraphNode();
             });
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithCharger()
+    {
+        _chargingPointManager.Setup(x => x.GetBestChargerAsync(It.IsAny<Agv>())).ReturnsAsync("charger".ToGraphNode());
         return this;
     }
 

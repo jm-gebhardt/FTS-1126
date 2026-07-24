@@ -255,19 +255,36 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastChargeUpLevel(double chargeLevel)
+    public async Task<ICollection<Agv>> GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(double chargeLevel, Guid agvCorrelationId)
     {
-        return await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= chargeLevel);
+        List<Agv> agvs = await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= chargeLevel);
+        return await FilterByAgvReachabilityAsync(agvs, agvCorrelationId);
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastMinChargeUpLevel()
+    public async Task<ICollection<Agv>> GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(Guid? agvCorrelationId=null)
     {
-        return await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp);
+        List<Agv> agvs = await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp);
+        if (agvCorrelationId == null)
+        {
+            return agvs;
+        }
+        return await FilterByAgvReachabilityAsync(agvs, agvCorrelationId.Value);
+    }
+
+    private async Task<ICollection<Agv>> FilterByAgvReachabilityAsync(ICollection<Agv> agvs, Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var agvGraph = await context.Set<AgvGraph>().Include(g => g.Nodes).SingleOrDefaultAsync(g => g.AgvCorrelationId == agvCorrelationId);
+        if (agvGraph == null)
+        {
+            return [];
+        }
+        return agvs.Where(a => agvGraph.Nodes.Any(n => n.Id == a.AgvStatus?.LastNodeId)).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevel()
+    public async Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(Guid? charger)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -300,10 +317,17 @@ public class AgvRepository : IAgvRepository
             .AsNoTracking()
             .Where(agv => !chargingAgvIds.Contains(agv.CorrelationId))
             .ToListAsync();
-
+        HashSet<Guid> agvsThatCanReachCharger = agvs.Select(a => a.CorrelationId).ToHashSet();
+        if (charger != null)
+        {
+            agvsThatCanReachCharger = await context.Set<AgvGraph>().Include(a => a.Nodes)
+                .Where(a => a.Nodes.Any(n => n.Id == charger))
+                .Select(a => a.AgvCorrelationId).ToHashSetAsync();
+        }
         return agvs
             .Where(agv => agv.AgvStatus != null &&
-                          agv.AgvStatus.BatteryCharge <= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].BatteryLevelCritical)
+                          agv.AgvStatus.BatteryCharge <= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].BatteryLevelCritical
+                          && agvsThatCanReachCharger.Contains(agv.CorrelationId))
             .ToList();
     }
 

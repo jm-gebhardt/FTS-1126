@@ -26,7 +26,7 @@ public class NodeStationEventHandler(IAgvDb agvDb) :
 
         // With infinite charging there could be no parking agvs,
         // reactivate also charging agvs
-        ICollection<Agv> agvs = await agvDb.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel();
+        ICollection<Agv> agvs = await agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel();
         if (agvs.Count == 0)
         {
             return;

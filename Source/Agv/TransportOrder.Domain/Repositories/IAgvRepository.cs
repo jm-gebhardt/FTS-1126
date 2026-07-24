@@ -126,7 +126,8 @@ public interface IAgvRepository
     /// <summary>
     /// Get all agvs with critical battery level that are not currently charging.
     /// </summary>
-    public Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevel();
+    /// <param name="charger">The charging node that should be reached.</param>
+    public Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(Guid? charger);
 
     /// <summary>
     /// Get the last node id of the agv with the given correlation id.
@@ -150,14 +151,14 @@ public interface IAgvRepository
     Task<bool> HasOnlineAgvs();
 
     /// <summary>
-    /// Gets all the agvs currently on a charger with min charge level.
+    /// Gets all the agvs currently on a charger (optionally, which can be reached by the given agv) with min charge level.
     /// </summary>
     /// <returns>Charging agvs with at least minimum charge up level.</returns>
-    Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastMinChargeUpLevel();
+    Task<ICollection<Agv>> GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(Guid? agvCorrelationId=null);
 
     /// <summary>
-    /// Gets all the agvs currently on a charger with at least the specified level.
+    /// Gets all the agvs currently on a charger which can be reached by the given agv, with at least the specified level.
     /// </summary>
     /// <returns>Charging agvs with at least the specified level.</returns>
-    Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastChargeUpLevel(double chargeLevel);
+    Task<ICollection<Agv>> GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(double chargeLevel, Guid agvCorrelationId);
 }

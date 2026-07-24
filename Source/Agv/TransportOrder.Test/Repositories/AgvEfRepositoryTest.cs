@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Exceptions;
+using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
@@ -301,14 +302,60 @@ public class AgvEfRepositoryTest
         await fixture.AddChargingAgv(agvLowLevel);
         await fixture.AddChargingAgv(agvMinLevel);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerWithAtLeastMinChargeUpLevel();
+        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel();
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBeEquivalentTo(agvMinLevel.CorrelationId);
     }
 
     [TestMethod]
-    public async Task GetNotChargingAgvsWithCriticalBatteryLevel_ValidData_ReturnsNotChargingAgvsWithCriticalBatteryLevel()
+    public async Task GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel_AgvCorrelationIdProvided_FiltersToReachableAgvsOnly()
+    {
+        var reachableAgv = AgvGenerator.GenerateChargingAgv(1, lastNodeId: "C-1", batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp + 1);
+        var unreachableAgv = AgvGenerator.GenerateChargingAgv(2, lastNodeId: "C-2", batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp + 1);
+        var requestingAgv = AgvGenerator.GenerateIdleAgv(3);
+        var fixture = new EfAgvRepositoryTestFixture();
+        await fixture.AddChargingAgv(reachableAgv);
+        await fixture.AddChargingAgv(unreachableAgv);
+        await fixture.AddWithGraph(requestingAgv, new GraphNode("C-1".ToGuid(), "C-1"));
+
+        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(requestingAgv.CorrelationId);
+
+        agvs.ShouldNotBeEmpty();
+        agvs.Single().CorrelationId.ShouldBe(reachableAgv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel_NoGraphForGivenAgv_ReturnsEmpty()
+    {
+        var chargingAgv = AgvGenerator.GenerateChargingAgv(1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp + 1);
+        var fixture = new EfAgvRepositoryTestFixture();
+        await fixture.AddChargingAgv(chargingAgv);
+
+        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(Guid.NewGuid());
+
+        agvs.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel_ChargeLevelAndAgvProvided_FiltersByChargeAndReachability()
+    {
+        var reachableAgv = AgvGenerator.GenerateChargingAgv(1, lastNodeId: "C-1", batteryCharge: 20);
+        var unreachableAgv = AgvGenerator.GenerateChargingAgv(2, lastNodeId: "C-2", batteryCharge: 20);
+        var requestingAgv = AgvGenerator.GenerateIdleAgv(3);
+        var fixture = new EfAgvRepositoryTestFixture();
+        await fixture.AddChargingAgv(reachableAgv);
+        await fixture.AddChargingAgv(unreachableAgv);
+        await fixture.AddWithGraph(requestingAgv, new GraphNode("C-1".ToGuid(), "C-1"));
+
+        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(0, requestingAgv.CorrelationId);
+
+        agvs.ShouldNotBeEmpty();
+        agvs.Single().CorrelationId.ShouldBe(reachableAgv.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger_ValidData_ReturnsNotChargingAgvsWithCriticalBatteryLevel()
     {
         var agvCriticalLevel = AgvGenerator.GenerateIdleAgv(2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical);
         var chargingAgv = AgvGenerator.GenerateChargingAgv(1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical);
@@ -316,9 +363,25 @@ public class AgvEfRepositoryTest
         await fixture.Add(agvCriticalLevel);
         await fixture.AddChargingAgv(chargingAgv);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevel();
+        ICollection<Agv> agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(null);
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBe(agvCriticalLevel.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger_ChargerProvided_FiltersToAgvsThatCanReachIt()
+    {
+        var chargerNode = new GraphNode("CHARGER".ToGuid(), "CHARGER");
+        var reachableAgv = AgvGenerator.GenerateIdleAgv(1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical);
+        var unreachableAgv = AgvGenerator.GenerateIdleAgv(2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelCritical);
+        var fixture = new EfAgvRepositoryTestFixture();
+        await fixture.AddWithGraph(reachableAgv, chargerNode);
+        await fixture.Add(unreachableAgv);
+
+        ICollection<Agv> agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(chargerNode.Id);
+
+        agvs.ShouldNotBeEmpty();
+        agvs.Single().CorrelationId.ShouldBe(reachableAgv.CorrelationId);
     }
 }

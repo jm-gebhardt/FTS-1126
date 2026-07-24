@@ -1807,6 +1807,13 @@ public class AgvCommandHandler :
             return;
         }
 
+        if (!chargingNode.IsCharger())
+        {
+            _logger.LogError("{Command}: Could not find charger for switching {ChargingAgv} with {NonChargingAgv}, charging agv seems not to be on charger but on {NodeId}", nameof(SwitchChargingAgvs), chargingAgv.CorrelationId, nonChargingAgv.CorrelationId, chargingNode.Id);
+            await context.Publish(new SwitchChargingAgvsFailed(nonChargingAgvId, chargingAgvId));
+            return;
+        }
+
         bool foundQueueToEnter = false;
 
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>

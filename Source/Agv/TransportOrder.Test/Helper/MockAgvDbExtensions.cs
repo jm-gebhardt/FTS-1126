@@ -69,7 +69,7 @@ public static class MockAgvDbExtensions
             repoMock.Setup(r => r.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.HasOnlineAgvs()).ReturnsAsync(true);
-            repoMock.Setup(r => r.Agvs.GetNotChargingAgvsWithCriticalBatteryLevel()).ReturnsAsync(agvs);
+            repoMock.Setup(r => r.Agvs.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(It.IsAny<Guid?>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.GetAnyOnlineAgv(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(agvs.FirstOrDefault(a => a.IsOnline));
             repoMock.Setup(x => x.Positions.GetPosition(It.IsAny<Guid>())).Returns((Guid c) =>
