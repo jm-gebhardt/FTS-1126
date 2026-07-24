@@ -46,3 +46,5 @@ stages:
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
     skipVulnerabilityCheck: true
+    publishMigrator: true
+    migrationsManifest: '$(Build.Repository.LocalPath)/deploy/migrations.transport-order.json'
