@@ -31,9 +31,9 @@ public class ResendActionRequestHandlerTestFixture<TMessage> : MediatorTestFixtu
         collection.AddTransient(_ => _logEntryRepository.Object);
         _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(),
             It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), 
-            It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>()))
+            It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, 
-                           Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) 
+                           Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) 
                 => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
 
         return this;
@@ -54,7 +54,7 @@ public class ResendActionRequestHandlerTestFixture<TMessage> : MediatorTestFixtu
     public ResendActionRequestHandlerTestFixture<TMessage> AddActionGroup(Common.Messages.ActionGroups.ActionGroup? actionGroup)
     {
         var ag = Mapper.Map<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(actionGroup);
-        _actionGroupRepository.Setup(x => x.GetCurrentAssignedActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(ag);
+        _actionGroupRepository.Setup(x => x.GetCurrentAssignedActionGroupAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(ag);
 
         return this;
     }

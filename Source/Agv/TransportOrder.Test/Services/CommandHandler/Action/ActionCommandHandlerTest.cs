@@ -2057,7 +2057,7 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[2].Target.NodeId == _parkNode.Id)), Times.Once);
+            ag.Actions[2].Target.NodeId == _parkNode.Id), It.IsAny<CancellationToken>()), Times.Once);
 
         incompleteAction.IsIncomplete.ShouldBeFalse();
     }
@@ -2266,7 +2266,7 @@ public class ActionCommandHandlerTest
             ag.CorrelationId == actionGroup.CorrelationId &&
             ag.Actions[1].Target.NodeId == _parkNode.Id &&
             ag.Actions[2].ShouldSkip
-        )), Times.Once);
+        ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
@@ -2290,7 +2290,7 @@ public class ActionCommandHandlerTest
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
             ag.Actions[1].Target.NodeId == _stationNode.Id
-        )), Times.Once);
+        ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]
@@ -2315,7 +2315,7 @@ public class ActionCommandHandlerTest
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
             ag.Actions[1].Target.NodeId == _stationNode.Id
-        )), Times.Once);
+        ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]

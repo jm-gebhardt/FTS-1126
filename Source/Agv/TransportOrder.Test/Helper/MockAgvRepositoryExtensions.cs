@@ -19,9 +19,9 @@ public static class MockAgvRepositoryExtensions
         /// <param name="agvs">The <see cref="Agv"/>s to add.</param>
         public void AddAgvs(params Agv[] agvs)
         {
-            repoMock.Setup(s => s.GetAllAgvsAsync()).ReturnsAsync(agvs);
+            repoMock.Setup(s => s.GetAllAgvsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(agvs);
 
-            repoMock.Setup(r => r.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+            repoMock.Setup(r => r.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) =>
             {
                 try
                 {
@@ -32,34 +32,38 @@ public static class MockAgvRepositoryExtensions
                     throw new AgvNotFoundException(c);
                 }
             });
-            repoMock.Setup(r => r.TryGetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return agvs.SingleOrDefault(a => a.CorrelationId == c); });
+            repoMock.Setup(r => r.TryGetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) => { return agvs.SingleOrDefault(a => a.CorrelationId == c); });
 
             repoMock.Setup(r => r.Count).Returns(agvs.Count);
-            repoMock.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
+            repoMock.Setup(r => r.CheckIfAgvExistsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) => agvs.Any(a => a.CorrelationId == c));
             repoMock.Setup(r => r.GetAllAgvsWithGraphAsync()).ReturnsAsync(agvs.Where(a => a.GraphExists).ToList());
             repoMock.Setup(r => r.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync(agvs);
             repoMock.Setup(r => r.GetIdleAgvsAsync()).ReturnsAsync(agvs.Where(a => a.CurrentAgvState == AgvState.Idle).ToList());
-            repoMock.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => cs.Count == 0 || cs.Contains(a.CorrelationId)).ToList());
+            repoMock.Setup(r => r.SelectExistingAgvsAsync(It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((List<Guid> cs, CancellationToken _) => agvs.Where(a => cs.Count == 0 || cs.Contains(a.CorrelationId)).ToList());
             repoMock.AddNonExistingAgvs(agvs.Select(a => a.CorrelationId).ToArray());
         }
 
         private void AddNonExistingAgvs(params Guid[] agvCorrelationIds)
         {
-            repoMock.Setup(r => r.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback((Guid correlationId) =>
-            {
-                if (agvCorrelationIds.All(a => a != correlationId))
+            repoMock.Setup(r => r.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .Callback((Guid correlationId, CancellationToken _) =>
                 {
-                    throw new AgvNotFoundException(correlationId);
-                }
-            });
-            repoMock.Setup(r => r.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback((ICollection<Guid> correlationIds) =>
-            {
-                List<Guid> notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
-                if (notExistingAgvs.Count != 0)
+                    if (agvCorrelationIds.All(a => a != correlationId))
+                    {
+                        throw new AgvNotFoundException(correlationId);
+                    }
+                });
+
+            repoMock.Setup(r => r.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>()))
+                .Callback((ICollection<Guid> correlationIds, CancellationToken _) =>
                 {
-                    throw new AgvsNotFoundException(notExistingAgvs);
-                }
-            });
+                    List<Guid> notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
+                    if (notExistingAgvs.Count != 0)
+                    {
+                        throw new AgvsNotFoundException(notExistingAgvs);
+                    }
+                });
         }
     }
 }

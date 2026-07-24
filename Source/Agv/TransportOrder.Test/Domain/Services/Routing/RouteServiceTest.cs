@@ -337,7 +337,7 @@ public class RouteServiceTest
             await fixture.RouteService.HasAnyAgvRouteAsync(actionGroup, [firstAgv, secondAgv], new CancellationToken(true)));
 
         fixture.LoggingService.Verify(x => x.LogAgv(It.IsAny<ILogger>(), LogLevel.Error, LogCodes.RouteCalculationFailed,
-            It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>()), Times.Never);
+            It.IsAny<Guid>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
@@ -353,6 +353,6 @@ public class RouteServiceTest
 
         hasRoute.ShouldBeFalse();
         fixture.LoggingService.Verify(x => x.LogAgv(It.IsAny<ILogger>(), LogLevel.Error, LogCodes.RouteCalculationFailed,
-            agv.CorrelationId, It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>()), Times.AtLeastOnce);
+            agv.CorrelationId, It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 }

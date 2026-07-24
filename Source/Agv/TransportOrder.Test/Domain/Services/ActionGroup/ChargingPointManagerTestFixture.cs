@@ -103,7 +103,7 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithNode(GraphNode node)
     {
-        NodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(node);
+        NodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(node);
         return this;
     }
 
@@ -133,11 +133,16 @@ public class ChargingPointManagerTestFixture
 
     public ChargingPointManagerTestFixture WithAvailableNodes(List<GraphNode> availableNodes)
     {
-        _agvDb.Setup(x => x.Graphs.GetNodesAsync(Agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
-            .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(
+                Agv.CorrelationId,
+                It.IsAny<Expression<Func<GraphNode, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid _, Expression<Func<GraphNode, bool>> predicate, CancellationToken _) =>
+                availableNodes.AsQueryable().Where(predicate));
+        
         foreach (var availableNode in availableNodes)
         {
-            _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id))
+            _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
         return this;
@@ -159,7 +164,7 @@ public class ChargingPointManagerTestFixture
     public void SetupGraphRepository(AgvGraph graph)
     {
         _agvDb.AddAgvGraph(graph);
-        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>()))
-            .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => graph.Nodes.AsQueryable().Where(predicate)));
-    }
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>>(),It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid _, Expression<Func<GraphNode, bool>> predicate, CancellationToken _) =>
+                graph.Nodes.AsQueryable().Where(predicate));    }
 }

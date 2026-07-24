@@ -27,7 +27,7 @@ public class NodeStateRequestHandler : IConsumer<GetMapNodeStates>
     {
         var correlationId = context.Message.CorrelationId;
 
-        ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId);
+        ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId, context.CancellationToken);
 
         await context.RespondAsync(new GotMapNodeStates(nodeStates));
     }

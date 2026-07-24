@@ -20,7 +20,7 @@ public class ActionGroupStatisticsRequestHandler(IActionGroupRepository actionGr
     {
         (Guid? source, Guid? target) = context.Message;
 
-        Dictionary<ActionType, ICollection<double>> actionDurations = await actionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, source, target);
+        Dictionary<ActionType, ICollection<double>> actionDurations = await actionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, source, target, cancellationToken: context.CancellationToken);
         List<DurationStatistics> statistics = [];
         foreach ((var actionType, ICollection<double> durations) in actionDurations)
         {

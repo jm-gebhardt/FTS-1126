@@ -49,7 +49,7 @@ public class TriggerEventHandlerTestFixture : MassTransitConsumerTestFixture<Tri
 
     public TriggerEventHandlerTestFixture WithCargo(Guid agvId, Cargo cargo)
     {
-        _agvDb.Setup(a => a.Cargos.GetCargosAsync(agvId)).ReturnsAsync([cargo]);
+        _agvDb.Setup(a => a.Cargos.GetCargosAsync(agvId, It.IsAny<CancellationToken>())).ReturnsAsync([cargo]);
         return this;
     }
 

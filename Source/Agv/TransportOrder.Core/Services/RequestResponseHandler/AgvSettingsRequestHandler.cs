@@ -58,7 +58,7 @@ public class AgvSettingsRequestHandler :
     {
         var correlationId = context.Message.CorrelationId;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
         var agvSettings =  _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
 
         var agvSettingsMessage = _mapper.Map<AgvSettings>(agvSettings);
@@ -74,7 +74,7 @@ public class AgvSettingsRequestHandler :
         List<AgvSettings> settings = new();
         foreach (var correlationId in selectedAgvs)
         {
-            var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+            var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
             var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
             var agvSettingsMessage = _mapper.Map<AgvSettings>(agvSettings);
             settings.Add(_mapper.Map(correlationId, agvSettingsMessage));
@@ -89,10 +89,11 @@ public class AgvSettingsRequestHandler :
     {
         var settings = context.Message.UpdatedSettings;
         string user = context.Message.User;
+        var cancellationToken = context.CancellationToken;
 
-        var defaultSettingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
-        await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, defaultSettingsGroup.GroupType, defaultSettingsGroup.Identifier);
-        await _loggingService.LogSystem(_logger, LogCodes.AgvOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.SystemAgvDefaultSettingUpdated } });
+        var defaultSettingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(null, cancellationToken);
+        await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, defaultSettingsGroup.GroupType, defaultSettingsGroup.Identifier, cancellationToken);
+        await _loggingService.LogSystem(_logger, LogCodes.AgvOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.SystemAgvDefaultSettingUpdated } }, cancellationToken: cancellationToken);
 
         await _notificationSender.SendAgvNotification(
             "Default agv settings changed",
@@ -110,8 +111,8 @@ public class AgvSettingsRequestHandler :
     public async Task Consume(ConsumeContext<UpdateAgvSettings> context)
     {
         (var correlationId, var settings, string user) = context.Message;
-        await UpdateAgvSetting(correlationId, settings);
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
+        await UpdateAgvSetting(correlationId, settings, context.CancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } }, context.CancellationToken);
 
         await _notificationSender.SendAgvNotification(
             "Agv settings changed",
@@ -130,12 +131,12 @@ public class AgvSettingsRequestHandler :
     {
         (ICollection<Guid> correlationIds, var settings, string user) = context.Message;
         List<Task> updateTasks = correlationIds
-            .Select(correlationId => Task.Run(() => UpdateAgvSetting(correlationId, settings))).ToList();
+            .Select(correlationId => UpdateAgvSetting(correlationId, settings, context.CancellationToken)).ToList();
 
         await Task.WhenAll(updateTasks);
         foreach (var correlationId in correlationIds)
         {
-            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } });
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingUpdated } }, context.CancellationToken);
             await _notificationSender.SendAgvNotification(
                 "Agv settings changed",
                 "User {user} updated the settings for agv {agvId}",
@@ -152,8 +153,8 @@ public class AgvSettingsRequestHandler :
     public async Task Consume(ConsumeContext<ResetAgvSettingToDefault> context)
     {
         (var correlationId, string propertyName, string user) = context.Message;
-        await ResetAgvSettingToDefault(correlationId, propertyName);
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
+        await ResetAgvSettingToDefault(correlationId, propertyName, context.CancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } }, context.CancellationToken);
 
         await _notificationSender.SendAgvNotification("Agv settings reset to default",
             "User {user} reset agv {agvId} to the default settings",
@@ -171,39 +172,39 @@ public class AgvSettingsRequestHandler :
     {
         (ICollection<Guid> correlationIds, string propertyName, string user) = context.Message;
         List<Task> updateTasks = correlationIds
-            .Select(correlationId => Task.Run(() => ResetAgvSettingToDefault(correlationId, propertyName))).ToList();
+            .Select(correlationId => ResetAgvSettingToDefault(correlationId, propertyName, context.CancellationToken)).ToList();
 
         await Task.WhenAll(updateTasks);
         foreach (var correlationId in correlationIds)
         {
-            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } });
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvSettingsReset } }, context.CancellationToken);
             await _notificationSender.SendAgvNotification("Agv settings reset to default", "User {user} reset agv {agvId} to the default settings", new Dictionary<string, string> { { "user", user }, { "agvId", correlationId.ToString() } }, [new NotificationLink("Agv", NotificationLinkResource.Agv, correlationId)]);
         }
         await context.RespondAsync(new Success());
     }
 
-    private async Task ResetAgvSettingToDefault(Guid correlationId, string propertyName)
+    private async Task ResetAgvSettingToDefault(Guid correlationId, string propertyName, CancellationToken cancellationToken)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        await _agvDb.AgvSettings.ResetSettingPropertyToDefaultAsync(agv.AgvSettingsGroup, propertyName);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, cancellationToken);
+        await _agvDb.AgvSettings.ResetSettingPropertyToDefaultAsync(agv.AgvSettingsGroup, propertyName, cancellationToken);
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvSettingsReset, agv.CorrelationId, null, "AGV Setting Reset", $"{propertyName} reset to default",
-            new Dictionary<string, object?>{{LogLabels.PropertyName, propertyName}});
+            new Dictionary<string, object?>{{LogLabels.PropertyName, propertyName}}, cancellationToken);
     }
 
-    private async Task UpdateAgvSetting(Guid correlationId, AgvSettingsReadModel settings)
+    private async Task UpdateAgvSetting(Guid correlationId, AgvSettingsReadModel settings, CancellationToken cancellationToken)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
-        await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, GroupType.SerialNumber, agv.SerialNumber);
-        await _bus.Publish(new UpdateAgvSettingsGroupReference(correlationId));
-        await LogSettingsUpdateForAgv(correlationId, settings);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, cancellationToken);
+        await _agvDb.AgvSettings.AddOrUpdateSettingsForAgvGroup(settings, GroupType.SerialNumber, agv.SerialNumber, cancellationToken);
+        await _bus.Publish(new UpdateAgvSettingsGroupReference(correlationId), cancellationToken);
+        await LogSettingsUpdateForAgv(correlationId, settings, cancellationToken);
     }
 
-    private async Task LogSettingsUpdateForAgv(Guid correlationId, AgvSettingsReadModel settings)
+    private async Task LogSettingsUpdateForAgv(Guid correlationId, AgvSettingsReadModel settings, CancellationToken cancellationToken)
     {
         foreach ((string name, object? value) in settings.GetValidPropertiesInformation())
         {
             await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvSettingUpdated, correlationId, null, "AGV Setting Updated", $"{name} updated to {value}",
-            new Dictionary<string, object?> { { LogLabels.PropertyName, name }, {LogLabels.PropertyValue, value} });
+            new Dictionary<string, object?> { { LogLabels.PropertyName, name }, {LogLabels.PropertyValue, value} }, cancellationToken);
         }
     }
 }

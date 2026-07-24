@@ -68,7 +68,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             _logger.LogDebug("Locked nodes: {Ids}", string.Join(",", lockedNodeIds));
         }
 
-        IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
+        IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId, cancellationToken);
 
         //1) Action group assigned to the agv with the highest priority, that is not an automatic pick drop action group (e.g. charging, manual, queueing, queue evacuation)
         var nextActionGroup = notStartedActionGroups.FirstOrDefault(a => a.AssignedAgv == agv.CorrelationId && (a.IsManual || !a.IsMovingCargo));
@@ -78,7 +78,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
             {
                 await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderWithLockedStation, agv.CorrelationId, nextActionGroup.CorrelationId, "Order Contains Locked Station",
                     $"Order {nextActionGroup.OrderId} contains locked station.",
-                    new Dictionary<string, object?> { { LogLabels.OrderId, nextActionGroup.OrderId } });
+                    new Dictionary<string, object?> { { LogLabels.OrderId, nextActionGroup.OrderId } }, cancellationToken);
             }
 
             if (nextActionGroup.IsManual || lockedNodeIds is { Count: 0 } ||
@@ -119,7 +119,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         //and remove queue head node explicitly again from nodes to avoid
         if ((await _queueManager.GetAgvsAtQueueHeads()).Contains(agv.CorrelationId))
         {
-            var queueAgvIsIn = await _queueRepository.GetQueueForAgv(agv.CorrelationId);
+            var queueAgvIsIn = await _queueRepository.GetQueueForAgv(agv.CorrelationId, cancellationToken);
             if (queueAgvIsIn?.Head?.NodeId != null)
             {
                 var queueHead = queueAgvIsIn.Head.NodeId;

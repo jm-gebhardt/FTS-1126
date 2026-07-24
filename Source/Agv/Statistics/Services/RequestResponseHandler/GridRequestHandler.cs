@@ -41,7 +41,8 @@ public class GridRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetGrids> context)
     {
-        ICollection<Grid> grids = await _db.Grids.GetGridsAsync();
+        var cancellationToken = context.CancellationToken;
+        ICollection<Grid> grids = await _db.Grids.GetGridsAsync(cancellationToken);
         await context.RespondAsync(new GotGrids(grids.ToList()));
     }
 

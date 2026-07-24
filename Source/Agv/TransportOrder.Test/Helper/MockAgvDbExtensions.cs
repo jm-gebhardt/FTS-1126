@@ -39,9 +39,9 @@ public static class MockAgvDbExtensions
 
         private void AddAgvsCore(Agv[] agvs)
         {
-            repoMock.Setup(s => s.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
+            repoMock.Setup(s => s.Agvs.GetAllAgvsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(agvs);
 
-            repoMock.Setup(r => r.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
+            repoMock.Setup(r => r.Agvs.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) =>
             {
                 try
                 {
@@ -52,23 +52,26 @@ public static class MockAgvDbExtensions
                     throw new AgvNotFoundException(c);
                 }
             });
-            repoMock.Setup(r => r.Agvs.TryGetAgvAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => { return agvs.FirstOrDefault(a => a.CorrelationId == c); });
-
+            repoMock.Setup(r => r.Agvs.TryGetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Guid c, CancellationToken _) => agvs.FirstOrDefault(a => a.CorrelationId == c));
             repoMock.Setup(r => r.Agvs.Count).Returns(agvs.Count);
-            repoMock.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => agvs.Any(a => a.CorrelationId == c));
+            repoMock.Setup(r => r.Agvs.CheckIfAgvExistsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Guid c, CancellationToken _) => agvs.Any(a => a.CorrelationId == c));
             repoMock.Setup(r => r.Agvs.GetAllAgvsWithGraphAsync()).ReturnsAsync(agvs.Where(a => a.GraphExists).ToList());
-            repoMock.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync()).ReturnsAsync(agvs);
+            repoMock.Setup(r => r.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(It.IsAny<CancellationToken>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.GetIdleAgvsAsync()).ReturnsAsync(agvs.Where(a => a.CurrentAgvState == AgvState.Idle).ToList());
-            repoMock.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>())).ReturnsAsync((List<Guid> cs) => agvs.Where(a => cs.Count == 0 || cs.Contains(a.CorrelationId)).ToList());
+            repoMock.Setup(r => r.Agvs.SelectExistingAgvsAsync(It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((List<Guid> cs, CancellationToken _) => agvs.Where(a => cs.Count == 0 || cs.Contains(a.CorrelationId)).ToList());
             repoMock.AddNonExistingAgvs(agvs.Select(a => a.CorrelationId).ToArray());
             repoMock.Setup(r => r.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(EfAgvSettingsProvider.DefaultSettings);
-            repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<Agv?>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
-            repoMock.Setup(r => r.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ReturnsAsync(agvs);
+            repoMock.Setup(r => r.AgvSettings.GetSettingsGroupForAgv(It.IsAny<Agv?>(), It.IsAny<CancellationToken>())).ReturnsAsync(new AgvSettingsGroup(GroupType.All));
+            repoMock.Setup(r => r.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel(It.IsAny<CancellationToken>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
             repoMock.Setup(r => r.Agvs.HasOnlineAgvs()).ReturnsAsync(true);
             repoMock.Setup(r => r.Agvs.GetNotChargingAgvsWithCriticalBatteryLevel()).ReturnsAsync(agvs);
-            repoMock.Setup(r => r.Agvs.GetAnyOnlineAgv()).ReturnsAsync(agvs.FirstOrDefault(a => a.IsOnline));
+            repoMock.Setup(r => r.Agvs.GetAnyOnlineAgv(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(agvs.FirstOrDefault(a => a.IsOnline));
             repoMock.Setup(x => x.Positions.GetPosition(It.IsAny<Guid>())).Returns((Guid c) =>
             {
                 var agv = agvs.Single(a => a.CorrelationId == c);
@@ -93,14 +96,14 @@ public static class MockAgvDbExtensions
 
         private void AddNonExistingAgvs(params Guid[] agvCorrelationIds)
         {
-            repoMock.Setup(r => r.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>())).Callback((Guid correlationId) =>
+            repoMock.Setup(r => r.Agvs.ThrowIfAgvNotExistsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Callback((Guid correlationId, CancellationToken _) =>
             {
                 if (agvCorrelationIds.All(a => a != correlationId))
                 {
                     throw new AgvNotFoundException(correlationId);
                 }
             });
-            repoMock.Setup(r => r.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback((ICollection<Guid> correlationIds) =>
+            repoMock.Setup(r => r.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).Callback((ICollection<Guid> correlationIds, CancellationToken _) =>
             {
                 List<Guid> notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
                 if (notExistingAgvs.Count != 0)
@@ -136,7 +139,7 @@ public static class MockAgvDbExtensions
         /// <param name="graphExists">Whether the graph exists.</param>
         public void AddAgvGraph(AgvGraph? agvGraph = null, bool graphExists = true)
         {
-            repoMock.Setup(x => x.Graphs.GetAgvGraphAsync(It.IsAny<Guid>()))!.ReturnsAsync(agvGraph);
+            repoMock.Setup(x => x.Graphs.GetAgvGraphAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))!.ReturnsAsync(agvGraph);
             repoMock.Setup(x => x.Graphs.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(graphExists);
             repoMock.Setup(x => x.Graphs.ExistsAsync()).ReturnsAsync(graphExists);
         }
@@ -146,10 +149,8 @@ public static class MockAgvDbExtensions
         /// </summary>
         public void SetupNodeFallbacks()
         {
-            repoMock.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
-            repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
-            repoMock.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
-            repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).Returns<Guid>(id => throw new NodeNotFoundException(id));
+            repoMock.Setup(x => x.Graphs.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Returns<Guid, CancellationToken>((id, _) => throw new NodeNotFoundException(id));
+            repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Returns<Guid, CancellationToken>((id, _) => throw new NodeNotFoundException(id));
         }
 
         /// <summary>
@@ -168,10 +169,8 @@ public static class MockAgvDbExtensions
             {
                 if (node != null)
                 {
-                    repoMock.Setup(x => x.Graphs.GetNodeAsync(node.Id)).ReturnsAsync(node);
-                    repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
-                    repoMock.Setup(x => x.Graphs.GetNodeAsync(node.Id)).ReturnsAsync(node);
-                    repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+                    repoMock.Setup(x => x.Graphs.GetNodeAsync(node.Id, It.IsAny<CancellationToken>())).ReturnsAsync(node);
+                    repoMock.Setup(x => x.Graphs.TryGetNodeByIdAsync(node.Id, It.IsAny<CancellationToken>())).ReturnsAsync(node);
                 }
             }
         }
@@ -182,8 +181,10 @@ public static class MockAgvDbExtensions
         /// <param name="agvData">The <see cref="AgvData"/> to add.</param>
         public void AddAgvData(AgvData? agvData)
         {
-            repoMock.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync([agvData!]);
-            repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
+            repoMock.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([agvData!]);
+            repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(agvData);
             repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
         }
 
@@ -193,10 +194,11 @@ public static class MockAgvDbExtensions
         /// <param name="agvData">The factory function to create <see cref="AgvData"/>.</param>
         public void AddAgvData(Func<Guid, AgvData?> agvData)
         {
-            repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>())).ReturnsAsync(agvData);
+            repoMock.Setup(x => x.Data.GetAgvDataAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Guid id, CancellationToken _) => agvData(id));
             repoMock.Setup(x => x.Data.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
         }
-
+        
         /// <summary>
         /// Adds active <see cref="AgvError"/>s to the mock repository.
         /// </summary>

@@ -27,7 +27,7 @@ public class RouteRequestHandlerTest
 
         await fixture.PublishMessageAsync(new SendAgvToCharger(agv.CorrelationId, "user"));
 
-        fixture.ChargingPointManager.Verify(x => x.ReserveChargerAsync(agv, node.ToGuid(), true), Times.Once);
+        fixture.ChargingPointManager.Verify(x => x.ReserveChargerAsync(agv, node.ToGuid(), true, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [TestMethod]

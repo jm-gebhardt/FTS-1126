@@ -26,11 +26,11 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     protected override string Description => "Charging";
 
     /// <inheritdoc />
-    public async Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreLocked = false)
+    public async Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreLocked = false, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await PickAndReserveNodeAsync(agv, startNodeId, ignoreLocked: ignoreLocked);
+            return await PickAndReserveNodeAsync(agv, startNodeId, ignoreLocked: ignoreLocked, cancellationToken: cancellationToken);
         }
         catch (Exception e) when (e is ReserveNodeFailedException or NoNodesAvailableException)
         {
@@ -56,11 +56,11 @@ public class ChargingPointManager : BaseNodeReservationManager, IChargingPointMa
     }
 
     /// <inheritdoc />
-    public async Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreLocked=false)
+    public async Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreLocked=false, CancellationToken cancellationToken = default)
     {
         try
         {
-            await ReserveNodeAsync(node.Id, agvCorrelationId, ignoreLocked);
+            await ReserveNodeAsync(node.Id, agvCorrelationId, ignoreLocked, cancellationToken);
         }
         catch (ReserveNodeFailedException)
         {

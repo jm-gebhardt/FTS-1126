@@ -29,13 +29,14 @@ public class HandlingUnitsController : Controller
     /// </summary>
     /// <param name="query">The substring to search for (case-insensitive).</param>
     /// <param name="limit">The maximum number of handling unit results to return. Default is 100.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <response code="200">Ok</response>
     /// <response code="400">Invalid query</response>
     [HttpGet]
     [Route("/handlingUnits")]
-    public async Task<ActionResult<IEnumerable<string>>> SearchHandlingUnits([FromQuery] [Required] string query, int limit = 100)
+    public async Task<ActionResult<IEnumerable<string>>> SearchHandlingUnits([FromQuery] [Required] string query, int limit = 100, CancellationToken cancellationToken = default)
     {
-        Response<GotHandlingUnits> response = await _getHandlingUnitsRequest.GetResponse<GotHandlingUnits>(new GetHandlingUnits(query, limit));
+        Response<GotHandlingUnits> response = await _getHandlingUnitsRequest.GetResponse<GotHandlingUnits>(new GetHandlingUnits(query, limit), cancellationToken);
 
         return Ok(response.Message.HandlingUnits);
     }

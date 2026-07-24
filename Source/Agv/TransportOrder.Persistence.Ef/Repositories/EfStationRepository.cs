@@ -102,13 +102,13 @@ public class EfStationRepository(
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<Station> GetStation(Guid id)
+    public async Task<Station> GetStation(Guid id, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var station = await context.Set<Station>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(s => s.Id == id);
+            .SingleOrDefaultAsync(s => s.Id == id, cancellationToken);
 
         if (station == null)
         {
@@ -126,7 +126,7 @@ public class EfStationRepository(
                     NodeLock = nl,
                     GraphNode = g
                 })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (nodeLock != null)
         {
@@ -143,7 +143,7 @@ public class EfStationRepository(
                 ac.Target.NodeId!.Value == station.Id &&
                 ac.State == ActionState.Started))
             .Select(a => a.AssignedAgv.GetValueOrDefault())
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         station.IsOnline = stationOnlineRepository.Get(station.Id);
 
@@ -160,9 +160,9 @@ public class EfStationRepository(
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<ICollection<Station>> GetStations(Guid? mapId = null)
+    public async Task<ICollection<Station>> GetStations(Guid? mapId = null, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.Set<Station>()
             .AsNoTracking()
             .GroupJoin(
@@ -202,7 +202,7 @@ public class EfStationRepository(
             query = query.Where(x => x.Station.MapId == mapId);
         }
 
-        var rows = await query.ToListAsync();
+        var rows = await query.ToListAsync(cancellationToken);
 
         List<Station> stations = rows.Select(r =>
         {

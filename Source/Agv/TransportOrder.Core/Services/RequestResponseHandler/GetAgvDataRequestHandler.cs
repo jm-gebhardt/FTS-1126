@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -38,7 +38,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvData> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agvData = await _agvDb.Data.GetAgvDataAsync(correlationId);
+        var agvData = await _agvDb.Data.GetAgvDataAsync(correlationId, context.CancellationToken);
         if (agvData == null)
         {
             throw new AgvDataNotFoundException(correlationId);
@@ -54,7 +54,7 @@ public class GetAgvDataRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Common.Domain.Models.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
+        ICollection<Common.Domain.Models.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs, context.CancellationToken);
         var agvDataList = _mapper.Map<List<AgvData>>(fetchedData);
         await context.RespondAsync(new GotAgvsData(agvDataList));
     }

@@ -211,7 +211,7 @@ public class ActionGroupControllerTest
             .Build();
 
         var controller = fixture.Controller;
-        var response = await controller.SetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, targetNode.Name);
+        var response = await controller.SetTarget(actionGroup.CorrelationId, actionGroup.Actions.First(a => a.ActionType == ActionType.Pick).CorrelationId, targetNode.Name, CancellationToken.None);
         var result = response as OkResult;
         result.ShouldNotBeNull();
     }

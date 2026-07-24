@@ -351,16 +351,17 @@ public class QueueCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<RemoveAgvFromQueueConsideration> context)
     {
+        var cancellationToken = context.CancellationToken;
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            ICollection<Queue> queues = await queueRepository.GetQueues();
+            ICollection<Queue> queues = await queueRepository.GetQueues(cancellationToken);
 
             foreach (var queue in queues)
             {
                 queue.ConsideredAgvs.Remove(context.Message.CorrelationId);
             }
-            await Task.WhenAll(queues.Select(queueRepository.UpdateQueueAsync));
-        });
+            await Task.WhenAll(queues.Select(q => queueRepository.UpdateQueueAsync(q, cancellationToken)));
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -368,12 +369,13 @@ public class QueueCommandHandler(
     {
         await queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var queue = await queueRepository.GetQueueById(context.Message.QueueId);
+            var cancellationToken = context.CancellationToken;
+            var queue = await queueRepository.GetQueueById(context.Message.QueueId, cancellationToken);
 
             queue.ConsideredAgvs.Push(context.Message.CorrelationId);
 
-            await queueRepository.UpdateQueueAsync(queue);
-        });
+            await queueRepository.UpdateQueueAsync(queue, cancellationToken);
+        }, context.CancellationToken);
     }
 
     /// <inheritdoc />

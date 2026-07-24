@@ -68,7 +68,7 @@ public class PriorityAwareTargetSelector(
                 return;
             }
 
-            var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.Value);
+            var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.Value, stoppingToken);
             if (_lastEvaluatedActions.Contains(action.Value))
             {
                 return;

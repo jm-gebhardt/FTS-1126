@@ -15,9 +15,9 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IMapper mapper, IActionGroupRepository actionGroupRepository) : ILoggingService
 {
     /// <inheritdoc cref="ILoggingService"/>>
-    public async Task LogOrder(ILogger logger, LogLevel severity, int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null)
+    public async Task LogOrder(ILogger logger, LogLevel severity, int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default)
     {
-        var logEntry = await logEntryRepository.AddAsync(Categories.Order, code, severity.ToString(), agvId, actionGroupId, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        var logEntry = await logEntryRepository.AddAsync(Categories.Order, code, severity.ToString(), agvId, actionGroupId, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>(), cancellationToken);
         switch (severity)
         {
             case LogLevel.Information:
@@ -38,18 +38,18 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 break;
             }
         }
-        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
+        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)), cancellationToken);
     }
 
     /// <inheritdoc cref="ILoggingService"/>>
-    public async Task LogAgv(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null)
+    public async Task LogAgv(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default)
     {
         // Get current action group
         Guid? actionGroupCorrelationId = null;
 
         if (severity is LogLevel.Warning or LogLevel.Error)
         {
-            IReadOnlyList<Models.ActionGroup.ActionGroup> actionGroups = await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Started], null, null, 1, agvId, null, Models.ActionGroup.SortBy.StartedDate, false);
+            IReadOnlyList<Models.ActionGroup.ActionGroup> actionGroups = await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Started], null, null, 1, agvId, null, Models.ActionGroup.SortBy.StartedDate, false, cancellationToken);
             if (actionGroups.Count > 0)
             {
                 actionGroupCorrelationId = actionGroups.First().CorrelationId;
@@ -58,16 +58,16 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 if (severity is LogLevel.Error)
                 {
                     await LogOrder(logger, LogLevel.Error, LogCodes.OrderAgvError, agvId, (Guid)actionGroupCorrelationId, "Order AGV Error", $"AGV reports error '{errorDescription}' during execution of order.",
-                        errorDescription != null ? new Dictionary<string, object?> { { LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
+                        errorDescription != null ? new Dictionary<string, object?> { { LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>(), cancellationToken);
                 }
                 else
                 {
                     await LogOrder(logger, LogLevel.Warning, LogCodes.OrderAgvWarning, agvId, (Guid)actionGroupCorrelationId, "Order AGV Warning", $"AGV reports warning '{errorDescription}' during execution of order.",
-                        errorDescription != null ? new Dictionary<string, object?> { { LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>());
+                        errorDescription != null ? new Dictionary<string, object?> { { LogLabels.ErrorDescription, errorDescription } } : new Dictionary<string, object?>(), cancellationToken);
                 }
             }
         }
-        var logEntry = await logEntryRepository.AddAsync(Categories.Agv, code, severity.ToString(), agvId, actionGroupCorrelationId, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        var logEntry = await logEntryRepository.AddAsync(Categories.Agv, code, severity.ToString(), agvId, actionGroupCorrelationId, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>(), cancellationToken);
         switch (severity)
         {
             case LogLevel.Information:
@@ -88,13 +88,13 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 break;
             }
         }
-        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
+        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)), cancellationToken);
     }
 
     /// <inheritdoc cref="ILoggingService"/>>
-    public async Task LogBattery(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null)
+    public async Task LogBattery(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default)
     {
-        var logEntry = await logEntryRepository.AddAsync(Categories.Battery, code, severity.ToString(), agvId, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        var logEntry = await logEntryRepository.AddAsync(Categories.Battery, code, severity.ToString(), agvId, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>(), cancellationToken);
         switch (severity)
         {
             case LogLevel.Information:
@@ -115,13 +115,13 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 break;
             }
         }
-        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
+        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)), cancellationToken);
     }
 
     /// <inheritdoc cref="ILoggingService"/>>
-    public async Task LogStation(ILogger logger, LogLevel severity, int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null)
+    public async Task LogStation(ILogger logger, LogLevel severity, int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default)
     {
-        var logEntry = await logEntryRepository.AddAsync(Categories.Station, code, severity.ToString(), null, null, stationId, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        var logEntry = await logEntryRepository.AddAsync(Categories.Station, code, severity.ToString(), null, null, stationId, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>(), cancellationToken);
         switch (severity)
         {
             case LogLevel.Information:
@@ -142,13 +142,13 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 break;
             }
         }
-        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
+        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)), cancellationToken);
     }
 
     /// <inheritdoc cref="ILoggingService"/>>
-    public async Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, LogLevel logLevel = LogLevel.Information)
+    public async Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, LogLevel logLevel = LogLevel.Information, CancellationToken cancellationToken = default)
     {
-        var logEntry = await logEntryRepository.AddAsync(Categories.System, code, logLevel.ToString(), null, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>());
+        var logEntry = await logEntryRepository.AddAsync(Categories.System, code, logLevel.ToString(), null, null, null, DateTime.UtcNow, additionalLabels ?? new Dictionary<string, object?>(), cancellationToken);
         switch (logLevel)
         {
             case LogLevel.Warning:
@@ -163,6 +163,6 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
                 logger.LogSystemInformation(code, title, message, additionalLabels);
                 break;
         }
-        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)));
+        await bus.Publish(new LogEntryCreated(mapper.Map<LogEntryDto>(logEntry)), cancellationToken);
     }
 }

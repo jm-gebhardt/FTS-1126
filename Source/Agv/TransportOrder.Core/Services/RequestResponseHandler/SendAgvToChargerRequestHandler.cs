@@ -57,33 +57,34 @@ public class SendAgvToChargerRequestHandler : IConsumer<SendAgvToCharger>
     {
         var agvCorrelationId = context.Message.CorrelationId;
         string user = context.Message.User;
-
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var cancellationToken = context.CancellationToken;
+        
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
 
         if (!agv.CanStartManualOperationalAction)
         {
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        var currentAction = await _actionGroupDb.GetCurrentAgvActionAsync(agv.CorrelationId);
+        var currentAction = await _actionGroupDb.GetCurrentAgvActionAsync(agv.CorrelationId, cancellationToken);
 
-        var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.Node?.Id, ignoreLocked: true);
-        await PublishNodeStateChange(charger.Id);
+        var charger = await _chargingPointManager.ReserveChargerAsync(agv, startNodeId: currentAction?.Target.Node?.Id, ignoreLocked: true, cancellationToken: cancellationToken);
+        await PublishNodeStateChange(charger.Id, cancellationToken);
 
-        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger, ActionGroupCreator.TransportOrderWebApi));
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
+        await context.Publish(new CreateChargingActionGroup(Guid.NewGuid(), agvCorrelationId, charger, ActionGroupCreator.TransportOrderWebApi), cancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } }, context.CancellationToken);
 
         await context.RespondAsync(new Success());
     }
 
-    private async Task PublishNodeStateChange(Guid nodeId)
+    private async Task PublishNodeStateChange(Guid nodeId, CancellationToken cancellationToken)
     {
-        var node= await _nodeRepository.GetNodeAsync(nodeId);
-        var station = await _stationRepository.GetStation(nodeId);
+        var node= await _nodeRepository.GetNodeAsync(nodeId, cancellationToken);
+        var station = await _stationRepository.GetStation(nodeId, cancellationToken);
         if (node.Lock == null)
         {
             return;
         }
-        await _bus.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
+        await _bus.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription), cancellationToken);
     }
 }

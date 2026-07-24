@@ -63,7 +63,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv1 = AgvGenerator.GenerateChargingAgv(index: 1, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
         var agv2 = AgvGenerator.GenerateChargingAgv(index: 2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow + 5);
-        var agv3 = AgvGenerator.GenerateChargingAgv(index: 2, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow + 50);
+        var agv3 = AgvGenerator.GenerateChargingAgv(index: 3, batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow + 50);
 
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv3.CorrelationId);
         fixture.AddAgvs([agv1, agv2, agv3]);
@@ -139,7 +139,7 @@ public class AgvCommandHandlerTest
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Fatal);
         await fixture.PublishMessageAsync(new AgvErrorChanged(agv.CorrelationId, errorStatus.Errors, [], []));
         fixture.AgvDb.Verify(r =>
-            r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Once());
+            r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError), It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [TestMethod]
@@ -151,7 +151,7 @@ public class AgvCommandHandlerTest
         var errorStatus = AgvErrorGenerator.GenerateAgvErrorStatus(1, agv.CorrelationId, errorLevel: ErrorLevel.Warning);
         await fixture.PublishMessageAsync(new AgvErrorChanged(agv.CorrelationId, errorStatus.Errors, errorStatus.Errors, []));
         fixture.AgvDb.Verify(r =>
-            r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError)), Times.Never());
+            r.Agvs.UpdateAgvAsync(It.Is((TransportOrder.Domain.Models.Agv.Agv a) => a.CorrelationId == agv.CorrelationId && a.HasError), It.IsAny<CancellationToken>()), Times.Never());
     }
 
     [TestMethod]
@@ -780,7 +780,7 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(updateAgvStatus);
         await fixture.ShouldHavePublishedAsync<RequestAgvGraph>();
         fixture.AgvDb.Verify(r =>
-            r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), Times.Once());
+            r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<CancellationToken>()), Times.Once());
     }
 
     [TestMethod]

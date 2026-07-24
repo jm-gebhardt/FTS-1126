@@ -93,8 +93,8 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
     private UnifiedTargetSelectorTestFixture WithStations(ICollection<Station> stations)
     {
         Stations = stations.ToList();
-        _stationRepository.Setup(x => x.GetStationsById(It.IsAny<List<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => stations.Where(s => ids.Contains(s.Id)).ToList());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync((Guid id) => stations.Single(s => s.Id == id));
+        _stationRepository.Setup(x => x.GetStationsById(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => stations.Where(s => ids.Contains(s.Id)).ToList());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid id, CancellationToken _) => stations.Single(s => s.Id == id));
 
         _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>()))
             .ReturnsAsync((GraphNode node, bool _, bool _) =>
@@ -106,8 +106,8 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
                 }
                 return true;
             });
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((Guid nodeId) =>
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid nodeId, CancellationToken _) =>
             {
                 var node = new GraphNode(nodeId, "test");
                 node.Lock = new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
@@ -148,8 +148,8 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
                 }
                 return true;
             });
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>()))
-            .ReturnsAsync((Guid nodeId) =>
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid nodeId, CancellationToken _) =>
             {
                 var node = new GraphNode(nodeId, "test");
                 node.Lock = new NodeLock(node, NodeLockState.Free, false, null, DateTime.UtcNow);
@@ -198,7 +198,7 @@ public class UnifiedTargetSelectorTestFixture : MassTransitTestFixture
     public UnifiedTargetSelectorTestFixture AddActionGroup(ActionGroup actionGroup)
     {
         ActionGroups.Add(actionGroup);
-        _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid id) => ActionGroups.Single(a => a.Actions.Any(ac => ac.CorrelationId == id)));
+        _actionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid id, CancellationToken _) => ActionGroups.Single(a => a.Actions.Any(ac => ac.CorrelationId == id)));
         return this;
     }
 

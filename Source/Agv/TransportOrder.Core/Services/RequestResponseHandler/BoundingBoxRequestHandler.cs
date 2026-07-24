@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
@@ -30,12 +30,12 @@ public class BoundingBoxRequestHandler : IConsumer<GetBoundingBoxes>
         IReadOnlyList<ResourceBoundingBox> boxes;
         if (context.Message.ResourceId.HasValue)
         {
-            var box = await _boundingBoxRepository.GetAsync(context.Message.ResourceId.Value, context.Message.AgvType);
+            var box = await _boundingBoxRepository.GetAsync(context.Message.ResourceId.Value, context.Message.AgvType, context.CancellationToken);
             boxes = box != null ? [box] : [];
         }
         else
         {
-            boxes = await _boundingBoxRepository.GetByAgvTypeAsync(context.Message.AgvType);
+            boxes = await _boundingBoxRepository.GetByAgvTypeAsync(context.Message.AgvType, context.CancellationToken);
         }
 
         var content = _mapper.Map<List<ResourceBoundingBoxContent>>(boxes);

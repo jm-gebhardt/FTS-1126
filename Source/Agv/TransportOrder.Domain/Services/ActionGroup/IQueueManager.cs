@@ -52,8 +52,9 @@ public interface IQueueManager
     /// </summary>
     /// <param name="agv">The agv.</param>
     /// <param name="nodeId">The node id.</param>
+    /// <param name="cancellationToken">The cancellation token</param>
     /// <returns>True, if the agv is now at queue head.</returns>
-    Task<bool> TryReachQueueNode(Agv agv, Guid nodeId);
+    Task<bool> TryReachQueueNode(Agv agv, Guid nodeId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get all agvs at queue heads.

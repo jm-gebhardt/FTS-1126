@@ -19,8 +19,9 @@ public interface IStationRepository
     /// Get a single station by Id.
     /// </summary>
     /// <param name="id">The id of the station.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The station with the given id.</returns>
-    Task<Station> GetStation(Guid id);
+    Task<Station> GetStation(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the base information of the station (w/o agvs and node state)
@@ -33,8 +34,9 @@ public interface IStationRepository
     /// Get all stations.
     /// </summary>
     /// <param name="mapId">Optional map name.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>All stations (optionally on the given map).</returns>
-    Task<ICollection<Station>> GetStations(Guid? mapId = null);
+    Task<ICollection<Station>> GetStations(Guid? mapId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a stations ordered in the order of the given ids.

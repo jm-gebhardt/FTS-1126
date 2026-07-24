@@ -26,7 +26,7 @@ public class RouteServiceTestFixture
     public RouteServiceTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv, AgvGraph agvGraph)
     {
         _agvGraphRepository.Setup(x => x.ExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
-        _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);
+        _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId, It.IsAny<CancellationToken>())).ReturnsAsync(agvGraph);
 
         return this;
     }
@@ -36,7 +36,7 @@ public class RouteServiceTestFixture
         foreach (var (agv, agvGraph) in agvs.Zip(agvGraphs))
         {
             _agvGraphRepository.Setup(x => x.ExistsAsync(agv.CorrelationId)).ReturnsAsync(true);
-            _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId)).ReturnsAsync(agvGraph);
+            _agvGraphRepository.Setup(x => x.GetAgvGraphAsync(agv.CorrelationId, It.IsAny<CancellationToken>())).ReturnsAsync(agvGraph);
         }
 
         return this;

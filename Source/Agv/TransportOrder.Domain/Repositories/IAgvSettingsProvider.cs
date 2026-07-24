@@ -21,8 +21,9 @@ public interface IAgvSettingsProvider
     /// is returned.
     /// </summary>
     /// <param name="agv">The agv.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The most specific agv group.</returns>
-    Task<AgvSettingsGroup> GetSettingsGroupForAgv(Models.Agv.Agv? agv=null);
+    Task<AgvSettingsGroup> GetSettingsGroupForAgv(Models.Agv.Agv? agv=null, CancellationToken cancellationToken=default);
 
     /// <summary>
     /// Initialize the agv settings group default.
@@ -35,14 +36,16 @@ public interface IAgvSettingsProvider
     /// <param name="newSettings">The updated settings.</param>
     /// <param name="type">The group type.</param>
     /// <param name="identifier">The group identifier.</param>
-    Task AddOrUpdateSettingsForAgvGroup(AgvSettingsReadModel newSettings, GroupType type, string identifier);
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task AddOrUpdateSettingsForAgvGroup(AgvSettingsReadModel newSettings, GroupType type, string identifier, CancellationToken cancellationToken=default);
 
     /// <summary>
     /// Resets the given property of the agv settings group to the default.
     /// </summary>
     /// <param name="agvSettingsGroup">The id of the agv settings group.</param>
     /// <param name="propertyName">The property name.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <exception cref="InvalidAgvSettingsPropertyException">Thrown, when the given property name does not match any settings property.</exception>
     /// <exception cref="AgvSettingsNotFoundException">Thrown, when no group was found that corresponds to the given group id.</exception>
-    Task ResetSettingPropertyToDefaultAsync(Guid agvSettingsGroup, string propertyName);
+    Task ResetSettingPropertyToDefaultAsync(Guid agvSettingsGroup, string propertyName, CancellationToken cancellationToken=default);
 }

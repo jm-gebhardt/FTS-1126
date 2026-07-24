@@ -36,24 +36,25 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         _mapper = mapper;
     }
 
-    private async Task<TransportOrderDbContext> CreateDbContextAsync()
+    private async Task<TransportOrderDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
     {
-        var context = await _dbContextFactory.CreateDbContextAsync();
+        var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         // no need for tracking as we are returning read models only
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
     }
 
     /// <inheritdoc />
-    public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
+    public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties, CancellationToken cancellationToken = default)
     {
-        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>(await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
+        PagedResult<ActionGroupFilterable> pagedResult = await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties, cancellationToken).WaitAsync(cancellationToken);
+        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>(pagedResult);
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true)
+    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
         IQueryable<ActionGroup> query = context.Set<ActionGroup>().AsQueryable();
 
         if (states.Count != 0)
@@ -80,13 +81,13 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<ActionGroup> actionGroups = await query
             .Take(maxItems)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions).Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
         Dictionary<Guid, GraphNode> graphNodesById = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
-            .ToDictionaryAsync(n => n.Id, n => n);
+            .ToDictionaryAsync(n => n.Id, n => n, cancellationToken);
 
         List<ActionGroupReadModel> result = actionGroups.Select(g => new ActionGroupReadModel(
             g.CorrelationId,
@@ -158,19 +159,19 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
         List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
             .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv) && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused))
             .OrderByDescending(g => g.StartedDate)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value)).Distinct().ToList();
 
         List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         Dictionary<Guid, ActionGroupReadModel?> result = agvCorrelationIds.ToDictionary(
             agvCorrelationId => agvCorrelationId,
@@ -230,15 +231,15 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroupReadModel> EnrichActionGroupWithNodesAsync(ActionGroup actionGroup)
+    public async Task<ActionGroupReadModel> EnrichActionGroupWithNodesAsync(ActionGroup actionGroup, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
 
         List<Guid> targetNodeIds = actionGroup.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
         List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var result = new ActionGroupReadModel(actionGroup.CorrelationId,
             actionGroup.OrderId,
@@ -263,9 +264,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId)
+    public async Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
 
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         var actionGroup = actionGroups.FirstOrDefault(g => g.CorrelationId == correlationId);
@@ -278,7 +279,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return new ActionGroupReadModel(actionGroup.CorrelationId,
             actionGroup.OrderId,
@@ -301,9 +302,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroupReadModel?> GetCurrentAgvActionGroupWithNodesAsync(Guid agvCorrelationId)
+    public async Task<ActionGroupReadModel?> GetCurrentAgvActionGroupWithNodesAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
 
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         var actionGroup = actionGroups.Where(g => g.AssignedAgv == agvCorrelationId && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused)).OrderByDescending(ag => ag.StartedDate).FirstOrDefault();
@@ -316,7 +317,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<GraphNode> graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return new ActionGroupReadModel(actionGroup.CorrelationId,
             actionGroup.OrderId,
@@ -339,9 +340,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType)
+    public async Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
 
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         IQueryable<GraphNode> graphNodes = context.Set<GraphNode>();
@@ -350,7 +351,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             .Where(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started)
             .Include(g => g.Actions)
             .ThenInclude(a => a.Target)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return actionGroupsResult.Any(g => g.Actions.Join(
             graphNodes.AsEnumerable(),

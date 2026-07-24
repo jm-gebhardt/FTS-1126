@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Domain.Constants;
+﻿using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
@@ -61,22 +61,22 @@ public class StationsRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetMapStations> context)
     {
-        var map = await _mapRepository.GetMapAsync(context.Message.CorrelationId);
-        ICollection<Station> stations = await _stationRepository.GetStations(map.CorrelationId);
+        var map = await _mapRepository.GetMapAsync(context.Message.CorrelationId, context.CancellationToken);
+        ICollection<Station> stations = await _stationRepository.GetStations(map.CorrelationId, context.CancellationToken);
         await context.RespondAsync(new GotMapStations(stations));
     }
 
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetStations> context)
     {
-        ICollection<Station> stations = await _stationRepository.GetStations();
+        ICollection<Station> stations = await _stationRepository.GetStations(null, context.CancellationToken);
         await context.RespondAsync(new GotStations(stations));
     }
 
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetStation> context)
     {
-        var station = await _stationRepository.GetStation(context.Message.CorrelationId);
+        var station = await _stationRepository.GetStation(context.Message.CorrelationId, context.CancellationToken);
         await context.RespondAsync(new GotStation(station));
     }
 
@@ -86,26 +86,26 @@ public class StationsRequestHandler :
     public async Task Consume(ConsumeContext<TryLockStation> context)
     {
         (var id, string user, string reason, string lockDescription, var lockOrderHandling) = context.Message;
-        var station = await _stationRepository.GetStation(id);
+        var station = await _stationRepository.GetStation(id, context.CancellationToken);
         if (station.IsLocked)
         {
             await context.RespondAsync(new LockedUnlockedStation(false));
             return;
         }
-        await HandleOrders(station.Name, lockOrderHandling);
-        await _bus.Publish(new LockStation(id, user, reason, lockDescription, lockOrderHandling));
-        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationLocked } });
+        await HandleOrders(station.Name, lockOrderHandling, context.CancellationToken);
+        await _bus.Publish(new LockStation(id, user, reason, lockDescription, lockOrderHandling), context.CancellationToken);
+        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationLocked } }, context.CancellationToken);
         await context.RespondAsync(new LockedUnlockedStation(true));
     }
 
-    private async Task HandleOrders(string stationName, LockedOrderHandlingType policy)
+    private async Task HandleOrders(string stationName, LockedOrderHandlingType policy, CancellationToken cancellationToken)
     {
-        IReadOnlyCollection<ActionGroup> actionGroups = await _actionGroupRepository.GetCurrentActionGroupsForStation(stationName);
-        await CancelParkAndChargeActionGroups(actionGroups);
-        await HandleStartedOrders(actionGroups, policy);
+        IReadOnlyCollection<ActionGroup> actionGroups = await _actionGroupRepository.GetCurrentActionGroupsForStation(stationName, cancellationToken);
+        await CancelParkAndChargeActionGroups(actionGroups, cancellationToken);
+        await HandleStartedOrders(actionGroups, policy, cancellationToken);
     }
 
-    private async Task CancelParkAndChargeActionGroups(IReadOnlyCollection<ActionGroup> actionGroups)
+    private async Task CancelParkAndChargeActionGroups(IReadOnlyCollection<ActionGroup> actionGroups, CancellationToken cancellationToken)
     {
         IEnumerable<ActionGroup> pendingParkAndChargeActionGroups = actionGroups.Where(a =>
             a.State == ActionGroupState.Created &&
@@ -113,15 +113,15 @@ public class StationsRequestHandler :
              (a.Actions.Count == 1 && a.Actions.First().ActionType == ActionType.Move)));
         foreach (var actionGroup in pendingParkAndChargeActionGroups)
         {
-            await _bus.Publish(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.LockedStation));
+            await _bus.Publish(new CancelActionGroup(actionGroup.CorrelationId, CancelReason.LockedStation), cancellationToken);
         }
     }
 
-    private async Task HandleStartedOrders(IReadOnlyCollection<ActionGroup> actionGroups, LockedOrderHandlingType policy)
+    private async Task HandleStartedOrders(IReadOnlyCollection<ActionGroup> actionGroups, LockedOrderHandlingType policy, CancellationToken cancellationToken)
     {
         IEnumerable<ActionGroup> startedOrders = actionGroups.Where(a => a.State is ActionGroupState.Started or ActionGroupState.Paused);
 
-        Func<Guid, Task>? handleOrder = GetHandlingForPolicy(policy);
+        Func<Guid, Task>? handleOrder = GetHandlingForPolicy(policy, cancellationToken);
         if (handleOrder == null)
         {
             return;
@@ -132,15 +132,15 @@ public class StationsRequestHandler :
         }
     }
 
-    private Func<Guid, Task>? GetHandlingForPolicy(LockedOrderHandlingType policy)
+    private Func<Guid, Task>? GetHandlingForPolicy(LockedOrderHandlingType policy, CancellationToken cancellationToken)
     {
         if (policy == LockedOrderHandlingType.Abort)
         {
-            return async correlationId => await _bus.Publish(new AbortActionGroup(correlationId, AbortReason.LockedStation));
+            return async correlationId => await _bus.Publish(new AbortActionGroup(correlationId, AbortReason.LockedStation), cancellationToken);
         }
         if (policy == LockedOrderHandlingType.OnHold)
         {
-            return async correlationId => await _bus.Publish(new PauseActionGroup(correlationId, PauseReason.LockedStation));
+            return async correlationId => await _bus.Publish(new PauseActionGroup(correlationId, PauseReason.LockedStation), cancellationToken);
         }
         return null;
     }
@@ -152,26 +152,26 @@ public class StationsRequestHandler :
     {
         (var id, string user) = context.Message;
 
-        var station = await _stationRepository.GetStation(id);
+        var station = await _stationRepository.GetStation(id, context.CancellationToken);
         if (station.IsLocked)
         {
-            await HandleOrdersWithPausedAction(station.Name, user);
+            await HandleOrdersWithPausedAction(station.Name, user, context.CancellationToken);
 
-            await _bus.Publish(new UnlockStation(id, user));
-            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationUnlocked } });
+            await _bus.Publish(new UnlockStation(id, user), context.CancellationToken);
+            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.StationUnlocked } }, context.CancellationToken);
             await context.RespondAsync(new LockedUnlockedStation(true));
             return;
         }
         await context.RespondAsync(new LockedUnlockedStation(false));
     }
 
-    private async Task HandleOrdersWithPausedAction(string stationName, string userEmail)
+    private async Task HandleOrdersWithPausedAction(string stationName, string userEmail, CancellationToken cancellationToken)
     {
-        IReadOnlyCollection<ActionGroup> actionGroups = await _actionGroupRepository.GetPausedActionGroupsForStation(stationName);
+        IReadOnlyCollection<ActionGroup> actionGroups = await _actionGroupRepository.GetPausedActionGroupsForStation(stationName, cancellationToken);
 
         foreach (var actionGroup in actionGroups)
         {
-            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, userEmail, FromStationUnlock: true));
+            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, userEmail, FromStationUnlock: true), cancellationToken);
         }
     }
 
@@ -180,13 +180,13 @@ public class StationsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UnblockStation> context)
     {
-        var station = await _stationRepository.GetStation(context.Message.StationId);
+        var station = await _stationRepository.GetStation(context.Message.StationId, context.CancellationToken);
         string user = context.Message.User;
 
-        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationUnblocked, station.Id, "Station Unblocked", "Station was unblocked", new Dictionary<string, object?>{{LogLabels.User, user}});
-        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationUnblocked}});
+        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationUnblocked, station.Id, "Station Unblocked", "Station was unblocked", new Dictionary<string, object?>{{LogLabels.User, user}}, context.CancellationToken);
+        await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, station.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationUnblocked}}, context.CancellationToken);
 
-        await _bus.Publish(new Common.Messages.Stations.UnblockStation(station.Id));
+        await _bus.Publish(new Common.Messages.Stations.UnblockStation(station.Id), context.CancellationToken);
 
         await context.RespondAsync(new Success());
     }
@@ -197,19 +197,19 @@ public class StationsRequestHandler :
     public async Task Consume(ConsumeContext<SendJamStateRequest> context)
     {
         // check if node exists as station
-        var station = await _stationRepository.GetStation(context.Message.CorrelationId);
+        var station = await _stationRepository.GetStation(context.Message.CorrelationId, context.CancellationToken);
         bool hasJamStateValue = station.AdditionalInfo.GetBool("HasJamState");
         
          _logger.LogInformation("Station {StationName} ({StationId}) supports JamState:  {HasJamState}", station.Name, station.Id, hasJamStateValue);
         if (hasJamStateValue)
         {
-            var stationNode = await _nodeRepository.GetNodeAsync(context.Message.CorrelationId);
+            var stationNode = await _nodeRepository.GetNodeAsync(context.Message.CorrelationId, context.CancellationToken);
             string user = context.Message.User;
 
-            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationJamStateRequested, stationNode.Id, "JamState Requested", "JamState for station requested", new Dictionary<string, object?>{{LogLabels.User, user}});
-            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, stationNode.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationJamStateRequested}});
+            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationJamStateRequested, stationNode.Id, "JamState Requested", "JamState for station requested", new Dictionary<string, object?>{{LogLabels.User, user}}, context.CancellationToken);
+            await _loggingService.LogStation(_logger, LogLevel.Information, LogCodes.StationOperatorInteraction, stationNode.Id, "Operator interaction", "Operator interacted with station", new Dictionary<string, object?>{{LogLabels.User, user}, {LogLabels.Operation, LogCodes.StationJamStateRequested}}, context.CancellationToken);
 
-            await _bus.Publish(new Common.Messages.Graphs.Events.JamStateRequested(stationNode));
+            await _bus.Publish(new Common.Messages.Graphs.Events.JamStateRequested(stationNode), context.CancellationToken);
         }
 
         await context.RespondAsync(new Success());

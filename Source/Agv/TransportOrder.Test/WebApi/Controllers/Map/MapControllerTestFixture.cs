@@ -69,7 +69,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public MapControllerTestFixture(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates) : this()
     {
-        _nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
+        _nodeRepositoryMock.Setup(x => x.GetNodeStatesForMapAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(nodeStates);
     }
 
     public MapControllerTestFixture()
@@ -81,7 +81,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             s.AddTransient(_ => _logEntryRepository.Object);
             s.AddTransient<ILoggingService, LoggingService>();
         });
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     {
         MapRepositoryMock = new Mock<IMapRepository>();
 
-        MapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
+        MapRepositoryMock.Setup(x => x.GetAllMapsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
             MapGenerator.Generate(),
             MapGenerator.Generate(),
@@ -100,12 +100,12 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         }));
         if (mapBackground != null)
         {
-            MapRepositoryMock.Setup(x => x.GetMapAsync(mapBackground.CorrelationId)).ReturnsAsync(MapGenerator.Generate());
-            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>(), It.IsAny<bool>())).ReturnsAsync(mapBackground.Image);
+            MapRepositoryMock.Setup(x => x.GetMapAsync(mapBackground.CorrelationId, It.IsAny<CancellationToken>())).ReturnsAsync(MapGenerator.Generate());
+            MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(mapBackground.Image);
         }
         else
         {
-            MapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ThrowsAsync(new MapNotFoundException("Map not found"));
+            MapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ThrowsAsync(new MapNotFoundException("Map not found"));
             MapRepositoryMock.Setup(x => x.GetBackgroundImageAsync(It.IsAny<Guid>(), It.IsAny<bool>())).ThrowsAsync(new MapNotFoundException("Map not found"));
         }
         AddServices(sc => sc.AddTransient(_ => MapRepositoryMock.Object));

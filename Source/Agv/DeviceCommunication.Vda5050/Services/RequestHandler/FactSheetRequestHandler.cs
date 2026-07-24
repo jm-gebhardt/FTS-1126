@@ -24,7 +24,8 @@ public class FactSheetRequestHandler(IAgvActionRepository agvActionRepository, I
     public async Task Consume(ConsumeContext<AddOrUpdateFactSheet> context)
     {
         var (agvCorrelationId, factSheet) = context.Message;
-
+        var cancellationToken = context.CancellationToken;
+        
         try
         {
             var agvData = mapper.Map<AgvData>(factSheet);
@@ -35,11 +36,11 @@ public class FactSheetRequestHandler(IAgvActionRepository agvActionRepository, I
             }
             if (actions.Count > 0)
             {
-                await agvActionRepository.AddOrUpdateActionsAsync(actions, factSheet.SerialNumber);
+                await agvActionRepository.AddOrUpdateActionsAsync(actions, factSheet.SerialNumber, cancellationToken);
                 await PublishInstantActions(agvCorrelationId, actions);
             }
-            await bus.Publish(new AgvDataReceived(agvCorrelationId, factSheet.SerialNumber, agvData));
-            await bus.Publish(new AgvAddedOrUpdated(agvCorrelationId, factSheet.SerialNumber));
+            await bus.Publish(new AgvDataReceived(agvCorrelationId, factSheet.SerialNumber, agvData),  cancellationToken);
+            await bus.Publish(new AgvAddedOrUpdated(agvCorrelationId, factSheet.SerialNumber), cancellationToken);
         }
         catch (Exception ex)
         {

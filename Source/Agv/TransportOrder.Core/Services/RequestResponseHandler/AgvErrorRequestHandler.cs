@@ -46,7 +46,7 @@ public class AgvErrorRequestHandler :
     {
         (var agvCorrelationId, string user, bool ignoreErrorState) = context.Message;
         _logger.LogInformation("Received SolveResourceBlockingErrors request for agv {AgvCorrelationId} with ignoreErrorState={IgnoreErrorState}", agvCorrelationId, ignoreErrorState);
-        ICollection<GraphNode> nodeLocks = await _nodeRepository.GetNodesForAgv(agvCorrelationId);
+        ICollection<GraphNode> nodeLocks = await _nodeRepository.GetNodesForAgv(agvCorrelationId, context.CancellationToken);
         IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         var resourceError = agvErrors.SingleOrDefault(e => e.IsResourceError());
         bool hasResourceErrors = resourceError != null;
@@ -64,20 +64,20 @@ public class AgvErrorRequestHandler :
                         continue;
                     }
                     _logger.LogInformation("Solving resource blocking errors for agv {AgvCorrelationId} and node {NodeId}", agvCorrelationId, nodeLock.NodeId);
-                    await _bus.Publish(new FreeNode(nodeLock.NodeId));
+                    await _bus.Publish(new FreeNode(nodeLock.NodeId), context.CancellationToken);
                 }
 
-                await _bus.Publish(new ResolveSystemAgvError(agvCorrelationId, [resourceError!]));
+                await _bus.Publish(new ResolveSystemAgvError(agvCorrelationId, [resourceError!]), context.CancellationToken);
             }
         }
 
         if (hasQueueBlockingError)
         {
-            await _bus.Publish(new RemoveAgvFromQueue(agvCorrelationId, true));
+            await _bus.Publish(new RemoveAgvFromQueue(agvCorrelationId, true), context.CancellationToken);
         }
 
-        await _bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId));
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode } });
+        await _bus.Publish(new SolveResourceErrorsReceived(agvCorrelationId), context.CancellationToken);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode } }, context.CancellationToken);
 
         await context.RespondAsync(new Success());
     }
