@@ -1,0 +1,16 @@
+{
+  "$schema": "https://gbsd.io/schemas/migrations.schema.json",
+  "srcRoot": "Source",
+  "objRoot": "Source/artifacts/obj",
+  "contexts": [
+    {
+      "context": "TransportOrderDbContext",
+      "providers": [
+        {
+          "project": "Gebhardt.Acc.TransportOrder.Persistence.Ef",
+          "provider": "mssql"
+        }
+      ]
+    }
+  ]
+}
