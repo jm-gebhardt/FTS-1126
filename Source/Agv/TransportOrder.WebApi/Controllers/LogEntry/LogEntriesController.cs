@@ -22,9 +22,9 @@ public class LogEntriesController(IMapper mapper, IRequestClient<GetFilteredLogE
     /// <response code="200">Ok</response>
     [HttpPost]
     [Route("/logEntries/filter")]
-    public async Task<ActionResult<PagedResult<LogEntryDto>>> FilterLogEntries([FromBody]FilterDto filter, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+    public async Task<ActionResult<PagedResult<LogEntryDto>>> FilterLogEntries([FromBody]FilterDto filter, [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken cancellationToken = default)
     {
-        Response<GotLogEntries> response = await filterLogEntriesClient.GetResponse<GotLogEntries>(new GetFilteredLogEntries(filter, pageNumber, pageSize));
+        Response<GotLogEntries> response = await filterLogEntriesClient.GetResponse<GotLogEntries>(new GetFilteredLogEntries(filter, pageNumber, pageSize), cancellationToken);
         var dto = mapper.Map<PagedResult<LogEntryDto>>(response.Message.LogEntries);
         return Ok(dto);
     }

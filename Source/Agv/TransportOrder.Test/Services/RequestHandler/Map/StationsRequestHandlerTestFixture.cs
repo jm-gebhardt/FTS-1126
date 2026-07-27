@@ -27,9 +27,9 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
 
     public StationsRequestHandlerTestFixture<TRequestClient, TConsumer> WithStation(Station station)
     {
-        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(station);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode
         {
             Id = station.Id,
             Name = station.Name
@@ -39,14 +39,14 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
 
     public StationsRequestHandlerTestFixture<TRequestClient, TConsumer> WithMap(TransportOrder.Domain.Models.Map.Map map)
     {
-        _mapRepository.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ReturnsAsync(map);
+        _mapRepository.Setup(x => x.GetMapAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(map);
         return this;
     }
 
     public StationsRequestHandlerTestFixture<TRequestClient, TConsumer> WithActionGroups(List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
     {
-        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsForStation(It.IsAny<string>())).ReturnsAsync(actionGroups);
-        _actionGroupRepository.Setup(x => x.GetPausedActionGroupsForStation(It.IsAny<string>())).ReturnsAsync(actionGroups.Where(g => g.State == ActionGroupState.Paused).ToList());
+        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsForStation(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetPausedActionGroupsForStation(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups.Where(g => g.State == ActionGroupState.Paused).ToList());
         return this;
     }
 
@@ -61,7 +61,7 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
             sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient<ILoggingService, LoggingService>();
         });
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         base.Build();
         return this;
     }

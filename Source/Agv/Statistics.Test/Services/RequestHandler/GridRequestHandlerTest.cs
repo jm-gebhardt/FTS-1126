@@ -22,7 +22,7 @@ public class GridRequestHandlerTest
 
         await fixture.PublishMessageAsync(new GetGrids(Guid.NewGuid()));
 
-        fixture.StatisticsDbMock.Verify(x => x.Grids.GetGridsAsync(), Times.Once);
+        fixture.StatisticsDbMock.Verify(x => x.Grids.GetGridsAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         var gotGrids = await fixture.GetFirstPublishedMessageAsync<GotGrids>();
         gotGrids.Grids.Count.ShouldBe(1);

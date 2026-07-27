@@ -41,24 +41,24 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
     }
 
     /// <inheritdoc />
-    public async Task<AgvSettingsGroup> GetSettingsGroupForAgv(Domain.Models.Agv.Agv? agv = null)
+    public async Task<AgvSettingsGroup> GetSettingsGroupForAgv(Domain.Models.Agv.Agv? agv = null, CancellationToken cancellationToken=default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var group = await context.Set<AgvSettingsGroup>()
             .Where(g => (g.GroupType == GroupType.SerialNumber && agv != null && agv.SerialNumber == g.Identifier) ||
                         g.GroupType == GroupType.All)
             .OrderByDescending(ag => ag.GroupType)
             .Take(1)
-            .SingleOrDefaultAsync();
+            .SingleOrDefaultAsync(cancellationToken);
         return group ?? throw new AgvSettingsNotFoundException();
     }
 
     /// <inheritdoc />
-    public async Task AddOrUpdateSettingsForAgvGroup(AgvSettingsReadModel newSettings, GroupType type, string identifier)
+    public async Task AddOrUpdateSettingsForAgvGroup(AgvSettingsReadModel newSettings, GroupType type, string identifier, CancellationToken cancellationToken=default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var defaultGroup = await GetDefaultGroup();
-        var group = await context.Set<AgvSettingsGroup>().SingleOrDefaultAsync(g => g.GroupType == type && g.Identifier == identifier);
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var defaultGroup = await GetDefaultGroup(cancellationToken);
+        var group = await context.Set<AgvSettingsGroup>().SingleOrDefaultAsync(g => g.GroupType == type && g.Identifier == identifier, cancellationToken);
         
         // Add new settings group
         if (group == null)
@@ -91,23 +91,23 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
             }
             context.Set<Setting>().Update(setting);
         }
-        await context.SaveChangesAsync();
-        await ReloadInMemorySettings();
+        await context.SaveChangesAsync(cancellationToken);
+        await ReloadInMemorySettings(cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task ResetSettingPropertyToDefaultAsync(Guid agvSettingsGroup, string propertyName)
+    public async Task ResetSettingPropertyToDefaultAsync(Guid agvSettingsGroup, string propertyName, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var group = await context.Set<AgvSettingsGroup>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(g => g.Id == agvSettingsGroup);
+            .SingleOrDefaultAsync(g => g.Id == agvSettingsGroup, cancellationToken);
         if (group == null)
         {
             throw new AgvSettingsNotFoundException();
         }
 
-        var defaultGroup = await GetDefaultGroup();
+        var defaultGroup = await GetDefaultGroup(cancellationToken);
         var defaultSetting = defaultGroup.AgvSetting.GetSettingByName(propertyName);
         var originalSetting = group.AgvSetting.GetSettingByName(propertyName);
        
@@ -120,19 +120,19 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
         group.AgvSetting.ReplaceSetting(defaultSetting);
         context.Set<AgvSettingsGroup>().Update(group);
         context.Set<Setting>().Remove(originalSetting);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
         // ReSharper disable once DisposeOnUsingVariable
         await context.DisposeAsync();
-        await ReloadInMemorySettings();
+        await ReloadInMemorySettings(cancellationToken);
     }
 
-    private async Task<AgvSettingsGroup> GetDefaultGroup()
+    private async Task<AgvSettingsGroup> GetDefaultGroup(CancellationToken cancellationToken=default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<AgvSettingsGroup>()
                    .AsNoTracking()
-                   .SingleOrDefaultAsync(g => g.GroupType == GroupType.All) ??
-               await CreateDefaultGroup();
+                   .SingleOrDefaultAsync(g => g.GroupType == GroupType.All, cancellationToken) ??
+               await CreateDefaultGroup(cancellationToken);
     }
 
     private void StoreInMemory(AgvSettingsGroup group, AgvSettingsReadModel newSettings)
@@ -140,10 +140,10 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
         _agvSettingsProvider.ConcurrentDict.AddOrUpdate(group.Id, newSettings, (_, _)=> newSettings);
     }
 
-    private async Task<ICollection<AgvSettingsGroup>> ReloadInMemorySettings()
+    private async Task<ICollection<AgvSettingsGroup>> ReloadInMemorySettings(CancellationToken cancellationToken=default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        List<AgvSettingsGroup> groups = await context.Set<AgvSettingsGroup>().ToListAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        List<AgvSettingsGroup> groups = await context.Set<AgvSettingsGroup>().ToListAsync(cancellationToken);
         foreach (var group in groups)
         {
             var settings = group.AgvSetting.ToReadModel();
@@ -152,13 +152,13 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
         return groups;
     }
 
-    private async Task<AgvSettingsGroup> CreateDefaultGroup()
+    private async Task<AgvSettingsGroup> CreateDefaultGroup(CancellationToken cancellationToken=default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var defaultGroup = new AgvSettingsGroup(GroupType.All);
         defaultGroup.AgvSetting.Update(DefaultSettings, true);
         context.Set<AgvSettingsGroup>().Add(defaultGroup);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
         StoreInMemory(defaultGroup, DefaultSettings);
         return defaultGroup;
     }

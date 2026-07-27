@@ -14,12 +14,12 @@ public class EfQueueRepository(
     ILogger<EfQueueRepository> logger) : IQueueRepository
 {
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task AddQueue(Queue queue)
+    public async Task AddQueue(Queue queue, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Guid> nodeIds = queue.Nodes.Select(n => n.NodeId).ToList();
-        Dictionary<Guid, GraphNode> efNodes = await context.Set<GraphNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
+        Dictionary<Guid, GraphNode> efNodes = await context.Set<GraphNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id, cancellationToken);
 
         foreach (var node in queue.Nodes)
         {
@@ -30,19 +30,19 @@ public class EfQueueRepository(
         }
 
         context.Add(queue);
-        await context.AddAsync(queue);
-        await context.SaveChangesAsync();
+        await context.AddAsync(queue, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<bool> UpdateQueueAsync(Queue queue)
+    public async Task<bool> UpdateQueueAsync(Queue queue, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         try
         {
             context.Set<Queue>().Update(queue);
-            return await context.SaveChangesAsync() > 0;
+            return await context.SaveChangesAsync(cancellationToken) > 0;
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -55,19 +55,19 @@ public class EfQueueRepository(
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task UpdateQueueSize(Guid queueId, int newSize)
+    public async Task UpdateQueueSize(Guid queueId, int newSize, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         try
         {
-            var queue = await context.Set<Queue>().FindAsync(queueId);
+            var queue = await context.Set<Queue>().FindAsync(new object[] { queueId }, cancellationToken);
             if (queue == null)
             {
                 throw new QueueNotFoundException(queueId);
             }
             context.Entry(queue).Property(q => q.AgvFillQuantity).CurrentValue = newSize;
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -79,73 +79,73 @@ public class EfQueueRepository(
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<ICollection<Queue>> GetQueues()
+    public async Task<ICollection<Queue>> GetQueues(CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<Queue>()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<Queue?> GetQueueByIdIfExisting(Guid? id)
+    public async Task<Queue?> GetQueueByIdIfExisting(Guid? id, CancellationToken cancellationToken = default)
     {
         if (id == null)
         {
             return null;
         }
 
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<Queue>()
-            .Where(q => q.Id == id).SingleOrDefaultAsync();
+            .Where(q => q.Id == id).SingleOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<Queue> GetQueueById(Guid id)
+    public async Task<Queue> GetQueueById(Guid id, CancellationToken cancellationToken = default)
     {
-        var queue = await GetQueueByIdIfExisting(id);
+        var queue = await GetQueueByIdIfExisting(id, cancellationToken);
         return queue ?? throw new QueueNotFoundException(id);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<Queue> GetQueueByName(string name)
+    public async Task<Queue> GetQueueByName(string name, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var queue = await context.Set<Queue>()
             .Where(q => q.Name == name)
-            .SingleOrDefaultAsync();
+            .SingleOrDefaultAsync(cancellationToken);
         return queue ?? throw new QueueNotFoundException(name);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task RemoveQueue(Guid id)
+    public async Task RemoveQueue(Guid id, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var queue = await context.Set<Queue>()
-            .Where(q => q.Id == id).SingleOrDefaultAsync();
+            .Where(q => q.Id == id).SingleOrDefaultAsync(cancellationToken);
         if (queue == null)
         {
             throw new QueueNotFoundException(id);
         }
 
         context.Remove(queue);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<ICollection<Queue>> GetQueuesWithCapacity()
+    public async Task<ICollection<Queue>> GetQueuesWithCapacity(CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return (await context.Set<Queue>()
-                .ToListAsync())
+                .ToListAsync(cancellationToken))
             .Where(q => q.AgvFillQuantity != q.Nodes.Count).ToList();
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<ICollection<Guid>> GetBlockedQueueNodes()
+    public async Task<ICollection<Guid>> GetBlockedQueueNodes(CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         List<Queue> queues = await context.Set<Queue>()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         List<Guid> reservedOrOccupiedNodes = queues
             .Where(q => q.AgvFillQuantity > 0)
@@ -161,46 +161,46 @@ public class EfQueueRepository(
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<Queue?> GetQueueByEntryNode(Guid entryNode)
+    public async Task<Queue?> GetQueueByEntryNode(Guid entryNode, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<Queue>()
             .Where(q => q.Nodes.OrderBy(p => p.Position).Last().NodeId == entryNode)
-            .SingleOrDefaultAsync();
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<ICollection<Queue>> GetOccupiedQueues()
+    public async Task<ICollection<Queue>> GetOccupiedQueues(CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return (await context.Set<Queue>()
-                .ToListAsync())
+                .ToListAsync(cancellationToken))
             .Where(q => q.Nodes.OrderBy(p => p.Position).First().GetCurrentAgv() != null).ToList();
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<Queue?> GetQueueForAgv(Guid agvCorrelationId)
+    public async Task<Queue?> GetQueueForAgv(Guid agvCorrelationId, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return (await context.Set<Queue>()
-            .ToListAsync()).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
+            .ToListAsync(cancellationToken)).SingleOrDefault(q => q.Nodes.Any(n => n.AgvIsAssigned(agvCorrelationId)));
     }
 
     /// <inheritdoc />
-    public async Task<Queue?> GetQueueByQueueNodeId(Guid queueNodeId)
+    public async Task<Queue?> GetQueueByQueueNodeId(Guid queueNodeId, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<Queue>()
             .Where(q => q.Nodes.Any(n => n.NodeId == queueNodeId))
-            .SingleOrDefaultAsync();
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes)
+    public async Task<ICollection<Queue>> GetQueuesOnRoute(ICollection<Guid> nodes, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<Queue>()
             .Where(q => q.Nodes.Any(n => nodes.Contains(n.NodeId)))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 }

@@ -23,24 +23,24 @@ public class EfAgvDataRepository : IAgvDataRepository
     }
 
     /// <inheritdoc/>
-    public Task<bool> ExistsAsync(Guid correlationId)
+    public Task<bool> ExistsAsync(Guid correlationId, CancellationToken cancellationToken = default)
     {
-        return AgvData.AnyAsync(q => q.AgvCorrelationId == correlationId);
+        return AgvData.AnyAsync(q => q.AgvCorrelationId == correlationId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task<AgvData?> GetAgvDataAsync(Guid correlationId)
+    public Task<AgvData?> GetAgvDataAsync(Guid correlationId, CancellationToken cancellationToken = default)
     {
-        return AgvData.SingleOrDefaultAsync(q => q.AgvCorrelationId == correlationId);
+        return AgvData.SingleOrDefaultAsync(q => q.AgvCorrelationId == correlationId, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task AddOrUpdateAsync(AgvData agvData)
+    public async Task AddOrUpdateAsync(AgvData agvData, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DbSet<AgvData> dbSet = dbContext.Set<AgvData>();
 
-        if (dbSet.Any(a => a.AgvCorrelationId == agvData.AgvCorrelationId))
+        if (await dbSet.AnyAsync(a => a.AgvCorrelationId == agvData.AgvCorrelationId, cancellationToken))
         {
             dbSet.Update(agvData);
         }
@@ -49,12 +49,12 @@ public class EfAgvDataRepository : IAgvDataRepository
             dbSet.Add(agvData);
         }
 
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<AgvData>> GetSelectedAgvDataAsync(ICollection<Guid> correlationIds)
+    public async Task<ICollection<AgvData>> GetSelectedAgvDataAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken = default)
     {
-        return await AgvData.Where(a => correlationIds.Contains(a.AgvCorrelationId)).ToListAsync();
+        return await AgvData.Where(a => correlationIds.Contains(a.AgvCorrelationId)).ToListAsync(cancellationToken);
     }
 }

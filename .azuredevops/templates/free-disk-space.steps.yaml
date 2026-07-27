@@ -1,3 +1,10 @@
+parameters:
+  # Jobs that never invoke Docker (e.g. unit tests) should pass false: the prune
+  # costs time and reclaims nothing on an agent with an empty Docker daemon.
+  - name: pruneDocker
+    type: boolean
+    default: true
+
 steps:
   - bash: |
       echo "Disk space before cleanup:"
@@ -5,28 +12,23 @@ steps:
 
       echo "Removing unnecessary tools to free disk space..."
 
-      # Remove Android SDK
-      sudo rm -rf /usr/local/lib/android
-
-      # Remove .NET SDKs except the ones we need (keep 9 and 10)
-      sudo rm -rf /usr/share/dotnet/sdk/6.*
-      sudo rm -rf /usr/share/dotnet/sdk/7.*
-      sudo rm -rf /usr/share/dotnet/sdk/8.*
-
-      # Remove CodeQL (if not used)
-      sudo rm -rf /opt/hostedtoolcache/CodeQL
-
-      # Remove large tool caches
-      sudo rm -rf /opt/hostedtoolcache/go
-      sudo rm -rf /opt/hostedtoolcache/Ruby
-      sudo rm -rf /opt/hostedtoolcache/node
-
-      # Clean apt cache
-      sudo apt-get clean
-
-      # Clean Docker cache
-      docker system prune -af --volumes || true
+      # These paths are independent of each other, so delete them concurrently. Run sequentially
+      # this step measured 1m0s, and since the unit tests were sharded it runs once per shard,
+      # putting a full minute on the stage critical path.
+      sudo rm -rf /usr/local/lib/android &                                    # Android SDK
+      sudo rm -rf /usr/share/dotnet/sdk/6.* /usr/share/dotnet/sdk/7.* /usr/share/dotnet/sdk/8.* &  # keep 9 and 10
+      sudo rm -rf /opt/hostedtoolcache/CodeQL &
+      sudo rm -rf /opt/hostedtoolcache/go /opt/hostedtoolcache/Ruby /opt/hostedtoolcache/node &
+      sudo apt-get clean &
+      wait
 
       echo "Disk space after cleanup:"
       df -h /
     displayName: 'Free disk space'
+
+  - ${{ if eq(parameters.pruneDocker, true) }}:
+    - bash: |
+        docker system prune -af --volumes || true
+        echo "Disk space after Docker prune:"
+        df -h /
+      displayName: 'Free disk space (prune Docker)'

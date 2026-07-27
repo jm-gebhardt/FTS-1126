@@ -30,26 +30,26 @@ public class EfLogEntryRepository : ILogEntryRepository
     }
 
     /// <inheritdoc cref="ILogEntryRepository"/>>
-    public async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables)
+    public async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables, CancellationToken cancellationToken = default)
     {
         Dictionary<string, string> vars = variables.ToDictionary(
             v => v.Key,
             v => v.Value?.ToString() ?? string.Empty
         );
 
-        return await AddAsync(logCategory, logCode, logLevel, agvCorrelationId, actionGroupCorrelationId, stationId, timestamp, vars);
+        return await AddAsync(logCategory, logCode, logLevel, agvCorrelationId, actionGroupCorrelationId, stationId, timestamp, vars, cancellationToken);
     }
 
-    private async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, string> variables)
+    private async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, string> variables, CancellationToken cancellationToken = default)
     {
         var logEntry = new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId)
         {
             Variables = variables
         };
 
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        await context.AddAsync(logEntry);
-        if (await context.SaveChangesAsync() > 0)
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await context.AddAsync(logEntry, cancellationToken);
+        if (await context.SaveChangesAsync(cancellationToken) > 0)
         {
             return logEntry;
         }
@@ -57,9 +57,9 @@ public class EfLogEntryRepository : ILogEntryRepository
     }
 
     /// <inheritdoc cref="ILogEntryRepository"/>>
-    public async Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize)
+    public async Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize, CancellationToken cancellationToken = default)
     {
-        PagedResult<LogEntryFilterable> logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)]);
+        PagedResult<LogEntryFilterable> logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)], cancellationToken);
         return _mapper.Map<PagedResult<LogEntryFilterable>, PagedResult<LogEntry>>(logs);
     }
 

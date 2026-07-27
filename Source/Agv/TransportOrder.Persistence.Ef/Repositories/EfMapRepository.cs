@@ -41,15 +41,15 @@ public class EfMapRepository : IMapRepository
             .AsNoTracking(); // No need to track changes
 
     /// <inheritdoc/>
-    public async Task<ICollection<Map>> GetAllMapsAsync()
+    public async Task<ICollection<Map>> GetAllMapsAsync(CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         List<Map> maps = await context.Set<Map>()
             .Include(g => g.Nodes)
             .Include(g => g.Edges)
             .Include(g => g.MapAgvs)
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return maps;
     }
@@ -110,10 +110,10 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc/>
-    public async Task<Map> GetMapAsync(Guid correlationId)
+    public async Task<Map> GetMapAsync(Guid correlationId, CancellationToken cancellationToken = default)
     {
         var map = await Maps.Include(m => m.MapAgvs)
-            .SingleOrDefaultAsync(q => q.CorrelationId == correlationId);
+            .SingleOrDefaultAsync(q => q.CorrelationId == correlationId, cancellationToken);
         if (map == null)
         {
             throw new MapNotFoundException(correlationId);
@@ -122,12 +122,12 @@ public class EfMapRepository : IMapRepository
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false)
+    public async Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var map = await context.Set<Map>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(m => m.CorrelationId == correlationId);
+            .SingleOrDefaultAsync(m => m.CorrelationId == correlationId, cancellationToken);
         
         if (getBaseImage)
         {

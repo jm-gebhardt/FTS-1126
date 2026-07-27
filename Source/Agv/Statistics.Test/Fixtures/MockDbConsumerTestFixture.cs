@@ -44,10 +44,10 @@ public class MockDbConsumerTestFixture<TConsumer> : MassTransitConsumerTestFixtu
 
     public MockDbConsumerTestFixture<TConsumer> WithGrids(List<Grid> grids)
     {
-        StatisticsDbMock.Setup(x => x.Grids.GetGridsAsync()).ReturnsAsync(grids);
+        StatisticsDbMock.Setup(x => x.Grids.GetGridsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(grids);
         _gridCellRepoMock.Setup(x => x.GetOrAddGridCellsForCoordinatesAsync(It.IsAny<decimal>(), It.IsAny<decimal>())).ReturnsAsync([]);
-        StatisticsDbMock.Setup(x => x.Grids.ThrowIfNotExistAsync(It.IsAny<Guid>()))
-            .Callback((Guid gridId) =>
+        StatisticsDbMock.Setup(x => x.Grids.ThrowIfNotExistAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Callback((Guid gridId, CancellationToken _) =>
             {
                 if (grids.All(a => a.GridId != gridId))
                 {

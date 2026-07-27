@@ -71,9 +71,9 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
 
     public QueueCommandHandlerTestFixture WithQueue(TransportOrder.Domain.Models.Queue.Queue queue)
     {
-        _queueRepository.Setup(x => x.GetQueueByName(It.IsAny<string>())).ReturnsAsync(queue);
-        _queueRepository.Setup(x => x.GetQueueById(It.IsAny<Guid>())).ReturnsAsync(queue);
-        _queueRepository.Setup(x => x.GetQueues()).ReturnsAsync([queue]);
+        _queueRepository.Setup(x => x.GetQueueByName(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueueById(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueues(It.IsAny<CancellationToken>())).ReturnsAsync([queue]);  
         foreach (var queueNode in queue.Nodes)
         {
             var graphNode = Mapper.Map<GraphNode>(queueNode.Node);
@@ -84,11 +84,11 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
 
     public QueueCommandHandlerTestFixture WithQueues(List<TransportOrder.Domain.Models.Queue.Queue> queues)
     {
-        _queueRepository.Setup(x => x.GetQueues()).ReturnsAsync(queues);
+        _queueRepository.Setup(x => x.GetQueues(It.IsAny<CancellationToken>())).ReturnsAsync(queues);
         foreach (var queue in queues)
         {
-            _queueRepository.Setup(x => x.GetQueueByName(queue.Name)).ReturnsAsync(queue);
-            _queueRepository.Setup(x => x.GetQueueById(queue.Id)).ReturnsAsync(queue);
+            _queueRepository.Setup(x => x.GetQueueByName(queue.Name, It.IsAny<CancellationToken>())).ReturnsAsync(queue);
+            _queueRepository.Setup(x => x.GetQueueById(queue.Id, It.IsAny<CancellationToken>())).ReturnsAsync(queue);
             foreach (var queueNode in queue.Nodes)
             {
                 var graphNode = Mapper.Map<GraphNode>(queueNode.Node);
@@ -112,7 +112,7 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
 
     public QueueCommandHandlerTestFixture WithActionGroups(ICollection<ActionGroup> picks, ICollection<ActionGroup> evacuationMoves, Guid station, Guid evacuationTarget)
     {
-        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>())).ReturnsAsync((Guid s) =>
+        _actionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid s, CancellationToken _) =>
         {
             if (s == station)
             {
@@ -151,30 +151,30 @@ public class QueueCommandHandlerTestFixture : MassTransitConsumerTestFixture<Que
 
     public QueueCommandHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
+        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
         return this;
     }
 
     public QueueCommandHandlerTestFixture WithCurrentAction(AgvAction action)
     {
-        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(action);
         return this;
     }
 
     public QueueCommandHandlerTestFixture WithQueueInternalMoves(ICollection<ActionGroup> actionGroups)
     {
-        _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync((Guid _, ICollection<Guid> targets) => { return actionGroups.Where(a => a.GetTargets().Intersect(targets).Count() != 0).ToList(); });
+        _actionGroupRepository.Setup(x => x.GetNotStartedActionGroupsToTargetsForAgv(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid _, ICollection<Guid> targets, CancellationToken _) => { return actionGroups.Where(a => a.GetTargets().Intersect(targets).Count() != 0).ToList(); });
         return this;
     }
 
     public QueueCommandHandlerTestFixture WithNextPicksAtTarget(ICollection<ActionGroup> actionGroups)
     {
-        _actionGroupRepository.Setup(x => x.GetNextPicksAtTarget(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetNextPicksAtTarget(It.IsAny<Guid>(), It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
         return this;
     }
 
     public void ShouldHaveUpdatedQueue(Guid queueId)
     {
-        Should.NotThrow(() => _queueRepository.Verify(qr => qr.UpdateQueueAsync(It.Is<TransportOrder.Domain.Models.Queue.Queue>(q => q.Id == queueId))));
+        Should.NotThrow(() => _queueRepository.Verify(qr => qr.UpdateQueueAsync(It.Is<TransportOrder.Domain.Models.Queue.Queue>(q => q.Id == queueId), It.IsAny<CancellationToken>())));
     }
 }

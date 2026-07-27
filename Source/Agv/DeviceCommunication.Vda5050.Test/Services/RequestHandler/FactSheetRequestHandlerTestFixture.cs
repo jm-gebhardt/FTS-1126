@@ -21,7 +21,7 @@ public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdat
     {
         AddServices(s => s.AddTransient(_ => _agvActionRepository.Object));
         _agvActionRepository
-            .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>()))
+            .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         base.Build();
     }
@@ -29,7 +29,7 @@ public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdat
     public FactSheetRequestHandlerTestFixture WithAddOrUpdateActionsThrows()
     {
         _agvActionRepository
-            .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>()))
+            .Setup(x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("storage failure"));
         return this;
     }
@@ -37,7 +37,7 @@ public class FactSheetRequestHandlerTestFixture : MediatorTestFixture<AddOrUpdat
     public void VerifyActionsStored(string serialNumber, Times times)
     {
         _agvActionRepository.Verify(
-            x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), serialNumber),
+            x => x.AddOrUpdateActionsAsync(It.IsAny<ICollection<AgvAction>>(), serialNumber, It.IsAny<CancellationToken>()),
             times);
     }
 }

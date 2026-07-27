@@ -34,27 +34,27 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
         _logger = logger;
     }
 
-    private async Task<TransportOrderDbContext> CreateDbContextAsync()
+    private async Task<TransportOrderDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
     {
-        var context = await _dbContextFactory.CreateDbContextAsync();
+        var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         // no need for tracking as we are returning read models only
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
     }
 
     /// <inheritdoc />
-    public async Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, Guid? lastNodeId = null)
+    public async Task<CurrentAgvRouteReadModel?> GetAgvRouteAsync(Guid agvCorrelationId, Guid? lastNodeId = null, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         Task<ActionGroup?> actionGroupTask = queryable
             .Where(a => a.State == ActionGroupState.Started)
             .Where(a => a.AssignedAgv == agvCorrelationId)
             .OrderByDescending(g => g.StartedDate)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
-        Task<Guid?> lastNodeIdTask = lastNodeId == null ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId) : Task.FromResult(lastNodeId);
+        Task<Guid?> lastNodeIdTask = lastNodeId == null ? _agvRepository.GetLastNodeIdAsync(agvCorrelationId, cancellationToken) : Task.FromResult(lastNodeId);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
         var actionGroup = actionGroupTask.Result;
@@ -78,9 +78,9 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<CurrentAgvRouteReadModel>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds)
+    public async Task<ICollection<CurrentAgvRouteReadModel>> GetAgvRouteAsync(ICollection<Guid> agvCorrelationIds, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
         IQueryable<ActionGroup> queryable = context.Set<ActionGroup>()
             .Where(a => a.State == ActionGroupState.Started);
 
@@ -93,9 +93,9 @@ public class AgvRouteRetrievalService : IAgvRouteRetrievalService
             .OrderByDescending(a => a.StartedDate)
             .GroupBy(a => (Guid)a.AssignedAgv!, a => a)
             .Select(g => g.FirstOrDefault())
-            .ToDictionaryAsync(a => (Guid)a!.AssignedAgv!, a => a);
+            .ToDictionaryAsync(a => (Guid)a!.AssignedAgv!, a => a, cancellationToken);
 
-        Task<IReadOnlyDictionary<Guid, Guid?>> lastNodeIdTask = _agvRepository.GetLastNodeIdAsync(agvCorrelationIds);
+        Task<IReadOnlyDictionary<Guid, Guid?>> lastNodeIdTask = _agvRepository.GetLastNodeIdAsync(agvCorrelationIds, cancellationToken);
 
         await Task.WhenAll(actionGroupTask, lastNodeIdTask);
         Dictionary<Guid, ActionGroup?> actionGroupById = actionGroupTask.Result;

@@ -16,13 +16,13 @@ public class NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> : Med
     
     public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithEmptyRepository()
     {
-        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => throw new MapNotFoundException(correlationId));
+        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid correlationId, CancellationToken _) => throw new MapNotFoundException(correlationId));
         return this;
     }
 
     public NodeStateRequestHandlerTestFixture<TRequestClient, TConsumer> WithNodeStates(ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates)
     {
-        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>())).ReturnsAsync(nodeStates);
+        _nodeRepositoryMock.Setup(r => r.GetNodeStatesForMapAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(nodeStates);
         return this;
     }
 

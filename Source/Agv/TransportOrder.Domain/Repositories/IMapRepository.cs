@@ -12,15 +12,17 @@ public interface IMapRepository
     /// <summary>
     /// Get all maps found in MapRepository
     /// </summary>
-    public Task<ICollection<Map>> GetAllMapsAsync();
+    /// <param name="cancellationToken">A cancellation token.</param>
+    public Task<ICollection<Map>> GetAllMapsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves the background image for the given correlationId.
     /// </summary>
     /// <param name="correlationId">Unique identifier for the map background.</param>
     /// <param name="getBaseImage">If true, get the base map background image.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The custom background image (if there is any), or the base background</returns>
-    Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false);
+    Task<byte[]> GetBackgroundImageAsync(Guid correlationId, bool getBaseImage = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// /Retrieves the dimensions of the default map of the system.
@@ -44,7 +46,8 @@ public interface IMapRepository
     /// Get information on a map.
     /// </summary>
     /// <param name="correlationId">The correlation id of the map.</param>
-    Task<Map> GetMapAsync(Guid correlationId);
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task<Map> GetMapAsync(Guid correlationId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if map related to its correlationId exists in repository

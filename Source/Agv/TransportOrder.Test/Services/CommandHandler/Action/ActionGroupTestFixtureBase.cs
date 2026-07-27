@@ -78,11 +78,11 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient<ActionCommandHelper>();
-        ActionGroupRepository.Setup(x => x.IsActionGroupQueued(It.IsAny<Guid>())).ReturnsAsync(true);
-        ActionGroupRepository.Setup(x => x.GetLatestActionGroupsByStateForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(new AgvActionGroupsByState(null, null, null));
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        ActionGroupRepository.Setup(x => x.IsActionGroupQueued(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        ActionGroupRepository.Setup(x => x.GetLatestActionGroupsByStateForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new AgvActionGroupsByState(null, null, null));
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
@@ -98,7 +98,8 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         }
         ActionGroupRepository.Verify(x => x.GetNextManualActionGroupForAgvAsync(
                 It.Is<Guid>(g => g == agvCorrelationId),
-                It.Is<List<ActionType>>(a => a.SequenceEqual(allowedActionTypes))),
+                It.Is<List<ActionType>>(a => a.SequenceEqual(allowedActionTypes)),
+                    It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -111,9 +112,9 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         {
             TestHarness.TestInactivityTimeout = (TimeSpan)inactivityTimeout;
         }
-        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((ActionGroup?)null);
-        ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>())).Verifiable();
-        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).Verifiable();
+        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((ActionGroup?)null);
+        ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>())).Verifiable();
+        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>())).Verifiable();
     }
 
     public ActionGroupTestFixtureBase<T> WithAgvsAtQueueHead(ICollection<Guid> agvs)
@@ -128,7 +129,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithAgvsWithPriorityActionGroups(ICollection<Guid> agvs)
     {
-        ActionGroupRepository.Setup(x => x.FilterAgvsWithPriorityActionGroups(It.IsAny<ICollection<Guid>>())).ReturnsAsync(agvs);
+        ActionGroupRepository.Setup(x => x.FilterAgvsWithPriorityActionGroups(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(agvs);
         return this;
     }
 
@@ -165,26 +166,26 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithAddActionGroupIsSuccessful(bool isSuccessful = true)
     {
-        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>())).ReturnsAsync(isSuccessful);
+        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>())).ReturnsAsync(isSuccessful);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithAddOrUpdateActionGroupIsUpdating(bool isUpdating = true)
     {
-        ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>())).ReturnsAsync(isUpdating);
+        ActionGroupRepository.Setup(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>())).ReturnsAsync(isUpdating);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithLatestActionGroupsByState(AgvActionGroupsByState actionGroupsByState)
     {
-        ActionGroupRepository.Setup(x => x.GetLatestActionGroupsByStateForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroupsByState);
+        ActionGroupRepository.Setup(x => x.GetLatestActionGroupsByStateForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroupsByState);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithRunningIdleActionGroups(ICollection<ActionGroup> actionGroups)
     {
-        ActionGroupRepository.Setup(x => x.GetRunningIdleActionGroups()).ReturnsAsync(actionGroups);
-        ActionGroupRepository.Setup(x => x.GetAgvsMovingCargo(It.IsAny<ICollection<Guid>>())).ReturnsAsync(new List<Guid>());
+        ActionGroupRepository.Setup(x => x.GetRunningIdleActionGroups(It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
+        ActionGroupRepository.Setup(x => x.GetAgvsMovingCargo(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<Guid>());
 
         WithNode(actionGroups.SelectMany(ag => ag.Actions.Select(a => a.Target.Node)).ToArray());
 
@@ -193,52 +194,52 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithRunningChargeActionGroups(ICollection<ActionGroup> actionGroups)
     {
-        ActionGroupRepository.Setup(x => x.GetRunningChargeActionGroups()).ReturnsAsync(actionGroups);
+        ActionGroupRepository.Setup(x => x.GetRunningChargeActionGroups(It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithActionGroupToSaveAbortion(ActionGroup actionGroup)
     {
-        ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         return this;
     }
 
     public virtual ActionGroupTestFixtureBase<T> AddActionGroup(ActionGroup actionGroup, bool hasUnfinishedAction = true, bool hasNotStartedAction = true, bool existsPriorToTest = true, bool isManual = false)
     {
-        ActionGroupRepository.Setup(x => x.UpdateAsync(It.IsAny<ActionGroup>())).Verifiable();
-        ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-        ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        ActionGroupRepository.Setup(x => x.UpdateAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>())).Verifiable();
+        ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByActionIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
+        ActionGroupRepository.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         ActionGroupRepository.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason>(), It.IsAny<DateTimeOffset>())).ReturnsAsync(actionGroup);
-        ActionGroupRepository.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Created) ?? actionGroup.Actions.First());
-        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>())).ReturnsAsync([actionGroup]);
+        ActionGroupRepository.Setup(x => x.GetSubsequentActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Created) ?? actionGroup.Actions.First());
+        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<CancellationToken>())).ReturnsAsync([actionGroup]);
         if (existsPriorToTest)
         {
-            ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([actionGroup]);
+            ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync([actionGroup]);
             _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
-            ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-            ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync([actionGroup]);
-            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync(actionGroup);
+            ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
+            ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([actionGroup]);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         }
         else
         {
-            ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
+            ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
             _chooseAgvActionGroupService.Setup(x => x.GetNotStartedActionGroupAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(null as ActionGroup);
-            ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(null as ActionGroup);
-            ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync([]);
-            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>())).ReturnsAsync((ActionGroup?)null);
+            ActionGroupRepository.Setup(x => x.GetStartedActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(null as ActionGroup);
+            ActionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>?>(), It.IsAny<CancellationToken>())).ReturnsAsync((ActionGroup?)null);
         }
-        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
-        ActionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasNotStartedAction);
-        ActionGroupRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>())).ReturnsAsync(hasUnfinishedAction);
-        ActionGroupRepository.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup.Actions.First());
+        ActionGroupRepository.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
+        ActionGroupRepository.Setup(x => x.HasNotStartedActionsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(hasNotStartedAction);
+        ActionGroupRepository.Setup(x => x.HasUnfinishedDropActionsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(hasUnfinishedAction);
+        ActionGroupRepository.Setup(x => x.GetRequiredActionByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup.Actions.First());
 
         if (isManual)
         {
-            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>())).ReturnsAsync(actionGroup);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         }
         else
         {
-            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>())).ReturnsAsync((ActionGroup?)null);
+            ActionGroupRepository.Setup(x => x.GetNextManualActionGroupForAgvAsync(It.IsAny<Guid>(), It.IsAny<List<ActionType>>(), It.IsAny<CancellationToken>())).ReturnsAsync((ActionGroup?)null);
         }
 
         WithNode(actionGroup.Actions.Select(a => a.Target.Node).ToArray());
@@ -248,19 +249,19 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithCurrentActionGroupsToTarget(ICollection<ActionGroup> actionGroups)
     {
-        ActionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
+        ActionGroupRepository.Setup(x => x.GetCurrentActionGroupsToTarget(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithNextPickAtNode(ActionGroup? actionGroup)
     {
-        ActionGroupRepository.Setup(x => x.GetNextPickAtNodeAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroup);
+        ActionGroupRepository.Setup(x => x.GetNextPickAtNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithReadyAgvs(ICollection<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
-        _agvDb.Setup(x => x.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel()).ReturnsAsync(agvs);
+        _agvDb.Setup(x => x.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel(It.IsAny<CancellationToken>())).ReturnsAsync(agvs);
         return this;
     }
 
@@ -283,31 +284,31 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> AddActionGroupRetrieval(bool headingTo)
     {
-        _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>())).ReturnsAsync(headingTo);
+        _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>(), It.IsAny<CancellationToken>())).ReturnsAsync(headingTo);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> AddActionGroupTargetNodeType(ActionGroup actionGroup, AgvGraph.NodeType nodeType)
     {
-        _actionGroupRetrievalService.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<ActionGroup>())).ReturnsAsync(actionGroup.ConvertFromActionGroupWithGivenNodeType(nodeType)!);
+        _actionGroupRetrievalService.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroup.ConvertFromActionGroupWithGivenNodeType(nodeType)!);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithLastActionDockFront(bool dockFront)
     {
-        ActionGroupRepository.Setup(x => x.GetDockFrontOfLastCompletedAction(It.IsAny<Guid>(), It.IsAny<Guid>())).ReturnsAsync(dockFront);
+        ActionGroupRepository.Setup(x => x.GetDockFrontOfLastCompletedAction(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(dockFront);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithHasCargo(bool hasCargo)
     {
-        _agvDb.Setup(x => x.Cargos.HasAgvCargoAsync(It.IsAny<Guid>())).ReturnsAsync(hasCargo);
+        _agvDb.Setup(x => x.Cargos.HasAgvCargoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(hasCargo);
         return this;
     }
 
     public ActionGroupTestFixtureBase<T> WithLastActionIsMoveToCoordinate(bool isMoveToCoordinate)
     {
-        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>())).ReturnsAsync(isMoveToCoordinate);
+        ActionGroupRepository.Setup(x => x.IsLastCompletedActionMoveToCoordinate(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(isMoveToCoordinate);
         return this;
     }
 
@@ -320,7 +321,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithLockedStations()
     {
-        _stationRepository.Setup(a => a.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station("", AgvGraph.NodeType.Charge, []) { LockedBy = "lock" });
+        _stationRepository.Setup(a => a.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station("", AgvGraph.NodeType.Charge, []) { LockedBy = "lock" });
         return this;
     }
 
@@ -338,7 +339,7 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public ActionGroupTestFixtureBase<T> WithNodeState(NodeLock? nodeLock)
     {
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() =>
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(() =>
         {
             if (nodeLock == null)
             {
@@ -356,8 +357,8 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
 
     public void IsActionGroupSaved(Times howOften)
     {
-        ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<ActionGroup>()), howOften);
-        ActionGroupRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>()), howOften);
+        ActionGroupRepository.Verify(x => x.AddAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>()), howOften);
+        ActionGroupRepository.Verify(x => x.AddOrUpdateAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>()), howOften);
     }
 
     public async Task<Response<TResult>> GetResponseAsync<TResult, TRequest>(TRequest request)

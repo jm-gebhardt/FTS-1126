@@ -43,7 +43,8 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
                 It.IsAny<Guid?>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<DateTime>(),
-                It.IsAny<Dictionary<string, object?>>()))
+                It.IsAny<Dictionary<string, object?>>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync((Categories logCategory,
                 int logCode,
                 string logLevel,
@@ -51,7 +52,8 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
                 Guid? actionGroupCorrelationId,
                 Guid? stationId,
                 DateTime timestamp,
-                Dictionary<string, object?> _) => new LogEntry(logCode,
+                Dictionary<string, object?> _,
+                CancellationToken _) => new LogEntry(logCode,
                 logCategory,
                 logLevel,
                 timestamp,
@@ -59,7 +61,7 @@ public class QueueControllerTestFixture : MockRequestClientControllerTestFixture
                 stationId,
                 actionGroupCorrelationId));
         _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
-            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         AddRequestClient<DeleteQueue, Success>(() => new Success());
         AddRequestClient<GetQueue, GotQueue>(() => new GotQueue(_queue));
         AddRequestClient<TryAddQueue, GotQueue>(() => new GotQueue(_queue));

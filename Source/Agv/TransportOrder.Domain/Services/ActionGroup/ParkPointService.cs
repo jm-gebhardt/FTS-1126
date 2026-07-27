@@ -48,11 +48,11 @@ public class ParkPointService : BaseNodeReservationManager, IParkPointService
     }
 
     /// <inheritdoc />
-    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreLocked = false)
+    public async Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreLocked = false, CancellationToken cancellationToken = default)
     {
         try
         {
-            await ReserveNodeAsync(parkNodeId, agvCorrelationId, ignoreLocked);
+            await ReserveNodeAsync(parkNodeId, agvCorrelationId, ignoreLocked, cancellationToken);
         }
         catch (ReserveNodeFailedException)
         {

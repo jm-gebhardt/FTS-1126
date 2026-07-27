@@ -352,18 +352,18 @@ public class AgvCommandHandler :
         var cancellationToken = context.CancellationToken;
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
-            ICollection<Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync();
+            ICollection<Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync(cancellationToken);
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
             {
-                if (!await _actionGroupRepository.AgvHasPendingActions(agv.CorrelationId))
+                if (!await _actionGroupRepository.AgvHasPendingActions(agv.CorrelationId, cancellationToken))
                 {
                     _logger.LogDebug("No action needed for charging Agv with CorrelationId: {AgvCorrelationId}", agv.CorrelationId);
                     continue;
                 }
 
-                var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agv.CorrelationId);
+                var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agv.CorrelationId, cancellationToken);
                 if (action == null)
                 {
                     _logger.LogDebug("Agv is not charging at all with CorrelationId: {AgvCorrelationId}, so no need to abort it in order to get it to work again", agv.CorrelationId);
@@ -385,19 +385,21 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<AgvErrorChanged> context)
     {
         (var correlationId, List<AgvError> errors, _, _) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
+        var cancellationToken = context.CancellationToken;
+        
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, cancellationToken);
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();
 
         if (agvHasError != hadError)
         {
             agv.HasError = agvHasError;
-            await _agvDb.Agvs.UpdateAgvAsync(agv);
+            await _agvDb.Agvs.UpdateAgvAsync(agv, cancellationToken);
         }
 
         if (hadError && !agvHasError && agv.AgvStatus?.Busy == false)
         {
-            await context.Publish(new AgvBecameIdle(agv.CorrelationId));
+            await context.Publish(new AgvBecameIdle(agv.CorrelationId), cancellationToken);
         }
     }
 
@@ -407,7 +409,9 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<AbortChargeAction> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId);
+        var cancellationToken = context.CancellationToken;
+        
+        var action = await _actionGroupRepository.GetCurrentAgvActionAsync(agvCorrelationId, cancellationToken);
         if (action?.ActionType == ActionType.Charge)
         {
             _logger.LogInformation("Aborting charging action group: {ActionGroupCorrelationId}", action.ParentId);
@@ -1489,7 +1493,7 @@ public class AgvCommandHandler :
 
     private async Task TransitionToIdleAsync(IPublishEndpoint publishEndpoint, Guid agvCorrelationId, bool? isQueueing, CancellationToken cancellationToken)
     {
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
         if (isQueueing.HasValue)
         {
             agv.IsQueueing = isQueueing.Value;
@@ -1500,7 +1504,7 @@ public class AgvCommandHandler :
     private async Task TransitionToIdleAsync(IPublishEndpoint publishEndpoint, Agv agv, CancellationToken cancellationToken)
     {
         bool stateChanged = agv.TransitionToIdle();
-        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv, cancellationToken))
         {
             _logger.LogDebug("Could not update agv {AgvCorrelationId}", agv.CorrelationId);
             return;
@@ -1517,7 +1521,7 @@ public class AgvCommandHandler :
             await PublishStateChange(publishEndpoint, agv, cancellationToken);
             await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvIdle, agv.CorrelationId, null, "AGV Became Idle",
                 $"AGV {agv.SerialNumber} became idle",
-                new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } });
+                new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agv.SerialNumber } }, cancellationToken);
         }
     }
 
@@ -1803,6 +1807,13 @@ public class AgvCommandHandler :
             return;
         }
 
+        if (!chargingNode.IsCharger())
+        {
+            _logger.LogError("{Command}: Could not find charger for switching {ChargingAgv} with {NonChargingAgv}, charging agv seems not to be on charger but on {NodeId}", nameof(SwitchChargingAgvs), chargingAgv.CorrelationId, nonChargingAgv.CorrelationId, chargingNode.Id);
+            await context.Publish(new SwitchChargingAgvsFailed(nonChargingAgvId, chargingAgvId));
+            return;
+        }
+
         bool foundQueueToEnter = false;
 
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
@@ -1997,15 +2008,16 @@ public class AgvCommandHandler :
     {
         var message = context.Message;
         var agvCorrelationId = message.CorrelationId;
-
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var cancellationToken = context.CancellationToken;
+        
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
 
         bool removed = false;
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
             if (message.AlsoRemoveFromConsideration)
             {
-                List<Queue> queues = (await _queueRepository.GetQueues()).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId) &&
+                List<Queue> queues = (await _queueRepository.GetQueues(cancellationToken)).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId) &&
                                                                                      (message.QueueId == null || message.QueueId == q.Id)).ToList();
 
                 foreach (var queue in queues)
@@ -2013,11 +2025,11 @@ public class AgvCommandHandler :
                     queue.ConsideredAgvs.Remove(agv.CorrelationId);
                 }
 
-                await Task.WhenAll(queues.Select(_queueRepository.UpdateQueueAsync));
+                await Task.WhenAll(queues.Select(q => _queueRepository.UpdateQueueAsync(q, cancellationToken)));
             }
 
             removed = await TryEscapeQueue(context, agv, Guid.Empty, message.QueueId, message.QueueNodeId);
-        });
+        }, cancellationToken);
 
         if (!removed)
         {
@@ -2031,7 +2043,7 @@ public class AgvCommandHandler :
 
         agv.IsQueueing = false;
 
-        if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+        if (!await _agvDb.Agvs.UpdateAgvAsync(agv, cancellationToken))
         {
             _logger.LogInformation("{Command}: Could not update agv {AgvCorrelationId}", nameof(RemoveAgvFromQueue), agv.CorrelationId);
             return;
@@ -2046,21 +2058,22 @@ public class AgvCommandHandler :
             return;
         }
 
-        await context.Publish(new ResolveSystemAgvError(agvCorrelationId, [blockingError]));
+        await context.Publish(new ResolveSystemAgvError(agvCorrelationId, [blockingError]), cancellationToken);
     }
 
     /// <inheritdoc cref="AgvCommandHandler"/>
     public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
     {
+        var cancellationToken = context.CancellationToken;
         (var agvCorrelationId, ICollection<string> removedZones) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
         if (agv.AgvStatus?.ZoneIds?.Count > 0)
         {
             _logger.LogInformation("Remove zones {Zones} from status of agv {AgvCorrelationId}", string.Join(",", removedZones), agvCorrelationId);
             agv.AgvStatus.RemoveZones(removedZones);
 
-            if (!await _agvDb.Agvs.UpdateAgvAsync(agv))
+            if (!await _agvDb.Agvs.UpdateAgvAsync(agv, cancellationToken))
             {
                 _logger.LogDebug("{Command}: Could not update agv {AgvCorrelationId}", nameof(UpdateAgvStatus), agv.CorrelationId);
                 return;

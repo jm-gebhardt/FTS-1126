@@ -47,8 +47,8 @@ public class ResendActionRequestHandler :
     public async Task Consume(ConsumeContext<ResendAction> context)
     {
         (var agvId, string user) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvId);
-        var actionGroup = await _actionGroupRepository.GetCurrentAssignedActionGroupAsync(agvId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvId, context.CancellationToken);
+        var actionGroup = await _actionGroupRepository.GetCurrentAssignedActionGroupAsync(agvId, context.CancellationToken);
 
         if (actionGroup == null)
         {
@@ -69,7 +69,7 @@ public class ResendActionRequestHandler :
             throw new NotInCorrectStateException("Cannot resend an incomplete action");
         }
 
-        await _bus.Publish(new Common.Messages.ActionGroups.Commands.ResendAction(agvId, agv.SerialNumber, _mapper.Map<AgvAction>(action)));
+        await _bus.Publish(new Common.Messages.ActionGroups.Commands.ResendAction(agvId, agv.SerialNumber, _mapper.Map<AgvAction>(action)), context.CancellationToken);
         await _loggingService.LogOrder(
             _logger,
             LogLevel.Information, LogCodes.OrderActionResent, agv.CorrelationId, actionGroup.CorrelationId,
@@ -80,8 +80,8 @@ public class ResendActionRequestHandler :
                 { LogLabels.OrderId, actionGroup.OrderId }, 
                 { LogLabels.AgvSerialNumber, agv.SerialNumber }, 
                 { LogLabels.ActionId, action.CorrelationId }
-            });
-        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderActionResent }, { LogLabels.ActionId, action.CorrelationId } });
+            }, context.CancellationToken);
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderActionResent }, { LogLabels.ActionId, action.CorrelationId } }, context.CancellationToken);
         await context.RespondAsync(new Success());
     }
 }

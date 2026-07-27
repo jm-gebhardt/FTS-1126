@@ -43,7 +43,7 @@ public class MapRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetMapList> context)
     {
-        ICollection<Map> fetchedMaps = await _mapRepository.GetAllMapsAsync();
+        ICollection<Map> fetchedMaps = await _mapRepository.GetAllMapsAsync(context.CancellationToken);
         // reversing the list is a quick fix that the global map is on that. This needs improvement in the future.
         var maps = _mapper.Map<List<Messages.Requests.Map.Map>>(fetchedMaps.Reverse());
         await context.RespondAsync(new GotMapList { Maps = maps });
@@ -53,7 +53,7 @@ public class MapRequestHandler :
     public async Task Consume(ConsumeContext<GetMap> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var fetchedMap = await _mapRepository.GetMapAsync(correlationId);
+        var fetchedMap = await _mapRepository.GetMapAsync(correlationId, context.CancellationToken);
         var map = _mapper.Map<Messages.Requests.Map.Map>(fetchedMap);
         await context.RespondAsync(new GotMap(map));
     }
@@ -63,7 +63,7 @@ public class MapRequestHandler :
     {
         (var correlationId, bool getBaseImage) = context.Message;
 
-        byte[]? image = await _mapRepository.GetBackgroundImageAsync(correlationId, getBaseImage);
+        byte[]? image = await _mapRepository.GetBackgroundImageAsync(correlationId, getBaseImage, context.CancellationToken);
         if (image == null || image.Length == 0)
         {
             throw new MapNotFoundException(correlationId);
@@ -76,8 +76,8 @@ public class MapRequestHandler :
     public async Task Consume(ConsumeContext<TrySettingNodeApproachingProperties> context)
     {
         (var correlationId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
-        await _mapRepository.GetMapAsync(correlationId);
-        await _graphRepository.GetNodeAsync(nodeId);
+        await _mapRepository.GetMapAsync(correlationId, context.CancellationToken);
+        await _graphRepository.GetNodeAsync(nodeId, context.CancellationToken);
 
         await _publishEndpoint.Publish(new SetNodeApproachingProperties(correlationId, nodeId, pickLiftHeight, dropLiftHeight, dockingDirection));
 

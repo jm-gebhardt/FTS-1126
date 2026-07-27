@@ -50,22 +50,22 @@ public sealed class QueueManagerTestFixture : FixtureBase
         });
         Build();
         QueueManager = Provider.GetRequiredService<QueueManager>();
-        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync([]);
-        _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>())).Verifiable();
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>())).Verifiable();
         _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>())).ReturnsAsync(true);
-        _queueRepository.Setup(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>())).Verifiable();
-        _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>())).ReturnsAsync(true);
+        _queueRepository.Setup(x => x.UpdateQueueSize(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Verifiable();
+        _queueRepository.Setup(x => x.UpdateQueueAsync(It.IsAny<Queue>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
     }
 
     public QueueManagerTestFixture WithQueues(ICollection<Queue> queues)
     {
-        _queueRepository.Setup(x => x.GetQueues()).ReturnsAsync(queues);
-        _queueRepository.Setup(x => x.GetOccupiedQueues()).ReturnsAsync(queues);
-        _queueRepository.Setup(x => x.GetQueuesWithCapacity()).ReturnsAsync(queues);
+        _queueRepository.Setup(x => x.GetQueues(It.IsAny<CancellationToken>())).ReturnsAsync(queues);
+        _queueRepository.Setup(x => x.GetOccupiedQueues(It.IsAny<CancellationToken>())).ReturnsAsync(queues);
+        _queueRepository.Setup(x => x.GetQueuesWithCapacity(It.IsAny<CancellationToken>())).ReturnsAsync(queues);
         var queue = queues.FirstOrDefault();
         if (queue != null)
         {
-            _graphRepository.Setup(x => x.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(queue.Nodes.Select(n => n.NodeId.ToGraphNode()).ToList());
+            _graphRepository.Setup(x => x.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(queue.Nodes.Select(n => n.NodeId.ToGraphNode()).ToList());
             _routeService.Setup(x => x.GetNodeWithLowestCostsAsync(It.IsAny<Agv>(),
                     It.IsAny<IList<GraphNode>>(),
                     It.IsAny<AgvData?>(), It.IsAny<Guid?>()))
@@ -76,8 +76,8 @@ public sealed class QueueManagerTestFixture : FixtureBase
 
     public QueueManagerTestFixture WithQueue(Queue? queue)
     {
-        _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>())).ReturnsAsync(queue);
-        _queueRepository.Setup(x => x.GetQueueByIdIfExisting(It.IsAny<Guid>())).ReturnsAsync((Guid? id) => queue != null && queue.Id == id ? queue : null);
+        _queueRepository.Setup(x => x.GetQueueForAgv(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueueByIdIfExisting(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid? id, CancellationToken _) => queue != null && queue.Id == id ? queue : null);
         return this;
     }
 
@@ -90,7 +90,7 @@ public sealed class QueueManagerTestFixture : FixtureBase
 
     public QueueManagerTestFixture WithQueueByEntryNode(Queue? queue)
     {
-        _queueRepository.Setup(x => x.GetQueueByEntryNode(It.IsAny<Guid>())).ReturnsAsync(queue);
+        _queueRepository.Setup(x => x.GetQueueByEntryNode(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(queue);
         return this;
     }
 
@@ -98,14 +98,14 @@ public sealed class QueueManagerTestFixture : FixtureBase
     {
         var agvData = AgvDataGenerator.GenerateAgvData(correlationId: agv.CorrelationId);
         _agvDb.Setup(x => x.Data.GetAgvDataAsync(agv.CorrelationId)).ReturnsAsync(agvData);
-        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
-        _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>())).ReturnsAsync(true);
+        _agvDb.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
+        _agvDb.Setup(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         return this;
     }
 
     public void VerifyQueueWasUpdated(bool updated = true)
     {
-        _queueRepository.Verify(x => x.UpdateQueueAsync(It.IsAny<Queue>()), updated ? Times.Once() : Times.Never());
+        _queueRepository.Verify(x => x.UpdateQueueAsync(It.IsAny<Queue>(), It.IsAny<CancellationToken>()), updated ? Times.Once() : Times.Never());
     }
 
     public void VerifyQueueChangedWasPublished(bool updated = true)
@@ -117,6 +117,6 @@ public sealed class QueueManagerTestFixture : FixtureBase
 
     public void VerifyAgvWasUpdated(bool updated = true)
     {
-        _agvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>()), updated ? Times.Once() : Times.Never());
+        _agvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<Agv>(), It.IsAny<CancellationToken>()), updated ? Times.Once() : Times.Never());
     }
 }

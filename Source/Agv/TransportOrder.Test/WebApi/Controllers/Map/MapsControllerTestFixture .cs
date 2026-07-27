@@ -59,7 +59,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
     {
         var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
+        mapRepositoryMock.Setup(x => x.GetAllMapsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(new List<TransportOrder.Domain.Models.Map.Map>
         {
             MapGenerator.Generate(),
             MapGenerator.Generate(),

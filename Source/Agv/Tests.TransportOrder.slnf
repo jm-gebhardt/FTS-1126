@@ -1,0 +1,8 @@
+{
+  "solution": {
+    "path": "CompileAgv.sln",
+    "projects": [
+      "TransportOrder.Test\\TransportOrder.Test.csproj"
+    ]
+  }
+}

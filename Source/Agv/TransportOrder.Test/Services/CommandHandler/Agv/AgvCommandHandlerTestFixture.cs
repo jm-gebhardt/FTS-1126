@@ -68,11 +68,10 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture()
     {
         AgvDb.SetupNodeFallbacks();
-        _nodeRepositoryMock.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>())).ReturnsAsync([]);
+        _nodeRepositoryMock.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         Build();
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
     }
 
     protected override MassTransitConsumerTestFixture<AgvCommandHandler> AddServices(IServiceCollection collection)
@@ -97,13 +96,13 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         collection.AddTransient(_ => _logEntryRepository.Object);
         collection.AddSingleton<ITransportOrderNotificationSender>(_ => _toNotificationSender.Object);
         _chargingPointManager.Setup(x => x.IsOnAChargingNodeAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
     public void VerifyAgvUpdated(Times times)
     {
-        AgvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), times);
+        AgvDb.Verify(x => x.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<CancellationToken>()), times);
     }
 
     public AgvCommandHandlerTestFixture WithInfiniteCharging(bool infiniteCharging)
@@ -174,8 +173,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture AddAgvs(List<TransportOrder.Domain.Models.Agv.Agv> agvs)
     {
         AgvDb.AddAgvs(agvs);
-        AgvDb.Setup(r => r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()))
-            .ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv a) => agvs.Any(agv => agv.CorrelationId == a.CorrelationId))
+        AgvDb.Setup(r => r.Agvs.UpdateAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv a, CancellationToken _) => agvs.Any(agv => agv.CorrelationId == a.CorrelationId))
             .Verifiable();
         AgvDb.Setup(r => r.Agvs.AddAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>())).Verifiable();
 
@@ -187,7 +186,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture SetupAgv(bool hasPendingActions = false, bool exists = true)
     {
         _actionGroupRepository.Setup(x =>
-            x.AgvHasPendingActions(It.IsAny<Guid>())).ReturnsAsync(hasPendingActions);
+            x.AgvHasPendingActions(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(hasPendingActions);
         AgvDb.AddAgvGraph(graphExists: exists);
 
         return this;
@@ -196,7 +195,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     [PublicAPI]
     public AgvCommandHandlerTestFixture WithCurrentAgvAction(AgvAction action)
     {
-        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
+        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(action);
         return this;
     }
 
@@ -217,7 +216,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithCurrentStartedOrCreatedActionGroups(IReadOnlyList<ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
-        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<List<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(actionGroups);
+        _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<List<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
         return this;
     }
 
@@ -361,7 +360,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture AddActionGroupRetrieval(bool headingTo)
     {
-        _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>())).ReturnsAsync(headingTo);
+        _actionGroupRetrievalService.Setup(x => x.IsAgvHeadingToNodeOfType(It.IsAny<Guid>(), It.IsAny<AgvGraph.NodeType>(), It.IsAny<CancellationToken>())).ReturnsAsync(headingTo);
         return this;
     }
 

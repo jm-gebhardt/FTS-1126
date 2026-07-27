@@ -15,8 +15,9 @@ public interface IChargingPointManager
     /// <param name="agv"></param>
     /// <param name="startNodeId">The start node Id from which the route should be calculated. If null the last node Id of the agv will be used.</param>
     /// <param name="ignoreLocked">Flag to reserve charger even if it is locked.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The best free charger, throws if it could not reserve it</returns>
-    Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreLocked = false);
+    Task<GraphNode> ReserveChargerAsync(Agv agv, Guid? startNodeId = null, bool ignoreLocked = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Chooses the best free charger based on the agvs graph
@@ -32,8 +33,9 @@ public interface IChargingPointManager
     /// <param name="node">The charger to reserve</param>
     /// <param name="agvCorrelationId"></param>
     /// <param name="ignoreLocked">Flag to reserve charger even if it is locked.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns></returns>
-    Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreLocked = false);
+    Task ReserveChargerAsync(GraphNode node, Guid agvCorrelationId, bool ignoreLocked = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if the agv is on a charging node

@@ -50,9 +50,9 @@ public class AgvRepository : IAgvRepository
     public int Count => Agvs.Count();
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetAllAgvsAsync()
+    public async Task<ICollection<Agv>> GetAllAgvsAsync(CancellationToken cancellationToken=default)
     {
-        return await Agvs.ToListAsync();
+        return await Agvs.ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -74,9 +74,9 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<Agv> GetAgvAsync(Guid correlationId)
+    public async Task<Agv> GetAgvAsync(Guid correlationId, CancellationToken cancellationToken=default)
     {
-        var agv = await TryGetAgvAsync(correlationId);
+        var agv = await TryGetAgvAsync(correlationId, cancellationToken);
         if (agv == null)
         {
             throw new AgvNotFoundException(correlationId);
@@ -85,43 +85,43 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<Agv?> GetAnyOnlineAgv()
+    public async Task<Agv?> GetAnyOnlineAgv(CancellationToken cancellationToken = default)
     {
-        return await Agvs.OrderBy(a => a.TimeOfStateTransition).FirstOrDefaultAsync(a => a.GraphExists && a.IsOnline);
+        return await Agvs.OrderBy(a => a.TimeOfStateTransition).FirstOrDefaultAsync(a => a.GraphExists && a.IsOnline, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<Agv?> TryGetAgvAsync(Guid correlationId)
+    public async Task<Agv?> TryGetAgvAsync(Guid correlationId, CancellationToken cancellationToken=default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var agv = await context.Set<Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var agv = await context.Set<Agv>().Where(a => a.CorrelationId == correlationId).SingleOrDefaultAsync(cancellationToken);
         return agv;
     }
 
     /// <inheritdoc />
-    public async Task<bool> CheckIfAgvExistsAsync(Guid correlationId)
+    public async Task<bool> CheckIfAgvExistsAsync(Guid correlationId, CancellationToken cancellationToken=default)
     {
-        return await Agvs.AnyAsync(a => a.CorrelationId == correlationId);
+        return await Agvs.AnyAsync(a => a.CorrelationId == correlationId, cancellationToken);
     }
 
-    private async Task<ICollection<Guid>> CheckIfAgvExistAsync(IEnumerable<Guid> correlationIds)
+    private async Task<ICollection<Guid>> CheckIfAgvExistAsync(IEnumerable<Guid> correlationIds, CancellationToken cancellationToken=default)
     {
-        return await Agvs.Where(a => correlationIds.Contains(a.CorrelationId)).Select(a => a.CorrelationId).ToListAsync();
+        return await Agvs.Where(a => correlationIds.Contains(a.CorrelationId)).Select(a => a.CorrelationId).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task ThrowIfAgvNotExistsAsync(Guid correlationId)
+    public async Task ThrowIfAgvNotExistsAsync(Guid correlationId, CancellationToken cancellationToken=default)
     {
-        if (!await CheckIfAgvExistsAsync(correlationId))
+        if (!await CheckIfAgvExistsAsync(correlationId, cancellationToken))
         {
             throw new AgvNotFoundException(correlationId);
         }
     }
 
     /// <inheritdoc />
-    public async Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds)
+    public async Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken=default)
     {
-        ICollection<Guid> existingAgvs = await CheckIfAgvExistAsync(correlationIds);
+        ICollection<Guid> existingAgvs = await CheckIfAgvExistAsync(correlationIds, cancellationToken);
         List<Guid> notExistingAgvs = correlationIds.Except(existingAgvs).ToList();
         if (notExistingAgvs.Count != 0)
         {
@@ -130,9 +130,9 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds)
+    public async Task<ICollection<Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds, CancellationToken cancellationToken=default)
     {
-        return await Agvs.Where(a => agvCorrelationIds.Count == 0 || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.SerialNumber).ToListAsync();
+        return await Agvs.Where(a => agvCorrelationIds.Count == 0 || agvCorrelationIds.Contains(a.CorrelationId)).OrderBy(a => a.SerialNumber).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -170,12 +170,12 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> UpdateAgvAsync(Agv agv)
+    public async Task<bool> UpdateAgvAsync(Agv agv, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DbSet<Agv> dbSet = dbContext.Set<Agv>();
         dbSet.Update(agv);
-        return await dbContext.SaveChangesAsync() > 0;
+        return await dbContext.SaveChangesAsync(cancellationToken) > 0;
     }
 
     /// <inheritdoc />
@@ -188,7 +188,7 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel()
+    public async Task<ICollection<Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel(CancellationToken cancellationToken = default)
     {
         List<Agv> agvs = await Agvs.Where(Agv.IsReadyStatic)
             .Where(a => a.GraphExists &&
@@ -196,40 +196,40 @@ public class AgvRepository : IAgvRepository
                         !a.IsQueueing &&
                         a.Mode.Type == ModeType.Normal &&
                         a.CurrentAgvState == AgvState.Idle &&
-                        !a.AgvStatus!.Busy).ToListAsync();
+                        !a.AgvStatus!.Busy).ToListAsync(cancellationToken);
 
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].BatteryLevelLow).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetChargingAgvsWithMinBatteryLevelAsync()
+    public async Task<ICollection<Agv>> GetChargingAgvsWithMinBatteryLevelAsync(CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking();
 
         IQueryable<Agv> agvContext = context.Set<Agv>().AsNoTracking();
         List<Agv> agvs = await agvContext.Where(agv => agv.GraphExists &&
                                                        actionGroups.Any(g => g.AssignedAgv == agv.CorrelationId && g.State == ActionGroupState.Started &&
                                                                              g.Actions.Any(a => a.ActionType == ActionType.Charge && a.State == ActionState.Started)) &&
-                                                       agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging && !agv.IsLocked).ToListAsync();
+                                                       agv.CurrentAgvState == AgvState.Busy && agv.AgvStatus!.Charging && !agv.IsLocked).ToListAsync(cancellationToken);
         return agvs.Where(a => a.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[a.AgvSettingsGroup].MinChargeUp).ToList();
     }
 
-    private async Task<List<Agv>> GetAgvsByChargeCondition(Func<Agv, bool> chargePredicate)
+    private async Task<List<Agv>> GetAgvsByChargeCondition(Func<Agv, bool> chargePredicate, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         // Occupied node locks 
         var nodeLocks = await context.Set<NodeLock>()
             .Where(nl => nl.NodeState == NodeLockState.Occupied)
             .Select(nl => new { nl.NodeId, nl.AgvCorrelationId })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         List<Guid> nodeIds = nodeLocks.Select(nl => nl.NodeId).Distinct().ToList();
 
         // Nodes corresponding to locks to get which are chargers
         List<GraphNode> efNodes = await context.Set<GraphNode>()
             .Where(en => nodeIds.Contains(en.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
         var lockedNodes = _mapper.Map<List<GraphNode>>(efNodes);
 
         HashSet<Guid> chargerNodeIds = lockedNodes
@@ -247,7 +247,7 @@ public class AgvRepository : IAgvRepository
         List<Agv> agvs = await context.Set<Agv>()
             .AsNoTracking()
             .Where(agv => chargingAgvIds.Contains(agv.CorrelationId))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return agvs
             .Where(agv => agv.AgvStatus != null && chargePredicate(agv))
@@ -255,19 +255,36 @@ public class AgvRepository : IAgvRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastChargeUpLevel(double chargeLevel)
+    public async Task<ICollection<Agv>> GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(double chargeLevel, Guid agvCorrelationId)
     {
-        return await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= chargeLevel);
+        List<Agv> agvs = await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= chargeLevel);
+        return await FilterByAgvReachabilityAsync(agvs, agvCorrelationId);
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetAgvsOnChargerWithAtLeastMinChargeUpLevel()
+    public async Task<ICollection<Agv>> GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(Guid? agvCorrelationId=null)
     {
-        return await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp);
+        List<Agv> agvs = await GetAgvsByChargeCondition(agv => agv.AgvStatus!.BatteryCharge >= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].MinChargeUp);
+        if (agvCorrelationId == null)
+        {
+            return agvs;
+        }
+        return await FilterByAgvReachabilityAsync(agvs, agvCorrelationId.Value);
+    }
+
+    private async Task<ICollection<Agv>> FilterByAgvReachabilityAsync(ICollection<Agv> agvs, Guid agvCorrelationId)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var agvGraph = await context.Set<AgvGraph>().Include(g => g.Nodes).SingleOrDefaultAsync(g => g.AgvCorrelationId == agvCorrelationId);
+        if (agvGraph == null)
+        {
+            return [];
+        }
+        return agvs.Where(a => agvGraph.Nodes.Any(n => n.Id == a.AgvStatus?.LastNodeId)).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevel()
+    public async Task<ICollection<Agv>> GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(Guid? charger)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -300,29 +317,36 @@ public class AgvRepository : IAgvRepository
             .AsNoTracking()
             .Where(agv => !chargingAgvIds.Contains(agv.CorrelationId))
             .ToListAsync();
-
+        HashSet<Guid> agvsThatCanReachCharger = agvs.Select(a => a.CorrelationId).ToHashSet();
+        if (charger != null)
+        {
+            agvsThatCanReachCharger = await context.Set<AgvGraph>().Include(a => a.Nodes)
+                .Where(a => a.Nodes.Any(n => n.Id == charger))
+                .Select(a => a.AgvCorrelationId).ToHashSetAsync();
+        }
         return agvs
             .Where(agv => agv.AgvStatus != null &&
-                          agv.AgvStatus.BatteryCharge <= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].BatteryLevelCritical)
+                          agv.AgvStatus.BatteryCharge <= _agvSettingsProvider.ConcurrentDict[agv.AgvSettingsGroup].BatteryLevelCritical
+                          && agvsThatCanReachCharger.Contains(agv.CorrelationId))
             .ToList();
     }
 
     /// <inheritdoc />
-    public async Task<Guid?> GetLastNodeIdAsync(Guid agvCorrelationId)
+    public async Task<Guid?> GetLastNodeIdAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Guid? lastNodeId = await Agvs
             .Where(s => s.CorrelationId == agvCorrelationId && s.AgvStatus != null)
             .Select(s => s.AgvStatus!.LastNodeId)
-            .SingleOrDefaultAsync();
+            .SingleOrDefaultAsync(cancellationToken);
 
         return lastNodeId;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, Guid?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds)
+    public async Task<IReadOnlyDictionary<Guid, Guid?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         IQueryable<Agv> queryable = Agvs;
         if (agvCorrelationIds.Count != 0)
@@ -333,7 +357,7 @@ public class AgvRepository : IAgvRepository
         Dictionary<Guid, Guid?> lastNodeIdsById = await queryable
             .Where(s => s.AgvStatus != null)
             .Select(s => new { s.CorrelationId, s.AgvStatus!.LastNodeId })
-            .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId);
+            .ToDictionaryAsync(x => x.CorrelationId, x => x.LastNodeId, cancellationToken);
 
         // for potential Agvs with no status, we want to have a null value
         foreach (var agvCorrelationId in agvCorrelationIds)

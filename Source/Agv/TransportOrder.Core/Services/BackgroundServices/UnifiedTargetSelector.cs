@@ -46,7 +46,7 @@ public class UnifiedTargetSelector(
                 var loggingService = scope.ServiceProvider.GetRequiredService<ILoggingService>();
                 await loggingService.LogSystem(logger, LogCodes.TargetSelectionFailed,
                     "Target Selection Failed", "Fatal error during unified target selection",
-                    logLevel: LogLevel.Error);
+                    logLevel: LogLevel.Error, cancellationToken: stoppingToken);
             }
             finally
             {

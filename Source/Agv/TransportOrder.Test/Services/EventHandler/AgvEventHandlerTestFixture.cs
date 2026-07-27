@@ -61,7 +61,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
@@ -79,8 +79,18 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithMinBatteryAgvs(ICollection<Agv> agvs)
     {
-        _agvDb.Setup(x => x.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+        _agvDb.Setup(x => x.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(It.IsAny<Guid>())).ReturnsAsync(agvs);
         return this;
+    }
+
+    public void VerifyGetAgvsOnChargerCalledWith(Guid agvCorrelationId, Times? times = null)
+    {
+        _agvDb.Verify(x => x.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(agvCorrelationId), times ?? Times.Once());
+    }
+
+    public void VerifyGetNotChargingAgvsCalledWith(Guid? charger, Times? times = null)
+    {
+        _agvDb.Verify(x => x.Agvs.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(charger), times ?? Times.Once());
     }
 
     public AgvEventHandlerTestFixture WithAgv(Agv agv, bool isOnQueueHead = false)
@@ -101,11 +111,11 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     {
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
         }
         else
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup>());
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ActionGroup>());
         }
     }
 
@@ -126,7 +136,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
             It.IsAny<Guid?>(),
             It.IsAny<bool?>(),
             It.IsAny<SortBy>(),
-            It.IsAny<bool>()
+            It.IsAny<bool>(),
+            It.IsAny<CancellationToken>()
         )).ReturnsAsync(actionGroups);
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
         _actionGroupRepository.Setup(x => x.GetPendingActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
@@ -136,8 +147,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithReservedCharger(string? charger)
     {
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>()))
-            .ReturnsAsync((Agv _, Guid? _,  bool _) =>
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Agv _, Guid? _,  bool _, CancellationToken _) =>
             {
                 if (charger == null)
                 {
@@ -145,6 +156,12 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
                 }
                 return charger.ToGraphNode();
             });
+        return this;
+    }
+
+    public AgvEventHandlerTestFixture WithCharger()
+    {
+        _chargingPointManager.Setup(x => x.GetBestChargerAsync(It.IsAny<Agv>())).ReturnsAsync("charger".ToGraphNode());
         return this;
     }
 

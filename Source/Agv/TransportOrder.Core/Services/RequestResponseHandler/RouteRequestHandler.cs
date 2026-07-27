@@ -36,12 +36,12 @@ public class RouteRequestHandler : IConsumer<GetRoute>
     public async Task Consume(ConsumeContext<GetRoute> context)
     {
         var getRoute = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(getRoute.CorrelationId);
-        var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(getRoute.CorrelationId, context.CancellationToken);
+        var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId, context.CancellationToken);
         Route? route;
         try
         {
-            var modelRoute = await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData);
+            var modelRoute = await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData, context.CancellationToken);
 
             GraphNode[]? nodes = _mapper.Map<GraphNode[]>(modelRoute.Nodes);
             route = new Route(agv.CorrelationId, nodes, modelRoute.Edges);

@@ -27,7 +27,8 @@ public class ActionGroupStatisticsRequestHandlerTestFixture : MediatorTestFixtur
         _actionGroupRepository.Setup(x => x.GetActionDurationsByTypeAsync(It.IsAny<ActionGroupState>(),
                 It.IsAny<Guid?>(),
                 It.IsAny<Guid?>(),
-                It.IsAny<int>()))
+                It.IsAny<int>(), 
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(actionDurations);
         return this;
     }

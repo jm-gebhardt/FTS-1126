@@ -45,4 +45,13 @@ public class EfAgvRepositoryTestFixture : TransportOrderDbFixture
         var nodeLock = new NodeLock(graphNode, NodeLockState.Occupied, false, agv.CorrelationId, DateTime.UtcNow);
         await AddAsync(nodeLock);
     }
+
+    /// <summary>
+    /// Adds the given agv together with an <see cref="AgvGraph"/> containing the given nodes.
+    /// </summary>
+    public async Task AddWithGraph(TransportOrder.Domain.Models.Agv.Agv agv, params GraphNode[] nodes)
+    {
+        await Add(agv);
+        await AddAsync(new AgvGraph(agv.CorrelationId, nodes, []));
+    }
 }
