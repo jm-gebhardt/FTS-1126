@@ -15,6 +15,10 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
 public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = null)
     : BaseStateMachineTestFixture<SimulatedAgvStateMachine, SimulatedAgv>(inactivityTimeout)
 {
+    public const string LoadId = "Load123";
+    public const string LoadType = "pallet";
+    public const string LoadPosition = "front";
+
     private Options _options = new()
     {
         InitialBatteryCharge = 75,

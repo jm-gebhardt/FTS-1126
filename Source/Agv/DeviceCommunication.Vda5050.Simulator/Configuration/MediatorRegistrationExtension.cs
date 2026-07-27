@@ -21,6 +21,8 @@ public static class MediatorRegistrationExtension
             configurator.AddRequestClient<RequestOperatingModeSwitch>();
             configurator.AddRequestClient<RequestSetToPosition>();
             configurator.AddRequestClient<RequestAgvState>();
+            configurator.AddRequestClient<RequestAddLoad>();
+            configurator.AddRequestClient<RequestRemoveLoad>();
             return configurator;
         }
     }

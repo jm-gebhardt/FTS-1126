@@ -181,7 +181,7 @@ public class SimulatedAgv : SagaStateMachineInstance
         StateHeaderId = stateHeaderId;
         VisualizationHeaderId = visualizationHeaderId;
         ConnectionHeaderId = connectionHeaderId;
-        CurrentPosition = new AgvPosition(){MapId = configuration.MapId, PositionInitialized = true, Theta = InitialTheta};
+        CurrentPosition = new AgvPosition { MapId = configuration.MapId, PositionInitialized = true, Theta = InitialTheta };
         _edgeBuilder = edgeBuilder;
         _generateError = generateError;
         OperatingMode = AgvOperatingMode.Automatic;
@@ -219,6 +219,34 @@ public class SimulatedAgv : SagaStateMachineInstance
         CurrentPosition = position;
         LastNodeId = null;
         LastNodeSequenceId = 0;
+    }
+
+    /// <summary>
+    /// Add a load to the agv.
+    /// </summary>
+    /// <param name="loadId">The load id.</param>
+    /// <param name="loadType">The type of the load.</param>
+    /// <param name="loadPosition">Indicates which load handling/carrying unit of the AGV is used. Optional for vehicles with only one loadPosition.</param>
+    public void AddLoad(string loadId, string? loadType, string? loadPosition)
+    {
+        if (Loads.Any(l => l.LoadPosition == loadPosition))
+        {
+            return;
+        }
+        Loads.Add(new Load(loadId, _timeProvider.GetUtcNow().DateTime, loadType, loadPosition));
+    }
+
+    /// <summary>
+    /// Remove the load with the given id from the agv.
+    /// </summary>
+    /// <param name="loadId">The id of the load to remove.</param>
+    public void RemoveLoad(string loadId)
+    {
+        var load = Loads.FirstOrDefault(l => l.Id == loadId);
+        if (load != null)
+        {
+            Loads.Remove(load);
+        }
     }
 
     /// <summary>
@@ -438,8 +466,10 @@ public class SimulatedAgv : SagaStateMachineInstance
         bool pickFinishedHere = pickAction != null && (CurrentOrder?.PendingActionStates.Any(s => s.ActionId == pickAction.ActionId && s.ActionStatus == VehicleActionStatus.Finished) ?? false);
         if (pickFinishedHere && Loads.All(l => l.PickStartTime != pickAction!.StartedTime))
         {
-            string loadId = pickAction!.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString() ?? Guid.NewGuid().ToString();
-            Loads.Add(new Load(loadId, pickAction.StartedTime!.Value));
+            string? loadPosition = pickAction!.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString();
+            string? loadType = pickAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadType)?.Value.ToString();
+            string loadId = Guid.NewGuid().ToString();
+            Loads.Add(new Load(loadId, pickAction.StartedTime!.Value, loadType, loadPosition));
             logger?.LogInformation("UpdateLoad: added load {LoadId} for finished pick action {ActionId} at node {LastNodeId} (loads now {LoadCount})",
                 loadId, pickAction.ActionId, LastNodeId, Loads.Count);
         }
@@ -448,11 +478,15 @@ public class SimulatedAgv : SagaStateMachineInstance
         bool dropFinishedHere = dropAction != null && (CurrentOrder?.PendingActionStates.Any(s => s.ActionId == dropAction.ActionId && s.ActionStatus == VehicleActionStatus.Finished) ?? false);
         if (dropFinishedHere && !_processedDropActionIds.Contains(dropAction!.ActionId) && Loads.Count != 0)
         {
-            var load = Loads.FirstOrDefault(l => l.Id == dropAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString()) ?? Loads.First();
-            Loads.Remove(load);
+            string? loadPosition = dropAction.ActionParameters?.SingleOrDefault(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice)?.Value.ToString();
+            var load = Loads.FirstOrDefault(l => l.LoadPosition == loadPosition);
+            if (load != null)
+            {
+                Loads.Remove(load);
+            }
             _processedDropActionIds.Add(dropAction.ActionId);
             logger?.LogInformation("UpdateLoad: removed load {LoadId} for finished drop action {ActionId} at node {LastNodeId} (loads now {LoadCount})",
-                load.Id, dropAction.ActionId, LastNodeId, Loads.Count);
+                load?.Id, dropAction.ActionId, LastNodeId, Loads.Count);
         }
     }
 
@@ -533,10 +567,3 @@ public class SimulatedAgv : SagaStateMachineInstance
         SimulatedBatteryCharge = _initialBatteryCharge;
     }
 }
-
-/// <summary>
-/// A load.
-/// </summary>
-/// <param name="Id">The load id.</param>
-/// <param name="PickStartTime">The time the pick action started.</param>
-public record Load(string Id, DateTime PickStartTime);

@@ -1,9 +1,9 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain.Services;
@@ -22,7 +22,7 @@ public class PickOrderActionBuilderTest
     [TestMethod]
     public void Build_NoActionParameters_ThrowsRequiredAgvActionParameterMissing()
     {
-        var agvAction = new AgvAction { ActionType = Vda5050Specifications.ActionTypes.Pick };
+        var agvAction = ActionGenerator.CreateAction(Vda5050Specifications.ActionTypes.Pick);
         var context = new OrderActionContext([], BlockingType.SOFT, true);
 
         Should.Throw<RequiredAgvActionParameterMissing>(() => _builder.Build(agvAction, context));
@@ -31,7 +31,7 @@ public class PickOrderActionBuilderTest
     [TestMethod]
     public void Build_EmptyActionParameters_ThrowsRequiredAgvActionParameterMissing()
     {
-        var agvAction = new AgvAction { ActionType = Vda5050Specifications.ActionTypes.Pick, ActionParameters = [] };
+        var agvAction = ActionGenerator.CreateAction(Vda5050Specifications.ActionTypes.Pick, []);
         var context = new OrderActionContext([], BlockingType.SOFT, true);
 
         Should.Throw<RequiredAgvActionParameterMissing>(() => _builder.Build(agvAction, context));
@@ -40,11 +40,9 @@ public class PickOrderActionBuilderTest
     [TestMethod]
     public void Build_StationTypeMissingFromContext_ThrowsRequiredOrderActionParameterMissing()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters = [new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false }]
-        };
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
+            [ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType)]);
         var context = new OrderActionContext([], BlockingType.SOFT, true);
 
         Should.Throw<RequiredOrderActionParameterMissing>(() => _builder.Build(agvAction, context));
@@ -53,15 +51,12 @@ public class PickOrderActionBuilderTest
     [TestMethod]
     public void Build_StationNameRequiredButMissingFromContext_ThrowsRequiredOrderActionParameterMissing()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationName, IsOptional = false }
-            ]
-        };
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationName)
+            ]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" }],
             BlockingType.SOFT,
@@ -73,15 +68,12 @@ public class PickOrderActionBuilderTest
     [TestMethod]
     public void Build_LoadHandlingDeviceRequiredButMissingFromContext_ThrowsRequiredOrderActionParameterMissing()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.LoadHandlingDevice, IsOptional = false }
-            ]
-        };
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.LoadHandlingDevice)
+            ]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" }],
             BlockingType.SOFT,
@@ -93,12 +85,10 @@ public class PickOrderActionBuilderTest
     [TestMethod]
     public void Build_ValidWithOnlyStationType_ReturnsActionWithStationType()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters = [new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false }],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
+            [ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType)],
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" }],
             BlockingType.SOFT,
@@ -107,23 +97,20 @@ public class PickOrderActionBuilderTest
         var result = _builder.Build(agvAction, context);
 
         result.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.Pick);
-        result.ActionParameters!.Count.ShouldBe(1);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(1);
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.StationType).Value.ShouldBe("floor");
     }
 
     [TestMethod]
     public void Build_WithRequiredStationName_AddsStationNameParameter()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationName, IsOptional = false }
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationName)
             ],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [
                 new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" },
@@ -134,23 +121,20 @@ public class PickOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.Count.ShouldBe(2);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(2);
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.StationName).Value.ShouldBe("PS01");
     }
 
     [TestMethod]
     public void Build_WithOptionalStationName_DoesNotAddStationNameParameter()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationName, IsOptional = true }
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.OptionalParameter(Vda5050Specifications.Parameters.StationName)
             ],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" }],
             BlockingType.SOFT,
@@ -158,23 +142,20 @@ public class PickOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.Count.ShouldBe(1);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(1);
         result.ActionParameters.ShouldNotContain(p => p.Key == Vda5050Specifications.Parameters.StationName);
     }
 
     [TestMethod]
     public void Build_WithRequiredLoadHandlingDevice_AddsLoadHandlingDeviceParameter()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.LoadHandlingDevice, IsOptional = false }
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.LoadHandlingDevice)
             ],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [
                 new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" },
@@ -185,19 +166,62 @@ public class PickOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.Count.ShouldBe(2);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(2);
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.LoadHandlingDevice).Value.ShouldBe("LHD1");
+    }
+
+    [TestMethod]
+    public void Build_WithRequiredLoadType_AddsLoadTypeParameter()
+    {
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
+            [
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.LoadType)
+            ],
+            [BlockingType.SOFT]);
+        var context = new OrderActionContext(
+            [
+                new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" },
+                new OrderActionParameter { Key = Vda5050Specifications.Parameters.LoadType, Value = "pallet" }
+            ],
+            BlockingType.SOFT,
+            true);
+
+        var result = _builder.Build(agvAction, context);
+
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(2);
+        result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.LoadType).Value.ShouldBe("pallet");
+    }
+
+    [TestMethod]
+    public void Build_WithOptionalLoadType_DoesNotAddLoadTypeParameter()
+    {
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
+            [
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType),
+                ActionGenerator.OptionalParameter(Vda5050Specifications.Parameters.LoadType)
+            ],
+            [BlockingType.SOFT]);
+        var context = new OrderActionContext(
+            [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" }],
+            BlockingType.SOFT,
+            true);
+
+        var result = _builder.Build(agvAction, context);
+
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(1);
+        result.ActionParameters.ShouldNotContain(p => p.Key == Vda5050Specifications.Parameters.LoadType);
     }
 
     [TestMethod]
     public void Build_PreferredBlockingTypeSupported_UsesPreferredBlockingType()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.Pick,
-            ActionParameters = [new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false }],
-            BlockingTypes = [BlockingType.SOFT, BlockingType.HARD]
-        };  
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.Pick,
+            [ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType)],
+            [BlockingType.SOFT, BlockingType.HARD]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "floor" }],
             BlockingType.HARD,

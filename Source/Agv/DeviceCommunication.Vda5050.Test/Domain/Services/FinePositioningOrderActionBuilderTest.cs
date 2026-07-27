@@ -1,8 +1,8 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain.Services;
@@ -21,29 +21,22 @@ public class FinePositioningOrderActionBuilderTest
     [TestMethod]
     public void Build_NoOptionalParameters_ReturnsActionWithNoParameters()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.FinePositioning,
-            ActionParameters = [],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+        var agvAction = ActionGenerator.CreateAction(Vda5050Specifications.ActionTypes.FinePositioning, [], [BlockingType.SOFT]);
         var context = new OrderActionContext([], BlockingType.SOFT, true);
 
         var result = _builder.Build(agvAction, context);
 
         result.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.FinePositioning);
-        result.ActionParameters!.ShouldBeEmpty();
+        result.ActionParameters.ShouldNotBeNull().ShouldBeEmpty();
     }
 
     [TestMethod]
     public void Build_WithRequiredStationName_AddsStationNameParameter()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.FinePositioning,
-            ActionParameters = [new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationName, IsOptional = false }],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.FinePositioning,
+            [ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationName)],
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationName, Value = "PS01" }],
             BlockingType.SOFT,
@@ -51,19 +44,17 @@ public class FinePositioningOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.Count.ShouldBe(1);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(1);
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.StationName).Value.ShouldBe("PS01");
     }
 
     [TestMethod]
     public void Build_WithRequiredStationType_AddsStationTypeParameter()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.FinePositioning,
-            ActionParameters = [new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false }],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.FinePositioning,
+            [ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType)],
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationType, Value = "rack" }],
             BlockingType.SOFT,
@@ -71,23 +62,20 @@ public class FinePositioningOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.Count.ShouldBe(1);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(1);
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.StationType).Value.ShouldBe("rack");
     }
 
     [TestMethod]
     public void Build_WithBothRequiredParameters_AddsBothParameters()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.FinePositioning,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.FinePositioning,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationName, IsOptional = false },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = false }
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationName),
+                ActionGenerator.RequiredParameter(Vda5050Specifications.Parameters.StationType)
             ],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [
                 new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationName, Value = "PS02" },
@@ -98,7 +86,7 @@ public class FinePositioningOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.Count.ShouldBe(2);
+        result.ActionParameters.ShouldNotBeNull().Count.ShouldBe(2);
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.StationName).Value.ShouldBe("PS02");
         result.ActionParameters.Single(p => p.Key == Vda5050Specifications.Parameters.StationType).Value.ShouldBe("floor");
     }
@@ -106,16 +94,13 @@ public class FinePositioningOrderActionBuilderTest
     [TestMethod]
     public void Build_WithOptionalParameters_DoesNotAddParameters()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.FinePositioning,
-            ActionParameters =
+        var agvAction = ActionGenerator.CreateAction(
+            Vda5050Specifications.ActionTypes.FinePositioning,
             [
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationName, IsOptional = true },
-                new AgvActionParameter { Key = Vda5050Specifications.Parameters.StationType, IsOptional = true }
+                ActionGenerator.OptionalParameter(Vda5050Specifications.Parameters.StationName),
+                ActionGenerator.OptionalParameter(Vda5050Specifications.Parameters.StationType)
             ],
-            BlockingTypes = [BlockingType.SOFT]
-        };
+            [BlockingType.SOFT]);
         var context = new OrderActionContext(
             [
                 new OrderActionParameter { Key = Vda5050Specifications.Parameters.StationName, Value = "PS02" },
@@ -126,6 +111,6 @@ public class FinePositioningOrderActionBuilderTest
 
         var result = _builder.Build(agvAction, context);
 
-        result.ActionParameters!.ShouldBeEmpty();
+        result.ActionParameters.ShouldNotBeNull().ShouldBeEmpty();
     }
 }

@@ -58,6 +58,11 @@ public record OrderActionContext
             Vda5050Parameters.LoadHandlingDevice = parameter.Value.GetStringValue();
             return;
         }
+        if (Vda5050Specifications.Parameters.LoadType.Equals(parameter.Key))
+        {
+            Vda5050Parameters.LoadType = parameter.Value.GetStringValue();
+            return;
+        }
         if (Vda5050Specifications.Parameters.MapId.Equals(parameter.Key))
         {
             Vda5050Parameters.MapId = parameter.Value.GetStringValue();

@@ -100,4 +100,21 @@ public class MediatorTestFixture<TRequest, TConsumer, TBusConsumer> : MassTransi
 
         return response;
     }
+
+    /// <summary>
+    /// Gets the response from a request of an arbitrary message type.
+    /// </summary>
+    /// <typeparam name="TMessage">The request message type</typeparam>
+    /// <typeparam name="TResult">The result type</typeparam>
+    /// <param name="request">The request object</param>
+    /// <returns>The response object</returns>
+    public async Task<Response<TResult>> GetResponseAsync<TMessage, TResult>(TMessage request)
+        where TMessage : class
+        where TResult : class
+    {
+        IRequestClient<TMessage> client = Mediator!.CreateRequestClient<TMessage>();
+        Response<TResult> response = await client.GetResponse<TResult>(request);
+
+        return response;
+    }
 }

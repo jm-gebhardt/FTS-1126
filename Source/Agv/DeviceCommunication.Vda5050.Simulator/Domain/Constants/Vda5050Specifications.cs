@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 public static class Vda5050Specifications
 {
     public const string Version = "2.1.0";
-    
+
     public static class ActionTypes
     {
         public const string Pick = "pick";
@@ -24,6 +24,7 @@ public static class Vda5050Specifications
     public static class Parameters
     {
         public const string LoadHandlingDevice = "lhd";
+        public const string LoadType = "loadType";
         public const string X = "x";
         public const string Y = "y";
         public const string LastNodeId = "lastNodeId";
@@ -50,4 +51,3 @@ public static class Vda5050Specifications
     }
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-

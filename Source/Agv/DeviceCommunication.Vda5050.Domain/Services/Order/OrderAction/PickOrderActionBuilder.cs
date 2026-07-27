@@ -56,5 +56,6 @@ public sealed class PickOrderActionBuilder : IOrderActionBuilder
     {
         parameters.AddIfRequired(agvAction, Vda5050Specifications.Parameters.StationName, context.Vda5050Parameters.StationName!);
         parameters.AddIfRequired(agvAction, Vda5050Specifications.Parameters.LoadHandlingDevice, context.Vda5050Parameters.LoadHandlingDevice!);
+        parameters.AddIfRequired(agvAction, Vda5050Specifications.Parameters.LoadType, context.Vda5050Parameters.LoadType!);
     }
 }

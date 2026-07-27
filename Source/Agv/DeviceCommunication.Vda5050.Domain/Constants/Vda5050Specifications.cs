@@ -48,6 +48,7 @@ public static class Vda5050Specifications
         public const string StationName = "stationName";
         public const string StationType = "stationType";
         public const string LoadHandlingDevice = "lhd";
+        public const string LoadType = "loadType";
         public const string MapId = "mapId";
         public const string MapVersion = "mapVersion";
         public const string X = "x";
@@ -82,4 +83,3 @@ public static class Vda5050Specifications
     }
 }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-

@@ -1,13 +1,13 @@
 ﻿using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.Common.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using ValidationException = FluentValidation.ValidationException;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.RequestResponseHandler;
 
@@ -18,8 +18,19 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.RequestRes
 public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logger, IAgvCache agvCache, IBus bus, IAgvStateCache stateCache) :
     IConsumer<RequestOperatingModeSwitch>,
     IConsumer<RequestSetToPosition>,
-    IConsumer<RequestAgvState>
+    IConsumer<RequestAgvState>,
+    IConsumer<RequestAddLoad>,
+    IConsumer<RequestRemoveLoad>
 {
+    private async Task RequireOperatingModeAsync(Guid agvCorrelationId, AgvOperatingMode requiredMode)
+    {
+        var mode = await agvCache.GetOperatingModeAsync(agvCorrelationId);
+        if (mode != requiredMode)
+        {
+            throw new AgvOperatingModeNotAllowedException(agvCorrelationId, mode, requiredMode);
+        }
+    }
+
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestOperatingModeSwitch> context)
     {
@@ -42,7 +53,7 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
         var mode = await agvCache.GetOperatingModeAsync(agvCorrelationId);
         if (mode == AgvOperatingMode.Automatic)
         {
-            throw new ValidationException("Moving agv not allowed in automatic mode");
+            throw new AgvOperatingModeNotAllowedException(agvCorrelationId, mode);
         }
         logger.LogInformation("SetPosition to position to {Position} requested for agv {AgvCorrelationId}", position, agvCorrelationId);
         await bus.Publish(new SetToPosition(agvCorrelationId, position), context.CancellationToken);
@@ -60,5 +71,35 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
 
         var state = await stateCache.TryGetAsync(agvCorrelationId);
         await context.RespondAsync(new AgvStateResponse(state));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<RequestAddLoad> context)
+    {
+        (var agvCorrelationId, string loadId, string? loadType, string? loadPosition) = context.Message;
+        await RequireOperatingModeAsync(agvCorrelationId, AgvOperatingMode.Manual);
+        var state = await stateCache.TryGetAsync(agvCorrelationId);
+        if (state?.Loads?.Any(l => l.LoadPosition == loadPosition) == true)
+        {
+            throw new LoadPositionOccupiedException(loadPosition);
+        }
+        logger.LogInformation("Add load {LoadId} requested for agv {AgvCorrelationId}", loadId, agvCorrelationId);
+        await bus.Publish(new AddLoad(agvCorrelationId, loadId, loadType, loadPosition), context.CancellationToken);
+        await context.RespondAsync(new Success());
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<RequestRemoveLoad> context)
+    {
+        (var agvCorrelationId, string loadId) = context.Message;
+        await RequireOperatingModeAsync(agvCorrelationId, AgvOperatingMode.Manual);
+        var state = await stateCache.TryGetAsync(agvCorrelationId);
+        if (state?.Loads?.Any(l => l.LoadId == loadId) != true)
+        {
+            throw new LoadNotFoundException(loadId);
+        }
+        logger.LogInformation("Remove load {LoadId} requested for agv {AgvCorrelationId}", loadId, agvCorrelationId);
+        await bus.Publish(new RemoveLoad(agvCorrelationId, loadId), context.CancellationToken);
+        await context.RespondAsync(new Success());
     }
 }

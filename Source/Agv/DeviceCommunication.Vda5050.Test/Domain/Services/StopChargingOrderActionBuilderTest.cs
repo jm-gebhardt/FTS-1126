@@ -1,8 +1,8 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Services.Order.OrderAction;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Agv;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain.Services;
@@ -21,27 +21,19 @@ public class StopChargingOrderActionBuilderTest
     [TestMethod]
     public void Build_ReturnsActionWithCorrectTypeAndNoParameters()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.StopCharging,
-            BlockingTypes = [BlockingType.SOFT]
-        };
+        var agvAction = ActionGenerator.CreateAction(Vda5050Specifications.ActionTypes.StopCharging, blockingTypes: [BlockingType.SOFT]);
         var context = new OrderActionContext([], BlockingType.SOFT, true);
 
         var result = _builder.Build(agvAction, context);
 
         result.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.StopCharging);
-        result.ActionParameters!.ShouldBeEmpty();
+        result.ActionParameters.ShouldNotBeNull().ShouldBeEmpty();
     }
 
     [TestMethod]
     public void Build_ReturnsActionWithResolvedBlockingType()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.StopCharging,
-            BlockingTypes = [BlockingType.HARD]
-        };
+        var agvAction = ActionGenerator.CreateAction(Vda5050Specifications.ActionTypes.StopCharging, blockingTypes: [BlockingType.HARD]);
         var context = new OrderActionContext([], BlockingType.HARD, true);
 
         var result = _builder.Build(agvAction, context);
@@ -52,11 +44,7 @@ public class StopChargingOrderActionBuilderTest
     [TestMethod]
     public void Build_NoBlockingTypesOnAgvAction_ReturnsFallbackBlockingTypeHard()
     {
-        var agvAction = new AgvAction
-        {
-            ActionType = Vda5050Specifications.ActionTypes.StopCharging,
-            BlockingTypes = null
-        };
+        var agvAction = ActionGenerator.CreateAction(Vda5050Specifications.ActionTypes.StopCharging);
         var context = new OrderActionContext([], BlockingType.SOFT, true);
 
         var result = _builder.Build(agvAction, context);

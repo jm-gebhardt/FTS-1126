@@ -86,6 +86,16 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// </summary>
     public Event<SetToPosition> SetPositionEvent { get; private set; } = null!;
 
+    /// <summary>
+    /// <see cref="AddLoad"/> received.
+    /// </summary>
+    public Event<AddLoad> AddLoadEvent { get; private set; } = null!;
+
+    /// <summary>
+    /// <see cref="RemoveLoad"/> received.
+    /// </summary>
+    public Event<RemoveLoad> RemoveLoadEvent { get; private set; } = null!;
+
     #region Schedules
     /// <summary>
     /// Internal message to schedule sending status update
@@ -165,6 +175,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         DuringAny(UpdateOrderHandler());
         DuringAny(SetPositionHandler());
         DuringAny(SwitchOperatingModeHandler());
+        DuringAny(AddLoadHandler());
+        DuringAny(RemoveLoadHandler());
         SetCompletedWhenFinalized(); // Delete when finalized
     }
 
@@ -316,6 +328,28 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .ThenAsync(PublishState);
     }
 
+    private EventActivityBinder<SimulatedAgv, AddLoad> AddLoadHandler()
+    {
+        return When(AddLoadEvent)
+            .Then(c =>
+            {
+                _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(AddLoad), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.AddLoad(c.Message.LoadId, c.Message.LoadType, c.Message.LoadPosition);
+            })
+            .ThenAsync(PublishState);
+    }
+
+    private EventActivityBinder<SimulatedAgv, RemoveLoad> RemoveLoadHandler()
+    {
+        return When(RemoveLoadEvent)
+            .Then(c =>
+            {
+                _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(RemoveLoad), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.RemoveLoad(c.Message.LoadId);
+            })
+            .ThenAsync(PublishState);
+    }
+
     private EventActivityBinder<SimulatedAgv, StartOrder> StartOrderHandler()
     {
         return When(StartOrderEvent)
@@ -451,7 +485,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                 X = context.Saga.CurrentPosition.X,
                 Y = context.Saga.CurrentPosition.Y
             },
-            Loads = context.Saga.Loads.Select(l => new MqttLoad { LoadId = l.Id }).ToList(),
+            Loads = context.Saga.Loads.Select(l => new MqttLoad { LoadId = l.Id, LoadType = l.LoadType, LoadPosition = l.LoadPosition }).ToList(),
             ActionStates = context.Saga.CurrentOrder != null ? _mapper.Map<IList<MqttActionState>>(context.Saga.CurrentOrder!.PendingActionStates.ToList()) : [],
             BatteryState = new MqttBatteryState
             {

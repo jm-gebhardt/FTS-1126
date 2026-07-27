@@ -59,14 +59,15 @@ public class SimulatedAgvTest
     /// Creates an order whose nodes are evenly spaced along the X axis.
     /// Each edge has <paramref name="edgeLength"/> m of length; EstimatedTravelTime = length / speed.
     /// </summary>
-    private static Order CreateOrder(string[] nodeIds, double edgeLength = 10.0)
+    private static Order CreateOrder(string[] nodeIds, double edgeLength = 10.0, ICollection<OrderAction>? actionsOnLastNode = null)
     {
         List<OrderNode> nodes = nodeIds.Select((id, i) => new OrderNode
         {
             NodeId = id,
             SequenceId = i * 2,
             Released = true,
-            NodePosition = new OrderNodePosition { X = i * edgeLength, Y = 0 }
+            NodePosition = new OrderNodePosition { X = i * edgeLength, Y = 0 },
+            Actions = i == nodeIds.Length - 1 && actionsOnLastNode != null ? actionsOnLastNode : []
         }).ToList();
 
         var edges = new List<OrderEdge>();
@@ -709,7 +710,113 @@ public class SimulatedAgvTest
 
         agv.UpdateOrder(CreateOrder(["A", "B"]));
 
-        agv.Error.ShouldNotBeNull();
-        agv.Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+        agv.Error.ShouldNotBeNull().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+    }
+
+    [TestMethod]
+    public async Task AddLoad_AddsLoadWithTypeAndPosition()
+    {
+        const string loadId = "Load1";
+        const string loadType = "pallet";
+        const string loadPosition = "front";
+        var agv = await CreateAgv();
+
+        agv.AddLoad(loadId, loadType, loadPosition);
+
+        var load = agv.Loads.ShouldHaveSingleItem();
+        load.Id.ShouldBe(loadId);
+        load.LoadType.ShouldBe(loadType);
+        load.LoadPosition.ShouldBe(loadPosition);
+        load.PickStartTime.ShouldBe(_baseTime.DateTime);
+    }
+
+    [TestMethod]
+    public async Task AddLoad_WhenPositionAlreadyOccupied_DoesNotAddSecondLoad()
+    {
+        const string loadPosition = "front";
+        var agv = await CreateAgv();
+        agv.AddLoad("Load1", "pallet", loadPosition);
+
+        agv.AddLoad("Load2", "box", loadPosition);
+
+        agv.Loads.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task AddLoad_WithDifferentPositions_AddsBoth()
+    {
+        var agv = await CreateAgv();
+        agv.AddLoad("Load1", "pallet", "front");
+
+        agv.AddLoad("Load2", "box", "back");
+
+        agv.Loads.Count.ShouldBe(2);
+    }
+
+    [TestMethod]
+    public async Task RemoveLoad_RemovesLoadMatchingId()
+    {
+        const string loadId = "Load1";
+        var agv = await CreateAgv();
+        agv.AddLoad(loadId, "pallet", "front");
+
+        agv.RemoveLoad(loadId);
+
+        agv.Loads.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task RemoveLoad_WhenIdAbsent_DoesNothing()
+    {
+        var agv = await CreateAgv();
+        agv.AddLoad("Load1", "pallet", "front");
+
+        agv.RemoveLoad("UNKNOWN");
+
+        agv.Loads.Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task ProceedOrder_WhenPickActionFinishes_AddsLoadWithMappedTypeAndPosition()
+    {
+        const string loadType = "pallet";
+        const string loadPosition = "LHD1";
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        var pickAction = new OrderAction(Vda5050Specifications.ActionTypes.Pick, null, BlockingType.NONE,
+        [
+            new OrderActionParameter { Key = Vda5050Specifications.Parameters.LoadHandlingDevice, Value = loadPosition },
+            new OrderActionParameter { Key = Vda5050Specifications.Parameters.LoadType, Value = loadType }
+        ]);
+        agv.StartOrder(CreateOrder(["A"], actionsOnLastNode: [pickAction]));
+
+        agv.ProceedOrder();
+        timeProvider.Advance(TimeSpan.FromSeconds(11));
+        agv.ProceedOrder();
+
+        var load = agv.Loads.ShouldHaveSingleItem();
+        load.LoadType.ShouldBe(loadType);
+        load.LoadPosition.ShouldBe(loadPosition);
+        load.Id.ShouldNotBeNullOrEmpty();
+    }
+
+    [TestMethod]
+    public async Task ProceedOrder_WhenDropActionFinishes_RemovesLoadMatchedByPosition()
+    {
+        const string loadPosition = "LHD1";
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = await CreateAgv(speed: 1.0f, timeProvider: timeProvider);
+        agv.AddLoad("Load1", "pallet", loadPosition);
+        var dropAction = new OrderAction(Vda5050Specifications.ActionTypes.Drop, null, BlockingType.NONE,
+        [
+            new OrderActionParameter { Key = Vda5050Specifications.Parameters.LoadHandlingDevice, Value = loadPosition }
+        ]);
+        agv.StartOrder(CreateOrder(["A"], actionsOnLastNode: [dropAction]));
+
+        agv.ProceedOrder();
+        timeProvider.Advance(TimeSpan.FromSeconds(11));
+        agv.ProceedOrder();
+
+        agv.Loads.ShouldBeEmpty();
     }
 }

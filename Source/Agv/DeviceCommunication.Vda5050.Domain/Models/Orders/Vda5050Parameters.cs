@@ -21,6 +21,11 @@ public record Vda5050Parameters
     public string? LoadHandlingDevice { get; set; }
 
     /// <summary>
+    /// The type of the load being handled.
+    /// </summary>
+    public string? LoadType { get; set; }
+
+    /// <summary>
     /// The current position of the agv.
     /// </summary>
     public Vda5050Position? Position { get; set; }
