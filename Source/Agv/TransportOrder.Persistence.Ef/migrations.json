@@ -7,8 +7,7 @@
       "context": "TransportOrderDbContext",
       "providers": [
         {
-          "project": "Gebhardt.Acc.TransportOrder.Persistence.Ef",
-          "provider": "mssql"
+          "project": "Gebhardt.Acc.TransportOrder.Persistence.Ef"
         }
       ]
     }
