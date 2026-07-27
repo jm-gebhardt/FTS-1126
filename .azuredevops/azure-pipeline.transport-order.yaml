@@ -47,4 +47,5 @@ stages:
     skipResharper: true
     skipVulnerabilityCheck: true
     publishMigrator: true
-    migrationsManifest: '$(Build.Repository.LocalPath)/deploy/migrations.transport-order.json'
+    migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder.Persistence.Ef/migrations.json'
+    generateMigrationsScript: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder.Persistence.Ef/empty-migration.json'
