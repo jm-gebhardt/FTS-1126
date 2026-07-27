@@ -17,8 +17,8 @@
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Only update together, check which opentelemetry version corresponds to the Gebhart.Core.Observability packages -->
-    <PackageVersion Include="Gebhardt.Core.Observability" Version="10.4.2" />
-    <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.4.2" />
+    <PackageVersion Include="Gebhardt.Core.Observability" Version="10.4.7" />
+    <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.4.7" />
     <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.15.1-beta.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.17.0" />
@@ -42,11 +42,11 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.6.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.20.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.18.2" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.18.2" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.18.2" />
-    <PackageVersion Include="Quartz" Version="3.18.2" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.21.0" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.19.1" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.19.1" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.19.1" />
+    <PackageVersion Include="Quartz" Version="3.19.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />

@@ -41,4 +41,4 @@ jobs:
       SOURCE_DIR: $(Build.SourcesDirectory)/Source
       EXCLUDED_DEPENDENCIES: 'OpenTelemetry.Resources.Container AutoMapper Vdma.Lif Sarif.Sdk'
       INCLUDED_DEPENDENCIES: 'Gebhardt.Core'
-      REVIEWER_IDS: 'd57dc9ca-b7fe-401f-b7f7-c2ec2fcb5b3d a1963800-1848-4394-a6ed-7d0f733b4359 42f4ca0f-010d-6b7d-9420-a358bd5d6ed2 c01aac72-8af7-4b1d-8393-c787d77add86'
+      REVIEWER_IDS: '060ab369-48b9-653b-8ffc-bec8d011f4bb a1963800-1848-4394-a6ed-7d0f733b4359 42f4ca0f-010d-6b7d-9420-a358bd5d6ed2 c01aac72-8af7-4b1d-8393-c787d77add86'
