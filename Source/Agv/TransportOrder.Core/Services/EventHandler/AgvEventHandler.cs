@@ -407,10 +407,10 @@ public class AgvEventHandler :
 
     private async Task HandleNoChargingStationAvailableAsync(IPublishEndpoint context, Agv agv, Guid? excludedAgv = null)
     {
-        ICollection<Agv> candidatesToStopCharging = (await _agvDb.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).Where(c => excludedAgv == null || c.CorrelationId != excludedAgv).ToList();
+        ICollection<Agv> candidatesToStopCharging = (await _agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(agv.CorrelationId)).Where(c => excludedAgv == null || c.CorrelationId != excludedAgv).ToList();
         if (candidatesToStopCharging.Count == 0)
         {
-            ICollection<Agv> agvs = await _agvDb.Agvs.GetAgvsOnChargerWithAtLeastChargeUpLevel(0);
+            ICollection<Agv> agvs = await _agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(0, agv.CorrelationId);
             await _loggingService.LogBattery(_logger,
                 LogLevel.Warning,
                 LogCodes.BatteryNeedsChargingAllOccupied,
@@ -440,17 +440,27 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvBatteryChargedToMinimum> context)
     {
-        ICollection<Agv> candidatesToStartCharging = await _agvDb.Agvs.GetNotChargingAgvsWithCriticalBatteryLevel();
+        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
+        if (!agv.IsCharging)
+        {
+            // no switching situation, the agv that reached minimum charge level is not currently charging
+            return;
+        }
+
+        ICollection<Agv> candidatesToStartCharging = await _agvDb.Agvs.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(agv.AgvStatus?.LastNodeId);
 
         if (candidatesToStartCharging.Count == 0)
         {
             return;
         }
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(context.Message.CorrelationId);
-
         var agvToStartCharging = candidatesToStartCharging.OrderBy(a => a.AgvStatus?.BatteryCharge ?? double.MaxValue).First();
-
+        var availableCharger = await _chargingPointManager.GetBestChargerAsync(agvToStartCharging);
+        if (availableCharger != null)
+        {
+            // no need for switching, there is a charger available, the agv will go charging eventually
+            return;
+        }
         await context.Publish(new SwitchChargingAgvs(agvToStartCharging.CorrelationId, agv.CorrelationId));
     }
 

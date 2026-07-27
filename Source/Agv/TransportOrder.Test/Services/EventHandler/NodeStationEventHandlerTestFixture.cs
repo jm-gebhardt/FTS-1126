@@ -22,7 +22,7 @@ public class NodeStationEventHandlerTestFixture: MassTransitConsumerTestFixture<
 
     public NodeStationEventHandlerTestFixture WithChargingAgvs(ICollection<Agv> agvs)
     {
-        _agvDbMock.Setup(x => x.Agvs.GetAgvsOnChargerWithAtLeastMinChargeUpLevel()).ReturnsAsync(agvs);
+        _agvDbMock.Setup(x => x.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(It.IsAny<Guid?>())).ReturnsAsync(agvs);
         return this;
     }
 }
