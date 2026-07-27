@@ -94,6 +94,7 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Vdma.Lif" Version="1.0.0.6" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <!-- Packages specific to Resharper scripts -->
     <PackageVersion Include="Sarif.Sdk" Version="4.6.0" />
     <!-- ====================================== -->
