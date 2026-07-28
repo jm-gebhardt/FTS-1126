@@ -1,6 +1,6 @@
 {
   "$schema": "https://gbsd.io/schemas/migrations.schema.json",
-  "srcRoot": "Source",
+  "srcRoot": "Source/Agv",
   "objRoot": "Source/artifacts/obj",
   "contexts": [
     {
