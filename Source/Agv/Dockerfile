@@ -65,7 +65,7 @@ ENV PROJECT=${PROJECT}
 WORKDIR /app
 
 EXPOSE 80/tcp
-HEALTHCHECK --interval=1m --timeout=10s \
+HEALTHCHECK --interval=1m --timeout=10s --start-period=60s --start-interval=3s \
     CMD wget --spider -q --tries=1 -O- http://localhost:80/metrics || exit 1
 COPY --from=build-env /app/out ./
 CMD ["sh", "-c", "dotnet /app/Gebhardt.Acc.$PROJECT.dll"]
