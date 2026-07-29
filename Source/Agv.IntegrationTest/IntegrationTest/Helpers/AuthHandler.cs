@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Headers;
-using IdentityModel.Client;
+using Duende.IdentityModel.Client;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.IntegrationTest.Helpers;

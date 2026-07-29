@@ -1,10 +1,11 @@
 using System.Data.Common;
 using System.Reflection;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Prometheus;
 
-namespace Gebhardt.Acc.Common.Persistence.Ef.Test;
+namespace Gebhardt.Acc.CommonTest.Persistence.Ef;
 
 public class EfCommandMetricsInterceptorTestFixture
 {

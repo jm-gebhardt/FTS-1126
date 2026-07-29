@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.IntegrationTest</AssemblyName>
-        <Description></Description>
         <IsPackable>false</IsPackable>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
@@ -21,7 +20,7 @@
     
     <ItemGroup>
       <PackageReference Include="Azure.Identity" />
-      <PackageReference Include="IdentityModel" />
+      <PackageReference Include="Duende.IdentityModel" />
       <PackageReference Include="JetBrains.Annotations" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />

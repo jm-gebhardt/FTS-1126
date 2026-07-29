@@ -1,4 +1,4 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11217.181
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -167,9 +167,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestPlanRunner.Test", "TestPlanRunner.Test\TestPlanRunner.Test.csproj", "{83084EB6-F9CF-4761-A73B-788F771D0711}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Notification", "Common.Notification\Common.Notification.csproj", "{9F9D4B28-CEE0-4916-A956-D9AC22503ECA}"
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Vda5050.Simulator", "DeviceCommunication.Vda5050.Simulator\DeviceCommunication.Vda5050.Simulator.csproj", "{AE5C4E5B-931D-4D6B-B5FF-8A9F04C2D441}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Persistence.Ef.Test", "Common.Persistence.Ef.Test\Common.Persistence.Ef.Test.csproj", "{293B2E7A-73FA-4044-9608-BE0258BEC393}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Vda5050.Simulator", "DeviceCommunication.Vda5050.Simulator\DeviceCommunication.Vda5050.Simulator.csproj", "{AE5C4E5B-931D-4D6B-B5FF-8A9F04C2D441}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -461,10 +460,6 @@ Global
 		{AE5C4E5B-931D-4D6B-B5FF-8A9F04C2D441}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE5C4E5B-931D-4D6B-B5FF-8A9F04C2D441}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE5C4E5B-931D-4D6B-B5FF-8A9F04C2D441}.Release|Any CPU.Build.0 = Release|Any CPU
-		{293B2E7A-73FA-4044-9608-BE0258BEC393}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{293B2E7A-73FA-4044-9608-BE0258BEC393}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{293B2E7A-73FA-4044-9608-BE0258BEC393}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{293B2E7A-73FA-4044-9608-BE0258BEC393}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

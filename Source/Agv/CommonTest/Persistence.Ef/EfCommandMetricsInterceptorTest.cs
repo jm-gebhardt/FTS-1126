@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Shouldly;
 
-namespace Gebhardt.Acc.Common.Persistence.Ef.Test;
+namespace Gebhardt.Acc.CommonTest.Persistence.Ef;
 
 [TestClass]
 [DoNotParallelize]
