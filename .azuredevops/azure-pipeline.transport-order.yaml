@@ -48,4 +48,3 @@ stages:
     skipVulnerabilityCheck: true
     publishMigrator: true
     migrationsManifest: 'Source/Agv/TransportOrder.Persistence.Ef/migrations.json'
-    migrationsOutputPath: 'Source/artifacts/migrations/transport-order'

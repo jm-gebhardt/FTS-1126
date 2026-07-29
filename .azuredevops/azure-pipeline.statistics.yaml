@@ -46,3 +46,5 @@ stages:
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
     skipVulnerabilityCheck: true
+    publishMigrator: true
+    migrationsManifest: 'Source/Agv/Statistics.Persistence.Ef/migrations.json'
