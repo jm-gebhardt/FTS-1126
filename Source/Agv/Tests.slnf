@@ -2,7 +2,6 @@
   "solution": {
     "path": "CompileAgv.sln",
     "projects": [
-      "Common.Persistence.Ef.Test\\Common.Persistence.Ef.Test.csproj",
       "CommonTest\\CommonTest.csproj",
       "DeviceCommunication.Vda5050.Test\\DeviceCommunication.Vda5050.Test.csproj",
       "DeviceCommunicationTest\\DeviceCommunicationTest.csproj",

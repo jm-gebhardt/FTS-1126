@@ -1,8 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
-    <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
@@ -42,11 +41,17 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.6.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.IdentityModel.Abstractions" Version="8.21.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Logging" Version="8.21.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.21.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Protocols" Version="8.21.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.21.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.21.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.19.1" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.19.1" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.19.1" />
-    <PackageVersion Include="Quartz" Version="3.19.1" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.21.0" />
+      <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.19.1" />
+      <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.19.1" />
+      <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.19.1" />
+      <PackageVersion Include="Quartz" Version="3.19.1" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
@@ -83,7 +88,7 @@
     <PackageVersion Include="Sarif.Sdk" Version="4.6.0" />
     <!-- ====================================== -->
     <!-- Packages specific to IntegrationTest -->
-    <PackageVersion Include="IdentityModel" Version="7.0.0" />
+    <PackageVersion Include="Duende.IdentityModel" Version="8.1.0" />
     <PackageVersion Include="NSwag.Annotations" Version="14.7.1" />
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.7.1" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.7.1" />
