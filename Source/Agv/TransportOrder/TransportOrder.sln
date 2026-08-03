@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Persistence.Ef", "..
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Testing", "..\Common.Testing\Common.Testing.csproj", "{A33B5238-CF2A-4F13-A834-3988B09ECD45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.TrafficManagement", "..\TransportOrder.TrafficManagement\TransportOrder.TrafficManagement.csproj", "{0919A216-2C70-42F8-AE7B-6B7B40562DB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,5 +104,9 @@ Global
 		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A33B5238-CF2A-4F13-A834-3988B09ECD45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0919A216-2C70-42F8-AE7B-6B7B40562DB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0919A216-2C70-42F8-AE7B-6B7B40562DB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0919A216-2C70-42F8-AE7B-6B7B40562DB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0919A216-2C70-42F8-AE7B-6B7B40562DB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
