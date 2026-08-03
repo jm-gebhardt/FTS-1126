@@ -17,6 +17,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Gebhardt.Core.WebApi.Extensions;
 
 namespace Gebhardt.Acc.Statistics.WebApi;
 
@@ -147,6 +148,7 @@ public static class WebHostBuilderExtension
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHealthProbes();
             endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
             {
                 Predicate = _ => true

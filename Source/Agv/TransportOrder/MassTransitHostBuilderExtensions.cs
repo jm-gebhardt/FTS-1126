@@ -27,6 +27,12 @@ public static class MassTransitHostBuilderExtensions
     {
         hostBuilder.ConfigureServices((context, services) =>
         {
+            if (context.HostingEnvironment.IsEnvironment("SwaggerCli"))
+            {
+                initialLogger.LogInformation("Skipping MassTransit and tracing registration for SwaggerCli environment");
+                return;
+            }
+
             try
             {
                 services.ConfigureServicesMassTransit(context.Configuration, x =>

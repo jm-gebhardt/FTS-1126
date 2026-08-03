@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Statistics.WebApi;
+using Gebhardt.Core.Hosting.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -41,8 +42,9 @@ public static class StatisticsHostBuilder
             })
             .ConfigureWebHost(h =>
                 h.UseKestrel()
-                    .ConfigureAppConfiguration((_, config) =>
+                    .ConfigureAppConfiguration((context, config) =>
                     {
+                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })
