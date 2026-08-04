@@ -1,6 +1,7 @@
 ﻿using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.Messages.Filters;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Configurations;
 using Gebhardt.Acc.TransportOrder.WebApi;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,8 @@ public static class MassTransitHostBuilderExtensions
                 services.ConfigureServicesMassTransit(context.Configuration, x =>
                 {
                     x.AddCoreConsumer()
-                        .AddWebApiConsumer();
+                        .AddWebApiConsumer()
+                        .AddTrafficManagementConsumer();
 
                     x.AddMediator(c => c.AddMediator());
                 }, rabbitMqConfiguration: (ctx, cfg) =>

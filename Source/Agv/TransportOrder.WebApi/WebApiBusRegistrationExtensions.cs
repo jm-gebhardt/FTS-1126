@@ -13,7 +13,7 @@ public static class WebApiBusRegistrationExtensions
     /// </summary>
     /// <param name="busRegistrationConfigurator"></param>
     /// <returns></returns>
-    public static void AddWebApiConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
+    public static IBusRegistrationConfigurator AddWebApiConsumer(this IBusRegistrationConfigurator busRegistrationConfigurator)
     {
         busRegistrationConfigurator.AddConsumer<ActionGroupCreatedConsumer>();
         busRegistrationConfigurator.AddConsumer<AgvActionGroupConsumer>();
@@ -33,5 +33,7 @@ public static class WebApiBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<SystemChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<QueueChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<AgvTypeChangedConsumer>();
+
+        return busRegistrationConfigurator;
     }
 }

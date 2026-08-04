@@ -1,5 +1,7 @@
-﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.Reservations;
+﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Reservations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Configurations;
 
@@ -15,5 +17,8 @@ public static class TrafficManagementServiceRegistrationExtensions
     public static void AddTrafficManagementServices(this IServiceCollection services)
     {
         services.AddSingleton<ReservationManager>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<TrafficManagementTickState>();
+        services.AddHostedService<TrafficManagementTickPublisher>();
     }
 }

@@ -7,6 +7,10 @@
   <Import Project="..\SharedProjectSettings.csproj" />
 
   <ItemGroup>
+    <PackageReference Include="MassTransit" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
   </ItemGroup>
 
