@@ -24,6 +24,7 @@
 	<PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI" />
 	<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+	<PackageReference Include="SignalRSwaggerGen" />
 	<PackageReference Include="Swashbuckle.AspNetCore.Filters" />
     </ItemGroup>
 	<ItemGroup>

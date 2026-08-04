@@ -125,6 +125,19 @@ public static class WebHostBuilderExtension
                 services.AddSwaggerGen(options =>
                 {
                     options.SwaggerDoc(new RestApiGroup());
+                    options.SwaggerDoc(new HubApiGroup());
+                    options.AddSignalRSwaggerGen(opt =>
+                    {
+                        opt.ScanAssemblies(executingAssembly);
+                        opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+                        {
+                            {
+                                new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                                []
+                            }
+                        });
+                        opt.AddOperationFilter(new SecurityRequirementsOperationFilter(true, JwtBearerDefaults.AuthenticationScheme));
+                    });
                     options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
                     options.SchemaFilter<RequireNonNullableEnumPropertiesSchemaFilter>();
                     options.SchemaFilter<EnumDictionaryOptionalSchemaFilter>();
@@ -208,6 +221,7 @@ public static class WebHostBuilderExtension
             app.UseSwaggerUI(options =>
             {
                 options.SwaggerEndpoint(new RestApiGroup());
+                options.SwaggerEndpoint(new HubApiGroup());
                 options.ShowExtensions();
             });
             return app;

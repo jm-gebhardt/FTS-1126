@@ -106,7 +106,7 @@ public class SimulatedAgvController(
     /// <response code="404">Agv not found.</response>
     [HttpGet]
     [Route("agv/{correlationId:guid}/state")]
-    public async Task<IActionResult> GetState([FromRoute] Guid correlationId, CancellationToken cancellationToken)
+    public async Task<ActionResult<Vda5050StateDto>> GetState([FromRoute] Guid correlationId, CancellationToken cancellationToken)
     {
         Response<AgvStateResponse> response = await stateClient.GetResponse<AgvStateResponse>(new RequestAgvState(correlationId), cancellationToken);
         if (response.Message.State == null)
