@@ -261,7 +261,7 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
             var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Edge, e.EdgeId, Models.Lif.Severity.Err, message) };
             context.AddFailure(failure);
         }
-        if (trajectory.KnotVector.Min() < 0 || trajectory.KnotVector.Max() > 1)
+        if (trajectory.KnotVector.Any(k => k is < 0 or > 1))
         {
             string message = $"Trajectory for vehicle type {p.VehicleTypeId} on edge {e.EdgeId} in layout '{l.LayoutId}': knot vector values need to be in range [0,1]";
             var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Edge, e.EdgeId, Models.Lif.Severity.Err, message) };

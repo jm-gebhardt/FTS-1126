@@ -447,6 +447,58 @@ public class LifLayoutCollectionValidatorTest
     }
 
     [TestMethod]
+    public async Task Validate_TrajectoryWithEmptyKnotVector_ReportsErr()
+    {
+        var node1 = LifGenerator.GenerateNode("n1", x: 0, y: 0);
+        var node2 = LifGenerator.GenerateNode("n2", x: 5, y: 0);
+        var trajectory = new Trajectory
+        {
+            ControlPoints = [new ControlPoint { X = 0, Y = 0 }, new ControlPoint { X = 5, Y = 0 }],
+            KnotVector = [],
+            Degree = 1
+        };
+        var edgeProperty = LifGenerator.GenerateVehicleTypeEdgeProperty(trajectory: trajectory);
+        var edge = LifGenerator.GenerateEdge("e1", "n1", "n2", [edgeProperty]);
+        var layout = LifGenerator.GenerateLayout(nodes: [node1, node2], edges: [edge]);
+        var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
+
+        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("inconsistent with number of control points") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
+        result.Errors.ShouldNotContain(e => e.ErrorMessage.Contains("range [0,1]"));
+    }
+
+    [TestMethod]
+    public async Task Validate_ClampedQuinticTrajectory_Passes()
+    {
+        var node1 = LifGenerator.GenerateNode("n1", x: 0, y: 0, vehicleTypeProps: [LifGenerator.GenerateVehicleTypeNodeProperty()]);
+        var node2 = LifGenerator.GenerateNode("n2", x: 5, y: 0, vehicleTypeProps: [LifGenerator.GenerateVehicleTypeNodeProperty()]);
+        var trajectory = new Trajectory
+        {
+            ControlPoints =
+            [
+                new ControlPoint { X = 0, Y = 0 },
+                new ControlPoint { X = 1, Y = 1 },
+                new ControlPoint { X = 2, Y = 2 },
+                new ControlPoint { X = 3, Y = 2 },
+                new ControlPoint { X = 4, Y = 1 },
+                new ControlPoint { X = 5, Y = 0 }
+            ],
+            KnotVector = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+            Degree = 5
+        };
+        var edge = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty(trajectory: trajectory)]);
+        var returnEdge = LifGenerator.GenerateEdge("e2", "n2", "n1", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var layout = LifGenerator.GenerateLayout(nodes: [node1, node2], edges: [edge, returnEdge]);
+        var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
+
+        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+
+        result.ShouldNotHaveAnyValidationErrors();
+    }
+
+    [TestMethod]
     public async Task Validate_TrajectoryDegreeLessThanOne_ReportsErr()
     {
         var n1 = LifGenerator.GenerateNode("n1", x: 0, y: 0);
