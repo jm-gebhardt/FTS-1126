@@ -16,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Common"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Vda5050.Simulator", "..\DeviceCommunication.Vda5050.Simulator\DeviceCommunication.Vda5050.Simulator.csproj", "{42492C5D-4918-4593-B4D6-BA644AD19E3D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Domain", "..\Common.Domain\Common.Domain.csproj", "{B5FD6631-BAC8-4DA7-954D-A6AF455BAB68}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Common\Common.csproj", "{5D3F0320-DDEF-4340-A623-1C89FB87E745}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +58,13 @@ Global
 		{42492C5D-4918-4593-B4D6-BA644AD19E3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42492C5D-4918-4593-B4D6-BA644AD19E3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42492C5D-4918-4593-B4D6-BA644AD19E3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5FD6631-BAC8-4DA7-954D-A6AF455BAB68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5FD6631-BAC8-4DA7-954D-A6AF455BAB68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5FD6631-BAC8-4DA7-954D-A6AF455BAB68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5FD6631-BAC8-4DA7-954D-A6AF455BAB68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D3F0320-DDEF-4340-A623-1C89FB87E745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D3F0320-DDEF-4340-A623-1C89FB87E745}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D3F0320-DDEF-4340-A623-1C89FB87E745}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D3F0320-DDEF-4340-A623-1C89FB87E745}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
