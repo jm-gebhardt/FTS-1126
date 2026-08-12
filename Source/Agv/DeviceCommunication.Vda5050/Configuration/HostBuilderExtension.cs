@@ -25,6 +25,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Gebhardt.Core.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Configuration;
 
@@ -99,7 +100,8 @@ public static class HostBuilderExtension
                 services.ConfigureTracing(context.Configuration);
                 services.AddDbContextFactory<DeviceCommunicationVda5050DbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationVda5050DbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)  
+                                               ??context.Configuration.GetConnectionString(DeviceCommunicationVda5050DbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationVda5050DbContext>.MigrationTableName);

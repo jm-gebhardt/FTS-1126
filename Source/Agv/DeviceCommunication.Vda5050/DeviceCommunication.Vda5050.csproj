@@ -19,6 +19,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Gebhardt.Core.EntityFrameworkCore" />
       <PackageReference Include="MassTransit" />
       <PackageReference Include="JetBrains.Annotations" />
       <PackageReference Include="MassTransit.Quartz" />

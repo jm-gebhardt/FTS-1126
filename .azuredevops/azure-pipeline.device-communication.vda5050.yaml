@@ -34,7 +34,7 @@ stages:
     buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.Vda5050/DeviceCommunication.Vda5050.sln'
     publishNuget: false
     publishDocker: true
-    dockerImageName: 'gebhardt/fleet-manager/DeviceCommunication.Vda5050'
+    dockerImageName: 'gebhardt/fleet-manager/device-communication.vda5050'
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
     testTarget: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.Vda5050.Test/**/*.csproj'
