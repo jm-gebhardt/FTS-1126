@@ -10,29 +10,19 @@ var initialLogger = InitialLogger.Create<Program>();
 
 try
 {
-    var swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli");
-
-    if (swaggerCli)
-    {
-        var swaggerHostBuilder = DeviceCommunicationVda5050HostBuilder.CreateHostBuilder(args, initialLogger);
-        swaggerHostBuilder.UseDefaultServiceProvider((_, providerOptions) =>
-        {
-            providerOptions.ValidateScopes = false;
-            providerOptions.ValidateOnBuild = false;
-        });
-
-        _ = swaggerHostBuilder.Build();
-        return 0;
-    }
-    
     var hostBuilder = DeviceCommunicationVda5050HostBuilder.CreateHostBuilder(args, initialLogger);
     var host = hostBuilder.Build();
-    using (var scope = host.Services.CreateScope())
+    if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli"))
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<DeviceCommunicationVda5050DbContext>();
-        await dbContext.Database.MigrateAsync();
+        using (var scope = host.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DeviceCommunicationVda5050DbContext>();
+            await dbContext.Database.MigrateAsync();
+        }
+
+        host.Run();
     }
-    host.Run();
+
     return 0;
 }
 catch (Exception ex)
