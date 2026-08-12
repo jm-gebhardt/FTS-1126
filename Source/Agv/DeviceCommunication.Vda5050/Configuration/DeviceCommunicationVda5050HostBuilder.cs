@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
+using Gebhardt.Core.Hosting.Configuration;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Configuration;
 
@@ -29,8 +30,9 @@ public static class DeviceCommunicationVda5050HostBuilder
             {
                 host.UseKestrel()
                     .AddDeviceCommunicationVda5050WebApi()
-                    .ConfigureAppConfiguration((_, config) =>
+                    .ConfigureAppConfiguration((context, config) =>
                     {
+                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })

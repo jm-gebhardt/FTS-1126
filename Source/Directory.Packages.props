@@ -2,8 +2,6 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
-    <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Gebhardt.Core.Application" Version="10.4.2" />
