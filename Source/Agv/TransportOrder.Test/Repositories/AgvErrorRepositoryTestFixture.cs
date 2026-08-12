@@ -2,8 +2,6 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Memory;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
-using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -15,7 +13,7 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 
     public AgvErrorRepositoryTestFixture()
     {
-        AgvErrorRepository = new EfAgvErrorRepository(ContextFactory, _errorCache, Mock.Of<ILogger<EfAgvErrorRepository>>());
+        AgvErrorRepository = new EfAgvErrorRepository(ContextFactory, _errorCache);
     }
 
     public AgvErrorRepositoryTestFixture WithAgvErrors(List<AgvError> errors)

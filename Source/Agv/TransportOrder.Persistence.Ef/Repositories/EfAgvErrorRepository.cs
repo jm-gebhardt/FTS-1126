@@ -3,7 +3,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -18,45 +17,43 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// </summary>
     private readonly ICache<Guid, List<AgvError>> _errorCache;
 
-    private readonly ILogger<EfAgvErrorRepository> _logger;
-
     /// <inheritdoc cref="EfAgvErrorRepository"/>>
     public EfAgvErrorRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory,
-        ICache<Guid, List<AgvError>> errorCache,
-        ILogger<EfAgvErrorRepository> logger)
+        ICache<Guid, List<AgvError>> errorCache)
 
     {
         _dbContextFactory = dbContextFactory;
         _errorCache = errorCache;
-        _logger = logger;
     }
 
     /// <inheritdoc />
     public async Task AddAndUpdateAgvErrorAsync(List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId)
     {
+        List<DateTime?> resolvedTimesBeforeWrite = resolvedErrors.Select(e => e.ErrorResolved).ToList();
         ResolveErrors(resolvedErrors);
 
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<AgvError> dbSet = context.Set<AgvError>();
-        await dbSet.AddRangeAsync(newErrors);
-        dbSet.UpdateRange(resolvedErrors);
-        bool changed = await context.SaveChangesAsync() != 0;
-
-        if (changed)
+        try
         {
-            _errorCache.TryGet(agvCorrelationId, out List<AgvError>? previousErrors);
-            previousErrors ??= [];
-            List<AgvError> newMemory = previousErrors
-                .Where(e => resolvedErrors.All(r => r.CorrelationId != e.CorrelationId))
-                .Concat(newErrors.Where(n => previousErrors.All(e => e.CorrelationId != n.CorrelationId)))
-                .ToList();
-
-            _errorCache.AddOrUpdate(agvCorrelationId, newMemory);
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
+            DbSet<AgvError> dbSet = context.Set<AgvError>();
+            await dbSet.AddRangeAsync(newErrors);
+            dbSet.UpdateRange(resolvedErrors);
+            await context.SaveChangesAsync();
         }
-        else
+        catch
         {
-            _logger.LogWarning("No changes were made to the database for AGV {AgvCorrelationId} despite new errors or resolved errors", agvCorrelationId);
+            RestoreErrors(resolvedErrors, resolvedTimesBeforeWrite);
+            throw;
         }
+
+        _errorCache.TryGet(agvCorrelationId, out List<AgvError>? previousErrors);
+        previousErrors ??= [];
+        List<AgvError> newMemory = previousErrors
+            .Where(e => resolvedErrors.All(r => r.CorrelationId != e.CorrelationId))
+            .Concat(newErrors.Where(n => previousErrors.All(e => e.CorrelationId != n.CorrelationId)))
+            .ToList();
+
+        _errorCache.AddOrUpdate(agvCorrelationId, newMemory);
     }
 
     private static void ResolveErrors(IList<AgvError> resolvedErrors)
@@ -64,6 +61,14 @@ public class EfAgvErrorRepository : IAgvErrorRepository
         foreach (var resolvedError in resolvedErrors)
         {
             resolvedError.ErrorResolved = DateTime.UtcNow;
+        }
+    }
+
+    private static void RestoreErrors(IList<AgvError> resolvedErrors, IReadOnlyList<DateTime?> resolvedTimes)
+    {
+        for (int i = 0; i < resolvedErrors.Count; i++)
+        {
+            resolvedErrors[i].ErrorResolved = resolvedTimes[i];
         }
     }
 
