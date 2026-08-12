@@ -9,8 +9,9 @@ public static class AgvTypeGenerator
         string seriesName = "BF1",
         double length = 1.0,
         double width = 2.0,
-        bool acknowledged = false)
+        bool acknowledged = false,
+        bool reportedByAgv = false)
     {
-        return new AgvTypeInfo(agvTypeIdentifier, manufacturer, seriesName, length, width, acknowledged);
+        return new AgvTypeInfo(agvTypeIdentifier, manufacturer, seriesName, length, width, acknowledged, reportedByAgv);
     }
 }

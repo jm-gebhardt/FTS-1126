@@ -3,6 +3,7 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Profiles;
 using Shouldly;
@@ -72,6 +73,39 @@ public class FactsheetProfileTest
 
         agvData.IpV4Address.ShouldBe(string.Empty);
         agvData.SoftwareVersion.ShouldBe(string.Empty);
+    }
+
+    [TestMethod]
+    public void Map_FactsheetToAgvType_MarksAgvTypeAsNotReportedByAgv()
+    {
+        const string manufacturer = "Gebhardt";
+        const string seriesName = "GTL";
+        var factsheet = new Factsheet
+        {
+            SerialNumber = "SN-003",
+            Manufacturer = manufacturer,
+            TypeSpecification = new TypeSpecification { SeriesName = seriesName },
+            PhysicalParameters = new PhysicalParameters { Width = 0.8, Length = 1.2 }
+        };
+
+        var agvType = _mapper.Map<AgvType>(factsheet);
+
+        agvType.AgvTypeIdentifier.ShouldBe($"{manufacturer}.{seriesName}");
+        agvType.ReportedByAgv.ShouldBeFalse();
+        agvType.Acknowledged.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void Map_AgvTypeToAgvTypeInfo_CarriesReportedByAgv()
+    {
+        const string manufacturer = "Gebhardt";
+        const string seriesName = "GTL";
+        var agvType = new AgvType($"{manufacturer}.{seriesName}", manufacturer, seriesName, 1.2, 0.8, string.Empty, acknowledged: false, reportedByAgv: true);
+
+        var agvTypeInfo = _mapper.Map<AgvTypeInfo>(agvType);
+
+        agvTypeInfo.ReportedByAgv.ShouldBeTrue();
+        agvTypeInfo.Acknowledged.ShouldBeFalse();
     }
 
     [TestMethod]

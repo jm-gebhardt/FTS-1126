@@ -35,4 +35,19 @@ public class AgvTypeCommandHandlerTest
         fixture.VerifyAgvTypeUpserted(Times.Once());
         fixture.VerifySystemLogged(Times.Never());
     }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Consume_NewAgvType_UpsertsWithReportedByAgvFromInfo(bool reportedByAgv)
+    {
+        const string agvTypeIdentifier = AgvTypeCommandHandlerTestFixture.AgvTypeIdentifier;
+        var fixture = new AgvTypeCommandHandlerTestFixture();
+
+        await fixture.PublishMessageAsync(new AddOrUpdateAgvType(
+            agvTypeIdentifier.ToGuid(),
+            AgvTypeGenerator.GenerateAgvTypeInfo(agvTypeIdentifier, reportedByAgv: reportedByAgv)));
+
+        fixture.VerifyAgvTypeUpserted(reportedByAgv, Times.Once());
+    }
 }

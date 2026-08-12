@@ -43,7 +43,8 @@ public class FactsheetProfile : Profile
                 f.PhysicalParameters.Length,
                 f.PhysicalParameters.Width,
                 string.Empty,
-                true))
+                acknowledged: true,
+                reportedByAgv: false))
             .ForAllMembers(opt => opt.Ignore());
 
         CreateMap<AgvType, AgvTypeInfo>();

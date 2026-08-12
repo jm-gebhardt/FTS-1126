@@ -34,8 +34,17 @@ public record AgvType : IAgvType
     /// <inheritdoc/>
     public bool Acknowledged { get; set; }
 
+    /// <inheritdoc/>
+    public bool ReportedByAgv { get; init; }
+
     /// <inheritdoc cref="AgvType"/>
-    public AgvType(string agvTypeIdentifier, string manufacturer, string seriesName, double length, double width, bool acknowledged)
+    public AgvType(string agvTypeIdentifier,
+        string manufacturer,
+        string seriesName,
+        double length,
+        double width,
+        bool acknowledged,
+        bool reportedByAgv)
     {
         Id = IdFromIdentifier(agvTypeIdentifier);
         AgvTypeIdentifier = agvTypeIdentifier;
@@ -44,6 +53,7 @@ public record AgvType : IAgvType
         Length = length;
         Width = width;
         Acknowledged = acknowledged;
+        ReportedByAgv = reportedByAgv;
     }
 
     /// <summary>For serialization.</summary>

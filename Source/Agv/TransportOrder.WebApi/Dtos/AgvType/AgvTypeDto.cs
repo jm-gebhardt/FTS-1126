@@ -44,6 +44,11 @@ public record AgvTypeDto
     public bool Acknowledged { get; set; }
 
     /// <summary>
+    /// Whether the AGV type was reported by an AGV itself.
+    /// </summary>
+    public bool ReportedByAgv { get; init; }
+
+    /// <summary>
     /// Whether at least one AGV of this type has a graph.
     /// </summary>
     public bool HasGraph { get; set; }

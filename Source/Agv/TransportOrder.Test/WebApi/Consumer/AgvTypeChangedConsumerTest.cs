@@ -26,23 +26,23 @@ public class AgvTypeChangedConsumerTest
     [TestMethod]
     public async Task Consume_AgvTypeAdded_ValidData_SendsAgvTypeCreated()
     {
-        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, false);
-        var typeInfo = AgvTypeGenerator.GenerateAgvTypeInfo(agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged);
+        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, acknowledged: false, reportedByAgv: true);
+        var typeInfo = AgvTypeGenerator.GenerateAgvTypeInfo(agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, agvType.ReportedByAgv);
         var fixture = new ConsumerHubTestFixture<AgvTypeChangedConsumer, IAgvTypePublisher>();
 
         await fixture.PublishMessageAsync(new AgvTypeAdded(agvType.Id, typeInfo));
 
         var mapper = MappingHelper.GetMapper(new AgvTypeProfile());
-        var agvTypeDto = mapper.Map<AgvTypeDto>(typeInfo) with {Id = agvType.Id};
-        
+        var agvTypeDto = mapper.Map<AgvTypeDto>(typeInfo) with { Id = agvType.Id };
+
         fixture.PublisherMock.Verify(h => h.SendAgvTypeCreated(agvTypeDto), Times.Once);
     }
 
     [TestMethod]
     public async Task Consume_AgvTypeUpdated_ValidData_SendsAgvTypeUpdated()
     {
-        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, true);
-        var typeInfo = AgvTypeGenerator.GenerateAgvTypeInfo(agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged);
+        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, acknowledged: true, reportedByAgv: false);
+        var typeInfo = AgvTypeGenerator.GenerateAgvTypeInfo(agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, agvType.ReportedByAgv);
         var fixture = new ConsumerHubTestFixture<AgvTypeChangedConsumer, IAgvTypePublisher>();
 
         await fixture.PublishMessageAsync(new AgvTypeUpdated(agvType.Id, typeInfo));

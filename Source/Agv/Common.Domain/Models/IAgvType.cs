@@ -37,4 +37,9 @@ public interface IAgvType
     /// Whether the AGV type has been acknowledged (confirmed) by an operator.
     /// </summary>
     bool Acknowledged { get; }
+
+    /// <summary>
+    /// Whether the AGV type was reported by an AGV itself.
+    /// </summary>
+    bool ReportedByAgv { get; }
 }

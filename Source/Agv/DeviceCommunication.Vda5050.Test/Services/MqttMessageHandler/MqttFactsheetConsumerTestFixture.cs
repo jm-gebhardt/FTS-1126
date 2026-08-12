@@ -68,10 +68,10 @@ public class MqttFactsheetConsumerTestFixture : MqttConsumerTestFixture<MqttFact
     /// <paramref name="lookupIdentifier"/> to register it under a different identifier, e.g. to simulate the
     /// previously assigned type of an agv whose type is about to change.
     /// </summary>
-    public MqttFactsheetConsumerTestFixture WithExistingAgvType(string manufacturer = "", string seriesName = "series", double length = 1.0, double width = 1.0, bool acknowledged = true, string? lookupIdentifier = null)
+    public MqttFactsheetConsumerTestFixture WithExistingAgvType(string manufacturer = "", string seriesName = "series", double length = 1.0, double width = 1.0, bool acknowledged = true, string? lookupIdentifier = null, bool reportedByAgv = true)
     {
         string identifier = $"{manufacturer}.{seriesName}";
-        var agvType = new AgvType(identifier, manufacturer, seriesName, length, width, "raw-data", acknowledged);
+        var agvType = new AgvType(identifier, manufacturer, seriesName, length, width, "raw-data", acknowledged, reportedByAgv);
         _agvTypeRepository.Setup(x => x.GetAgvTypeAsync(lookupIdentifier ?? identifier)).ReturnsAsync(agvType);
         return this;
     }

@@ -51,6 +51,11 @@ public class AgvTypeCommandHandlerTestFixture : MassTransitConsumerTestFixture<A
         AgvDb.Verify(x => x.AgvTypes.AddOrUpdateAsync(It.IsAny<AgvTypeModel>(), It.IsAny<CancellationToken>()), times);
     }
 
+    public void VerifyAgvTypeUpserted(bool reportedByAgv, Times times)
+    {
+        AgvDb.Verify(x => x.AgvTypes.AddOrUpdateAsync(It.Is<AgvTypeModel>(a => a.ReportedByAgv == reportedByAgv), It.IsAny<CancellationToken>()), times);
+    }
+
     public void VerifySystemLogged(Times times)
     {
         LoggingService.Verify(

@@ -12,8 +12,8 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.AgvType;
 [TestClass]
 public class AgvTypeRequestHandlerTest
 {
-    private static TransportOrder.Domain.Models.AgvTypes.AgvType CreateAgvType(string identifier = "AGV1") =>
-        new(identifier, "Gebhardt", "SeriesA", length: 1.5, width: 0.8, acknowledged: false);
+    private static TransportOrder.Domain.Models.AgvTypes.AgvType CreateAgvType(string identifier = "AGV1", bool reportedByAgv = true) =>
+        new(identifier, "Gebhardt", "SeriesA", length: 1.5, width: 0.8, acknowledged: false, reportedByAgv: reportedByAgv);
 
     [TestMethod]
     public async Task Consume_RequestAgvTypeAcknowledgement_ExistingAgvType_PublishesAcknowledgeAgvTypeAndRespondsSuccess()
@@ -53,6 +53,22 @@ public class AgvTypeRequestHandlerTest
 
         response.Message.CorrelationId.ShouldBe(agvType.Id);
         response.Message.AgvType.Id.ShouldBe(agvType.Id);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task Consume_GetAgvType_ExistingAgvType_RespondsWithReportedByAgv(bool reportedByAgv)
+    {
+        var agvType = CreateAgvType(reportedByAgv: reportedByAgv);
+        AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler> fixture =
+            new AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler>()
+                .WithAgvTypes(agvType)
+                .Build();
+
+        Response<GotAgvType> response = await fixture.GetResponseAsync<GotAgvType>(new GetAgvType(agvType.Id));
+
+        response.Message.AgvType.ReportedByAgv.ShouldBe(reportedByAgv);
     }
 
     [TestMethod]

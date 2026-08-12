@@ -55,4 +55,32 @@ public class EfAgvTypeRepositoryTest
         persisted.Width.ShouldBe(AgvTypeRepositoryTestFixture.UpdatedWidth);
         persisted.Acknowledged.ShouldBeTrue();
     }
+
+    [TestMethod]
+    public async Task AddOrUpdateAsync_NewType_PersistsReportedByAgv()
+    {
+        var fixture = new AgvTypeRepositoryTestFixture();
+
+        await fixture.Repository.AddOrUpdateAsync(AgvTypeRepositoryTestFixture.GenerateAgvType(reportedByAgv: true));
+
+        var persisted = await fixture.GetAsync(AgvTypeRepositoryTestFixture.AgvTypeIdentifier);
+        persisted.ShouldNotBeNull();
+        persisted.ReportedByAgv.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task AddOrUpdateAsync_AcknowledgedReportedType_KeepsReportedByAgv()
+    {
+        var fixture = new AgvTypeRepositoryTestFixture();
+        await fixture.Repository.AddOrUpdateAsync(AgvTypeRepositoryTestFixture.GenerateAgvType(reportedByAgv: true));
+        var stored = await fixture.Repository.GetAgvTypeAsync(AgvTypeRepositoryTestFixture.AgvTypeIdentifier.ToGuid());
+        stored.Acknowledge();
+
+        await fixture.Repository.AddOrUpdateAsync(stored);
+
+        var persisted = await fixture.GetAsync(AgvTypeRepositoryTestFixture.AgvTypeIdentifier);
+        persisted.ShouldNotBeNull();
+        persisted.Acknowledged.ShouldBeTrue();
+        persisted.ReportedByAgv.ShouldBeTrue();
+    }
 }

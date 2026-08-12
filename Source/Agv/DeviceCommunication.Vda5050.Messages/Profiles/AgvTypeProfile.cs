@@ -22,7 +22,8 @@ public class AgvTypeProfile : Profile
                 f.PhysicalParameters.Length,
                 f.PhysicalParameters.Width,
                 string.Empty,
-                false))
+                acknowledged: false,
+                reportedByAgv: true))
             .ForAllMembers(opt => opt.Ignore());
     }
 }

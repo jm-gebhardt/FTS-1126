@@ -20,9 +20,9 @@ public class AgvTypeRepositoryTestFixture : TransportOrderDbFixture
         Repository = new EfAgvTypeRepository(ContextFactory);
     }
 
-    public static AgvType GenerateAgvType(double length = 1.0, double width = 2.0, bool acknowledged = false)
+    public static AgvType GenerateAgvType(double length = 1.0, double width = 2.0, bool acknowledged = false, bool reportedByAgv = false)
     {
-        return new AgvType(AgvTypeIdentifier, Manufacturer, SeriesName, length, width, acknowledged);
+        return new AgvType(AgvTypeIdentifier, Manufacturer, SeriesName, length, width, acknowledged, reportedByAgv);
     }
 
     public async Task<AgvType?> GetAsync(string agvTypeIdentifier)

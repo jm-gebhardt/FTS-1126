@@ -39,8 +39,18 @@ public record AgvType : IAgvType
     /// <inheritdoc/>
     public bool Acknowledged { get; init; }
 
+    /// <inheritdoc/>
+    public bool ReportedByAgv { get; init; }
+
     /// <inheritdoc cref="AgvType"/>
-    public AgvType(string agvTypeIdentifier, string manufacturer, string seriesName, double length, double width, string rawData, bool acknowledged)
+    public AgvType(string agvTypeIdentifier,
+        string manufacturer,
+        string seriesName,
+        double length,
+        double width,
+        string rawData,
+        bool acknowledged,
+        bool reportedByAgv)
     {
         Id = agvTypeIdentifier.ToGuid();
         AgvTypeIdentifier = agvTypeIdentifier;
@@ -50,6 +60,7 @@ public record AgvType : IAgvType
         Width = width;
         RawData = rawData;
         Acknowledged = acknowledged;
+        ReportedByAgv = reportedByAgv;
     }
 
     /// <summary>For AutoMapper.</summary>
