@@ -30,7 +30,7 @@ resources:
 stages:
 - template: backend-template-2.yml@templates
   parameters:
-    buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslatorv/OrderTranslator.sln'
+    buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator/OrderTranslator.sln'
     publishNuget: false
     publishDocker: true
     dockerImageName: 'gebhardt/fleet-manager/order-translator'
