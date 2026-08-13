@@ -40,8 +40,7 @@ stages:
     nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
     servicePublishProject: './Agv/OrderTranslator/OrderTranslator.csproj'
     entryPointProjectName: 'OrderTranslator'
-    openApiEnabled: true
-    openApiProjectTarget: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator/OrderTranslator.csproj'
+    openApiEnabled: false
     runContractPromotion: false
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
