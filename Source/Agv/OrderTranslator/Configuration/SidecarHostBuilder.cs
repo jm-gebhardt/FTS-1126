@@ -4,6 +4,8 @@ using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.OrderTranslator.CmdOptions;
 using Gebhardt.Acc.OrderTranslator.Domain.Services;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,8 +38,9 @@ public static class OrderTranslatorHostBuilder
             .AddOrderTranslator()
             .ConfigureWebHost(h =>
                 h.UseKestrel()
-                    .ConfigureAppConfiguration((_, config) =>
+                    .ConfigureAppConfiguration((context, config) =>
                     {
+                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })
@@ -48,6 +51,12 @@ public static class OrderTranslatorHostBuilder
                             app.UseDeveloperExceptionPage();
                         }
                         app.UseMetricServer();
+
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapHealthProbes();
+                        });
                         app.UseHealthChecks(HealthEndpoint);
                     }));
 

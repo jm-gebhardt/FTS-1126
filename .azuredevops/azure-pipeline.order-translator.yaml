@@ -1,0 +1,50 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master # to be removed when branch name is changed to main
+    - main
+  paths:
+    include:
+    - Source/Agv/OrderTranslatorv**
+    - Source/Agv/Common**
+    - Source/Directory.Build.props
+    - Source/Directory.Packages.props
+
+# Check out the repository with the Azure Pipelines templates. When this pipeline is executed the first time, there has to be manually given permission in the GUI.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#why-am-i-prompted-to-authorize-resources-the-first-time-i-try-to-check-out-a-different-repository
+resources:
+  repositories:
+  - repository: templates
+    type: git
+    name: Architecture/Gebhardt.Platform.CI
+    ref: main
+# Approved OpenAPI baselines. Alias must match the template's 'platformContractsResourceAlias'
+# (default 'platform-contracts'). The repo lives in the 'Gebhardt Software Platform' project, matching
+# the template's 'platformContractsProject' default used for PR creation.
+  - repository: platform-contracts
+    type: git
+    name: Gebhardt Software Platform/platform-contracts
+    ref: refs/heads/main
+
+stages:
+- template: backend-template-2.yml@templates
+  parameters:
+    buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslatorv/OrderTranslator.sln'
+    publishNuget: false
+    publishDocker: true
+    dockerImageName: 'gebhardt/fleet-manager/order-translator'
+    useNerdbankVersioning: true
+    workingDirectory: '$(Build.Repository.LocalPath)/Source'
+    testTarget: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator.Test/**/*.csproj'
+    nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
+    servicePublishProject: './Agv/OrderTranslator/OrderTranslator.csproj'
+    entryPointProjectName: 'OrderTranslator'
+    openApiEnabled: true
+    openApiProjectTarget: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator/OrderTranslator.csproj'
+    runContractPromotion: false
+    buildOutputPath: 'Source/artifacts'
+    skipResharper: true
+    skipVulnerabilityCheck: true
+    publishMigrator: true
+    migrationsManifest: 'Source/Agv/OrderTranslator.Persistence.Ef/migrations.json'
