@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Domain", "..\Common.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Filter", "..\Common.Filter\Common.Filter.csproj", "{867B54CC-F8EC-439F-8574-4B578553173F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Notification", "..\Common.Notification\Common.Notification.csproj", "{A5B66015-2501-4EA6-A5CA-9E1C2557CB1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,5 +68,9 @@ Global
 		{867B54CC-F8EC-439F-8574-4B578553173F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{867B54CC-F8EC-439F-8574-4B578553173F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{867B54CC-F8EC-439F-8574-4B578553173F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5B66015-2501-4EA6-A5CA-9E1C2557CB1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5B66015-2501-4EA6-A5CA-9E1C2557CB1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5B66015-2501-4EA6-A5CA-9E1C2557CB1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5B66015-2501-4EA6-A5CA-9E1C2557CB1C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
