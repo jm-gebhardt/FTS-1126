@@ -6,6 +6,7 @@ using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Dictionaries;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Common.WebApi.Swagger;
@@ -24,8 +25,10 @@ using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
+using Gebhardt.Core.EntityFrameworkCore;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using MassTransit;
-using Gebhardt.Acc.Common.Persistence.Ef;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 
@@ -57,7 +60,9 @@ public static class TestPlanRunnerHostBuilder
                 // Database
                 services.AddDbContextFactory<TransportOrderDbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(TransportOrderDbContext
+                                                   .ConfigSectionName);
                     builder.UseSqlServer(connectionString,
                         options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
                     builder.AddInterceptors(new EfCommandMetricsInterceptor());
@@ -81,7 +86,9 @@ public static class TestPlanRunnerHostBuilder
                 services.AddSingleton<IAgvRepository, AgvRepository>(); // captive (ITestPlanManager is singleton)
                 services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
                 services.AddSingleton<IAgvRoutePlanCacheProvider, AgvRoutePlanCache>();
-                services.AddSingleton<IAgvRouteRetrievalService, AgvRouteRetrievalService>(); // captive (ITestStepCancellationEvaluator is singleton)
+                services
+                    .AddSingleton<IAgvRouteRetrievalService,
+                        AgvRouteRetrievalService>(); // captive (ITestStepCancellationEvaluator is singleton)
                 services.AddSingleton<ITestPlanManager, TestPlanManager>();
                 services.AddSingleton<ITestStepCancellationEvaluator, TestStepCancellationEvaluator>();
                 services.AddSingleton<TestPlanFileWatcher>();
@@ -122,6 +129,7 @@ public static class TestPlanRunnerHostBuilder
                     initialLogger.LogError(e, "MassTransit could not be started");
                     throw;
                 }
+
                 services.ConfigureTracing(context.Configuration);
 
                 // Swagger
@@ -140,8 +148,9 @@ public static class TestPlanRunnerHostBuilder
         hostBuilder.ConfigureWebHost(host =>
         {
             host.UseKestrel()
-                .ConfigureAppConfiguration((_, config) =>
+                .ConfigureAppConfiguration((context, config) =>
                 {
+                    config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                 })
@@ -154,7 +163,11 @@ public static class TestPlanRunnerHostBuilder
                     app.UseSwagger();
                     app.UseSwaggerUI(options => { options.SwaggerEndpoint(new TestPlanRunnerApiGroup()); });
 
-                    app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapHealthProbes();
+                        endpoints.MapControllers();
+                    });
                 });
         });
 
