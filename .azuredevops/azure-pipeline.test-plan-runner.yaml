@@ -46,5 +46,4 @@ stages:
     buildOutputPath: 'Source/artifacts'
     skipResharper: true
     skipVulnerabilityCheck: true
-    publishMigrator: true
-    migrationsManifest: 'Source/Agv/TestPlanRunner.Persistence.Ef/migrations.json'
+    publishMigrator: false
