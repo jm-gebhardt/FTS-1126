@@ -71,8 +71,9 @@ public interface IActionGroupRepository
     /// <param name="sourceNodeId">The source node id.</param>
     /// <param name="targetNodeId">The target node id.</param>
     /// <param name="maxItems">The maximum number of groups returned.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000);
+    Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get ActionGroup count which have the given actionGroupState (and date range filter).
@@ -80,8 +81,9 @@ public interface IActionGroupRepository
     /// <param name="states">Can be one actionGroupState filter or contain multiple states which should be included in the return</param>
     /// <param name="fromDate">The UTC from date, only items with a greater CreatedDate will be considered.</param>
     /// <param name="toDate">The UTC to date, only items with a less CreatedDate will be considered.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null);
+    Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get the current AgvAction of provided agv.

@@ -17,12 +17,14 @@ public interface IZoneRepository
     /// Get all zones for given zone ids.
     /// </summary>
     /// <param name="zoneIds">The zone ids.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A collection of zones.</returns>
-    Task<ICollection<Zone>> GetZones(string[] zoneIds);
+    Task<ICollection<Zone>> GetZones(string[] zoneIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get all zones.
     /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A collection of zones.</returns>
-    Task<ICollection<Zone>> GetZones();
+    Task<ICollection<Zone>> GetZones(CancellationToken cancellationToken = default);
 }

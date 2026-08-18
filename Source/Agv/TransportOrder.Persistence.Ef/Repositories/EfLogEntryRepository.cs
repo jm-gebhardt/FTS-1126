@@ -57,9 +57,9 @@ public class EfLogEntryRepository : ILogEntryRepository
     }
 
     /// <inheritdoc cref="ILogEntryRepository"/>>
-    public async Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize)
+    public async Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize, CancellationToken cancellationToken)
     {
-        PagedResult<LogEntryFilterable> logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)]);
+        PagedResult<LogEntryFilterable> logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)], cancellationToken);
         return _mapper.Map<PagedResult<LogEntryFilterable>, PagedResult<LogEntry>>(logs);
     }
 

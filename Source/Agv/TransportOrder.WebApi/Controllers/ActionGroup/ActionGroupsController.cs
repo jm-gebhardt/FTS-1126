@@ -48,7 +48,7 @@ public class ActionGroupsController : Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/actionGroups")]
-    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, Guid? assignedAgv, int limit = 1000, SortBy sortBy = SortBy.CreatedDate, SortDirection sortDirection = SortDirection.Desc)
+    public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, Guid? assignedAgv, int limit = 1000, SortBy sortBy = SortBy.CreatedDate, SortDirection sortDirection = SortDirection.Desc, CancellationToken cancellationToken = default)
     {
         Response<GotActionGroups> response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>(new GetActionGroups(
             states,
@@ -57,7 +57,8 @@ public class ActionGroupsController : Controller
             assignedAgv != null ? new List<Guid> { (Guid) assignedAgv } : null,
             limit,
             sortBy,
-            sortDirection == SortDirection.Desc));
+            sortDirection == SortDirection.Desc),
+            cancellationToken);
         List<ActionGroupDto> actionGroups = response.Message.ActionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList();
         return Ok(actionGroups);
     }
@@ -68,9 +69,9 @@ public class ActionGroupsController : Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/actionGroupsAggregate/byState")]
-    public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState()
+    public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState(CancellationToken cancellationToken)
     {
-        Response<GotActionGroupCountsByState> response = await _getAgvActionGroupCountsByStateRequest.GetResponse<GotActionGroupCountsByState>(new GetActionGroupCountsByState());
+        Response<GotActionGroupCountsByState> response = await _getAgvActionGroupCountsByStateRequest.GetResponse<GotActionGroupCountsByState>(new GetActionGroupCountsByState(), cancellationToken);
         var actionGroupCountByState = _mapper.Map<List<AgvGroupCountByStateDto>>(response.Message.AgvGroupCountByState);
         return Ok(actionGroupCountByState);
     }
@@ -80,13 +81,14 @@ public class ActionGroupsController : Controller
     /// </summary>
     /// <param name="source">The source node id (optional).</param>
     /// <param name="target">The target node id (optional).</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the request.</param>
     /// <response code="200">Ok</response>
     /// <returns>Duration statistics of actions in groups matching query parameters. Empty list if no matching groups where found.</returns>
     [HttpGet]
     [Route("/actionGroups/durationStatistics")]
-    public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target)
+    public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target, CancellationToken cancellationToken)
     {
-        Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()));
+        Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()), cancellationToken);
         return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
     }
 
@@ -95,9 +97,9 @@ public class ActionGroupsController : Controller
     /// </summary>
     [HttpPost]
     [Route("/actionGroups/filtered")]
-    public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties)
+    public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties, CancellationToken cancellationToken)
     {
-        Response<GotFilteredActionGroups> result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []));
+        Response<GotFilteredActionGroups> result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []), cancellationToken);
         var mapped = _mapper.Map<PagedResult<FilteredActionGroupDto>>(result.Message.ActionGroups);
 
         return Ok(mapped);

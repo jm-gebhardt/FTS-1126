@@ -20,9 +20,9 @@ public class ZoneController(IMapper mapper, IRequestClient<GetZones> getZonesReq
     /// </summary>
     [HttpGet]
     [Route("/zones")]
-    public async Task<ActionResult<ICollection<ZoneDto>>> GetZones()
+    public async Task<ActionResult<ICollection<ZoneDto>>> GetZones(CancellationToken cancellationToken)
     {
-        Response<GotZones> response = await getZonesRequestClient.GetResponse<GotZones>(new GetZones());
+        Response<GotZones> response = await getZonesRequestClient.GetResponse<GotZones>(new GetZones(), cancellationToken);
         var dto = mapper.Map<List<ZoneDto>>(response.Message.Zones);
         return Ok(dto);
     }

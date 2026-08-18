@@ -67,6 +67,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroup> context)
     {
         var correlationId = context.Message.CorrelationId;
+
         var actionGroup = await _retrievalService.GetActionGroupWithNodesAsync(correlationId);
         if (actionGroup == null)
         {
@@ -81,7 +82,9 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroups> context)
     {
         var request = context.Message;
-        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit, request.AssignedAgvIds, request.SortBy, request.SortDescending);
+        var cancellationToken = context.CancellationToken;
+
+        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit, request.AssignedAgvIds, request.SortBy, request.SortDescending, cancellationToken);
 
         await context.RespondAsync(new GotActionGroups(actionGroups));
     }
@@ -91,8 +94,9 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<GetActionGroupCountsByState> context)
     {
-        AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state => _actionGroupRepository.GetActionGroupsCountAsync(new[] { state })
-            .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result))));
+        var cancellationToken = context.CancellationToken;
+        AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state => _actionGroupRepository.GetActionGroupsCountAsync(new[] { state }, cancellationToken: cancellationToken)
+            .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result), cancellationToken)));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));
     }
@@ -262,11 +266,12 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     /// </summary>
     public async Task Consume(ConsumeContext<GetFilteredActionGroups> context)
     {
+        var cancellationToken = context.CancellationToken;
         (var filterDto, int pageNumber, int pageSize, var ordering, ICollection<string> orderProps) = context.Message;
 
         var filter = filterDto.Translate<ActionGroup, ActionGroupFilterable>();
         
-        PagedResult<FilteredActionGroup> result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps);
+        PagedResult<FilteredActionGroup> result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps, cancellationToken);
 
         await context.RespondAsync(new GotFilteredActionGroups(result));
     }

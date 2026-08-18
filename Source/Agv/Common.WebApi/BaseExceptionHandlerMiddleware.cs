@@ -23,6 +23,10 @@ public abstract class BaseExceptionHandlerMiddleware(ILogger<BaseExceptionHandle
         {
             await next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // Client disconnected — no response needed, suppress the error log
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(context, ex);

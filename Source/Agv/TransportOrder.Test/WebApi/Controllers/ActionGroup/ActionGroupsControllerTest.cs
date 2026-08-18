@@ -67,7 +67,7 @@ public class ActionGroupsControllerTest
             .WithActionGroupCount([actionGroupCounts])
             .Build();
 
-        List<AgvGroupCountByStateDto> dtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroupCountsByState())).ToList();
+        List<AgvGroupCountByStateDto> dtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroupCountsByState(CancellationToken.None))).ToList();
 
         dtos.ShouldNotBeNull();
         dtos.Count.ShouldBe(1);
@@ -91,7 +91,7 @@ public class ActionGroupsControllerTest
             .WithDurationStatistics(durationStatistics)
             .Build();
 
-        List<ActionDurationStatisticsDto> durationStatisticsDtos = (await fixture.GetControllerResultValueAsync(c => c.GetDurationStatistics("source", "target"))).ToList();
+        List<ActionDurationStatisticsDto> durationStatisticsDtos = (await fixture.GetControllerResultValueAsync(c => c.GetDurationStatistics("source", "target", CancellationToken.None))).ToList();
 
         durationStatisticsDtos.ShouldNotBeNull();
         durationStatisticsDtos.Count.ShouldBe(durationStatistics.Count);

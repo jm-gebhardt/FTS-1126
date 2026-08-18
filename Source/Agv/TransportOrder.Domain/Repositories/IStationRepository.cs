@@ -33,8 +33,9 @@ public interface IStationRepository
     /// Get all stations.
     /// </summary>
     /// <param name="mapId">Optional map name.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>All stations (optionally on the given map).</returns>
-    Task<ICollection<Station>> GetStations(Guid? mapId = null);
+    Task<ICollection<Station>> GetStations(Guid? mapId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get a stations ordered in the order of the given ids.

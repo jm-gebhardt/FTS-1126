@@ -17,7 +17,8 @@ public class ZoneRequestHandler(IZoneRepository zoneRepository): IConsumer<GetZo
     /// </summary>
     public async Task Consume(ConsumeContext<GetZones> context)
     {
-        ICollection<Zone> zones = await zoneRepository.GetZones();
+        var cancellationToken = context.CancellationToken;
+        ICollection<Zone> zones = await zoneRepository.GetZones(cancellationToken);
         await context.RespondAsync(new GotZones(zones));
     }
 }

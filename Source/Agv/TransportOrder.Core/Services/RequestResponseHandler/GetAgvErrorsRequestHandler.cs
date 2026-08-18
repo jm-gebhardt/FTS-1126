@@ -37,8 +37,10 @@ public class GetAgvErrorsRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvErrors> context)
     {
         var correlationId = context.Message.CorrelationId;
-        await _agvDb.Agvs.GetAgvAsync(correlationId);
-        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(correlationId, context.Message.DateFrom, context.Message.DateTo);
+        var cancellationToken = context.CancellationToken;
+
+        await _agvDb.Agvs.GetAgvAsync(correlationId, cancellationToken);
+        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(correlationId, context.Message.DateFrom, context.Message.DateTo, cancellationToken);
         List<Messages.Requests.Agv.Queries.AgvError> agvErrorHistoryMessageContent = agvErrorHistory.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
         await context.RespondAsync(new GotAgvErrors(agvErrorHistoryMessageContent));
     }
@@ -64,8 +66,10 @@ public class GetAgvErrorsRequestHandler :
     public async Task Consume(ConsumeContext<GetErrorHistoryForAgvs> context)
     {
         (ICollection<Guid> selectedAgvs, var fromDate, var toDate) = context.Message;
+        var cancellationToken = context.CancellationToken;
+        
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(selectedAgvs);
-        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate);
+        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate, cancellationToken);
         List<AgvErrors> agvErrors = agvErrorHistory
             .GroupBy(e => e.AgvCorrelationId)
             .Select(g => new AgvErrors(

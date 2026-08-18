@@ -25,7 +25,7 @@ public class StationTypeRequestHandlerTestFixture : MassTransitConsumerTestFixtu
 
     public StationTypeRequestHandlerTestFixture WithStations(params Station[] stations)
     {
-        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync(stations);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync(stations);
         return this;
     }
 
