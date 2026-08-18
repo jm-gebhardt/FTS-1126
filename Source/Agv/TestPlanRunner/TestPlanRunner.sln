@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Messages", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Persistence.Ef", "..\TransportOrder.Persistence.Ef\TransportOrder.Persistence.Ef.csproj", "{E9C15449-6D22-4E7F-BB07-5BDC7233C91B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.Routing", "..\TransportOrder.Routing\TransportOrder.Routing.csproj", "{DD6E7141-2F2B-4D35-8E6C-D43CB4B5B6D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +92,9 @@ Global
 		{E9C15449-6D22-4E7F-BB07-5BDC7233C91B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9C15449-6D22-4E7F-BB07-5BDC7233C91B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9C15449-6D22-4E7F-BB07-5BDC7233C91B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD6E7141-2F2B-4D35-8E6C-D43CB4B5B6D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD6E7141-2F2B-4D35-8E6C-D43CB4B5B6D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD6E7141-2F2B-4D35-8E6C-D43CB4B5B6D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD6E7141-2F2B-4D35-8E6C-D43CB4B5B6D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
