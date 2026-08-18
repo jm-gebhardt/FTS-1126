@@ -130,7 +130,10 @@ public static class TestPlanRunnerHostBuilder
                     throw;
                 }
 
-                services.ConfigureTracing(context.Configuration);
+                if (!context.HostingEnvironment.IsEnvironment("SwaggerCli"))
+                {
+                    services.ConfigureTracing(context.Configuration);
+                }
 
                 // Swagger
                 services.AddSwaggerGen(options =>
