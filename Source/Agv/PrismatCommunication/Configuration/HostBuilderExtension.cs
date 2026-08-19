@@ -18,6 +18,7 @@ using Gebhardt.Acc.PrismatCommunication.Services.TelegramApi;
 using Gebhardt.Acc.PrismatCommunication.Simulation;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Services;
 using Gebhardt.Acc.PrismatCommunication.TelegramApi.Telegrams;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -87,7 +88,8 @@ public static class HostBuilderExtension
 
                 void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)  
+                                               ??context.Configuration.GetConnectionString(PrismatCommunicationDbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<PrismatCommunicationDbContext>.MigrationTableName);

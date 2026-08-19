@@ -2,6 +2,8 @@
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -43,14 +45,20 @@ public static class PrismatCommunicationHostBuilder
             })
             .ConfigureWebHost(h =>
                 h.UseKestrel()
-                    .ConfigureAppConfiguration((_, config) =>
+                    .ConfigureAppConfiguration((context, config) =>
                     {
+                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })
                     .Configure(app =>
                     {
                         app.UseMetricServer();
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapHealthProbes();
+                        });
                         if (simulationOptions != null)
                         {
                             app.UseDeveloperExceptionPage();
