@@ -36,8 +36,9 @@ public interface IAgvErrorRepository
     /// <param name="agvCorrelationId">The CorrelationId of the Agv</param>
     /// <param name="dateFrom">Only consider errors newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors older than this parameter (if set)</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>List of all errors for the given AGV and time range.</returns>
-    Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo);
+    Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all previous errors for given Agvs including resolved errors
@@ -45,9 +46,10 @@ public interface IAgvErrorRepository
     /// <param name="agvCorrelationIds">The CorrelationIds of the Agv</param>
     /// <param name="dateFrom">Only consider errors newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors older than this parameter (if set)</param>
+    /// <param name="cancellationToken"></param>
     /// <returns>List of all errors for the given AGVs and time range.</returns>
     [PublicAPI]
-    Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo);
+    Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Load db agv error information into the cache.

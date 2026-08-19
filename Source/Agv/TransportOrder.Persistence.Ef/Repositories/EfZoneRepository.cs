@@ -31,22 +31,22 @@ public class EfZoneRepository(IDbContextFactory<TransportOrderDbContext> context
     }
 
     /// <inheritdoc cref="IZoneRepository"/>>
-    public async Task<ICollection<Zone>> GetZones(string[] zoneIds)
+    public async Task<ICollection<Zone>> GetZones(string[] zoneIds, CancellationToken cancellationToken = default)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
         IEnumerable<string> ids = zoneIds;
         return await context.Set<Zone>()
             .Include(z => z.Polygon.OrderBy(p => p.Index))
-            .Where(z => ids.Contains(z.ZoneName)).ToListAsync();
+            .Where(z => ids.Contains(z.ZoneName)).ToListAsync(cancellationToken: cancellationToken);
     }
 
     /// <inheritdoc cref="IZoneRepository"/>>
-    public async Task<ICollection<Zone>> GetZones()
+    public async Task<ICollection<Zone>> GetZones(CancellationToken cancellationToken = default)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Set<Zone>()
             .Include(z => z.Polygon.OrderBy(p => p.Index))
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 }

@@ -263,7 +263,8 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     /// <param name="pageSize">The page size.</param>
     /// <param name="ordering">The direction to sort.</param>
     /// <param name="orderByProperties">The properties to sort.</param>
-    public delegate Task<PagedResult<TFilterable>> FilterByPaginatedWithOrdering(IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties);
+    /// <param name="cancellationToken">The cancellation token.</param>
+    public delegate Task<PagedResult<TFilterable>> FilterByPaginatedWithOrdering(IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties, CancellationToken cancellationToken = default);
 
     private delegate IQueryable<TFilterable> ApplyFiltering<in TDbContext>(TDbContext context, IFilter filter);
 
@@ -404,9 +405,9 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     {
         ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
 
-        return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties)
+        return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties, CancellationToken cancellationToken)
         {
-            await using var context = await contextFactory.CreateDbContextAsync();
+            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
             IQueryable<TFilterable> projectedQuery = filterer(context, filter);
             try
@@ -471,7 +472,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
                     projectedQuery = projectedQuery.Take(pageSize);
                 }
 
-                return new PagedResult<TFilterable>(await projectedQuery.ToListAsync(), await prePaginated.CountAsync(), pageNr, pageSize);
+                return new PagedResult<TFilterable>(await projectedQuery.ToListAsync(cancellationToken), await prePaginated.CountAsync(cancellationToken), pageNr, pageSize);
             }
             catch (TargetInvocationException ex)
             {

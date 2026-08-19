@@ -22,7 +22,7 @@ public class EfLogEntryRepositoryTest
             LogicalCombinationVariant.And,
             [new ValueComparisonFilter<Guid>(nameof(LogEntry.AgvCorrelationId), ComparisonVariant.Equals, agv),
                 new ValueComparisonFilter<string>(nameof(LogEntry.LogLevel), ComparisonVariant.Equals, logLevel)
-            ]), 0, 10);
+            ]), 0, 10, CancellationToken.None);
         logEntries.Items.Count.ShouldBe(1);
     }
 }

@@ -142,8 +142,8 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     {
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
-        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(new List<AgvError>());
+        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<AgvError>());
+        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<AgvError>());
         return this;
     }
 
@@ -193,8 +193,8 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
     {
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(agvCorrelationId)).ReturnsAsync(agvErrors);
         _agvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(agvErrors);
-        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
-        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>())).ReturnsAsync(agvErrors.AsReadOnly);
+        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>())).ReturnsAsync(agvErrors.AsReadOnly);
+        _agvDb.Setup(x => x.Errors.GetErrorsAsync(It.IsAny<IList<Guid>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>())).ReturnsAsync(agvErrors.AsReadOnly);
         return this;
     }
 

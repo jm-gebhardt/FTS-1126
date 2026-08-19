@@ -24,7 +24,8 @@ public interface IActionGroupRetrievalService
     /// <param name="assignedAgvIds">If set, only action groups which are assigned to one of these agvs will be returned.</param>
     /// <param name="sortBy">The sorting parameter.</param>
     /// <param name="sortDescending">If true, sorts in descending order.</param>
-    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get current action groups of provided AGVs.
@@ -63,5 +64,6 @@ public interface IActionGroupRetrievalService
     /// <param name="pageSize">The page size.</param>
     /// <param name="order">The direction to order.</param>
     /// <param name="orderProperties">The properties to order by.</param>
-    Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties);
-}
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties, CancellationToken cancellationToken);
+ }

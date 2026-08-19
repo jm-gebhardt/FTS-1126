@@ -69,7 +69,8 @@ public class StationsRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetStations> context)
     {
-        ICollection<Station> stations = await _stationRepository.GetStations();
+        var cancellationToken = context.CancellationToken;
+        ICollection<Station> stations = await _stationRepository.GetStations(cancellationToken: cancellationToken);
         await context.RespondAsync(new GotStations(stations));
     }
 

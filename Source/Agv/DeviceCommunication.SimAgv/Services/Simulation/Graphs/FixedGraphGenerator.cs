@@ -227,9 +227,12 @@ public class FixedGraphGenerator : GraphGeneratorBase
         var sourceNode = nodes.Single(n => n.Name == fromNodeId);
         var targetNode = nodes.Single(n => n.Name == toNodeId);
         var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
-        List<Vector3> points = [sourceNode.AsVector3()];
-        points.AddRange(pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)));
-        points.Add(targetNode.AsVector3());
+        List<Vector3> points =
+        [
+            sourceNode.AsVector3(),
+            .. pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)),
+            targetNode.AsVector3()
+        ];
         double length = new Polypath(points).GetLength();
         return GraphEdge.CreatePolypath(fromNodeId.ToGuid(), toNodeId.ToGuid(), (float)length, pathPoints, GraphHelper.ToGuid(EdgeType.Polypath, fromNodeId, (float)length, toNodeId), timeStamp);
     }

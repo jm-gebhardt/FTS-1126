@@ -217,9 +217,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000)
+    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .Where(a => a.State == actionGroupState)
             .AsNoTracking();
@@ -246,7 +246,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Reverse()
             .Take(maxItems)
             .SelectMany(a => a.Actions)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (actions.Count > 0)
         {
@@ -305,9 +305,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null)
+    public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         IQueryable<ActionGroup> actionGroups = queryable
@@ -323,7 +323,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        return await actionGroups.CountAsync();
+        return await actionGroups.CountAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -732,12 +732,12 @@ public class EfActionGroupRepository : IActionGroupRepository
                 ag.Actions.All(a => a.Target.NodeId.HasValue) &&
                 ag.Actions.All(a => nodeIds.Contains(a.Target.NodeId!.Value)));
 
-            if (!queryable.Any())
+            if (!await queryable.AnyAsync())
             {
                 return 0;
             }
-            return queryable
-                .Average(ag => (ag.CompletedDate!.Value - ag.StartedDate!.Value - ag.EstimatedDuration!.Value).TotalSeconds);
+            return await queryable
+                .AverageAsync(ag => (ag.CompletedDate!.Value - ag.StartedDate!.Value - ag.EstimatedDuration!.Value).TotalSeconds);
         }
         catch (InvalidOperationException)
         {

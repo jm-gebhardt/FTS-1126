@@ -21,7 +21,7 @@ public class StationsControllerTests
             .WithStation(station)
             .Build();
 
-        ICollection<StationDto> response = await fixture.GetControllerResultAsync(c => c.GetStations());
+        ICollection<StationDto> response = await fixture.GetControllerResultAsync(c => c.GetStations(CancellationToken.None));
 
         response.ShouldNotBeNull();
 

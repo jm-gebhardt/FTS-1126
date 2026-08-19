@@ -36,24 +36,24 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         _mapper = mapper;
     }
 
-    private async Task<TransportOrderDbContext> CreateDbContextAsync()
+    private async Task<TransportOrderDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
     {
-        var context = await _dbContextFactory.CreateDbContextAsync();
+        var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         // no need for tracking as we are returning read models only
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
     }
 
     /// <inheritdoc />
-    public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties)
+    public async Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties, CancellationToken cancellationToken = default)
     {
-        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>(await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties));
+        return _mapper.Map<PagedResult<ActionGroupFilterable>, PagedResult<FilteredActionGroup>>(await _filter.Invoke(filter, pageNr, pageSize, order, orderProperties, cancellationToken));
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true)
+    public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true, CancellationToken cancellationToken = default)
     {
-        await using var context = await CreateDbContextAsync();
+        await using var context = await CreateDbContextAsync(cancellationToken);
         IQueryable<ActionGroup> query = context.Set<ActionGroup>().AsQueryable();
 
         if (states.Count != 0)
@@ -80,13 +80,13 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         List<ActionGroup> actionGroups = await query
             .Take(maxItems)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
 
         List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions).Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
         Dictionary<Guid, GraphNode> graphNodesById = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
-            .ToDictionaryAsync(n => n.Id, n => n);
+            .ToDictionaryAsync(n => n.Id, n => n, cancellationToken);
 
         List<ActionGroupReadModel> result = actionGroups.Select(g => new ActionGroupReadModel(
             g.CorrelationId,
@@ -156,7 +156,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         return result;
     }
-
+    
     /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
     {

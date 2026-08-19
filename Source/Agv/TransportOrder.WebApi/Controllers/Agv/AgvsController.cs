@@ -228,13 +228,14 @@ public class AgvsController : Controller
     /// <param name="correlationIds">Only Agvs contained in this list will be considered</param>
     /// <param name="dateFrom">Only consider errors with a ErrorReceived newer than this parameter (if set)</param>
     /// <param name="dateTo">Only consider errors a ErrorReceived older than this parameter (if set)</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <response code="200">Ok</response>
     /// <response code="400">One or more of given correlation ids is unknown.</response>
     [HttpPost]
     [Route("/agvs/errorHistory")]
-    public async Task<ActionResult<IEnumerable<AgvErrorsDto>>> GetErrorHistoryForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds, DateTime? dateFrom, DateTime? dateTo)
+    public async Task<ActionResult<IEnumerable<AgvErrorsDto>>> GetErrorHistoryForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken)
     {
-        Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
+        Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue), cancellationToken);
         var dto = _mapper.Map<List<AgvErrorsDto>>(response.Message.AgvsErrors);
         List<AgvErrorsDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
         result.AddRange(dto);

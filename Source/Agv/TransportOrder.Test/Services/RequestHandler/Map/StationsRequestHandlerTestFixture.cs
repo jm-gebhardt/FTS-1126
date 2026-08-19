@@ -27,7 +27,7 @@ public class StationsRequestHandlerTestFixture<TRequestClient, TConsumer> : Medi
 
     public StationsRequestHandlerTestFixture<TRequestClient, TConsumer> WithStation(Station station)
     {
-        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync([station]);
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
         _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode
         {

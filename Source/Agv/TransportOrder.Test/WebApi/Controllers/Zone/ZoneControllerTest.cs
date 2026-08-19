@@ -12,7 +12,7 @@ public class ZoneControllerTest
     {
         var fixture = new ZoneControllerTestFixture().WithZones([new TransportOrder.Domain.Models.Zone.Zone([], "zoneId", "zoneId".ToGuid(), 5)]).Build();
 
-        ICollection<ZoneDto> zones = await fixture.GetControllerResultValueAsync(c => c.GetZones());
+        ICollection<ZoneDto> zones = await fixture.GetControllerResultValueAsync(c => c.GetZones(CancellationToken.None));
 
         zones.Count.ShouldBe(1);
         zones.First().CorrelationId.ShouldBe("zoneId".ToGuid());

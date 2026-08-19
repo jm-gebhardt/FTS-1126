@@ -61,7 +61,7 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
     public StationsControllerTestFixture<TRequest, TRequestHandler> WithStation(TransportOrder.Domain.Models.Station.Station station)
     {
         _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync([station]);
         _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode
         {
             Id = station.Id,

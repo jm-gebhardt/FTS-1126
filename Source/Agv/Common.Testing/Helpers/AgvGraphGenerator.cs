@@ -352,9 +352,12 @@ public static class AgvGraphGenerator
     {
         var sourceNode = nodes.Single(n => n.Name == fromNodeId).AsVector3();
         var targetNode = nodes.Single(n => n.Name == toNodeId).AsVector3();
-        List<Vector3> points = [sourceNode];
-        points.AddRange(pathPoints.Select(c => new Vector3((float) c.X!, (float) c.Y!, 0f)));
-        points.Add(targetNode);
+        List<Vector3> points =
+        [
+            sourceNode,
+            .. pathPoints.Select(c => new Vector3((float)c.X!, (float)c.Y!, 0f)),
+            targetNode
+        ];
         double length = new Polypath(points).GetLength();
         return GraphEdge.CreatePolypath(fromNodeId.ToGuid(), toNodeId.ToGuid(), (float) length, pathPoints);
     }

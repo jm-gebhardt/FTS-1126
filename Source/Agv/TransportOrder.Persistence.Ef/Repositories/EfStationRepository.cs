@@ -160,9 +160,9 @@ public class EfStationRepository(
     }
 
     /// <inheritdoc cref="IStationRepository"/>>
-    public async Task<ICollection<Station>> GetStations(Guid? mapId = null)
+    public async Task<ICollection<Station>> GetStations(Guid? mapId = null, CancellationToken cancellationToken = default)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.Set<Station>()
             .AsNoTracking()
             .GroupJoin(
@@ -202,7 +202,7 @@ public class EfStationRepository(
             query = query.Where(x => x.Station.MapId == mapId);
         }
 
-        var rows = await query.ToListAsync();
+        var rows = await query.ToListAsync(cancellationToken: cancellationToken);
 
         List<Station> stations = rows.Select(r =>
         {
