@@ -88,7 +88,7 @@ public class CargoRequestHandlerTest
         CargoRequestHandlerTestFixture<GetCargosOfAgvs, CargoRequestHandler> fixture = new CargoRequestHandlerTestFixture<GetCargosOfAgvs, CargoRequestHandler>()
             .Build();
 
-        fixture.AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync((ICollection<Guid> correlationIds, CancellationToken _) => throw new AgvsNotFoundException(correlationIds));
+        fixture.AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> correlationIds) => throw new AgvsNotFoundException(correlationIds));
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvsNotFoundException>(async () => await fixture.GetResponseAsync<GotCargosOfAgvs>(new GetCargosOfAgvs(new List<Guid> { Guid.NewGuid() })));
     }

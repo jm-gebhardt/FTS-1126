@@ -46,14 +46,14 @@ public class QueueManager(
         });
     }
 
-    private async Task<bool> UpdateQueueAsync(Queue queue, CancellationToken cancellationToken = default)
+    private async Task<bool> UpdateQueueAsync(Queue queue)
     {
-        Task<bool> updateTask = queueRepository.UpdateQueueAsync(queue, cancellationToken);
+        Task<bool> updateTask = queueRepository.UpdateQueueAsync(queue);
         var publishTask = Task.CompletedTask;
         if (queue.QueueReservationChanged)
         {
             var queueMessages = mapper.Map<Common.Messages.Queue.Queue>(queue);
-            publishTask = publishEndpoint.Publish(new QueueChanged(queueMessages), cancellationToken);
+            publishTask = publishEndpoint.Publish(new QueueChanged(queueMessages));
         }
         queue.ClearChangedFlag();
         await Task.WhenAll(updateTask, publishTask);
@@ -234,26 +234,26 @@ public class QueueManager(
     }
 
     /// <inheritdoc cref="IQueueManager"/>
-    public async Task<bool> TryReachQueueNode(Agv agv, Guid nodeId, CancellationToken cancellationToken = default)
+    public async Task<bool> TryReachQueueNode(Agv agv, Guid nodeId)
     {
         Queue? queue = null;
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            queue = await queueRepository.GetQueueForAgv(agv.CorrelationId, cancellationToken);
+            queue = await queueRepository.GetQueueForAgv(agv.CorrelationId);
             if (queue == null)
             {
                 logger.LogDebug("Agv {AgvCorrelationId} could not reach queue head {Head}, no queue found", agv.CorrelationId, nodeId);
                 return;
             }
             queue.ReachNode(nodeId, agv.CorrelationId);
-            await UpdateQueueAsync(queue, cancellationToken);
+            await UpdateQueueAsync(queue);
             if (queue.IsAgvAtQueueHead(agv.CorrelationId))
             {
                 logger.LogInformation("Agv {AgvCorrelationId} reached queue head {Head} for {@Queue}", agv.CorrelationId, nodeId, queue);
                 return;
             }
             logger.LogInformation("Agv {AgvCorrelationId} could not reach queue head {Head}, agv does not occupy head {NodeId}, {AgvAtQueueHead} is assigned to head for {@Queue}", agv.CorrelationId, nodeId, queue.Head?.NodeId, queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv(), queue);
-        }, cancellationToken);
+        });
         return queue != null && queue.IsAgvAtQueueHead(agv.CorrelationId);
     }
 

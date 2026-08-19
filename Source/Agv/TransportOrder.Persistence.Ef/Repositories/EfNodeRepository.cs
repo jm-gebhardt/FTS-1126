@@ -15,33 +15,33 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 [CanBeCaptiveDependency]
 public class GraphNodeRepository(ISemaphoreProvider<INodeStateDbSemaphore> semaphoreProvider, ILogger<GraphNodeRepository> logger, IDbContextFactory<TransportOrderDbContext> dbContextFactory) : INodeRepository
 {
-    private async Task<TransportOrderDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    private async Task<TransportOrderDbContext> CreateDbContextAsync()
     {
-        var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var context = await dbContextFactory.CreateDbContextAsync();
         context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return context;
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)>> GetNodeStatesForMapAsync(Guid mapCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)>> GetNodeStatesForMapAsync(Guid mapCorrelationId)
     {
-        await using var context = await CreateDbContextAsync(cancellationToken);
+        await using var context = await CreateDbContextAsync();
 
         List<GraphNode> nodes = await context.Set<Map>()
             .Include(g => g.Nodes)
             .Where(m => m.CorrelationId == mapCorrelationId)
             .SelectMany(x => x.Nodes)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         List<Guid> nodeIds = nodes.Select(n => n.Id).ToList();
 
         List<Station> stations = await context.Set<Station>()
             .Where(x => nodeIds.Contains(x.Id))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         List<NodeLock> nodeLocks = await context.Set<NodeLock>()
             .Where(x => nodeIds.Contains(x.NodeId))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         var currentTime = DateTime.MinValue;
 
@@ -85,9 +85,9 @@ public class GraphNodeRepository(ISemaphoreProvider<INodeStateDbSemaphore> semap
     }
 
     /// <inheritdoc/>
-    public async Task<GraphNode> GetNodeAsync(Guid nodeId, CancellationToken cancellationToken = default)
+    public async Task<GraphNode> GetNodeAsync(Guid nodeId)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        await using var dbContext = await CreateDbContextAsync();
 
         var data = await dbContext.Set<GraphNode>()
             .LeftJoin(dbContext.Set<NodeLock>().AsNoTracking(),
@@ -96,7 +96,7 @@ public class GraphNodeRepository(ISemaphoreProvider<INodeStateDbSemaphore> semap
                 (n, nl) => new { nl, n })
             .Where(t => t.n.Id == nodeId)
             .Select(t => new { t.nl, t.n })
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         var node = data.Select(x =>
         {
@@ -160,9 +160,9 @@ public class GraphNodeRepository(ISemaphoreProvider<INodeStateDbSemaphore> semap
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<GraphNode>> GetNodesForAgv(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<ICollection<GraphNode>> GetNodesForAgv(Guid agvCorrelationId)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        await using var dbContext = await CreateDbContextAsync();
 
         var data = await dbContext.Set<GraphNode>()
             .Join(dbContext.Set<NodeLock>().AsNoTracking(),
@@ -171,7 +171,7 @@ public class GraphNodeRepository(ISemaphoreProvider<INodeStateDbSemaphore> semap
                 (n, nl) => new { nl, n })
             .Where(t => t.nl.AgvCorrelationId == agvCorrelationId)
             .Select(t => new { t.nl, t.n })
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return data.Select(x =>
         {

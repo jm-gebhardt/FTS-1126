@@ -24,7 +24,7 @@ public class MapRequestHandlerTest
 
         Response<GotMap> response = await fixture.GetResponseAsync<GotMap>(new GetMap(fixture.Maps[0].CorrelationId));
 
-        fixture.MapRepositoryMock.Verify(m => m.GetMapAsync(fixture.Maps[0].CorrelationId, It.IsAny<CancellationToken>()), Times.Once);
+        fixture.MapRepositoryMock.Verify(m => m.GetMapAsync(fixture.Maps[0].CorrelationId), Times.Once);
         response.Message.Map.CorrelationId.ShouldBe(fixture.Maps[0].CorrelationId);
     }
 

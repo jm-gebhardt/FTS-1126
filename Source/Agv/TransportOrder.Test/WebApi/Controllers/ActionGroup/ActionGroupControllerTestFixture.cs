@@ -79,19 +79,19 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
             sc.AddTransient(_ => _logEntryRepository.Object);
             sc.AddTransient<ILoggingService, LoggingService>();
         });
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         _stationRepository.Setup(x => x.GetRequiredStationBaseInformation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) =>
+        _retrievalServiceMock.Setup(x => x.GetActionGroupWithNodesAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroupReadModels.FirstOrDefault(a => a.CorrelationId == c));
+        _actionGroupRepositoryMock.Setup(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) =>
         {
             var ag = _actionGroups.FirstOrDefault(a => a.CorrelationId == c);
             return ag ?? throw new ActionGroupNotFoundException(c);
         });
-        _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid c, CancellationToken _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
-        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))!.ReturnsAsync((AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _, DateTimeOffset _, CancellationToken _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
-        _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(), It.IsAny<CancellationToken>())).ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag, CancellationToken _) => ag.ConvertFromActionGroupWithFakeNodeType()!);
+        _actionGroupRepositoryMock.Setup(x => x.GetActionGroupAsync(It.IsAny<Guid>())).ReturnsAsync((Guid c) => _actionGroups.FirstOrDefault(a => a.CorrelationId == c));
+        _actionGroupRepositoryMock.Setup(x => x.UpdateActionAndGroupStateAsync(It.IsAny<AgvAction>(), It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<ActionState>(), It.IsAny<Reason?>(), It.IsAny<DateTimeOffset>()))!.ReturnsAsync((AgvAction action, TransportOrder.Domain.Models.Agv.Agv _, ActionState _, Reason? _, DateTimeOffset _) => _actionGroups.FirstOrDefault(a => a.CorrelationId == action.ParentId));
+        _retrievalServiceMock.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
         _graphRepositoryMock.Setup(x => x.NodeExistsByIdAsync(It.IsAny<Guid>())).ReturnsAsync(true);
     }
 
@@ -151,8 +151,10 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
         {
             if (node != null)
             {
-                _graphRepositoryMock.Setup(x => x.GetNodeAsync(node.Id, It.IsAny<CancellationToken>())).ReturnsAsync(node);
-                _graphRepositoryMock.Setup(x => x.TryGetNodeByIdAsync(node.Id, It.IsAny<CancellationToken>())).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+                _graphRepositoryMock.Setup(x => x.TryGetNodeByIdAsync(node.Id)).ReturnsAsync(node);
             }
         }
 

@@ -61,7 +61,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
         collection.AddTransient(_ => _queueManager.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
@@ -111,11 +111,11 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
     {
         if (existsPriorToTest)
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup> { actionGroup });
         }
         else
         {
-            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<ActionGroup>());
+            _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(new List<ActionGroup>());
         }
     }
 
@@ -136,8 +136,7 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
             It.IsAny<Guid?>(),
             It.IsAny<bool?>(),
             It.IsAny<SortBy>(),
-            It.IsAny<bool>(),
-            It.IsAny<CancellationToken>()
+            It.IsAny<bool>()
         )).ReturnsAsync(actionGroups);
         _actionGroupRepository.Setup(x => x.GetCreatedAndStartedActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
         _actionGroupRepository.Setup(x => x.GetPendingActionGroupsForAgvAsync(It.IsAny<Guid>())).ReturnsAsync(actionGroups);
@@ -147,8 +146,8 @@ public class AgvEventHandlerTestFixture : MassTransitConsumerTestFixture<AgvEven
 
     public AgvEventHandlerTestFixture WithReservedCharger(string? charger)
     {
-        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Agv _, Guid? _,  bool _, CancellationToken _) =>
+        _chargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>()))
+            .ReturnsAsync((Agv _, Guid? _,  bool _) =>
             {
                 if (charger == null)
                 {

@@ -43,22 +43,22 @@ public class AgvStationRequestHandler :
     {
         (string stationName, var agvId, string user) = context.Message;
 
-        var agvToRemove = await _agvDb.Agvs.TryGetAgvAsync(agvId, context.CancellationToken);
+        var agvToRemove = await _agvDb.Agvs.TryGetAgvAsync(agvId);
 
         if (agvToRemove == null)
         {
             throw new AgvNotFoundException(agvId);
         }
 
-        var onlineAgv = await _agvDb.Agvs.GetAnyOnlineAgv(context.CancellationToken);
+        var onlineAgv = await _agvDb.Agvs.GetAnyOnlineAgv();
 
         if (onlineAgv == null)
         {
             throw new AllAgvsOfflineException();
         }
 
-        await _bus.Publish(new RemoveAgvFromStation(stationName, agvToRemove.SerialNumber, onlineAgv.SerialNumber), context.CancellationToken);
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode } }, context.CancellationToken);
+        await _bus.Publish(new RemoveAgvFromStation(stationName, agvToRemove.SerialNumber, onlineAgv.SerialNumber));
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvRemoveFromNode } });
 
         await context.RespondAsync(new Success());
     }

@@ -54,20 +54,20 @@ public class EfBoundingBoxRepository : IBoundingBoxRepository
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeAsync(string agvType, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeAsync(string agvType)
     {
         if (_cache.TryGet(agvType, out IReadOnlyList<ResourceBoundingBox>? cached))
         {
             return Task.FromResult(cached);
         }
 
-        return GetByAgvTypeFromDbAsync(agvType, cancellationToken);
+        return GetByAgvTypeFromDbAsync(agvType);
     }
 
     /// <inheritdoc />
-    public async Task<ResourceBoundingBox?> GetAsync(Guid resourceId, string agvType, CancellationToken cancellationToken = default)
+    public async Task<ResourceBoundingBox?> GetAsync(Guid resourceId, string agvType)
     {
-        IReadOnlyList<ResourceBoundingBox> boxes = await GetByAgvTypeAsync(agvType, cancellationToken);
+        IReadOnlyList<ResourceBoundingBox> boxes = await GetByAgvTypeAsync(agvType);
         return boxes.FirstOrDefault(b => b.ResourceId == resourceId);
     }
 
@@ -107,11 +107,11 @@ public class EfBoundingBoxRepository : IBoundingBoxRepository
         return boundingBoxesByType.Keys.ToHashSet();
     }
 
-    private async Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeFromDbAsync(string agvType, CancellationToken cancellationToken = default)
+    private async Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeFromDbAsync(string agvType)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ResourceBoundingBox> query = context.Set<ResourceBoundingBox>().Where(b => b.AgvType == agvType);
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.ToListAsync();
     }
 }

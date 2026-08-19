@@ -125,21 +125,21 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
         AgvDb.SetupNodeFallbacks();
         QueueActionGroupRequestClient = new Mock<IRequestClient<QueueActionGroup>>();
         ActionGroupRetrievalService = new Mock<IActionGroupRetrievalService>();
-        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
+        ActionGroupRetrievalService.Setup(r => r.GetCurrentActionGroupsWithNodesAsync(It.IsAny<IReadOnlyCollection<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (ActionGroupReadModel?) null));
         _agvPositionRepository = GetAgvPositionRepository().Object;
         ActionGroupRepository = new Mock<IActionGroupRepository>();
-        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<bool?>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?) null));
-        ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(_chargeAction);
+        ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<ActionGroupState>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<bool?>())).ReturnsAsync([]);
+        ActionGroupRepository.Setup(r => r.GetCurrentAssignedActionGroupsAsync(It.IsAny<IEnumerable<Guid>>())).ReturnsAsync(() => AgvSerialNumbers.ToDictionary(GetGuid, _ => (TransportOrder.Domain.Models.ActionGroup.ActionGroup?) null));
+        ActionGroupRepository.Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(_chargeAction);
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(new List<AgvError>());
         AgvDb.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(new List<AgvError>());
-        AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync((ICollection<Guid> agvs, CancellationToken _) => agvs.ToDictionary(a => a, MaintenanceLog? (_) => null));
-        AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Verifiable();
+        AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> agvs) => agvs.ToDictionary(a => a, MaintenanceLog? (_) => null));
+        AgvDb.Setup(x => x.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(It.IsAny<Guid>())).Verifiable();
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
         ChargingPointManager = new Mock<IChargingPointManager>();
         ChargingPointManager.Setup(c => c.GetBestChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
-        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
-        _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        ChargingPointManager.Setup(c => c.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<bool>())).ReturnsAsync(NodeGenerator.GenerateNode(nodeName: "Charger-1"));
+        _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(false);
     }
 
     [UsedImplicitly]
@@ -178,16 +178,16 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
         AgvDb.Setup(x => x.AgvSettings.GetSettingsForAgvGroup(It.IsAny<Guid>())).Returns(AgvSettingsReadModel);
 
-        AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>(), It.IsAny<CancellationToken>()))
-            .Callback((AgvData agvData, CancellationToken _) => { data[agvData.AgvCorrelationId] = agvData; });
+        AgvDb.Setup(x => x.Data.AddOrUpdateAsync(It.IsAny<AgvData>()))
+            .Callback((AgvData agvData) => { data[agvData.AgvCorrelationId] = agvData; });
 
         if (allAgvsOffline)
         {
-            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv(It.IsAny<CancellationToken>())).ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv?) null);
+            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync((TransportOrder.Domain.Models.Agv.Agv?) null);
         }
         else
         {
-            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv(It.IsAny<CancellationToken>())).ReturnsAsync(agvs.First());
+            AgvDb.Setup(x => x.Agvs.GetAnyOnlineAgv()).ReturnsAsync(agvs.First());
         }
         return this;
     }
@@ -235,7 +235,7 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
     [PublicAPI]
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithHasCargo(Guid agvCorrelationId, bool hasCargo)
     {
-        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId, It.IsAny<CancellationToken>())).ReturnsAsync(hasCargo);
+        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId)).ReturnsAsync(hasCargo);
         return this;
     }
 
@@ -351,15 +351,15 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     public AgvControllerTestFixture<TRequest, TRequestHandler> WithAgvGraph(Guid correlationId, AgvGraph agvGraph)
     {
-        AgvDb.Setup(x => x.Graphs.GetAgvGraphAsync(correlationId, It.IsAny<CancellationToken>())).ReturnsAsync(agvGraph);
-        AgvDb.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(() => agvGraph.Nodes.First());
+        AgvDb.Setup(x => x.Graphs.GetAgvGraphAsync(correlationId)).ReturnsAsync(agvGraph);
+        AgvDb.Setup(x => x.Graphs.TryGetNodeByIdAsync(It.IsAny<Guid>())).ReturnsAsync(() => agvGraph.Nodes.First());
         return this;
     }
 
     public new AgvControllerTestFixture<TRequest, TRequestHandler> Build()
     {
         _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>(), It.IsAny<bool>())).Verifiable();
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid _, CancellationToken _) =>
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync((Guid _) =>
         {
             var node = "target".ToGraphNode();
             node.Lock = new NodeLock(node, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow);
@@ -393,8 +393,9 @@ public class AgvControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
             sc.AddSingleton<ITransportOrderNotificationSender>(_ => _notSender.Object);
         });
         base.Build();
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
 
         return this;
     }

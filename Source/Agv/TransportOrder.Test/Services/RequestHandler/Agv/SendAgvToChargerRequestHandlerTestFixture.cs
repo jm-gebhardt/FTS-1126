@@ -26,7 +26,8 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
     public SendAgvToChargerRequestHandlerTestFixture()
     {
         Build();
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
     }
 
     public Mock<IChargingPointManager> ChargingPointManager { get; } = new();
@@ -41,7 +42,7 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
         collection.AddTransient(_ => _stationRepository.Object);
         collection.AddTransient<ILoggingService, LoggingService>();
         collection.AddTransient(_ => _logEntryRepository.Object);
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
@@ -53,19 +54,19 @@ public class SendAgvToChargerRequestHandlerTestFixture : MassTransitConsumerTest
 
     public SendAgvToChargerRequestHandlerTestFixture WithCurrentAction(AgvAction? action)
     {
-        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(action);
+        _actionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(action);
         return this;
     }
 
     public SendAgvToChargerRequestHandlerTestFixture ReserveChargerReturns(GraphNode chargingNode)
     {
-        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(chargingNode);
+        ChargingPointManager.Setup(x => x.ReserveChargerAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid?>(), It.IsAny<bool>())).ReturnsAsync(chargingNode);
         return this;
     }
 
     public SendAgvToChargerRequestHandlerTestFixture WithNodeLock(NodeLock nodeLock)
     {
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new GraphNode{Id = nodeLock.NodeId, Lock = nodeLock});
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(new GraphNode{Id = nodeLock.NodeId, Lock = nodeLock});
         return this;
     }
 }

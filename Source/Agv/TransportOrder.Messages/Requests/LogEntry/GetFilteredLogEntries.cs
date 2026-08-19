@@ -9,6 +9,5 @@ namespace Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
 /// <param name="Filter">The filter to apply.</param>
 /// <param name="PageNr">The current page number.</param>
 /// <param name="PageSize">The page size.</param>
-/// <param name="CancellationToken">The cancellation token.</param>
 [PublicAPI]
-public record GetFilteredLogEntries(FilterDto Filter, int PageNr, int PageSize, CancellationToken CancellationToken = default);
+public record GetFilteredLogEntries(FilterDto Filter, int PageNr, int PageSize);

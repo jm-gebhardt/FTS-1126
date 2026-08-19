@@ -14,9 +14,7 @@ public interface IGraphRepository
     /// <summary>
     /// Gets the graph from the GraphRepository for this agv.
     /// </summary>
-    /// <param name="agvCorrelationId">The Agv CorrelationId</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<AgvGraph> GetAgvGraphAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default);
+    Task<AgvGraph> GetAgvGraphAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets correlation ids of all agvs on a map.
@@ -28,45 +26,40 @@ public interface IGraphRepository
     /// Gets the graph of selected agvs.
     /// </summary>
     /// <param name="correlationIds">The agv correlation ids.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken = default);
+    /// <returns></returns>
+    Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds);
 
     /// <summary>
     /// Get nodes of this agv, but only which are included in the predicate filter.
     /// </summary>
     /// <param name="agvCorrelationId">The AgvCorrelationId</param>
     /// <param name="predicate">Optional Linq predicate. If null, there will be no filtering</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<IEnumerable<GraphNode>> GetNodesAsync(Guid agvCorrelationId, Expression<Func<GraphNode, bool>>? predicate = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<GraphNode>> GetNodesAsync(Guid agvCorrelationId, Expression<Func<GraphNode, bool>>? predicate = null);
 
     /// <summary>
     /// Get distinct nodes by given ids.
     /// </summary>
     /// <param name="nodeIds">The node ids.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<Guid> nodeIds, CancellationToken cancellationToken = default);
+    Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<Guid> nodeIds);
 
     /// <summary>
     /// Get node of this agv by NodeId.
     /// </summary>
     /// <param name="id">The Id of the node to get</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<GraphNode> GetNodeAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<GraphNode> GetNodeAsync(Guid id);
 
     /// <summary>
     /// Try to get node.
     /// </summary>
     /// <param name="nodeId">The Id of the node to get</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<GraphNode?> TryGetNodeByIdAsync(Guid nodeId, CancellationToken cancellationToken = default);
+    Task<GraphNode?> TryGetNodeByIdAsync(Guid nodeId);
 
     /// <summary>
     /// Gets the graph for the given map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Only nodes and edges which are used in any AgvGraph will be returned.</returns>
-    Task<IGraph> GetGraphForMap(Guid mapCorrelationId, CancellationToken cancellationToken = default);
+    Task<IGraph> GetGraphForMap(Guid mapCorrelationId);
 
     /// <summary>
     /// Update the relation to the nodes/edges and Agvs. If the AgvGraph does not exist, it will be created.
@@ -119,7 +112,7 @@ public interface IGraphRepository
     /// <summary>
     /// Gets the (global) Graph. If there is none it will create an empty one.
     /// </summary>
-    Task<Graph> GetGraphAsync(CancellationToken  cancellationToken = default);
+    Task<Graph> GetGraphAsync();
 
     /// <summary>
     /// Get nodes , but only which are included in the predicate filter.
@@ -156,9 +149,8 @@ public interface IGraphRepository
     /// Get last graph nodes of provided agvs.
     /// </summary>
     /// <param name="lastNodeIdsByAgvCorrelationId">A dictionary with agv correlation id and last node id.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns></returns>
-    public Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, Guid?> lastNodeIdsByAgvCorrelationId, CancellationToken cancellationToken = default);
+    public Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, Guid?> lastNodeIdsByAgvCorrelationId);
 
     /// <summary>
     /// Check if the agv has a node of the given type.

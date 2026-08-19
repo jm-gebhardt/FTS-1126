@@ -12,13 +12,13 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContext> dbContextFactory) : IRestrictedAreaRepository
 {
     /// <inheritdoc />
-    public async Task<bool> IsPointInRestrictedArea(float x, float y, CancellationToken cancellationToken=default)
+    public async Task<bool> IsPointInRestrictedArea(float x, float y)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync();
         List<RestrictedArea> restrictedAreas = await context.Set<RestrictedArea>()
             .Include(a => a.Area.OrderBy(p => p.Index))
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
         return restrictedAreas.Any(a => a.IsPositionInside(x, y));
     }
 

@@ -13,22 +13,22 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     : ICargoRepository
 {
     /// <inheritdoc />
-    public async Task<bool> HasAgvCargoAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasAgvCargoAsync(Guid correlationId)
     {
         if (agvCargos.ConcurrentDict.TryGetValue(correlationId, out List<Cargo>? inMemoryCargo))
         {
             return inMemoryCargo.Count > 0;
         }
 
-        bool isLoaded = await (await dbContextFactory.CreateDbContextAsync(cancellationToken)).Set<Cargo>()
+        bool isLoaded = await (await dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
             .AsNoTracking()
-            .AnyAsync(q => q.AgvCorrelationId == correlationId, cancellationToken);
+            .AnyAsync(q => q.AgvCorrelationId == correlationId);
 
         return isLoaded;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, bool>> HaveAgvsCargoAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyDictionary<Guid, bool>> HaveAgvsCargoAsync(ICollection<Guid> correlationIds)
     {
         Dictionary<Guid, bool> hasCargoByAgvCorrelationId = agvCargos.ConcurrentDict
             .Where(kvp => correlationIds.Contains(kvp.Key))
@@ -38,8 +38,8 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
 
         if (missingCorrelationIds.Count > 0)
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            await agvRepository.ThrowIfAgvsNotExistAsync(missingCorrelationIds, cancellationToken);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+            await agvRepository.ThrowIfAgvsNotExistAsync(missingCorrelationIds);
             DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
 
             List<Guid> agvsWithCargo = await dbSet
@@ -47,7 +47,7 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
                 .Where(q => missingCorrelationIds.Contains(q.AgvCorrelationId))
                 .Select(g => g.AgvCorrelationId)
                 .Distinct()
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             foreach (var agv in agvsWithCargo)
             {
@@ -65,23 +65,23 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyCollection<Cargo>> GetCargosAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<Cargo>> GetCargosAsync(Guid correlationId)
     {
         if (agvCargos.ConcurrentDict.TryGetValue(correlationId, out List<Cargo>? cargos))
         {
             return cargos.AsReadOnly();
         }
 
-        cargos = await (await dbContextFactory.CreateDbContextAsync(cancellationToken)).Set<Cargo>()
+        cargos = await (await dbContextFactory.CreateDbContextAsync()).Set<Cargo>()
             .AsNoTracking()
             .Where(q => q.AgvCorrelationId == correlationId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return cargos.AsReadOnly();
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>>> GetCargosAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>>> GetCargosAsync(ICollection<Guid> correlationIds)
     {
         Dictionary<Guid, IReadOnlyCollection<Cargo>> cargosByAgvCorrelationId = agvCargos.ConcurrentDict
             .Where(kvp => correlationIds.Contains(kvp.Key))
@@ -91,15 +91,15 @@ public class CargoRepository(IDbContextFactory<TransportOrderDbContext> dbContex
 
         if (missingCorrelationIds.Count > 0)
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            await agvRepository.ThrowIfAgvsNotExistAsync(correlationIds, cancellationToken);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+            await agvRepository.ThrowIfAgvsNotExistAsync(correlationIds);
             DbSet<Cargo> dbSet = dbContext.Set<Cargo>();
 
             Dictionary<Guid, IReadOnlyCollection<Cargo>> dbResults = await dbSet
                 .AsNoTracking()
                 .Where(q => missingCorrelationIds.Contains(q.AgvCorrelationId))
                 .GroupBy(c => c.AgvCorrelationId)
-                .ToDictionaryAsync(q => q.Key, q => q.ToList().AsReadOnly() as IReadOnlyCollection<Cargo>, cancellationToken);
+                .ToDictionaryAsync(q => q.Key, q => q.ToList().AsReadOnly() as IReadOnlyCollection<Cargo>);
 
             foreach ((var agvCorrelationId, IReadOnlyCollection<Cargo> cargos) in dbResults)
             {

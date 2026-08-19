@@ -24,42 +24,36 @@ public interface IActionGroupRetrievalService
     /// <param name="assignedAgvIds">If set, only action groups which are assigned to one of these agvs will be returned.</param>
     /// <param name="sortBy">The sorting parameter.</param>
     /// <param name="sortDescending">If true, sorts in descending order.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true);
 
     /// <summary>
     /// Get current action groups of provided AGVs.
     /// </summary>
-    /// <param name="agvCorrelationIds">The AGV correlation ids.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="agvCorrelationIds"></param>
     /// <returns></returns>
-    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds, CancellationToken cancellationToken = default);
+    public Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Enrich an action group with the target node types.
     /// </summary>
     /// <param name="actionGroup">The action group to be enriched.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    public Task<ActionGroupReadModel> EnrichActionGroupWithNodesAsync(ActionGroup actionGroup, CancellationToken cancellationToken = default);
+    public Task<ActionGroupReadModel> EnrichActionGroupWithNodesAsync(ActionGroup actionGroup);
 
     /// Get an action group with node types by correlation id.
     /// <param name="correlationId">The action group correlation id.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    public Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId, CancellationToken cancellationToken = default);
+    public Task<ActionGroupReadModel?> GetActionGroupWithNodesAsync(Guid correlationId);
 
     /// Get the current action group for the agv with node types by correlation id.
     /// <param name="agvCorrelationId">The agv correlation id.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    public Task<ActionGroupReadModel?> GetCurrentAgvActionGroupWithNodesAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default);
+    public Task<ActionGroupReadModel?> GetCurrentAgvActionGroupWithNodesAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Gets a flag if AGV is heading to nodeType (e.g. Park or Charge).
     /// </summary>
-    /// <param name="agvCorrelationId">The AGV correlation id.</param>
-    /// <param name="nodeType">The node type to check.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="agvCorrelationId"></param>
+    /// <param name="nodeType"></param>
     /// <returns></returns>
-    public Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType, CancellationToken cancellationToken = default);
+    public Task<bool> IsAgvHeadingToNodeOfType(Guid agvCorrelationId, AgvGraph.NodeType nodeType);
 
     /// <summary>
     /// Gets a filtered paginated collection of <see cref="FilteredActionGroup"/>
@@ -69,6 +63,5 @@ public interface IActionGroupRetrievalService
     /// <param name="pageSize">The page size.</param>
     /// <param name="order">The direction to order.</param>
     /// <param name="orderProperties">The properties to order by.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties, CancellationToken cancellationToken = default);
+    Task<PagedResult<FilteredActionGroup>> Filter(IFilter filter, int pageNr, int pageSize, SortDirection order, ICollection<string> orderProperties);
 }

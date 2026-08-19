@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -38,7 +38,7 @@ public class GetAgvBatteryRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvBattery> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
         var agvSettings = _mapper.Map<AgvSettings>(_agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup));
         var agvStatus = _mapper.Map<AgvStatus>(agv.AgvStatus);
@@ -51,7 +51,7 @@ public class GetAgvBatteryRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvsBattery> context)
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList(), context.CancellationToken);
+        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
 
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
         if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Count != 0)

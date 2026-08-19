@@ -22,12 +22,12 @@ public interface IBoundingBoxRepository
     /// <summary>
     /// Returns bounding boxes for the given AGV type, optionally filtered to a specific resource type.
     /// </summary>
-    Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeAsync(string agvType, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeAsync(string agvType);
 
     /// <summary>
     /// Returns the bounding box for a specific resource and AGV type, or null if not found.
     /// </summary>
-    Task<ResourceBoundingBox?> GetAsync(Guid resourceId, string agvType, CancellationToken cancellationToken = default);
+    Task<ResourceBoundingBox?> GetAsync(Guid resourceId, string agvType);
 
     /// <summary>
     /// Returns all stored bounding boxes.

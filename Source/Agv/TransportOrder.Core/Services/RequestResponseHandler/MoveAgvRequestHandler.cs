@@ -73,7 +73,7 @@ public class MoveAgvRequestHandler :
     {
         (var agvCorrelationId, var targetNodeId, var creator, string user, double theta) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.CanStartManualOperationalAction)
         {
@@ -83,7 +83,7 @@ public class MoveAgvRequestHandler :
         GraphNode? targetNode;
         try
         {
-            targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId, context.CancellationToken);
+            targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId);
         }
         catch (NodeNotFoundException ex)
         {
@@ -92,7 +92,7 @@ public class MoveAgvRequestHandler :
 
         if (targetNode.NeedsReservation())
         {
-            await ReserveNodeForAgv(targetNode.GetReservableNodeTypes().First(), targetNode, agvCorrelationId, context.CancellationToken);
+            await ReserveNodeForAgv(targetNode.GetReservableNodeTypes().First(), targetNode, agvCorrelationId);
         }
 
         var rotationInfo = new Dictionary<InfoToAgvKey, string> { { InfoToAgvKey.CargoRotation, theta.ToString(CultureInfo.InvariantCulture) } };
@@ -109,9 +109,8 @@ public class MoveAgvRequestHandler :
             $"Manual {ActionType.Move}",
             agvCorrelationId,
             creator,
-            actionGroupId,
-            context.CancellationToken);
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } }, context.CancellationToken);
+            actionGroupId);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
@@ -123,7 +122,7 @@ public class MoveAgvRequestHandler :
     {
         (var agvCorrelationId, var chargerId, string user) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.CanStartManualOperationalAction)
         {
@@ -134,7 +133,7 @@ public class MoveAgvRequestHandler :
 
         try
         {
-            node = await _agvDb.Graphs.GetNodeAsync(chargerId, context.CancellationToken);
+            node = await _agvDb.Graphs.GetNodeAsync(chargerId);
         }
         catch (NodeNotFoundException ex)
         {
@@ -148,7 +147,7 @@ public class MoveAgvRequestHandler :
 
         if (agv.AgvStatus?.LastNodeId != chargerId)
         {
-            await ReserveNodeForAgv(AgvGraph.NodeType.Charge, node, agvCorrelationId, context.CancellationToken);
+            await ReserveNodeForAgv(AgvGraph.NodeType.Charge, node, agvCorrelationId);
         }
 
         var actionGroupId = Guid.NewGuid();
@@ -166,10 +165,8 @@ public class MoveAgvRequestHandler :
             ], $"Manual {nameof(ActionType.Charge)}",
             agvCorrelationId,
             ActionGroupCreator.TransportOrderWebApi,
-            actionGroupId,
-            context.CancellationToken,
-            priority: Priority.Charging);
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } }, context.CancellationToken);
+            actionGroupId, priority: Priority.Charging);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualCharge } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
@@ -181,14 +178,14 @@ public class MoveAgvRequestHandler :
     {
         (var agvCorrelationId, float x, float y, float theta, var creator, string user) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         if (!agv.ShouldStartManualAction)
         {
             throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
         }
 
-        if (await _restrictedAreaRepository.IsPointInRestrictedArea(x, y, context.CancellationToken))
+        if (await _restrictedAreaRepository.IsPointInRestrictedArea(x, y))
         {
             throw new PositionIsInRestrictedAreaException(x, y);
         }
@@ -204,33 +201,32 @@ public class MoveAgvRequestHandler :
             $"Manual {ActionType.Move} to ({x}, {y}) with orientation {theta}",
             agvCorrelationId,
             creator,
-            actionGroupId,
-            context.CancellationToken);
-        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } }, context.CancellationToken);
+            actionGroupId);
+        await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, agvCorrelationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvManualMove } });
 
         await context.RespondAsync(new AgvMoveSuccessful(actionGroupId));
     }
 
-    private async Task ReserveNodeForAgv(AgvGraph.NodeType type, GraphNode targetNode, Guid agvCorrelationId, CancellationToken cancellationToken)
+    private async Task ReserveNodeForAgv(AgvGraph.NodeType type, GraphNode targetNode, Guid agvCorrelationId)
     {
         switch (type)
         {
             case AgvGraph.NodeType.Charge:
-                await _chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId, true, cancellationToken);
+                await _chargingPointManager.ReserveChargerAsync(targetNode, agvCorrelationId, true);
                 break;
 
             case AgvGraph.NodeType.Park:
-                await _parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId, true, cancellationToken);
+                await _parkPointService.ReserveParkAsync(targetNode.Id, agvCorrelationId, true);
                 break;
 
             default:
                 throw new ArgumentOutOfRangeException($"Unable to reserve node type: {targetNode.Type}");
         }
 
-        await PublishNodeStateChange(targetNode.Id, cancellationToken);
+        await PublishNodeStateChange(targetNode.Id);
     }
 
-    private async Task QueueNewActionGroup(ConsumeContext context, ICollection<AgvAction> actions, string orderId, Guid agvCorrelationId, ActionGroupCreator creator, Guid actionGroupId, CancellationToken cancellationToken, Priority priority = Priority.Manual)
+    private async Task QueueNewActionGroup(ConsumeContext context, ICollection<AgvAction> actions, string orderId, Guid agvCorrelationId, ActionGroupCreator creator, Guid actionGroupId, Priority priority = Priority.Manual)
     {
         var actionGroup = new ActionGroup(
             actionGroupId,
@@ -243,17 +239,17 @@ public class MoveAgvRequestHandler :
             creator: creator
         );
         IRequestClient<QueueActionGroup>? requestClient = context.CreateRequestClient<QueueActionGroup>(_bus);
-        await requestClient.GetResponse<Success>(new QueueActionGroup(actionGroup, true), cancellationToken);
+        await requestClient.GetResponse<Success>(new QueueActionGroup(actionGroup, true));
     }
 
-    private async Task PublishNodeStateChange(Guid nodeId, CancellationToken cancellationToken)
+    private async Task PublishNodeStateChange(Guid nodeId)
     {
-        var node = await _nodeRepository.GetNodeAsync(nodeId, cancellationToken);
-        var station = await _stationRepository.GetStation(nodeId, cancellationToken);
+        var node = await _nodeRepository.GetNodeAsync(nodeId);
+        var station = await _stationRepository.GetStation(nodeId);
         if (node.Lock == null)
         {
             return;
         }
-        await _bus.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription), cancellationToken);
+        await _bus.Publish(new NodeStateChanged(node.Lock!, node.Name, station.Id, station.LockedBy, station.LockReason, station.LockDescription));
     }
 }

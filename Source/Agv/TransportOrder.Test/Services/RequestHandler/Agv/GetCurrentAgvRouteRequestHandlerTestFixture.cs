@@ -30,11 +30,11 @@ public class GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsum
     {
         if (lastNodeName != null)
         {
-            _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeName.ToGuid(), It.IsAny<CancellationToken>())).ReturnsAsync(currentAgvRouteReadModel);
+            _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, lastNodeName.ToGuid())).ReturnsAsync(currentAgvRouteReadModel);
         }
         else
         {
-            _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, null, It.IsAny<CancellationToken>())).ReturnsAsync(currentAgvRouteReadModel);
+            _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationId, null)).ReturnsAsync(currentAgvRouteReadModel);
         }
         _agvDb.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { new(agvCorrelationId, Guid.Empty, "") });
         return this;
@@ -42,7 +42,7 @@ public class GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsum
 
     public GetCurrentAgvRouteRequestHandlerTestFixture<TRequestClient, TConsumer> WithAgvRoutes(Guid[] agvCorrelationIds, ICollection<CurrentAgvRouteReadModel> agvRoutesByAgv)
     {
-        _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationIds, It.IsAny<CancellationToken>())).ReturnsAsync(agvRoutesByAgv);
+        _agvRouteService.Setup(x => x.GetAgvRouteAsync(agvCorrelationIds)).ReturnsAsync(agvRoutesByAgv);
         _agvDb.AddAgvs(agvCorrelationIds.Select(c => new TransportOrder.Domain.Models.Agv.Agv(c, Guid.Empty, "")).ToList());
         return this;
     }

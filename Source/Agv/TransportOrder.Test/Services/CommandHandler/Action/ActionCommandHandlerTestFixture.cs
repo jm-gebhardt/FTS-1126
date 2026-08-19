@@ -29,7 +29,7 @@ public class ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
 
     public ActionCommandHandlerTestFixture WithMultipleRequiredActionGroups(ICollection<ActionGroup> actionGroups)
     {
-        ISetupSequentialResult<Task<ActionGroup>> setupSequence = ActionGroupRepository.SetupSequence(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()));
+        ISetupSequentialResult<Task<ActionGroup>> setupSequence = ActionGroupRepository.SetupSequence(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>()));
 
         foreach (var actionGroup in actionGroups)
         {

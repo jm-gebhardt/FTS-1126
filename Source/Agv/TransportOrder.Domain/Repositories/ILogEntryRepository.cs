@@ -21,9 +21,8 @@ public interface ILogEntryRepository
     /// <param name="stationId">The station id.</param>
     /// <param name="timestamp">The time the log was created.</param>
     /// <param name="variables">The additional variables provided.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>True, of the entry has been added.</returns>
-    Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables, CancellationToken cancellationToken = default);
+    Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables);
     
     /// <summary>
     /// Get filtered log entries.
@@ -31,9 +30,8 @@ public interface ILogEntryRepository
     /// <param name="logEntryFilter">The filter to apply.</param>
     /// <param name="pageNr">The current page number.</param>
     /// <param name="pageSize">The page size.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A collection of log entries matching the filter.</returns>
-    Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize, CancellationToken cancellationToken = default);
+    Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize);
 
     /// <summary>
     /// Delete log entries older than given time.

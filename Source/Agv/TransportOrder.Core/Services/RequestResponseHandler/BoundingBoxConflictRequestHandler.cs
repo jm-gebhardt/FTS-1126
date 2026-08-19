@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
@@ -29,11 +29,11 @@ public class BoundingBoxConflictRequestHandler
         _agvDb = agvDb;
     }
 
-    private async Task<IReadOnlyList<BoundingBoxConflictContent>> GetConflictsAsync(CommonGraph graph, Guid? resourceId, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<BoundingBoxConflictContent>> GetConflictsAsync(CommonGraph graph, Guid? resourceId)
     {
-        ICollection<Domain.Models.Agv.Agv> allAgvs = await _agvDb.Agvs.GetAllAgvsAsync(cancellationToken);
+        ICollection<Domain.Models.Agv.Agv> allAgvs = await _agvDb.Agvs.GetAllAgvsAsync();
         List<Guid> correlationIds = allAgvs.Select(a => a.CorrelationId).ToList();
-        ICollection<AgvData> agvDatas = await _agvDb.Data.GetSelectedAgvDataAsync(correlationIds, cancellationToken);
+        ICollection<AgvData> agvDatas = await _agvDb.Data.GetSelectedAgvDataAsync(correlationIds);
 
         string? worstCaseType = agvDatas.MaxBy(d => d.Length + d.Width)?.Type;
         if (worstCaseType is null)
@@ -41,7 +41,7 @@ public class BoundingBoxConflictRequestHandler
             return [];
         }
 
-        IReadOnlyList<ResourceBoundingBox> boxes = await _boundingBoxRepository.GetByAgvTypeAsync(worstCaseType, cancellationToken);
+        IReadOnlyList<ResourceBoundingBox> boxes = await _boundingBoxRepository.GetByAgvTypeAsync(worstCaseType);
         var detector = new BoundingBoxConflictDetector(boxes, graph);
         IReadOnlyList<BoundingBoxConflict> conflicts = resourceId is null ? detector.Detect() : detector.DetectFor(resourceId.Value);
 
@@ -53,8 +53,8 @@ public class BoundingBoxConflictRequestHandler
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetBoundingBoxConflicts> context)
     {
-        var graph = await _agvDb.Graphs.GetGraphAsync(context.CancellationToken);
-        IReadOnlyList<BoundingBoxConflictContent> content = await GetConflictsAsync(graph, null, context.CancellationToken);
+        var graph = await _agvDb.Graphs.GetGraphAsync();
+        IReadOnlyList<BoundingBoxConflictContent> content = await GetConflictsAsync(graph, null);
         await context.RespondAsync(new GotBoundingBoxConflicts(content));
     }
 
@@ -62,13 +62,13 @@ public class BoundingBoxConflictRequestHandler
     public async Task Consume(ConsumeContext<GetNodeBoundingBoxConflicts> context)
     {
         var nodeId = context.Message.NodeId;
-        var graph = await _agvDb.Graphs.GetGraphAsync(context.CancellationToken);
+        var graph = await _agvDb.Graphs.GetGraphAsync();
         if (graph.Nodes.All(n => n.Id != nodeId))
         {
             throw new NodeNotFoundException(nodeId);
         }
 
-        IReadOnlyList<BoundingBoxConflictContent> content = await GetConflictsAsync(graph, nodeId, context.CancellationToken);
+        IReadOnlyList<BoundingBoxConflictContent> content = await GetConflictsAsync(graph, nodeId);
         await context.RespondAsync(new GotBoundingBoxConflicts(content));
     }
 
@@ -76,13 +76,13 @@ public class BoundingBoxConflictRequestHandler
     public async Task Consume(ConsumeContext<GetEdgeBoundingBoxConflicts> context)
     {
         var edgeId = context.Message.EdgeId;
-        var graph = await _agvDb.Graphs.GetGraphAsync(context.CancellationToken);
+        var graph = await _agvDb.Graphs.GetGraphAsync();
         if (graph.Edges.All(e => e.Id != edgeId))
         {
             throw new EdgeNotFoundException(edgeId);
         }
 
-        IReadOnlyList<BoundingBoxConflictContent> content = await GetConflictsAsync(graph, edgeId, context.CancellationToken);
+        IReadOnlyList<BoundingBoxConflictContent> content = await GetConflictsAsync(graph, edgeId);
         await context.RespondAsync(new GotBoundingBoxConflicts(content));
     }
 }

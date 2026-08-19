@@ -36,7 +36,7 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
 
     public DoppelspielCommandHandlerTestFixture WithStation(TransportOrder.Domain.Models.Station.Station station)
     {
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(station);
         return this;
     }
 
@@ -84,7 +84,7 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
 
     public DoppelspielCommandHandlerTestFixture WithCurrentAgvAction(TransportOrder.Domain.Models.ActionGroup.AgvAction? agvAction)
     {
-        ActionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agvAction);
+        ActionGroupRepository.Setup(x => x.GetCurrentAgvActionAsync(It.IsAny<Guid>())).ReturnsAsync(agvAction);
         return this;
     }
 
@@ -99,8 +99,7 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
             It.IsAny<Guid?>(),
             It.IsAny<bool?>(),
             It.IsAny<TransportOrder.Domain.Models.ActionGroup.SortBy>(),
-            It.IsAny<bool>(),
-            It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
+            It.IsAny<bool>())).ReturnsAsync(actionGroups);
         return this;
     }
 

@@ -12,15 +12,13 @@ public interface IAgvActionRepository
     /// </summary>
     /// <param name="actions">The agv actions.</param>
     /// <param name="agvSerialNumber">The serial number of the agv.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    Task AddOrUpdateActionsAsync(ICollection<AgvAction> actions, string agvSerialNumber, CancellationToken cancellationToken = default);
+    Task AddOrUpdateActionsAsync(ICollection<AgvAction> actions, string agvSerialNumber);
 
     /// <summary>
     /// Get all actions for this agv on given scope.
     /// </summary>
     /// <param name="agvSerialNumber">The agv serial number.</param>
     /// <param name="scope">The action scope.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A collection of actions the agv can run on the given scope.</returns>
-    Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope, CancellationToken cancellationToken = default);
+    Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope);
 }

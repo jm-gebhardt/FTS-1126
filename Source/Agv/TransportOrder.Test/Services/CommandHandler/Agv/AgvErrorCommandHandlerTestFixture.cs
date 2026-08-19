@@ -32,7 +32,7 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
     {
         AgvDbMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<Guid>())).ReturnsAsync(() => _errors);
         AgvDbMock.Setup(x => x.Errors.GetActiveErrorsAsync(It.IsAny<IList<Guid>>())).ReturnsAsync(() => _errors);
-        AgvDbMock.Setup(x => x.Errors.AddAndUpdateAgvErrorAsync(It.IsAny<List<AgvError>>(), It.IsAny<List<AgvError>>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>())).Callback((List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId, CancellationToken _) =>
+        AgvDbMock.Setup(x => x.Errors.AddAndUpdateAgvErrorAsync(It.IsAny<List<AgvError>>(), It.IsAny<List<AgvError>>(), It.IsAny<Guid>())).Callback((List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId) =>
         {
             _errors.RemoveAll(e => e.AgvCorrelationId == agvCorrelationId && resolvedErrors.Any(r => r.CorrelationId == e.CorrelationId));
             _errors.AddRange(newErrors);
@@ -49,20 +49,20 @@ public class AgvErrorCommandHandlerTestFixture : MassTransitConsumerTestFixture<
         collection.AddTransient(_ => _actionGroupRepository.Object);
         collection.AddSingleton<ITransportOrderNotificationSender>(_ => _toNotificationSender.Object);
         collection.AddSingleton<INotificationManager>(_ => _notManager.Object);
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
     public AgvErrorCommandHandlerTestFixture WithAgv(TransportOrder.Domain.Models.Agv.Agv agv)
     {
-        AgvDbMock.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(agv);
+        AgvDbMock.Setup(x => x.Agvs.GetAgvAsync(It.IsAny<Guid>())).ReturnsAsync(agv);
         return this;
     }
     
     public AgvErrorCommandHandlerTestFixture WithActionGroups(IReadOnlyList<TransportOrder.Domain.Models.ActionGroup.ActionGroup> actionGroups)
     {
         _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
-            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync(actionGroups);
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync(actionGroups);
         return this;
     }
 

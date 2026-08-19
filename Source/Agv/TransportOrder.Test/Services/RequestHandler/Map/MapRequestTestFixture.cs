@@ -68,8 +68,8 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         var mapRepositoryMock = new Mock<IMapRepository>();
 
-        mapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid correlationId, CancellationToken _) => Maps.Single(m => m.CorrelationId == correlationId));
-        mapRepositoryMock.Setup(x => x.GetAllMapsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(Maps));
+        mapRepositoryMock.Setup(x => x.GetMapAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => Maps.Single(m => m.CorrelationId == correlationId));
+        mapRepositoryMock.Setup(x => x.GetAllMapsAsync()).ReturnsAsync(new List<TransportOrder.Domain.Models.Map.Map>(Maps));
 
         return mapRepositoryMock;
     }
@@ -102,7 +102,7 @@ public class MapRequestTestFixture<TRequestClient, TConsumer> : MediatorTestFixt
     {
         background ??= MapBackgroundGenerator.Generate();
         MapRepositoryMock
-            .Setup(r => r.GetBackgroundImageAsync(background.CorrelationId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetBackgroundImageAsync(background.CorrelationId, It.IsAny<bool>()))
             .ReturnsAsync(background.Image);
 
         return this;

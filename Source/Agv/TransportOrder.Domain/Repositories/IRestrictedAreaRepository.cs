@@ -13,8 +13,7 @@ public interface IRestrictedAreaRepository
     /// </summary>
     /// <param name="x">The x coordinate of the point.</param>
     /// <param name="y">The y coordinate of the point.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    Task<bool> IsPointInRestrictedArea(float x, float y, CancellationToken cancellationToken=default);
+    Task<bool> IsPointInRestrictedArea(float x, float y);
 
     /// <summary>
     /// Add a restricted area.

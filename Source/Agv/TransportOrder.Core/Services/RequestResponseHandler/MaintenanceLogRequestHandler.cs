@@ -26,7 +26,7 @@ public class MaintenanceLogRequestHandler(IBus bus, ILogger<MaintenanceLogReques
     {
         (string user, var agv, var type, var date, string? comment) = context.Message;
 
-        await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agv, context.CancellationToken);
+        await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agv);
 
         logger.LogInformation("{User} triggered adding maintenance log entry for agv {AgvCorrelationId}: {MaintenanceType}/{Comment}/{ExecutionDate}", user, agv, type, comment, date);
 
@@ -42,7 +42,7 @@ public class MaintenanceLogRequestHandler(IBus bus, ILogger<MaintenanceLogReques
     {
         (var agv, MaintenanceType? type) = context.Message;
 
-        await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agv, context.CancellationToken);
+        await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agv);
 
         IReadOnlyCollection<MaintenanceLog> logs = await maintenanceLogRepository.GetMaintenancesLogsAsync([agv], type);
 
@@ -56,7 +56,7 @@ public class MaintenanceLogRequestHandler(IBus bus, ILogger<MaintenanceLogReques
     {
         (ICollection<Guid> agvs, MaintenanceType? type) = context.Message;
 
-        await agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvs, context.CancellationToken);
+        await agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvs);
 
         IReadOnlyCollection<MaintenanceLog> logs = await maintenanceLogRepository.GetMaintenancesLogsAsync(agvs, type);
 

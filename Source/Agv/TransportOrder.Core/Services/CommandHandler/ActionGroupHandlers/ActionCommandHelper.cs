@@ -75,11 +75,11 @@ public class ActionCommandHelper
             return false;
         }
 
-        bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId, cancellationToken);
+        bool lastActionWasMoveToCoordinate = await _actionGroupRepository.IsLastCompletedActionMoveToCoordinate(assignedAgv.CorrelationId);
         Route? route = null;
         if (action is { IsMoveToCoordinate: false, Target.NodeId: not null })
         {
-            var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId, cancellationToken);
+            var agvData = await _agvDb.Data.GetAgvDataAsync(assignedAgv.CorrelationId);
             route = await _routeService.GetRouteAsync(assignedAgv, action.Target.NodeId.Value, null, agvData, cancellationToken);
             action.Nodes = action.ActionType == ActionType.Charge ? [action.Target.Node!] : route.Nodes;
             action.Edges = route.Edges;
@@ -183,18 +183,17 @@ public class ActionCommandHelper
     /// Try update action group.
     /// </summary>
     /// <param name="actionGroup">The action group.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task TryUpdateActionGroup(Domain.Models.ActionGroup.ActionGroup actionGroup, CancellationToken cancellationToken)
+    public async Task TryUpdateActionGroup(Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
         try
         {
-            await _actionGroupRepository.UpdateAsync(actionGroup, cancellationToken);
+            await _actionGroupRepository.UpdateAsync(actionGroup);
         }
         catch (SqlException ex)
         {
             _logger.LogWarning("Update of action group caught {Exception}. Retrying ...", ex.Message);
-            await Task.Delay(1000, cancellationToken);
-            await TryUpdateActionGroup(actionGroup, cancellationToken);
+            await Task.Delay(1000);
+            await TryUpdateActionGroup(actionGroup);
         }
     }
 
@@ -304,9 +303,8 @@ public class ActionCommandHelper
     /// Get the next manual action for the given agv.
     /// </summary>
     /// <param name="agv">The agv.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The manual action.</returns>
-    public async Task<AgvAction?> GetManualAction(Agv agv, CancellationToken cancellationToken)
+    public async Task<AgvAction?> GetManualAction(Agv agv)
     {
         List<ActionType>? allowedActionTypes = null;
         if (agv.CanStartManualPickDropAction)
@@ -326,7 +324,7 @@ public class ActionCommandHelper
             }
         }
 
-        var actionGroup = await _actionGroupRepository.GetNextManualActionGroupForAgvAsync(agv.CorrelationId, allowedActionTypes, cancellationToken);
+        var actionGroup = await _actionGroupRepository.GetNextManualActionGroupForAgvAsync(agv.CorrelationId, allowedActionTypes);
         if (actionGroup == null)
         {
             _logger.LogInformation("There is no manual action group available for agv with CorrelationId {AgvCorrelationId}", agv.CorrelationId);
@@ -339,12 +337,11 @@ public class ActionCommandHelper
     /// Checks if a station is locked if it exists.
     /// </summary>
     /// <param name="id">The Id of the station.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    public async Task<bool> StationIsLockedIfExists(Guid id, CancellationToken cancellationToken)
+    public async Task<bool> StationIsLockedIfExists(Guid id)
     {
         try
         {
-            return (await _stationRepository.GetStation(id, cancellationToken)).IsLocked;
+            return (await _stationRepository.GetStation(id)).IsLocked;
         }
         catch
         {
@@ -426,17 +423,17 @@ public class ActionCommandHelper
             return;
         }
         var dropTarget = drop.Target.Node!;
-        var pickAtDropTarget = await _actionGroupRepository.GetNextPickAtNodeAsync(dropTarget.Id, cancellationToken);
+        var pickAtDropTarget = await _actionGroupRepository.GetNextPickAtNodeAsync(dropTarget.Id);
         if (pickAtDropTarget == null)
         {
             return;
         }
-        var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId, cancellationToken);
+        var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
         var routeToDropTarget = await _routeService.GetRouteAsync(agv, dropTarget.Id, null, agvData, cancellationToken);
         ICollection<Queue> queuesOnRoute = await _queueManager.GetQueuesOnRoute(routeToDropTarget.Nodes.Select(n => n.Id).ToList());
         if (queuesOnRoute.All(q => q.AgvFillQuantity == 0) || queuesOnRoute.Count == 0)
         {
-            ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel(cancellationToken);
+            ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
             if (!readyAgvs.Except([agv]).Any())
             {
                 await context.Publish(new TryRetractActionGroup(pickAtDropTarget.CorrelationId), cancellationToken);

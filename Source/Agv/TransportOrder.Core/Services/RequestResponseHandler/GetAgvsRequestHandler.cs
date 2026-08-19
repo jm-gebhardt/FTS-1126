@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -47,16 +47,15 @@ public class GetAgvsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetAgvs> context)
     {
-        var cancellationToken = context.CancellationToken;
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
         ICollection<Domain.Models.Agv.Agv> agvs;
         if (selectedAgvs.Count == 0)
         {
-            agvs = await _agvDb.Agvs.GetAllAgvsAsync(cancellationToken);
+            agvs = await _agvDb.Agvs.GetAllAgvsAsync();
         }
         else
         {
-            agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList(), cancellationToken);
+            agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
         }
 
         List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
@@ -67,11 +66,11 @@ public class GetAgvsRequestHandler :
 
         Dictionary<Guid, Guid?> agvLastNodeIds = agvs.ToDictionary(a => a.CorrelationId, a => a.AgvStatus?.LastNodeId);
 
-        Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvDb.Graphs.GetLastNodesForAgvsAsync(agvLastNodeIds, cancellationToken);
+        Task<IReadOnlyDictionary<Guid, GraphNode?>> agvLastNodesTask = _agvDb.Graphs.GetLastNodesForAgvsAsync(agvLastNodeIds);
 
-        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds, cancellationToken);
+        Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> actionGroupsTask = _actionGroupRepository.GetCurrentActionGroupsWithNodesAsync(agvCorrelationIds);
         Task<IReadOnlyList<AgvError>> errorsTask = _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationIds);
-        Task<Dictionary<Guid, MaintenanceLog?>> maintenanceTask = _agvDb.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(agvCorrelationIds, cancellationToken);
+        Task<Dictionary<Guid, MaintenanceLog?>> maintenanceTask = _agvDb.MaintenanceLogs.GetLatestMaintenanceLogsForAgvsAsync(agvCorrelationIds);
         await Task.WhenAll(actionGroupsTask, errorsTask, agvLastNodesTask, maintenanceTask);
 
         Dictionary<Guid, List<AgvError>> allAgvErrors = errorsTask.Result
@@ -102,16 +101,16 @@ public class GetAgvsRequestHandler :
     {
         var agvCorrelationId = context.Message.CorrelationId;
 
-        Task<ActionGroupReadModel?> agTask = _actionGroupRepository.GetCurrentAgvActionGroupWithNodesAsync(agvCorrelationId, context.CancellationToken);
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
+        Task<ActionGroupReadModel?> agTask = _actionGroupRepository.GetCurrentAgvActionGroupWithNodesAsync(agvCorrelationId);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         Guid? lastNodeId = agv.AgvStatus?.LastNodeId;
         Task<GraphNode?> lastNodeTask = Task.FromResult<GraphNode?>(null);
-        Task<MaintenanceLog?> maintenanceLogTask = _agvDb.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(agvCorrelationId, context.CancellationToken);
+        Task<MaintenanceLog?> maintenanceLogTask = _agvDb.MaintenanceLogs.GetLatestMaintenanceLogForAgvAsync(agvCorrelationId);
 
         if (lastNodeId != null)
         {
-            lastNodeTask = _agvDb.Graphs.TryGetNodeByIdAsync(lastNodeId.Value, context.CancellationToken);
+            lastNodeTask = _agvDb.Graphs.TryGetNodeByIdAsync(lastNodeId.Value);
         }
 
         await Task.WhenAll(lastNodeTask, agTask, maintenanceLogTask);

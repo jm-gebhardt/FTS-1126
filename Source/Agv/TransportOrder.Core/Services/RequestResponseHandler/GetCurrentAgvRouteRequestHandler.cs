@@ -27,9 +27,9 @@ public class GetCurrentAgvRouteRequestHandler : IConsumer<GetCurrentAgvRoute>, I
     public async Task Consume(ConsumeContext<GetCurrentAgvRoute> context)
     {
         var correlationId = context.Message.CorrelationId;
-        await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(correlationId, context.CancellationToken);
+        await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(correlationId);
 
-        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationId, cancellationToken: context.CancellationToken);
+        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationId);
         await context.RespondAsync(new GotCurrentAgvRoute(agvRoute));
     }
 
@@ -37,9 +37,9 @@ public class GetCurrentAgvRouteRequestHandler : IConsumer<GetCurrentAgvRoute>, I
     public async Task Consume(ConsumeContext<GetCurrentAgvRoutes> context)
     {
         ICollection<Guid> correlationIds = context.Message.CorrelationIds;
-        await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(correlationIds, context.CancellationToken);
+        await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(correlationIds);
 
-        ICollection<CurrentAgvRouteReadModel> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationIds, cancellationToken: context.CancellationToken);
+        ICollection<CurrentAgvRouteReadModel> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationIds);
         await context.RespondAsync(new GotCurrentAgvRoutes(agvRoute));
     }
 }

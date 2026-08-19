@@ -28,11 +28,11 @@ public class MaintenanceServiceTestFixture
 
     public MaintenanceServiceTestFixture WithAvailableNodes(TransportOrder.Domain.Models.Agv.Agv agv, List<GraphNode> availableNodes)
     {
-        _agvDb.Setup(x => x.Graphs.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Guid _, Expression<Func<GraphNode, bool>> predicate, CancellationToken _) => availableNodes.AsQueryable().Where(predicate));
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(agv.CorrelationId, It.IsAny<Expression<Func<GraphNode, bool>>>()))
+            .ReturnsAsync(new Func<Guid, Expression<Func<GraphNode, bool>>, IEnumerable<GraphNode>>((_, predicate) => availableNodes.AsQueryable().Where(predicate)));
         foreach (var availableNode in availableNodes)
         {
-            _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id, It.IsAny<CancellationToken>()))
+            _agvDb.Setup(x => x.Graphs.GetNodeAsync(availableNode.Id))
                 .ReturnsAsync(availableNodes.First(n => n.Id == availableNode.Id));
         }
         return this;

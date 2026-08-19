@@ -31,11 +31,11 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     private void SetupCargoRepositoryMock()
     {
-        AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid correlationId, CancellationToken _) => _cargosByAgv.TryGetValue(correlationId, out IReadOnlyCollection<Cargo>? cargos) ? cargos : new List<Cargo>());
-        AgvDb.Setup(x => x.Cargos.GetCargosAsync((ICollection<Guid>)It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync((IEnumerable<Guid> correlationIds, CancellationToken _) => _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+        AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _cargosByAgv.TryGetValue(correlationId, out IReadOnlyCollection<Cargo>? cargos) ? cargos : new List<Cargo>());
+        AgvDb.Setup(x => x.Cargos.GetCargosAsync((ICollection<Guid>)It.IsAny<IEnumerable<Guid>>())).ReturnsAsync((IEnumerable<Guid> correlationIds) => _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
 
-        AgvDb.Setup(x => x.Cargos.HaveAgvsCargoAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((ICollection<Guid> correlationIds, CancellationToken _) =>
+        AgvDb.Setup(x => x.Cargos.HaveAgvsCargoAsync(It.IsAny<ICollection<Guid>>()))
+            .ReturnsAsync((ICollection<Guid> correlationIds) =>
                 _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key))
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count != 0));
     }
@@ -74,7 +74,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     private void SetupIsAgvLoaded(Guid agvCorrelationId, ICollection<Cargo> cargos)
     {
-        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId, It.IsAny<CancellationToken>())).ReturnsAsync(cargos.Count != 0);
+        AgvDb.Setup(x => x.Cargos.HasAgvCargoAsync(agvCorrelationId)).ReturnsAsync(cargos.Count != 0);
     }
 
     public override CargoRequestHandlerTestFixture<TRequest, TConsumer> Build()

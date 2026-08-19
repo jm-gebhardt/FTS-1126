@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models;
@@ -63,35 +63,35 @@ public class CreateActionGroupRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, var creator, string user) = await ValidateMessageContent(context.Message, context.CancellationToken);
+        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, var creator, string user) = await ValidateMessageContent(context.Message);
 
-        var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, creator, context.CancellationToken);
+        var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, creator);
         actionGroup.Queue();
-        await _actionGroupRepository.AddAsync(actionGroup, context.CancellationToken);
+        await _actionGroupRepository.AddAsync(actionGroup);
 
         await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderCreated, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Created", $"Order {actionGroup.OrderId} was created successfully",
-            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } }, context.CancellationToken);
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
         await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderQueued, agvCorrelationId.GetValueOrDefault(),
             actionGroup.CorrelationId, "Order Queued", $"Order {actionGroup.OrderId} was queued successfully",
-            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } }, context.CancellationToken);
+            new Dictionary<string, object?> { { LogLabels.OrderId, actionGroup.OrderId } });
 
-        await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agvCorrelationId), context.CancellationToken);
-        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderCreated } }, context.CancellationToken);
-        await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup, context.CancellationToken)));
+        await _bus.Publish(new Common.Messages.ActionGroups.Events.ActionGroupCreated(_mapper.Map<ActionGroup>(actionGroup), actionGroup.CorrelationId, agvCorrelationId));
+        await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderCreated } });
+        await context.RespondAsync(new ActionGroupCreated(await _retrievalService.EnrichActionGroupWithNodesAsync(actionGroup)));
     }
 
     private async Task<(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId,
             string? infoPick, string? infoDrop, ActionGroupCreator creator, string user)>
-        ValidateMessageContent(CreatePickDropActionGroup createPickDropActionGroup, CancellationToken cancellationToken)
+        ValidateMessageContent(CreatePickDropActionGroup createPickDropActionGroup)
     {
         (Guid? sourceNodeId, Guid? targetNodeId, _, _, _, Guid? agvCorrelationId, _, _, _, _) = createPickDropActionGroup;
 
         // validate agv existence 
         if (agvCorrelationId != null)
         {
-            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value, cancellationToken);
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
             if (!agv.CanStartManualPickDropAction && sourceNodeId != null && targetNodeId != null)
             {
                 throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());
@@ -109,7 +109,7 @@ public class CreateActionGroupRequestHandler :
             throw new AgvNotAssignedToActionGroupException("Pick or drop only order requires assigned agv");
         }
 
-        var (sourceNode, targetNode) = await TryGetSourceAndTargetNode(sourceNodeId, targetNodeId, agvCorrelationId, cancellationToken);
+        var (sourceNode, targetNode) = await TryGetSourceAndTargetNode(sourceNodeId, targetNodeId, agvCorrelationId);
         if (sourceNode != null && !sourceNode.IsPickStation())
         {
             throw new InvalidNodeTypeException(sourceNode.Name, sourceNode.Type.ToString(), $"{nameof(AgvGraph.NodeType.Pick)} or {nameof(AgvGraph.NodeType.PickDrop)}");
@@ -125,7 +125,7 @@ public class CreateActionGroupRequestHandler :
             createPickDropActionGroup.AdditionalDropInfo, createPickDropActionGroup.Creator, createPickDropActionGroup.User);
     }
 
-    private async Task<(GraphNode? sourceNode, GraphNode? targetNode)> TryGetSourceAndTargetNode(Guid? sourceNodeId, Guid? targetNodeId, Guid? agvCorrelationId, CancellationToken cancellationToken)
+    private async Task<(GraphNode? sourceNode, GraphNode? targetNode)> TryGetSourceAndTargetNode(Guid? sourceNodeId, Guid? targetNodeId, Guid? agvCorrelationId)
     {
         var nodeIds = new List<Guid>();
         if (sourceNodeId != null)
@@ -140,7 +140,7 @@ public class CreateActionGroupRequestHandler :
         if (agvCorrelationId == null)
         {
             // get source and target independent of agv graph 
-            nodes = await _agvDb.Graphs.GetNodesByIdsAsync(nodeIds, cancellationToken);
+            nodes = await _agvDb.Graphs.GetNodesByIdsAsync(nodeIds);
         }
         else
         {
@@ -148,7 +148,7 @@ public class CreateActionGroupRequestHandler :
             // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
             Guid?[] nodeIdArray = [sourceNodeId, targetNodeId];
             IEnumerable<Guid?> nodeIdsToFetch = nodeIdArray;
-            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => nodeIdsToFetch.Contains(node.Id), cancellationToken)).ToList();
+            nodes = (await _agvDb.Graphs.GetNodesAsync(agvCorrelationId.Value, node => nodeIdsToFetch.Contains(node.Id))).ToList();
         }
         try
         {
@@ -160,7 +160,7 @@ public class CreateActionGroupRequestHandler :
         }
     }
 
-    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, ActionGroupCreator creator, CancellationToken cancellationToken)
+    private async Task<Domain.Models.ActionGroup.ActionGroup> CreatePickDropActionGroup(GraphNode? sourceNode, GraphNode? targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, ActionGroupCreator creator)
     {
         var correlationId = Guid.NewGuid();
 
@@ -186,7 +186,7 @@ public class CreateActionGroupRequestHandler :
 
         if (actions.Count == 1)
         {
-            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId!.Value, cancellationToken);
+            var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId!.Value);
             if (!agv.IsInMaintenance)
             {
                 throw new ActionNotAllowedInModeException(agv.CorrelationId, agv.Mode.Type.ToString());

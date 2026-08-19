@@ -11,22 +11,22 @@ namespace Gebhardt.Acc.Statistics.Persistence.Ef.Repositories;
 public class EfGridRepository(StatisticsDbContext context) : EfRepository<Grid, StatisticsDbContext>(context), IGridRepository
 {
     /// <inheritdoc />
-    public async Task<ICollection<Grid>> GetGridsAsync(CancellationToken cancellationToken = default)
+    public async Task<ICollection<Grid>> GetGridsAsync()
     {
         List<Grid> grids = await DbSet
             .Include(g => g.Maps)
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return grids;
     }
 
     /// <inheritdoc cref="IGridRepository"/>>
-    public async Task ThrowIfNotExistAsync(Guid gridId, CancellationToken cancellationToken = default)
+    public async Task ThrowIfNotExistAsync(Guid gridId)
     {
         try
         {
-            await DbSet.SingleAsync(m => m.GridId == gridId, cancellationToken);
+            await DbSet.SingleAsync(m => m.GridId == gridId);
         }
         catch (InvalidOperationException)
         {

@@ -11,16 +11,14 @@ public interface INodeRepository
     /// Get states of all nodes on a given map.
     /// </summary>
     /// <param name="mapCorrelationId">The correlation id of the map.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    Task<ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)>> GetNodeStatesForMapAsync(Guid mapCorrelationId, CancellationToken cancellationToken = default);
+    Task<ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)>> GetNodeStatesForMapAsync(Guid mapCorrelationId);
 
     /// <summary>
     /// Get a graph node.
     /// </summary>
     /// <param name="nodeId">The id of the node.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A graph node including its node lock.</returns>
-    Task<GraphNode> GetNodeAsync(Guid nodeId, CancellationToken cancellationToken = default);
+    Task<GraphNode> GetNodeAsync(Guid nodeId);
 
     /// <summary>
     /// Update the node lock.
@@ -35,9 +33,8 @@ public interface INodeRepository
     /// Get all nodes reserved for or occupied by given agv.
     /// </summary>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A collection of nodes.</returns>
-    Task<ICollection<GraphNode>> GetNodesForAgv(Guid agvCorrelationId, CancellationToken cancellationToken = default);
+    Task<ICollection<GraphNode>> GetNodesForAgv(Guid agvCorrelationId);
 
     /// <summary>
     /// Get ids of nodes which are in state Locked.

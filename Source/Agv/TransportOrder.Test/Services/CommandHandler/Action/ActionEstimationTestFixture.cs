@@ -25,8 +25,8 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
         base.AddActionGroup(actionGroup, hasUnfinishedAction, hasNotStartedAction, existsPriorToTest, isManual);
         ActionGroup = actionGroup;
 
-        ActionGroupRepository.Setup(a => a.UpdateAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>()))
-            .Callback<ActionGroup, CancellationToken>((a, _) => ActionGroup = a);
+        ActionGroupRepository.Setup(a => a.UpdateAsync(It.IsAny<ActionGroup>()))
+            .Callback<ActionGroup>(a => ActionGroup = a);
 
         return this;
     }
@@ -61,7 +61,7 @@ public class ActionGroupEstimationTestFixture : ActionGroupTestFixtureBase<Actio
 
     public ActionGroup VerifyActionGroupUpdate(Times times)
     {
-        ActionGroupRepository.Verify(a => a.UpdateAsync(It.IsAny<ActionGroup>(), It.IsAny<CancellationToken>()), times);
+        ActionGroupRepository.Verify(a => a.UpdateAsync(It.IsAny<ActionGroup>()), times);
         ActionGroup.ShouldNotBeNull();
         return ActionGroup;
     }

@@ -37,9 +37,9 @@ public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<Cr
 
     public CreateActionGroupRequestHandlerTestFixture WithNodes(ICollection<GraphNode> nodes)
     {
-        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync(nodes);
-        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>(), It.IsAny<CancellationToken>())).ReturnsAsync(nodes);
-        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync((ICollection<Guid> ids, CancellationToken _) => nodes.Where(n => ids.Contains(n.Id)).ToList());
+        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync(nodes);
+        _agvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>())).ReturnsAsync(nodes);
+        _agvDb.Setup(x => x.Graphs.GetNodesByIdsAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => nodes.Where(n => ids.Contains(n.Id)).ToList());
         return this;
     }
 
@@ -60,10 +60,10 @@ public class CreateActionGroupRequestHandlerTestFixture : MediatorTestFixture<Cr
         AddServices(s => s.AddTransient(_ => _logEntryRepository.Object));
         AddServices(s => s.AddTransient<ILoggingService, LoggingService>());
         base.Build();
-        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(), It.IsAny<CancellationToken>())).Verifiable();
-        _retrievalService.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag, CancellationToken _) => ag.ConvertFromActionGroupWithFakeNodeType()!);
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        ActionGroupRepository.Setup(x => x.AddAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())).Verifiable();
+        _retrievalService.Setup(x => x.EnrichActionGroupWithNodesAsync(It.IsAny<TransportOrder.Domain.Models.ActionGroup.ActionGroup>()))
+            .ReturnsAsync((TransportOrder.Domain.Models.ActionGroup.ActionGroup ag) => ag.ConvertFromActionGroupWithFakeNodeType()!);
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 }

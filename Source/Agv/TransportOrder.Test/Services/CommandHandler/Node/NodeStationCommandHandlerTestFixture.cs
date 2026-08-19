@@ -55,15 +55,15 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
         _stationRepository.Setup(x => x.Update(It.IsAny<TransportOrder.Domain.Models.Station.Station>())).Returns(Task.CompletedTask).Verifiable();
         _agvDb.Setup(x => x.Graphs.UpdateNode(It.IsAny<GraphNode>())).Verifiable();
         _loggingService
-            .Setup(x => x.LogStation(It.IsAny<ILogger>(), It.IsAny<LogLevel>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.LogStation(It.IsAny<ILogger>(), It.IsAny<LogLevel>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object?>?>()))
             .Returns(Task.CompletedTask);
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         return this;
     }
 
     public NodeStationCommandHandlerTestFixture WithNodeLock(NodeLock? nodeLock)
     {
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(() =>
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(() =>
         {
             var node = new GraphNode(nodeLock?.NodeId?? Guid.NewGuid(), "")
             {
@@ -88,16 +88,16 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
 
     public NodeStationCommandHandlerTestFixture WithStation(TransportOrder.Domain.Models.Station.Station station)
     {
-        _stationRepository.Setup(x => x.GetStation(station.Id, It.IsAny<CancellationToken>())).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStation(station.Name.ToGuid(), It.IsAny<CancellationToken>())).ReturnsAsync(station);
-        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync([station]);
-        _stationRepository.Setup(x => x.GetStations(null, It.IsAny<CancellationToken>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStation(station.Id)).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStation(station.Name.ToGuid())).ReturnsAsync(station);
+        _stationRepository.Setup(x => x.GetStations(It.IsAny<Guid?>())).ReturnsAsync([station]);
+        _stationRepository.Setup(x => x.GetStations()).ReturnsAsync([station]);
         return WithNodeLock(station.NodeLock);
     }
 
     public NodeStationCommandHandlerTestFixture WithAnyStation()
     {
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new TransportOrder.Domain.Models.Station.Station());
         return this;
     }
 
@@ -115,7 +115,7 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
 
     public NodeStationCommandHandlerTestFixture WithNodeLocks(ICollection<NodeLock> nodeLocks)
     {
-        _nodeRepository.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync((Guid _, CancellationToken _) =>
+        _nodeRepository.Setup(x => x.GetNodesForAgv(It.IsAny<Guid>())).ReturnsAsync((Guid _) =>
         {
             List<GraphNode> nodes = [];
             foreach (var nodeLock in nodeLocks)
@@ -142,7 +142,7 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
     public NodeStationCommandHandlerTestFixture WithCurrentAgvAction(AgvAction action)
     {
         _actionGroupRepository
-            .Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetCurrentAgvActionAsync(It.IsAny<Guid>()))
             .ReturnsAsync(action);
         return this;
     }
@@ -151,8 +151,8 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
     {
         _agvDb.AddNode(node);
         _mapRepository.Setup(x => x.GetMapIdForNodeAsync(node.Id)).ReturnsAsync(Guid.NewGuid);
-        _nodeRepository.Setup(x => x.GetNodeAsync(node.Id, It.IsAny<CancellationToken>())).ReturnsAsync(node);
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(node);
+        _nodeRepository.Setup(x => x.GetNodeAsync(node.Id)).ReturnsAsync(node);
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.IsAny<Guid>())).ReturnsAsync(node);
         return this;
     }
 
@@ -165,7 +165,7 @@ public class NodeStationCommandHandlerTestFixture : MassTransitConsumerTestFixtu
     public NodeStationCommandHandlerTestFixture WithAgvsGraph()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        _graphRepository.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(graph);
+        _graphRepository.Setup(x => x.GetAgvGraphAsync(It.IsAny<Guid>())).ReturnsAsync(graph);
         return this;
     }
 

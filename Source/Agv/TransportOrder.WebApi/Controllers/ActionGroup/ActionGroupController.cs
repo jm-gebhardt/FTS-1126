@@ -68,9 +68,9 @@ public class ActionGroupController : Controller
     /// <response code="404">Action group with given correlationId not found.</response>
     [HttpGet]
     [Route("/actionGroup/{correlationId:guid}")]
-    public async Task<ActionResult<ActionGroupDto>> GetActionGroup(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<ActionGroupDto>> GetActionGroup(Guid correlationId)
     {
-        Response<GotAgvActionGroup> response = await _getActionGroupRequestClient.GetResponse<GotAgvActionGroup>(new GetActionGroup(correlationId), cancellationToken);
+        Response<GotAgvActionGroup> response = await _getActionGroupRequestClient.GetResponse<GotAgvActionGroup>(new GetActionGroup(correlationId));
         var actionGroup = _mapper.Map<ActionGroupDto>(response.Message.AgvActionGroup);
         return Ok(actionGroup!);
     }
@@ -84,14 +84,14 @@ public class ActionGroupController : Controller
     /// <response code="400">Action group abortion failed because of the current group state (details in error message).</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/abort")]
-    public async Task<ActionResult> AbortActionGroup(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> AbortActionGroup(Guid correlationId)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId, AbortReason.WebApi, email), cancellationToken);
+        await _abortionRequestClient.GetResponse<ActionGroupAbortionTriggered>(new TriggerActionGroupAbortion(correlationId, AbortReason.WebApi, email));
         return Ok();
     }
 
@@ -104,14 +104,14 @@ public class ActionGroupController : Controller
     /// <response code="400">Action group cancellation failed because of the current group state (details in error message).</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/cancel")]
-    public async Task<ActionResult> CancelActionGroup(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> CancelActionGroup(Guid correlationId)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi, User.GetEmail()), cancellationToken);
+        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi, User.GetEmail()));
         return response.Message switch
         {
             ActionGroupCanceled => Ok(),
@@ -125,20 +125,19 @@ public class ActionGroupController : Controller
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the action group.</param>
     /// <param name="keepAgv">Optional parameter if the same agv should be kept assigned to the action group. Defaults to false.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     /// <response code="200">Ok</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/reset")]
-    public async Task<ActionResult> ResetActionGroup(Guid correlationId, bool keepAgv = false, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> ResetActionGroup(Guid correlationId, bool keepAgv = false)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId, keepAgv, email), cancellationToken);
+        await _resetActionGroupRequestClient.GetResponse<ActionGroupResetTriggered>(new TriggerActionGroupReset(correlationId, keepAgv, email));
         return Ok();
     }
 
@@ -153,7 +152,6 @@ public class ActionGroupController : Controller
     /// <param name="additionalPickInfo">Additional info for the pick station (optional).</param>
     /// <param name="additionalDropInfo">Additional info for the drop station (optional).</param>
     /// <param name="agvCorrelationId">The assigned agv (optional).</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created action group.</returns>
     /// <response code="200">Ok</response>
     /// <response code="400">The given pick or drop station node is not of type pick, drop, or pick drop, respectively.
@@ -174,8 +172,7 @@ public class ActionGroupController : Controller
         string? handlingUnit,
         string? additionalPickInfo,
         string? additionalDropInfo,
-        Guid? agvCorrelationId,
-        CancellationToken cancellationToken = default
+        Guid? agvCorrelationId
     )
     {
         string? email = User.GetEmail();
@@ -192,7 +189,7 @@ public class ActionGroupController : Controller
             agvCorrelationId,
             additionalPickInfo,
             additionalDropInfo,
-            ActionGroupCreator.TransportOrderWebApi, email), cancellationToken);
+            ActionGroupCreator.TransportOrderWebApi, email));
         return Ok(_mapper.Map<ActionGroupDto>(response.Message.ActionGroup));
     }
 
@@ -200,23 +197,20 @@ public class ActionGroupController : Controller
     /// Re-assign action group to a different available agv.
     /// Optionally, provide the one to assign it to.
     /// </summary>
-    /// <param name="correlationId">The correlation id of the action group.</param>
-    /// <param name="assignedAgv">The correlation id of the agv to assign the action group to (optional).</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     /// <response code="200">Ok</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Action group with given correlationId not found.</response>
     /// <response code="400">The pick action of the action group is not in state started.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/reassign")]
-    public async Task<ActionResult> ReassignActionGroup(Guid correlationId, [FromQuery] Guid? assignedAgv, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> ReassignActionGroup(Guid correlationId, [FromQuery] Guid? assignedAgv)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId, assignedAgv, email), cancellationToken);
+        await _reassignActionGroupClient.GetResponse<Success>(new TryReassignActionGroup(correlationId, assignedAgv, email));
         return Ok();
     }
 
@@ -228,14 +222,14 @@ public class ActionGroupController : Controller
     /// <response code="404">Action group with given correlationId or the action was not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId}/complete")]
-    public async Task<ActionResult> CompleteAction(Guid correlationId, Guid actionCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> CompleteAction(Guid correlationId, Guid actionCorrelationId)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId, email), cancellationToken);
+        await _actionCompletionClient.GetResponse<Success>(new TriggerActionCompletion(correlationId, actionCorrelationId, email));
         return Ok();
     }
 
@@ -247,14 +241,14 @@ public class ActionGroupController : Controller
     /// <response code="404">Action group with given correlationId not found.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/queue")]
-    public async Task<ActionResult> QueueActionGroup(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> QueueActionGroup(Guid correlationId)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId, email), cancellationToken);
+        await _actionGroupQueueingClient.GetResponse<Success>(new TriggerActionGroupQueueing(correlationId, email));
         return Ok();
     }
 
@@ -267,14 +261,14 @@ public class ActionGroupController : Controller
     /// <response code="400">The action has already been completed or the target node is not of type Pick, Drop, or PickDrop.</response>
     [HttpPatch]
     [Route("/actionGroup/{correlationId:guid}/action/{actionCorrelationId:guid}/setTarget")]
-    public async Task<ActionResult> SetTarget(Guid correlationId, Guid actionCorrelationId, [FromQuery] [Required] string targetNode, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> SetTarget(Guid correlationId, Guid actionCorrelationId, [FromQuery] [Required] string targetNode)
     {
         string? email = User.GetEmail();
         if (email == null)
         {
             return Unauthorized();
         }
-        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode.ToGuid(), email), cancellationToken);
+        await _setTargetClient.GetResponse<Success>(new TriggerSetTarget(correlationId, actionCorrelationId, targetNode.ToGuid(), email));
         return Ok();
     }
 }

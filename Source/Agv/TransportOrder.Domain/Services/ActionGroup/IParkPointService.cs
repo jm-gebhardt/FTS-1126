@@ -21,9 +21,8 @@ public interface IParkPointService
     /// <param name="parkNodeId"></param>
     /// <param name="agvCorrelationId"></param>
     /// <param name="ignoreLocked">Flag to reserve park node even if it is locked.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Throws if reservations fails.</returns>
-    Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreLocked = false, CancellationToken cancellationToken = default);
+    Task ReserveParkAsync(Guid parkNodeId, Guid agvCorrelationId, bool ignoreLocked = false);
 
     /// <summary>
     /// Checks if the agv is on a park node

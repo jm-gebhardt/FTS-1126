@@ -19,9 +19,10 @@ public class LogEntryRequestHandler(ILogEntryRepository logEntryRepository):
     /// <inheritdoc cref="LogEntryRequestHandler"/>>
     public async Task Consume(ConsumeContext<GetFilteredLogEntries> context)
     {
-        (var filter, int pageNr, int pageSize, var cancellationToken) = context.Message;
+        (var filter, int pageNr, int pageSize) = context.Message;
 
-        PagedResult<LogEntry> logEntries = await logEntryRepository.FilterAsync(filter.Translate<LogEntry, LogEntryFilterable>(), pageNr, pageSize, cancellationToken);
+        PagedResult<LogEntry> logEntries = await logEntryRepository.FilterAsync(filter.Translate<LogEntry, LogEntryFilterable>(), pageNr, pageSize);
+
         await context.RespondAsync(new GotLogEntries(logEntries));
     }
 }

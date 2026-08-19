@@ -44,7 +44,7 @@ public class AgvModeRequestHandler:
     {
         (var agvCorrelationId, string? initiatingUser, MaintenanceReason? maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
         await _bus.Publish(new SetMaintenanceMode(agv.CorrelationId, initiatingUser, maintenanceReason, reasonDescription, assignedActionPolicy, currentActionPolicy, cancelManualActions), context.CancellationToken);
 
@@ -57,13 +57,13 @@ public class AgvModeRequestHandler:
     public async Task Consume(ConsumeContext<SetNormalMode> context)
     {
         (var agvCorrelationId, string? initiatingUser) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
-        IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 100, cancellationToken: context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 100);
 
         if (pausedActionGroups.Count == 0)
         {
             _logger.LogDebug("Triggering set normal mode for agv {AgvCorrelationId}", agvCorrelationId);
-            await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser), context.CancellationToken);
+            await _bus.Publish(new SetNormalMode(agv.CorrelationId, initiatingUser));
             await context.RespondAsync(new Success());
             return;
         }
@@ -76,7 +76,7 @@ public class AgvModeRequestHandler:
                 // We do not allow to set AGV back to normal mode when one target station is locked
                 throw new SetAgvToNormalModeFailedException(agvCorrelationId);
             }
-            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, initiatingUser), context.CancellationToken);
+            await _bus.Publish(new ResumeActionGroup(actionGroup.CorrelationId, initiatingUser));
         }
         await context.RespondAsync(new Success());
     }
@@ -87,8 +87,8 @@ public class AgvModeRequestHandler:
     public async Task Consume(ConsumeContext<SetUserMode> context)
     {
         (var agvCorrelationId, string? initiatingUser, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
-        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
-        await _bus.Publish(new SetUserMode(agv.CorrelationId, initiatingUser, assignedActionPolicy, currentActionPolicy, cancelManualActions), context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
+        await _bus.Publish(new SetUserMode(agv.CorrelationId, initiatingUser, assignedActionPolicy, currentActionPolicy, cancelManualActions));
         await context.RespondAsync(new Success());
     }
 }

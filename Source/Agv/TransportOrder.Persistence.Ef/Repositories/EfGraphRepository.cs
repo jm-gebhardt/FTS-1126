@@ -53,11 +53,11 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<AgvGraph> GetAgvGraphAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<AgvGraph> GetAgvGraphAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var agvGraph = await QueryAgvGraphWithChildren(context)
-            .SingleOrDefaultAsync(g => g.AgvCorrelationId == agvCorrelationId, cancellationToken);
+            .SingleOrDefaultAsync(g => g.AgvCorrelationId == agvCorrelationId);
 
         return agvGraph ?? throw new AgvGraphNotDefinedException(agvCorrelationId);
     }
@@ -73,12 +73,12 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken = default)
+    public async Task<ICollection<AgvGraph>> GetSelectedAgvGraphsAsync(ICollection<Guid> correlationIds)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<AgvGraph> agvGraphs = await QueryAgvGraphWithChildren(context)
             .Where(g => correlationIds.Contains(g.AgvCorrelationId))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return agvGraphs;
     }
@@ -95,20 +95,20 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<GraphNode>> GetNodesAsync(Guid agvCorrelationId, Expression<Func<GraphNode, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<GraphNode>> GetNodesAsync(Guid agvCorrelationId, Expression<Func<GraphNode, bool>>? predicate = null)
     {
-        var graph = await GetAgvGraphAsync(agvCorrelationId, cancellationToken);
+        var graph = await GetAgvGraphAsync(agvCorrelationId);
         Func<GraphNode, bool>? filter = predicate?.Compile();
 
         IEnumerable<GraphNode> agvNodes = graph.Nodes.Where(n => filter?.Invoke(n) ?? true);
 
-        return await GetNodesByIdsAsync(agvNodes.Select(a => a.Id).ToList(), cancellationToken);
+        return await GetNodesByIdsAsync(agvNodes.Select(a => a.Id).ToList());
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<Guid> nodeIds, CancellationToken cancellationToken = default)
+    public async Task<ICollection<GraphNode>> GetNodesByIdsAsync(ICollection<Guid> nodeIds)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var data = await context.Set<GraphNode>()
             .AsNoTracking()
             .LeftJoin(context.Set<NodeLock>().AsNoTracking(),
@@ -117,7 +117,7 @@ public class EfGraphRepository : IGraphRepository
                 (n, nl) => new { nl, n })
             .Where(t => nodeIds.Contains(t.n.Id))
             .Select(t => new { t.nl, t.n })
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return data.Select(x =>
         {
@@ -127,9 +127,9 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<GraphNode> GetNodeAsync(Guid id, CancellationToken cancellationToken  = default)
+    public async Task<GraphNode> GetNodeAsync(Guid id)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var data = await context.Set<GraphNode>()
             .AsNoTracking()
             .LeftJoin(context.Set<NodeLock>().AsNoTracking(),
@@ -138,7 +138,7 @@ public class EfGraphRepository : IGraphRepository
                 (n, nl) => new { nl, n })
             .Where(t => t.n.Id == id)
             .Select(t => new { t.nl, t.n })
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         var node = data.Select(x =>
         {
@@ -154,9 +154,9 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<GraphNode?> TryGetNodeByIdAsync(Guid nodeId, CancellationToken cancellationToken = default)
+    public async Task<GraphNode?> TryGetNodeByIdAsync(Guid nodeId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var data = await context.Set<GraphNode>()
             .AsNoTracking()
             .LeftJoin(context.Set<NodeLock>().AsNoTracking(),
@@ -165,7 +165,7 @@ public class EfGraphRepository : IGraphRepository
                 (n, nl) => new { nl, n })
             .Where(t => t.n.Id == nodeId)
             .Select(t => new { t.nl, t.n })
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return data.Select(x =>
         {
@@ -175,19 +175,19 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<IGraph> GetGraphForMap(Guid mapCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<IGraph> GetGraphForMap(Guid mapCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         Guid[] nodeIdsUsedByGraphs = await context.Set<GraphNode>()
             .Select(x => x.Id)
             .Distinct()
-            .ToArrayAsync(cancellationToken);
+            .ToArrayAsync();
 
         Guid[] edgeIdsUsedByGraphs = await context.Set<GraphEdge>()
             .Select(x => x.Id)
             .Distinct()
-            .ToArrayAsync(cancellationToken);
+            .ToArrayAsync();
 
         var map = await context.Set<Map>()
             .AsNoTracking()
@@ -196,7 +196,7 @@ public class EfGraphRepository : IGraphRepository
                 .Where(n => ((IEnumerable<Guid>)nodeIdsUsedByGraphs).Contains(n.Id)))
             .Include(m => m.Edges
                 .Where(e => ((IEnumerable<Guid>)edgeIdsUsedByGraphs).Contains(e.Id)))
-            .SingleOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync();
 
         if (map == null)
         {
@@ -353,16 +353,16 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<Graph> GetGraphAsync(CancellationToken cancellationToken = default)
+    public async Task<Graph> GetGraphAsync()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<GraphNode> efNodes = await context.Set<GraphNode>()
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         List<GraphEdge> efEdges = await context.Set<GraphEdge>()
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         var graph = new Graph
         {
@@ -465,13 +465,13 @@ public class EfGraphRepository : IGraphRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, Guid?> lastNodeIdsByAgvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyDictionary<Guid, GraphNode?>> GetLastNodesForAgvsAsync(Dictionary<Guid, Guid?> lastNodeIdsByAgvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<GraphNode> nodeContext = context.Set<GraphNode>();
         List<GraphNode> nodeList = await nodeContext.Where(n => lastNodeIdsByAgvCorrelationId.Select(l => l.Value).Contains(n.Id))
             .AsNoTracking()
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
         Dictionary<Guid, GraphNode?> nodesByAgv = new();
         foreach (KeyValuePair<Guid, Guid?> element in lastNodeIdsByAgvCorrelationId)
         {

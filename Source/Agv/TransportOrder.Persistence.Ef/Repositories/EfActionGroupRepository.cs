@@ -84,32 +84,32 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> AddAsync(ActionGroup actionGroup, CancellationToken cancellationToken = default)
+    public async Task<bool> AddAsync(ActionGroup actionGroup)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
-        await context.AddAsync(actionGroup, cancellationToken);
+        await context.AddAsync(actionGroup);
         UpdateComputedProperties(context);
-        bool changes = await context.SaveChangesAsync(cancellationToken) > 0;
+        bool changes = await context.SaveChangesAsync() > 0;
         RestoreNodes(actionGroup, savedNodes);
         return changes;
     }
 
     /// <inheritdoc />
-    public async Task<bool> AddOrUpdateAsync(ActionGroup actionGroup, CancellationToken cancellationToken = default)
+    public async Task<bool> AddOrUpdateAsync(ActionGroup actionGroup)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
-        if (await context.Set<ActionGroup>().AnyAsync(a => a.CorrelationId == actionGroup.CorrelationId, cancellationToken))
+        if (await context.Set<ActionGroup>().AnyAsync(a => a.CorrelationId == actionGroup.CorrelationId))
         {
             await UpdateActionGroupAndActions(actionGroup, context);
             RestoreNodes(actionGroup, savedNodes);
             return true;
         }
         await ClearStaleTargetNodeIdsAsync(actionGroup, context);
-        await context.AddAsync(actionGroup, cancellationToken);
+        await context.AddAsync(actionGroup);
         UpdateComputedProperties(context);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync();
         RestoreNodes(actionGroup, savedNodes);
         return false;
     }
@@ -194,15 +194,15 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(ActionGroupState actionGroupState, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null)
     {
-        return await GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual, cancellationToken: cancellationToken);
+        return await GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, fromDate, toDate, maxItems, assignedAgvCorrelationId, isManual);
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes = null, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes = null)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .Where(a => a.AssignedAgv == assignedAgv && a.IsManual && a.IsQueued && a.State == ActionGroupState.Created)
             .AsNoTracking();
@@ -213,13 +213,13 @@ public class EfActionGroupRepository : IActionGroupRepository
         }
 
         actionGroups = actionGroups.OrderByProperty(nameof(SortBy.CreatedDate), isDescending: false).ThenByDescending(g => g.Priority);
-        return await actionGroups.FirstOrDefaultAsync(cancellationToken);
+        return actionGroups.FirstOrDefault();
     }
 
     /// <inheritdoc />
-    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .Where(a => a.State == actionGroupState)
             .AsNoTracking();
@@ -246,7 +246,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Reverse()
             .Take(maxItems)
             .SelectMany(a => a.Actions)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         if (actions.Count > 0)
         {
@@ -262,9 +262,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ActionGroup>> GetActionGroupsAsync(IList<ActionGroupState>? states = null, DateTime? fromDate = null, DateTime? toDate = null, int maxItems = 100, Guid? assignedAgvCorrelationId = null, bool? isManual = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
 
         if (states?.Any() ?? false)
@@ -300,14 +300,14 @@ public class EfActionGroupRepository : IActionGroupRepository
             .OrderByProperty(sortBy.ToString(), isDescending: sortDescending)
             .ThenByDescending(g => g.Priority)
             .Take(maxItems)
-            .ToListWithNoLockAsync(cancellationToken);
+            .ToListWithNoLockAsync();
         return actionGroupsAsync;
     }
 
     /// <inheritdoc />
-    public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
+    public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         IQueryable<ActionGroup> actionGroups = queryable
@@ -323,39 +323,39 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        return await actionGroups.CountAsync(cancellationToken);
+        return await actionGroups.CountAsync();
     }
 
     /// <inheritdoc />
-    public async Task<AgvAction?> GetCurrentAgvActionAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<AgvAction?> GetCurrentAgvActionAsync(Guid agvCorrelationId)
     {
-        var actionGroup = await GetCurrentAssignedActionGroupAsync(agvCorrelationId, cancellationToken);
+        var actionGroup = await GetCurrentAssignedActionGroupAsync(agvCorrelationId);
         var currentAction = actionGroup?.Actions.OrderByDescending(a => a.Sequence).FirstOrDefault(a => a.State == ActionState.Started);
         return currentAction;
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup?> GetCurrentAssignedActionGroupAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetCurrentAssignedActionGroupAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var actionGroup = await context.Set<ActionGroup>().OrderByDescending(g => g.StartedDate)
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
-            .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Started, cancellationToken);
+            .FirstOrDefaultAsync(a => a.AssignedAgv == agvCorrelationId && a.State == ActionGroupState.Started);
 
         return actionGroup;
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyDictionary<Guid, ActionGroup?>> GetCurrentAssignedActionGroupsAsync(IEnumerable<Guid> agvCorrelationIds)
     {
         // Once Agv is assigned to ActionGroup, Status is immediately set to started (and StartedDate), therefore we can use StartedDate to get current assigned ActionGroup  
         List<Task<(Guid agvCorrelationId, ActionGroup? actionGroup)>> tasks = agvCorrelationIds
             .Select(async agvCorrelationId =>
             {
-                var actionGroup = await GetCurrentAssignedActionGroupAsync(agvCorrelationId, cancellationToken);
+                var actionGroup = await GetCurrentAssignedActionGroupAsync(agvCorrelationId);
                 return (agvCorrelationId, actionGroup);
             }).ToList();
         await Task.WhenAll(tasks);
@@ -368,23 +368,23 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup?> GetActionGroupAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetActionGroupAsync(Guid correlationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .AsNoTracking()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
-            .SingleOrDefaultAsync(a => a.CorrelationId == correlationId, cancellationToken);
+            .SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
         return actionGroup;
     }
 
     /// <inheritdoc />
-    public async Task<List<string>> GetHandlingUnitsAsync(string query, int maxItems, CancellationToken cancellationToken = default)
+    public async Task<List<string>> GetHandlingUnitsAsync(string query, int maxItems)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .AsNoTracking()
             .Where(ag => ag.HandlingUnit != null && ag.HandlingUnit.Contains(query))
@@ -392,13 +392,13 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Distinct()
             .OrderBy(s => s)
             .Take(maxItems)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup> GetRequiredActionGroupByIdAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup> GetRequiredActionGroupByIdAsync(Guid correlationId)
     {
-        var actionGroup = await GetActionGroupAsync(correlationId, cancellationToken);
+        var actionGroup = await GetActionGroupAsync(correlationId);
         if (actionGroup == null)
         {
             throw new ActionGroupNotFoundException(correlationId);
@@ -408,14 +408,14 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup> GetRequiredActionGroupByActionIdAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup> GetRequiredActionGroupByActionIdAsync(Guid correlationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var actionGroupId = await context.Set<ActionGroup>()
             .Where(ag => ag.Actions.Any(a => a.CorrelationId == correlationId))
             .Select(ag => ag.CorrelationId)
-            .SingleOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync();
 
         if (actionGroupId == Guid.Empty)
         {
@@ -426,39 +426,39 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(an => an.Node)
-            .SingleAsync(g => g.CorrelationId == actionGroupId, cancellationToken);
+            .SingleAsync(g => g.CorrelationId == actionGroupId);
 
         return actionGroup ?? throw new ActionGroupNotFoundException(correlationId);
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<ActionGroup>> GetRunningIdleActionGroups(CancellationToken cancellationToken = default)
+    public async Task<ICollection<ActionGroup>> GetRunningIdleActionGroups()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         return (await context.Set<ActionGroup>()
                 .Include(g => g.Actions)
                 .ThenInclude(a => a.AgvActionNodes)
                 .ThenInclude(a => a.Node)
-                .Where(a => a.State == ActionGroupState.Started && !a.IsManual && a.Priority != Priority.QueueEvacuation && a.Priority != Priority.Queueing).ToListAsync(cancellationToken))
+                .Where(a => a.State == ActionGroupState.Started && !a.IsManual && a.Priority != Priority.QueueEvacuation && a.Priority != Priority.Queueing).ToListAsync())
             .Where(a => !a.IsMovingCargo).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<ICollection<ActionGroup>> GetRunningChargeActionGroups(CancellationToken cancellationToken = default)
+    public async Task<ICollection<ActionGroup>> GetRunningChargeActionGroups()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
             .Where(ag => ag.State == ActionGroupState.Started && ag.Actions.Any(a =>
-                a.ActionType == ActionType.Charge && a.State == ActionState.Started)).ToListAsync(cancellationToken);
+                a.ActionType == ActionType.Charge && a.State == ActionState.Started)).ToListAsync();
     }
 
     /// <inheritdoc cref="IActionGroupRepository"/>
-    public async Task<AgvAction?> GetActionByIdAsync(Guid correlationId, CancellationToken  cancellationToken = default)
+    public async Task<AgvAction?> GetActionByIdAsync(Guid correlationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
 
         var action = await queryable
@@ -466,16 +466,16 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
-            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions.Any(a => a.CorrelationId == correlationId), cancellationToken)
+            .SingleOrDefaultAsync(actionGroup => actionGroup.Actions.Any(a => a.CorrelationId == correlationId))
             .Select(ag => ag?.Actions.SingleOrDefault(a => a.CorrelationId == correlationId));
 
         return action;
     }
 
     /// <inheritdoc cref="IActionGroupRepository"/>
-    public async Task<AgvAction> GetRequiredActionByIdAsync(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<AgvAction> GetRequiredActionByIdAsync(Guid correlationId)
     {
-        var action = await GetActionByIdAsync(correlationId, cancellationToken);
+        var action = await GetActionByIdAsync(correlationId);
         if (action != null)
         {
             return action;
@@ -485,15 +485,15 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Agv? agv, ActionState state, Reason? reason, DateTimeOffset now, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup> UpdateActionAndGroupStateAsync(AgvAction action, Agv? agv, ActionState state, Reason? reason, DateTimeOffset now)
     {
         var actionGroupCorrelationId = action.ParentId;
 
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(a => a.Actions)
-            .SingleOrDefaultAsync(a => a.CorrelationId == actionGroupCorrelationId, cancellationToken);
+            .SingleOrDefaultAsync(a => a.CorrelationId == actionGroupCorrelationId);
 
         if (actionGroup == null)
         {
@@ -515,15 +515,15 @@ public class EfActionGroupRepository : IActionGroupRepository
         {
             actionGroup.Reasons.Add(reason);
         }
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync();
 
         return actionGroup;
     }
 
     /// <inheritdoc/>
-    public async Task<bool> HasUnfinishedDropActionsAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasUnfinishedDropActionsAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasUnfinishedDropActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
@@ -532,15 +532,15 @@ public class EfActionGroupRepository : IActionGroupRepository
             )
             .AsNoTracking()
             .AsSplitQuery()
-            .AnyWithNoLockAsync(cancellationToken);
+            .AnyWithNoLockAsync();
 
         return hasUnfinishedDropActions;
     }
 
     /// <inheritdoc/>
-    public async Task<List<ActionGroup>> GetNotStartedActionsAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<List<ActionGroup>> GetNotStartedActionsAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         List<ActionGroup> getNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
@@ -550,15 +550,15 @@ public class EfActionGroupRepository : IActionGroupRepository
             )
             .AsNoTracking()
             .AsSplitQuery()
-            .ToListWithNoLockAsync(cancellationToken);
+            .ToListWithNoLockAsync();
 
         return getNotStartedActions;
     }
 
     /// <inheritdoc/>
-    public async Task<bool> HasNotStartedActionsAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasNotStartedActionsAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
@@ -567,15 +567,15 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
             )
             .AsNoTracking()
-            .AnyWithNoLockAsync(cancellationToken);
+            .AnyWithNoLockAsync();
 
         return hasNotStartedActions;
     }
 
     /// <inheritdoc />
-    public async Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
@@ -583,15 +583,15 @@ public class EfActionGroupRepository : IActionGroupRepository
                 actionGroup.Actions.Any(a => a.State != ActionState.Completed && a.State != ActionState.Started)
             )
             .AsNoTracking()
-            .AnyAsync(cancellationToken);
+            .AnyAsync();
 
         return hasNotStartedActions;
     }
 
     /// <inheritdoc />
-    public async Task<bool> HasCurrentAssignedActionGroupAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasCurrentAssignedActionGroupAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         bool hasActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
@@ -599,15 +599,15 @@ public class EfActionGroupRepository : IActionGroupRepository
                 (actionGroup.State == ActionGroupState.Started || actionGroup.State == ActionGroupState.Created)
             )
             .AsNoTracking()
-            .AnyAsync(cancellationToken);
+            .AnyAsync();
 
         return hasActions;
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         List<ActionGroup> notStartedActionGroups = await queryable
             .Where(actionGroup =>
@@ -617,15 +617,15 @@ public class EfActionGroupRepository : IActionGroupRepository
             .OrderByDescending(g => g.Priority)
             .ThenBy(g => g.CreatedDate)
             .AsNoTracking()
-            .ToListWithNoLockAsync(cancellationToken);
+            .ToListWithNoLockAsync();
 
         return notStartedActionGroups;
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         List<ActionGroup> notStartedActionGroups = await queryable
             .Where(actionGroup => actionGroup.State == ActionGroupState.Invalid)
@@ -633,15 +633,15 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return notStartedActionGroups;
     }
 
     /// <inheritdoc/>
-    public async Task<AgvAction> GetSubsequentActionAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<AgvAction> GetSubsequentActionAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
@@ -652,7 +652,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync();
 
         var subsequentAction = startedGroup?.Actions.Where(action => action.State != ActionState.Completed && !action.ShouldSkip).MinBy(a => a.Sequence);
 
@@ -664,9 +664,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> AgvHasPendingActions(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> AgvHasPendingActions(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
 
@@ -674,37 +674,37 @@ public class EfActionGroupRepository : IActionGroupRepository
             (a.AssignedAgv == agvCorrelationId && a.IsQueued &&
              (a.State == ActionGroupState.Created || (a.State == ActionGroupState.Started && a.Actions.Any(aa => aa.State == ActionState.Created)))) ||
             (a.AssignedAgv == null && a.State == ActionGroupState.Created && a.IsQueued)
-        , cancellationToken);
+        );
     }
 
     /// <inheritdoc />
-    public async Task<Guid?> GetAgvAssignedToAction(Guid actionCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<Guid?> GetAgvAssignedToAction(Guid actionCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
-        return (await actionGroups.SingleAsync(ag => ag.Actions.Any(a => a.CorrelationId == actionCorrelationId), cancellationToken)).AssignedAgv;
+        return (await actionGroups.SingleAsync(ag => ag.Actions.Any(a => a.CorrelationId == actionCorrelationId))).AssignedAgv;
     }
 
     /// <inheritdoc />
-    public async Task<bool> HasStartedActionAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasStartedActionAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
-        return await actionGroups.AnyAsync(ag => ag.State == ActionGroupState.Started && ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.State == ActionState.Started), cancellationToken);
+        return await actionGroups.AnyAsync(ag => ag.State == ActionGroupState.Started && ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.State == ActionState.Started));
     }
 
     /// <inheritdoc />
-    public async Task UpdateAsync(ActionGroup actionGroup, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(ActionGroup actionGroup)
     {
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Set<ActionGroup>().Update(actionGroup);
         UpdateComputedProperties(context);
-        int result = await context.SaveChangesAsync(cancellationToken);
+        int result = await context.SaveChangesAsync();
         _logger.LogDebug("Update action group async save affected {RowsAffected} rows", result);
-        await context.Entry(actionGroup).ReloadAsync(cancellationToken);
+        await context.Entry(actionGroup).ReloadAsync();
         RestoreNodes(actionGroup, savedNodes);
         _logger.LogDebug("Action group {ActionGroupCorrelationId} state after saving update {State}", actionGroup.CorrelationId, actionGroup.State);
         foreach (var action in actionGroup.Actions)
@@ -747,9 +747,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsLastCompletedActionMoveToCoordinate(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsLastCompletedActionMoveToCoordinate(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var action = await context.Set<ActionGroup>()
             .AsNoTracking()
@@ -757,28 +757,28 @@ public class EfActionGroupRepository : IActionGroupRepository
             .SelectMany(a => a.Actions)
             .Where(a => a.CompletedDate != null)
             .OrderByDescending(a => a.CompletedDate)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync();
         return action is { IsMoveToCoordinate: true };
     }
 
     /// <inheritdoc/>
-    public async Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid actionGroupCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid actionGroupCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(a => a.Actions)
             .Where(a => a.CorrelationId != actionGroupCorrelationId && a.AssignedAgv == agvCorrelationId && (a.State == ActionGroupState.Completed || a.State == ActionGroupState.Started))
             .OrderByDescending(a => a.StartedDate)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync();
         bool? dockFront = actionGroup?.Actions.OrderByDescending(a => a.Sequence).First(a => !a.ShouldSkip).InfoToAgv?.GetDockFront();
         return dockFront;
     }
 
     /// <inheritdoc/>
-    public async Task<AgvAction?> GetLastAbortedPickDropActionAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<AgvAction?> GetLastAbortedPickDropActionAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(ag => ag.Actions)
@@ -789,16 +789,16 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Where(ag => ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop))
             .OrderByDescending(ag => ag.StartedDate)
             .ThenByDescending(ag => ag.CompletedDate)
-            .FirstOrDefaultAsync(ag => ag.Actions.Any(a => a.State == ActionState.Aborted), cancellationToken);
+            .FirstOrDefaultAsync(ag => ag.Actions.Any(a => a.State == ActionState.Aborted));
 
         var action = actionGroup?.Actions.OrderByDescending(a => a.CompletedDate).FirstOrDefault(a => a.CompletedDate != null);
         return action;
     }
 
     /// <inheritdoc/>
-    public async Task<bool> HasCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasCreatedChargingActionGroupForAgvAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Actions are auto-included
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
@@ -813,13 +813,13 @@ public class EfActionGroupRepository : IActionGroupRepository
                 && ag.Actions.Any(a =>
                     a.ActionType == ActionType.Charge
                     && a.State == ActionState.Created))
-            .AnyAsync(cancellationToken);
+            .AnyAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetStartedActionGroupForAgvAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetStartedActionGroupForAgvAsync(Guid agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Actions are auto-included.
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
@@ -832,11 +832,11 @@ public class EfActionGroupRepository : IActionGroupRepository
             .OrderByDescending(ag => ag.StartedDate)
             .FirstOrDefaultAsync(ag =>
                 ag.AssignedAgv == agvCorrelationId
-                && ag.State == ActionGroupState.Started, cancellationToken);
+                && ag.State == ActionGroupState.Started);
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<ActionGroup>> GetCreatedAndStartedActionGroupsForAgvAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ActionGroup>> GetCreatedAndStartedActionGroupsForAgvAsync(Guid agvCorrelationId)
     {
         var actionGroupStates = new List<ActionGroupState>()
         {
@@ -844,11 +844,11 @@ public class EfActionGroupRepository : IActionGroupRepository
             ActionGroupState.Started
         };
 
-        return (await GetAgvActionGroupsInState(agvCorrelationId, actionGroupStates, cancellationToken)).Where(ag => ag.IsQueued).ToList();
+        return (await GetAgvActionGroupsInState(agvCorrelationId, actionGroupStates)).Where(ag => ag.IsQueued).ToList();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<ActionGroup>> GetPendingActionGroupsForAgvAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<ICollection<ActionGroup>> GetPendingActionGroupsForAgvAsync(Guid agvCorrelationId)
     {
         var actionGroupStates = new List<ActionGroupState>()
         {
@@ -857,26 +857,26 @@ public class EfActionGroupRepository : IActionGroupRepository
             ActionGroupState.Paused
         };
 
-        return (await GetAgvActionGroupsInState(agvCorrelationId, actionGroupStates, cancellationToken)).Where(ag => ag.IsQueued).ToList();
+        return (await GetAgvActionGroupsInState(agvCorrelationId, actionGroupStates)).Where(ag => ag.IsQueued).ToList();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<Guid>> FilterAgvsWithPriorityActionGroups(ICollection<Guid> agvs, CancellationToken cancellationToken = default)
+    public async Task<ICollection<Guid>> FilterAgvsWithPriorityActionGroups(ICollection<Guid> agvs)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
 
         return (await actionGroups.Where(a => a.Priority > Priority.Default && a.Priority != Priority.Charging && a.IsQueued &&
                                               a.AssignedAgv != null && agvs.Contains(a.AssignedAgv!.Value) &&
                                               (a.State == ActionGroupState.Started || a.State == ActionGroupState.Created))
-            .ToListAsync(cancellationToken)).Select(a => a.AssignedAgv!.Value).ToList();
+            .ToListAsync()).Select(a => a.AssignedAgv!.Value).ToList();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(Guid targetId, CancellationToken cancellationToken = default)
+    public async Task<ICollection<ActionGroup>> GetCurrentActionGroupsToTarget(Guid targetId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
             .Include(g => g.Actions)
@@ -885,13 +885,13 @@ public class EfActionGroupRepository : IActionGroupRepository
         return await actionGroups.Where(ag =>
                 (ag.State == ActionGroupState.Started || ag.State == ActionGroupState.Created) &&
                 ag.Actions.Any(a => (a.State == ActionState.Started || a.State == ActionState.Created) && a.Target.NodeId!.Value == targetId))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<ActionGroup>> GetNextPicksAtTarget(Guid targetId, ICollection<Guid> assignedAgvs, CancellationToken cancellationToken = default)
+    public async Task<ICollection<ActionGroup>> GetNextPicksAtTarget(Guid targetId, ICollection<Guid> assignedAgvs)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
             .Include(g => g.Actions)
@@ -903,14 +903,14 @@ public class EfActionGroupRepository : IActionGroupRepository
                 ag.AssignedAgv != null &&
                 assignedAgvs.Contains(ag.AssignedAgv.Value) &&
                 ag.Actions.Any(a => a.ActionType == ActionType.Pick && a.Target.NodeId!.Value == targetId))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextDropActionGroupEligibleForDoppelspiel(ICollection<string> stations, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextDropActionGroupEligibleForDoppelspiel(ICollection<string> stations)
     {
         IEnumerable<string> targets = stations;
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<ActionGroup> candidates = await context.Set<ActionGroup>()
             .Where(o => o.CanRunDoppelspiel
                         && o.CompletedDate == null
@@ -918,7 +918,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                         && o.Actions.Any(a => a.ActionType == ActionType.Drop)
                         && !o.Actions.Any(a => a.ActionType == ActionType.Drop && a.IsRegisteredForDoppelspiel)
                         && o.Actions.Any(a => a.ActionType == ActionType.Pick && a.CompletedDate != null))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return candidates.Where(o =>
                 o.Actions.Any(a => a.ActionType == ActionType.Drop &&
@@ -929,22 +929,22 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextDelayedDropForStations(ICollection<Guid> stations, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextDelayedDropForStations(ICollection<Guid> stations)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .Where(a => !a.IsQueued
                         && a.CompletedDate == null
                         && a.StartedDate == null
                         && a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id)))
-            .OrderBy(a => a.CreatedDate).FirstOrDefaultAsync(cancellationToken);
+            .OrderBy(a => a.CreatedDate).FirstOrDefaultAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextPickForStation(GraphNode pickNode, ICollection<Guid>? ordersToIgnore = null)
     {
         ordersToIgnore ??= [];
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         List<ActionGroup> candidates = await context.Set<ActionGroup>()
             .Where(a => !a.IsQueued
@@ -953,7 +953,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                         && a.StartedDate == null
                         && a.Actions.Any(ac => ac.ActionType == ActionType.Pick))
             .OrderBy(h => h.CreatedDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return candidates.FirstOrDefault(a =>
             a.Actions.Any(ac => ac is { ActionType: ActionType.Pick, DoppelspielPartner: null } &&
@@ -962,9 +962,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextUnmatchedDoppelspielDrop(GraphNode node, Guid? orderToIgnore, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextUnmatchedDoppelspielDrop(GraphNode node, Guid? orderToIgnore)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Step 1: Fetch pick candidates from database (without StationOptions check)
         List<ActionGroup> pickCandidates = await context.Set<ActionGroup>()
@@ -976,7 +976,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                                             ac.IsRegisteredForDoppelspiel &&
                                             ac.DoppelspielPartner == null))
             .OrderBy(h => h.CreatedDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         // Step 2: Filter in memory with StationOptions check
         int pickCount = pickCandidates.Count(a =>
@@ -993,7 +993,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                                             ac.IsRegisteredForDoppelspiel &&
                                             ac.DoppelspielPartner == null))
             .OrderBy(h => h.ConsideredForDoppelspielDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         // Step 4: Filter in memory with StationOptions check
         List<ActionGroup> dropOrders = dropCandidates
@@ -1013,9 +1013,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextUnmatchedDoppelspielPick(GraphNode node, Guid? orderToIgnore, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextUnmatchedDoppelspielPick(GraphNode node, Guid? orderToIgnore)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Step 1: Fetch pick candidates from database (without StationOptions check)
         List<ActionGroup> pickCandidates = await context.Set<ActionGroup>()
@@ -1028,7 +1028,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                                                ac.Target.DoppelspielMode != DoppelspielMode.Always &&
                                                ac.Target.DoppelspielMode != DoppelspielMode.None))
             .OrderBy(h => h.CreatedDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         // Step 2: Filter in memory with StationOptions check
         List<ActionGroup> pickOrders = pickCandidates
@@ -1046,7 +1046,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                         a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
                                             ac.DoppelspielPartner == null))
             .OrderBy(h => h.ConsideredForDoppelspielDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         // Step 4: Filter in memory and count
         int drops = dropCandidates
@@ -1065,29 +1065,29 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc/>
-    public async Task<bool> HasActionGroupsForStationGroup(ICollection<Guid> stations, Guid? agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasActionGroupsForStationGroup(ICollection<Guid> stations, Guid? agvCorrelationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .Where(a => a.IsQueued
                         && a.CompletedDate == null
                         && (a.AssignedAgv == null || a.AssignedAgv != agvCorrelationId)
                         && (a.Actions.Any(ac => ac.ActionType == ActionType.Drop && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null) ||
                             a.Actions.Any(ac => ac.ActionType == ActionType.Pick && ac.Target.Node != null && stations.Contains(ac.Target.Node.Id) && ac.CompletedDate == null)))
-            .AnyAsync(cancellationToken);
+            .AnyAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<bool> IsActionGroupQueued(Guid correlationId, CancellationToken cancellationToken = default)
+    public async Task<bool> IsActionGroupQueued(Guid correlationId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var actionGroup = await context.Set<ActionGroup>().SingleOrDefaultAsync(a => a.CorrelationId == correlationId, cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var actionGroup = await context.Set<ActionGroup>().SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
         return actionGroup?.IsQueued ?? false;
     }
 
-    private async Task<IReadOnlyList<ActionGroup>> GetAgvActionGroupsInState(Guid agvCorrelationId, List<ActionGroupState> actionGroupStates, CancellationToken cancellationToken = default)
+    private async Task<IReadOnlyList<ActionGroup>> GetAgvActionGroupsInState(Guid agvCorrelationId, List<ActionGroupState> actionGroupStates)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Actions are auto-included.
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
@@ -1099,13 +1099,13 @@ public class EfActionGroupRepository : IActionGroupRepository
         return await actionGroups.Where(ag =>
                 ag.AssignedAgv == agvCorrelationId
                 && actionGroupStates.Contains(ag.State))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyCollection<ActionGroup>> GetCurrentActionGroupsForStation(string stationName, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<ActionGroup>> GetCurrentActionGroupsForStation(string stationName)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         return await context.Set<ActionGroup>()
             .AsNoTracking()
@@ -1122,13 +1122,13 @@ public class EfActionGroupRepository : IActionGroupRepository
                     (a.State == ActionGroupState.Started || // currently running orders to this station
                      a.State == ActionGroupState.Paused || // or paused orders with not completed action to this station
                      a.Actions.Any(action => action.ActionType == ActionType.Charge) || (a.Actions.Count == 1 && a.Actions.First().ActionType == ActionType.Move)) // park and charge actions
-            ).ToListAsync(cancellationToken);
+            ).ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyCollection<ActionGroup>> GetPausedActionGroupsForStation(string stationName, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<ActionGroup>> GetPausedActionGroupsForStation(string stationName)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         return await context.Set<ActionGroup>()
             .AsNoTracking()
             .Include(a => a.Actions)
@@ -1140,13 +1140,13 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Where(a =>
                 a.Actions.Any(action => action.Target.Node!.Name == stationName) &&
                 a.State == ActionGroupState.Paused
-            ).ToListAsync(cancellationToken);
+            ).ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<Guid> targets, CancellationToken cancellationToken = default)
+    public async Task<ICollection<ActionGroup>> GetNotStartedActionGroupsToTargetsForAgv(Guid agvId, ICollection<Guid> targets)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>().AsNoTracking()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
@@ -1154,13 +1154,13 @@ public class EfActionGroupRepository : IActionGroupRepository
         return await actionGroups.Where(ag => ag.AssignedAgv == agvId
                                               && ag.State == ActionGroupState.Created
                                               && ag.Actions.All(a => targets.Contains(a.Target.NodeId!.Value)))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ActionGroup?> GetNextPickAtNodeAsync(Guid nodeId, CancellationToken cancellationToken = default)
+    public async Task<ActionGroup?> GetNextPickAtNodeAsync(Guid nodeId)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
             .AsNoTracking()
             .Include(g => g.Actions)
@@ -1170,14 +1170,14 @@ public class EfActionGroupRepository : IActionGroupRepository
                 ag.StartedDate == null && ag.State == ActionGroupState.Created && (ag.EstimatedDuration == null || ag.EstimatedDuration == TimeSpan.Zero) && ag.IsQueued && !ag.IsManual &&
                 ag.Actions.Any(a => a.ActionType == ActionType.Pick && a.Target.NodeId!.Value == nodeId && a.StartedDate == null))
             .OrderBy(ac => ac.CreatedDate)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId)
     {
         var states = new List<ActionGroupState> { ActionGroupState.Created, ActionGroupState.Started, ActionGroupState.Completed };
-        IReadOnlyList<ActionGroup> actionGroups = await GetActionGroupsAsync(states, assignedAgvCorrelationId: agvCorrelationId, maxItems: 3, cancellationToken: cancellationToken);
+        IReadOnlyList<ActionGroup> actionGroups = await GetActionGroupsAsync(states, assignedAgvCorrelationId: agvCorrelationId, maxItems: 3);
 
         var created = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Created);
         var started = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Started);
@@ -1187,14 +1187,14 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
     
     /// <inheritdoc />
-    public async Task<ICollection<Guid>> GetAgvsMovingCargo(ICollection<Guid> assignedAgvs, CancellationToken cancellationToken = default)
+    public async Task<ICollection<Guid>> GetAgvsMovingCargo(ICollection<Guid> assignedAgvs)
     {
         if (assignedAgvs.Count == 0)
         {
             return new List<Guid>();
         }
         
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<Guid> filteredAgvIds = await context.Set<ActionGroup>()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
@@ -1202,7 +1202,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .Where(ag => (ag.State == ActionGroupState.Created || ag.State == ActionGroupState.Started)
                          && assignedAgvs.Contains(ag.AssignedAgv!.Value)
                          && ag.Actions.Any(a => a.ActionType == ActionType.Pick || a.ActionType == ActionType.Drop))
-            .Select(ag => ag.AssignedAgv!.Value).Distinct().ToListAsync(cancellationToken);
+            .Select(ag => ag.AssignedAgv!.Value).Distinct().ToListAsync();
         
         return filteredAgvIds;
     }

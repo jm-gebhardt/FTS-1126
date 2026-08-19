@@ -18,7 +18,7 @@ public interface IAgvRepository
     /// <summary>
     /// Get list of all AGVs
     /// </summary>
-    Task<ICollection<Agv>> GetAllAgvsAsync(CancellationToken cancellationToken = default);
+    Task<ICollection<Agv>> GetAllAgvsAsync();
 
     /// <summary>
     /// Get list of all AGVs where the graph exists
@@ -33,55 +33,47 @@ public interface IAgvRepository
     /// <summary>
     /// Get specific AGV
     /// </summary>
-    /// <param name="correlationId">The correlation id of the AGV.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Agv object.</returns>
     /// <exception cref="AgvNotFoundException">If the agv with the given correlation id does not exist.</exception>
-    Task<Agv> GetAgvAsync(Guid correlationId, CancellationToken cancellationToken=default);
+    Task<Agv> GetAgvAsync(Guid correlationId);
 
     /// <summary>
     /// Get an online AGV.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An Agv object.</returns>
-    Task<Agv?> GetAnyOnlineAgv(CancellationToken cancellationToken=default);
+    Task<Agv?> GetAnyOnlineAgv();
 
     /// <summary>
     /// Get specific AGV
     /// </summary>
-    /// <param name="correlationId">The correlation id of the AGV.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Agv object or null.</returns>
-    Task<Agv?> TryGetAgvAsync(Guid correlationId, CancellationToken cancellationToken=default);
+    Task<Agv?> TryGetAgvAsync(Guid correlationId);
 
     /// <summary>
     /// Checks if the agv matching the correlation id exists.
     /// </summary>
     /// <param name="correlationId">The correlation id to check.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>If the agv exists.</returns>
-    Task<bool> CheckIfAgvExistsAsync(Guid correlationId, CancellationToken cancellationToken=default);
+    Task<bool> CheckIfAgvExistsAsync(Guid correlationId);
 
     /// <summary>
     /// Throws an <see cref="AgvNotFoundException"/> if the agv with the given correlation id does not exist.
     /// </summary>
     /// <param name="correlationId">The CorrelationId of the Agv.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task ThrowIfAgvNotExistsAsync(Guid correlationId, CancellationToken cancellationToken=default);
+    Task ThrowIfAgvNotExistsAsync(Guid correlationId);
 
     /// <summary>
     /// Throws an <see cref="AgvNotFoundException"/> for all not existing agvs.
     /// </summary>
     /// <param name="correlationIds">The CorrelationIds of the Agv to check.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds, CancellationToken cancellationToken=default);
+    Task ThrowIfAgvsNotExistAsync(ICollection<Guid> correlationIds);
 
     /// <summary>
     /// Select from the given agv ids the ones that exists.
     /// </summary>
-    Task<ICollection<Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds, CancellationToken cancellationToken=default);
+    Task<ICollection<Agv>> SelectExistingAgvsAsync(List<Guid> agvCorrelationIds);
 
     /// <summary>
     /// Selects all agvs that have above critical battery level.
@@ -101,8 +93,7 @@ public interface IAgvRepository
     /// Update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    Task<bool> UpdateAgvAsync(Agv agv, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAgvAsync(Agv agv);
 
     /// <summary>
     /// Add an agv.
@@ -113,15 +104,13 @@ public interface IAgvRepository
     /// <summary>
     /// Gets all agvs that have a battery level higher than their specified low battery level.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Agvs.</returns>
-    Task<ICollection<Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel(CancellationToken cancellationToken = default);
+    Task<ICollection<Agv>> GetReadyAgvsWithAtLeastLowBatteryLevel();
 
     /// <summary>
     /// Get all charging agvs with at least their MinChargeUp battery level.
     /// </summary>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    Task<ICollection<Agv>> GetChargingAgvsWithMinBatteryLevelAsync(CancellationToken cancellationToken = default);
+    Task<ICollection<Agv>> GetChargingAgvsWithMinBatteryLevelAsync();
 
     /// <summary>
     /// Get all agvs with critical battery level that are not currently charging.
@@ -133,17 +122,15 @@ public interface IAgvRepository
     /// Get the last node id of the agv with the given correlation id.
     /// </summary>
     /// <param name="agvCorrelationId">The AgvCorrelationId</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task<Guid?> GetLastNodeIdAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default);
+    Task<Guid?> GetLastNodeIdAsync(Guid agvCorrelationId);
 
     /// <summary>
     /// Get the last node id of the agvs with the given correlation ids.
     /// </summary>
     /// <param name="agvCorrelationIds">A list of AgvCorrelationIds</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task<IReadOnlyDictionary<Guid, Guid?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds, CancellationToken cancellationToken = default);
+    Task<IReadOnlyDictionary<Guid, Guid?>> GetLastNodeIdAsync(ICollection<Guid> agvCorrelationIds);
 
     /// <summary>
     /// True, if there are online agvs.

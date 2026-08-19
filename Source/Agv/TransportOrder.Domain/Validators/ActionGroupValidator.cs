@@ -175,14 +175,14 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
     {
         if (actionGroup.Actions.Any(a => a.IsMoveToCoordinate) && actionGroup.AssignedAgv != null)
         {
-            _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value, cancellationToken);
+            _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
             _hasRoute = true;
             return _hasRoute;
         }
 
         if (actionGroup.AssignedAgv != null)
         {
-            _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value, cancellationToken);
+            _agv = await _agvRepository.GetAgvAsync(actionGroup.AssignedAgv!.Value);
             if (_agv == null)
             {
                 return false;

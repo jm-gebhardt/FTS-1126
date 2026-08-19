@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
@@ -43,9 +43,9 @@ public class GetGraphRequestHandler :
     public async Task Consume(ConsumeContext<GetAgvGraph> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
+        var agv = await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        var agvGraph = await _agvDb.Graphs.GetAgvGraphAsync(agv.CorrelationId, context.CancellationToken);
+        var agvGraph = await _agvDb.Graphs.GetAgvGraphAsync(agv.CorrelationId);
 
         var graph = _mapper.Map<Graph>(agvGraph);
         await context.RespondAsync(new GotAgvGraph(graph));
@@ -59,13 +59,13 @@ public class GetGraphRequestHandler :
     {
         ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
 
-        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList(), context.CancellationToken);
+        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
         if (agvs.Count != selectedAgvs.Count)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvs.Select(a => a.CorrelationId)).ToList());
         }
 
-        ICollection<AgvGraph> agvGraphs = await _agvDb.Graphs.GetSelectedAgvGraphsAsync(selectedAgvs, context.CancellationToken);
+        ICollection<AgvGraph> agvGraphs = await _agvDb.Graphs.GetSelectedAgvGraphsAsync(selectedAgvs);
         var graphs = _mapper.Map<List<Graph>>(agvGraphs);
         await context.RespondAsync(new GotAgvGraphs(graphs));
     }
@@ -77,7 +77,7 @@ public class GetGraphRequestHandler :
     public async Task Consume(ConsumeContext<GetMapGraph> context)
     {
         var correlationId = context.Message.CorrelationId;
-        var graph = await _agvDb.Graphs.GetGraphForMap(correlationId, context.CancellationToken);
+        var graph = await _agvDb.Graphs.GetGraphForMap(correlationId);
         var gotMapGraph = new GotMapGraph(_mapper.Map<Graph>(graph));
         await context.RespondAsync(gotMapGraph);
     }
@@ -85,7 +85,7 @@ public class GetGraphRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetGraph> context)
     {
-        var graph = await _agvDb.Graphs.GetGraphAsync(context.CancellationToken);
+        var graph = await _agvDb.Graphs.GetGraphAsync();
         await context.RespondAsync(new GotGraph(graph));
     }
 }

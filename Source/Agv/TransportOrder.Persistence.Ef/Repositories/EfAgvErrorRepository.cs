@@ -27,18 +27,18 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     }
 
     /// <inheritdoc />
-    public async Task AddAndUpdateAgvErrorAsync(List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task AddAndUpdateAgvErrorAsync(List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId)
     {
         List<DateTime?> resolvedTimesBeforeWrite = resolvedErrors.Select(e => e.ErrorResolved).ToList();
         ResolveErrors(resolvedErrors);
-
+ 
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
             DbSet<AgvError> dbSet = context.Set<AgvError>();
-            await dbSet.AddRangeAsync(newErrors, cancellationToken);
+            await dbSet.AddRangeAsync(newErrors);
             dbSet.UpdateRange(resolvedErrors);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync();
         }
         catch
         {
@@ -85,18 +85,18 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<AgvError>> GetErrorsAsync(Guid agvCorrelationId, DateTime dateFrom, DateTime dateTo)
     {
-        return GetErrorsAsync(new List<Guid> { agvCorrelationId }, dateFrom, dateTo, cancellationToken);
+        return GetErrorsAsync(new List<Guid> { agvCorrelationId }, dateFrom, dateTo);
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         List<AgvError> agvErrorsInRepository = await context.Set<AgvError>()
             .Where(e => agvCorrelationIds.Contains(e.AgvCorrelationId) && e.ErrorReceived >= dateFrom && e.ErrorReceived <= dateTo)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
         return agvErrorsInRepository;
     }
 

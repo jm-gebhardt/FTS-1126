@@ -9,11 +9,11 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.Repositories;
 public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050DbContext> dbContextFactory) : IAgvActionRepository
 {
     /// <inheritdoc/>
-    public async Task AddOrUpdateActionsAsync(ICollection<AgvAction> actions, string agvSerialNumber, CancellationToken cancellationToken = default)
+    public async Task AddOrUpdateActionsAsync(ICollection<AgvAction> actions, string agvSerialNumber)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<AgvAction> dbSet = context.Set<AgvAction>();
-        List<AgvAction> existingActionsForAgv = await dbSet.Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync(cancellationToken);
+        List<AgvAction> existingActionsForAgv = await dbSet.Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
 
         Dictionary<string, AgvAction> pendingActionsByType = actions
             .GroupBy(action => action.ActionType)
@@ -31,15 +31,15 @@ public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050D
         }
 
         IEnumerable<AgvAction> newActions = pendingActionsByType.Values;
-        await context.AddRangeAsync(newActions, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.AddRangeAsync(newActions);
+        await context.SaveChangesAsync();
     }
 
     /// <inheritdoc/>
-    public async Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope, CancellationToken cancellationToken = default)
+    public async Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        List<AgvAction> actions = await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        List<AgvAction> actions = await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
         return actions.Where(a => a.ActionScopes.Contains(scope)).ToList();
     }
 }

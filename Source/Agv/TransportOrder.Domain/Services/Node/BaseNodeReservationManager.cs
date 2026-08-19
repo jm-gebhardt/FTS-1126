@@ -41,21 +41,20 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="reserveNode"></param>
     /// <param name="ignoreLocked">Flag to reserve node even if it is locked.</param>
     /// <param name="ignoredNodes">Nodes to ignore.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
-    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true, bool ignoreLocked = false, CancellationToken cancellationToken = default, params Guid[] ignoredNodes)
+    protected async Task<GraphNode> PickAndReserveNodeAsync(Agv agv, Guid? startNodeId = null, bool reserveNode = true, bool ignoreLocked = false, params Guid[] ignoredNodes)
     {
         return await SemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId, cancellationToken);
+            var agvData = await AgvDb.Data.GetAgvDataAsync(agv.CorrelationId);
             var node = await PickNode(agv, agvData, startNodeId, ignoreLocked, ignoredNodes);
 
             if (reserveNode)
             {
-                await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreLocked, cancellationToken);
+                await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreLocked);
             }
             return node;
-        }, cancellationToken);
+        });
     }
 
     /// <summary>
@@ -64,13 +63,12 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="nodeId">The node id.</param>
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     /// <param name="ignoreLocked">Flag to reserve node even if it is locked.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <exception cref="ReserveNodeFailedException">Thrown, in case node reservation failed.</exception>
-    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreLocked = false, CancellationToken cancellationToken = default)
+    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreLocked = false)
     {
         try
         {
-            var node = await NodeRepository.GetNodeAsync(nodeId, cancellationToken);
+            var node = await NodeRepository.GetNodeAsync(nodeId);
             if (!node.Reserve(agvCorrelationId, ignoreLocked))
             {
                 throw new ReserveNodeFailedException(nodeId);

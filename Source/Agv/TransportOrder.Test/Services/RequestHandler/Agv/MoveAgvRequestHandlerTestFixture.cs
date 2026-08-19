@@ -58,17 +58,17 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
         AddConsumers<SuccessQueueActionGroupRequestHandler>();
         _nodeRepository.Setup(x => x.UpdateLock(It.IsAny<GraphNode>(), It.IsAny<bool>())).Verifiable();
-        _nodeRepository.Setup(x => x.GetNodeAsync(It.Is<Guid>(y => y == "target".ToGuid()), It.IsAny<CancellationToken>())).ReturnsAsync((Guid _, CancellationToken _) =>
+        _nodeRepository.Setup(x => x.GetNodeAsync(It.Is<Guid>(y => y == "target".ToGuid()))).ReturnsAsync((Guid _) =>
         {
             var node = "target".ToGraphNode();
             node.Lock = new NodeLock(node, NodeLockState.Free, false, Guid.NewGuid(), DateTime.UtcNow);
             return node;
         });
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Station());
-        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Station());
-        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _, CancellationToken _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _stationRepository.Setup(x => x.GetStation(It.IsAny<Guid>())).ReturnsAsync(new Station());
+        _logEntryRepository.Setup(x => x.AddAsync(It.IsAny<Categories>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<DateTime>(), It.IsAny<Dictionary<string, object?>>())).ReturnsAsync((Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> _) => new LogEntry(logCode, logCategory, logLevel, timestamp, agvCorrelationId, stationId, actionGroupCorrelationId));
         _actionGroupRepository.Setup(x => x.GetActionGroupsAsync(It.IsAny<IList<ActionGroupState>?>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>(),
-            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+            It.IsAny<Guid?>(), It.IsAny<bool?>(), It.IsAny<SortBy>(), It.IsAny<bool>())).ReturnsAsync([]);
         base.Build();
         return this;
     }
@@ -87,7 +87,7 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
 
     public MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> WithInsideRestrictedArea(bool isInside)
     {
-        _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>(), It.IsAny<CancellationToken>())).ReturnsAsync(isInside);
+        _restrictedAreaRepository.Setup(x => x.IsPointInRestrictedArea(It.IsAny<float>(), It.IsAny<float>())).ReturnsAsync(isInside);
         return this;
     }
 
@@ -96,11 +96,11 @@ public class MoveAgvRequestHandlerTestFixture<TRequestClient, TConsumer> : Media
         switch (nodeType)
         {
             case AgvGraph.NodeType.Charge:
-                ChargingPointManager.Verify(x => x.ReserveChargerAsync(It.Is<GraphNode>(n => n == targetNode), It.Is<Guid>(a => a == agvId), true, It.IsAny<CancellationToken>()), Times.Once());
+                ChargingPointManager.Verify(x => x.ReserveChargerAsync(It.Is<GraphNode>(n => n == targetNode), It.Is<Guid>(a => a == agvId), true), Times.Once());
                 break;
 
             case AgvGraph.NodeType.Park:
-                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<Guid>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId), true, It.IsAny<CancellationToken>()), Times.Once());
+                ParkPointService.Verify(x => x.ReserveParkAsync(It.Is<Guid>(n => n == targetNode.Id), It.Is<Guid>(a => a == agvId), true), Times.Once());
                 break;
 
             default:

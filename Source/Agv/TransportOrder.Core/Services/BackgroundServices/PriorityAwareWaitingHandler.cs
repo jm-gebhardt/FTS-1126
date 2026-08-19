@@ -71,7 +71,7 @@ public class PriorityAwareWaitingHandler(
                 return;
             }
 
-            var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.Value, stoppingToken);
+            var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(action.Value);
             var agvCorrelationId = actionGroup.AssignedAgv!.Value;
             logger.LogInformation("Handle waiting for agv {Agv} running action group {ActionGroup}", agvCorrelationId, actionGroup.CorrelationId);
 
@@ -124,7 +124,7 @@ public class PriorityAwareWaitingHandler(
 
     private async Task AssignTarget(Guid actionId, ActionGroup actionGroup, Guid agvCorrelationId, Guid targetNodeId, CancellationToken stoppingToken)
     {
-        var node = await nodeRepository.GetNodeAsync(targetNodeId, stoppingToken);
+        var node = await nodeRepository.GetNodeAsync(targetNodeId);
         node.Reserve(agvCorrelationId);
         if (await nodeRepository.UpdateLock(node))
         {

@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Constants;
+using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Exceptions;
 using Gebhardt.Acc.Common.MassTransit;
@@ -72,7 +72,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
         // agv does not have any errors
         if (!activeErrors.Any())
         {
-            await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(correlationId, context.CancellationToken);
+            await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(correlationId);
             _logger.LogInformation("No active errors for Agv {AgvCorrelationId}", correlationId);
             await context.RespondAsync(new ResetAgvErrorsResult("No active errors. So all good already."));
             return;
@@ -128,7 +128,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
                 checkContinuouslyUntilSuccess: errorsBySource.Count > 1);
 
             int numberOfResetErrors = errorIdsToReset.Count == 0 ? activeErrors.Count : errorIdsToReset.Count;
-            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvErrorReset} }, context.CancellationToken);
+            await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvOperatorInteraction, correlationId, null, "Operator interaction", "Operator interacted with agv", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.AgvErrorReset} });
             await context.RespondAsync(new ResetAgvErrorsResult($"{numberOfResetErrors} error{(numberOfResetErrors == 1 ? "" : "s")} were reset successfully."));
         }
         catch (WaitForMessageFailedException<AgvErrorChanged> e)

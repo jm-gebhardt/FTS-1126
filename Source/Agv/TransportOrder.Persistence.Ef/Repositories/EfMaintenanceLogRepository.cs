@@ -44,22 +44,22 @@ public class EfMaintenanceLogRepository(IDbContextFactory<TransportOrderDbContex
     }
 
     /// <inheritdoc cref="IMaintenanceLogRepository"/>>
-    public async Task<MaintenanceLog?> GetLatestMaintenanceLogForAgvAsync(Guid agvCorrelationId, CancellationToken cancellationToken = default)
+    public async Task<MaintenanceLog?> GetLatestMaintenanceLogForAgvAsync(Guid agvCorrelationId)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.Set<MaintenanceLog>().Where(l => l.AgvCorrelationId == agvCorrelationId).OrderByDescending(l => l.ExecutionDate).FirstOrDefaultAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<MaintenanceLog>().Where(l => l.AgvCorrelationId == agvCorrelationId).OrderByDescending(l => l.ExecutionDate).FirstOrDefaultAsync();
     }
 
     /// <inheritdoc cref="IMaintenanceLogRepository"/>>
-    public async Task<Dictionary<Guid, MaintenanceLog?>> GetLatestMaintenanceLogsForAgvsAsync(ICollection<Guid> agvCorrelationIds, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<Guid, MaintenanceLog?>> GetLatestMaintenanceLogsForAgvsAsync(ICollection<Guid> agvCorrelationIds)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync();
 
         List<MaintenanceLog> latestLogs = await context.Set<MaintenanceLog>()
             .Where(l => agvCorrelationIds.Contains(l.AgvCorrelationId))
             .GroupBy(l => l.AgvCorrelationId)
             .Select(g => g.OrderByDescending(l => l.ExecutionDate).First())
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         // Create dictionary with all requested AGV IDs, setting null for those without logs
         return agvCorrelationIds.ToDictionary(

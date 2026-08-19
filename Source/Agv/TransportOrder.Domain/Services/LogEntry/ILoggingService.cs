@@ -18,8 +18,7 @@ public interface ILoggingService
     /// <param name="title">The title.</param>
     /// <param name="message">The message.</param>
     /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    Task LogOrder(ILogger logger, LogLevel severity, int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default);
+    Task LogOrder(ILogger logger, LogLevel severity, int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null);
 
     /// <summary>
     /// Log messages for agvs with information severity.
@@ -32,8 +31,7 @@ public interface ILoggingService
     /// <param name="title">The title.</param>
     /// <param name="message">The message.</param>
     /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    Task LogAgv(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default);
+    Task LogAgv(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null);
 
     /// <summary>
     /// Log messages for agv battery with information severity.
@@ -46,8 +44,7 @@ public interface ILoggingService
     /// <param name="title">The title.</param>
     /// <param name="message">The message.</param>
     /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    Task LogBattery(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default);
+    Task LogBattery(ILogger logger, LogLevel severity, int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null);
 
     /// <summary>
     /// Log messages for stations.
@@ -59,8 +56,7 @@ public interface ILoggingService
     /// <param name="title">The title of the message.</param>
     /// <param name="message">The message.</param>
     /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    Task LogStation(ILogger logger, LogLevel severity, int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null, CancellationToken cancellationToken = default);
+    Task LogStation(ILogger logger, LogLevel severity, int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null);
 
     /// <summary>
     /// Log messages for the system.
@@ -71,6 +67,5 @@ public interface ILoggingService
     /// <param name="message">The message.</param>
     /// <param name="additionalLabels">Additional labels for values used in the log message.</param>
     /// <param name="logLevel">The log severity level.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, LogLevel logLevel = LogLevel.Information, CancellationToken cancellationToken = default);
+    Task LogSystem(ILogger logger, int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, LogLevel logLevel = LogLevel.Information);
 }

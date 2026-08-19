@@ -199,7 +199,7 @@ public class RouteService : IRouteService
                 _logger.LogError(e, "Error while calculating route for Agv with CorrelationId {CorrelationId} in HasAnyAgvRouteAsync", agv.CorrelationId);
                 await _loggingService.LogAgv(_logger, LogLevel.Error, LogCodes.RouteCalculationFailed, agv.CorrelationId, null,
                     "Route Calculation Failed",
-                    $"Error while calculating route for AGV {agv.CorrelationId}: {e.Message}", cancellationToken: cts.Token);
+                    $"Error while calculating route for AGV {agv.CorrelationId}: {e.Message}");
                 return null;
             }
         }).ToList();
