@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Testing", "..\Common
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.WebApi", "..\Common.WebApi\Common.WebApi.csproj", "{1B8935B6-7122-4468-A318-A78C3301122F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.TelegramCommunication", "..\Common.TelegramCommunication\Common.TelegramCommunication.csproj", "{F4204DC3-938F-4834-A0C6-DDCFD530549A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,5 +86,9 @@ Global
 		{1B8935B6-7122-4468-A318-A78C3301122F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B8935B6-7122-4468-A318-A78C3301122F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B8935B6-7122-4468-A318-A78C3301122F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4204DC3-938F-4834-A0C6-DDCFD530549A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4204DC3-938F-4834-A0C6-DDCFD530549A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4204DC3-938F-4834-A0C6-DDCFD530549A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4204DC3-938F-4834-A0C6-DDCFD530549A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
