@@ -53,6 +53,12 @@ public record StationDto
     public ICollection<Guid> Agvs { get; set; } = [];
 
     /// <summary>
+    /// The AGV currently occupying or reserving this node.
+    /// </summary>
+    [PublicAPI]
+    public Guid? ReservedOrOccupiedBy { get; set; }
+
+    /// <summary>
     /// Node lock state
     /// </summary>
     [PublicAPI]

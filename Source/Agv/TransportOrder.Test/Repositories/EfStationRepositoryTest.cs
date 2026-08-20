@@ -196,6 +196,26 @@ public class EfStationRepositoryTest
     }
 
     [TestMethod]
+    public async Task GetStation_OccupiedStationWithoutStartedAction_IncludesOccupyingAgv()
+    {
+        var agvId = Guid.NewGuid();
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
+        var node = graph.Nodes.First(n => n.IsStation());
+        var nodeLock = new NodeLock(node, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var fixture = await new EfStationRepositoryTestFixture()
+            .WithNodeLockAsync(nodeLock, node.Name)
+            .BuildAsync();
+
+        await fixture.Repository.AddStations(graph);
+
+        var station = await fixture.Repository.GetStation(node.Id);
+
+        station.Agvs.ShouldBeEmpty();
+        station.NodeLock.ShouldNotBeNull();
+        station.NodeLock!.AgvCorrelationId.ShouldBe(agvId);
+    }
+
+    [TestMethod]
     public async Task GetStations_ValidData_GetsStationsWithNodeLockAndAgvs()
     {
         var agvId = Guid.NewGuid();
@@ -239,6 +259,27 @@ public class EfStationRepositoryTest
             }
             station.Agvs.ShouldBeEmpty();
         }
+    }
+
+    [TestMethod]
+    public async Task GetStations_OccupiedStationWithoutStartedAction_IncludesOccupyingAgv()
+    {
+        var agvId = Guid.NewGuid();
+        var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
+        var node = graph.Nodes.First(n => n.IsStation());
+        var nodeLock = new NodeLock(node, NodeLockState.Occupied, false, agvId, DateTime.UtcNow);
+        var fixture = await new EfStationRepositoryTestFixture()
+            .WithNodeLockAsync(nodeLock, node.Name)
+            .BuildAsync();
+
+        await fixture.Repository.AddStations(graph);
+
+        ICollection<Station> stations = await fixture.Repository.GetStations();
+
+        var occupiedStation = stations.Single(s => s.Id == node.Id);
+        occupiedStation.Agvs.ShouldBeEmpty();
+        occupiedStation.NodeLock.ShouldNotBeNull();
+        occupiedStation.NodeLock!.AgvCorrelationId.ShouldBe(agvId);
     }
 
     [TestMethod]

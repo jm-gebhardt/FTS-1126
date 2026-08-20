@@ -19,6 +19,9 @@ public class StationProfileTest
             Agvs = [Guid.NewGuid()],
             MapId = "map".ToGuid()
         };
+        var occupantAgvId = Guid.NewGuid();
+        var modifiedDate = DateTime.UtcNow;
+        station.NodeLock = new NodeLock(new GraphNode(station.Id, station.Name), NodeLockState.Occupied, false, occupantAgvId, modifiedDate);
         station.SetSize(3.0, 2.0);
         var mapper = MappingHelper.GetMapper(new StationProfile());
 
@@ -31,10 +34,12 @@ public class StationProfileTest
             x => x.Length.ShouldBe(station.Length),
             x => x.Width.ShouldBe(station.Width),
             x => x.Agvs.ShouldBeEquivalentTo(station.Agvs),
+            x => x.ReservedOrOccupiedBy.ShouldBe(occupantAgvId),
             x => x.MapId.ShouldBe(station.MapId),
             x => x.PrimaryType.ShouldBe(station.PrimaryType),
             x => x.AdditionalTypes.ShouldBeEquivalentTo(station.AdditionalTypes),
-            x => x.State.ShouldBe(NodeLockState.Free),
+            x => x.State.ShouldBe(NodeLockState.Occupied),
+            x => x.ModifiedDate.ShouldBe(modifiedDate),
             x => x.HasPalletJam.ShouldBe(station.HasPalletJam),
             x => x.PalletJamChangedDate.ShouldBe(station.PalletJamChangedDate));
     }

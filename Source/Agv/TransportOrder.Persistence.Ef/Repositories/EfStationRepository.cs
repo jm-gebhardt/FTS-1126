@@ -143,6 +143,7 @@ public class EfStationRepository(
                 ac.Target.NodeId!.Value == station.Id &&
                 ac.State == ActionState.Started))
             .Select(a => a.AssignedAgv.GetValueOrDefault())
+            .Distinct()
             .ToListAsync();
 
         station.IsOnline = stationOnlineRepository.Get(station.Id);
@@ -202,7 +203,7 @@ public class EfStationRepository(
             query = query.Where(x => x.Station.MapId == mapId);
         }
 
-        var rows = await query.ToListAsync(cancellationToken: cancellationToken);
+        var rows = await query.ToListAsync(cancellationToken);
 
         List<Station> stations = rows.Select(r =>
         {

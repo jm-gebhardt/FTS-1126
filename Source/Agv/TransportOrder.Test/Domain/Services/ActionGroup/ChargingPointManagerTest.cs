@@ -130,7 +130,37 @@ public class ChargingPointManagerTest
         agvNodeResult.ShouldNotBeNull();
         fixture.RouteService.Verify(m => m.GetNodeWithLowestCostsAsync(fixture.Agv, availableNodes, It.IsAny<AgvData>(), null), Times.Once);
         agvNodeResult.Type.First().ShouldBe(AgvGraph.NodeType.Charge);
+        agvNodeResult.Lock.ShouldNotBeNull();
+        agvNodeResult.Lock.NodeState.ShouldBe(NodeLockState.Reserved);
         VerifyGraphNode(agvNodeResult, chargingNode);
+    }
+
+    [TestMethod]
+    public async Task FindAndReserveFreeCharger_WhenRepositoryReturnsDifferentInstance_ReturnUpdatedReservedNode()
+    {
+        var selectedNode = NodeGenerator.GenerateChargingNode();
+        var repositoryNode = new GraphNode(selectedNode.Id, selectedNode.Name, selectedNode.X, selectedNode.Y, selectedNode.Z, selectedNode.Type.ToList(), selectedNode.PickLiftHeight, selectedNode.DropLiftHeight, selectedNode.DockingDirection);
+        var availableNodes = new List<GraphNode>
+        {
+            selectedNode
+        };
+
+        var fixture = new ChargingPointManagerTestFixture()
+            .WithAgv()
+            .WithAvailableNodes(availableNodes)
+            .WithLowestCostNode(availableNodes, selectedNode)
+            .WithNode(repositoryNode)
+            .WithChargingPointManager()
+            .WithGraphRepository(true)
+            .WithNodeLocker(true);
+
+        var reservedNode = await fixture.ChargingPointManager.ReserveChargerAsync(fixture.Agv);
+
+        reservedNode.ShouldNotBeSameAs(selectedNode);
+        reservedNode.Lock.ShouldNotBeNull();
+        reservedNode.Lock.NodeState.ShouldBe(NodeLockState.Reserved);
+        reservedNode.Lock.AgvCorrelationId.ShouldBe(fixture.Agv.CorrelationId);
+        selectedNode.Lock.ShouldBeNull();
     }
 
     [TestMethod]

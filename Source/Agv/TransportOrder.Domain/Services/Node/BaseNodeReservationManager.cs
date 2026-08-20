@@ -51,7 +51,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
 
             if (reserveNode)
             {
-                await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreLocked);
+                return await ReserveNodeAsync(node.Id, agv.CorrelationId, ignoreLocked);
             }
             return node;
         });
@@ -64,7 +64,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
     /// <param name="agvCorrelationId">The correlation id of the agv.</param>
     /// <param name="ignoreLocked">Flag to reserve node even if it is locked.</param>
     /// <exception cref="ReserveNodeFailedException">Thrown, in case node reservation failed.</exception>
-    protected async Task ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreLocked = false)
+    protected async Task<GraphNode> ReserveNodeAsync(Guid nodeId, Guid agvCorrelationId, bool ignoreLocked = false)
     {
         try
         {
@@ -78,6 +78,7 @@ public abstract class BaseNodeReservationManager : BaseNodePicker
             {
                 throw new ReserveNodeFailedException(nodeId);
             }
+            return node;
         }
         catch (Exception)
         {

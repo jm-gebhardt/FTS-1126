@@ -16,6 +16,7 @@ public class StationProfile : WebApiProfile
     {
         CreateMap<Station, StationDto>()
             .ForMember(x => x.Id, x => x.MapFrom(c => c.Id))
+            .ForMember(x => x.ReservedOrOccupiedBy, x => x.MapFrom(c => c.NodeLock != null ? c.NodeLock.AgvCorrelationId : null))
             .ForMember(x => x.State, x => x.MapFrom(c =>
                 c.NodeLock != null ? c.NodeLock.NodeState : NodeLockState.Free
             ))
