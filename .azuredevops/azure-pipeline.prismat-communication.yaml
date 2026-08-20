@@ -36,7 +36,7 @@ stages:
     dockerImageName: 'gebhardt/fleet-manager/prismat-communication'
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
-    testTarget: '$(Build.Repository.LocalPath)/Source/Agv/PrismatCommunication.Test/**/*.csproj'
+    testTarget: '$(Build.Repository.LocalPath)/Source/Agv/PrismatCommunicationTest/**/*.csproj'
     nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
     servicePublishProject: './Agv/PrismatCommunication/PrismatCommunication.csproj'
     entryPointProjectName: 'PrismatCommunication'
