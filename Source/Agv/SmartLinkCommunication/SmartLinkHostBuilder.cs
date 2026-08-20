@@ -30,6 +30,10 @@ public static class SmartLinkHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, Config config)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 services.AddScoped<IIoActionExecutionService, IoActionExecutionService>();
@@ -52,9 +56,8 @@ public static class SmartLinkHostBuilder
                 services.ConfigureServicesMassTransit(context.Configuration);
             })
             .ConfigureWebHost(h => h.UseKestrel()
-                .ConfigureAppConfiguration((context, c) =>
+                .ConfigureAppConfiguration((_, c) =>
                 {
-                    c.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     c.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                 })

@@ -28,6 +28,10 @@ public static class StatisticsHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger, string quartzSchedulerId, string quartzSchedulerName)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddStatistics()
             .ConfigureServices((_, services) =>
@@ -42,9 +46,8 @@ public static class StatisticsHostBuilder
             })
             .ConfigureWebHost(h =>
                 h.UseKestrel()
-                    .ConfigureAppConfiguration((context, config) =>
+                    .ConfigureAppConfiguration((_, config) =>
                     {
-                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })

@@ -34,13 +34,16 @@ public static class OrderTranslatorHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SimulateOptions? simulateOptions, ILogger initialLogger)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddOrderTranslator()
             .ConfigureWebHost(h =>
                 h.UseKestrel()
-                    .ConfigureAppConfiguration((context, config) =>
+                    .ConfigureAppConfiguration((_, config) =>
                     {
-                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })

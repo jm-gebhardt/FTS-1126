@@ -31,6 +31,10 @@ public static class TransportOrderHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SystemOptions options, ILogger initialLogger, bool isSimulation)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddTransportOrderCore(options)
             .ConfigureServices((_, services) =>
@@ -48,9 +52,8 @@ public static class TransportOrderHostBuilder
         {
             host.UseKestrel()
                 .AddTransportOrderWebApi(isSimulation)
-                .ConfigureAppConfiguration((context, config) =>
+                .ConfigureAppConfiguration((_, config) =>
                 {
-                    config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     config.AddDefaultConfiguration(ConfigurationTypeManager.Instance);
                 })

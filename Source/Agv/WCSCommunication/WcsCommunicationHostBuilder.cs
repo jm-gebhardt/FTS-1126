@@ -18,6 +18,9 @@ using Gebhardt.Acc.WCSCommunication.WcsApi.SimulationMode;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +43,10 @@ public static class WcsCommunicationHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, bool isSimulation, SimulateOptions? simulateOptions)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 services.ConfigureTracing(context.Configuration);
@@ -74,7 +81,15 @@ public static class WcsCommunicationHostBuilder
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                 })
-                .Configure(app => { app.UseMetricServer(); });
+                .Configure(app =>
+                {
+                    app.UseMetricServer();
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapHealthProbes();
+                    });
+                });
         });
 
         hostBuilder.ConfigureServices((context, services) =>

@@ -24,6 +24,10 @@ public static class DeviceCommunicationVda5050HostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddDeviceCommunicationVda5050()
             .ConfigureWebHost(host =>
@@ -32,7 +36,6 @@ public static class DeviceCommunicationVda5050HostBuilder
                     .AddDeviceCommunicationVda5050WebApi()
                     .ConfigureAppConfiguration((context, config) =>
                     {
-                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })

@@ -47,6 +47,10 @@ public static class TestPlanRunnerHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
@@ -151,9 +155,8 @@ public static class TestPlanRunnerHostBuilder
         hostBuilder.ConfigureWebHost(host =>
         {
             host.UseKestrel()
-                .ConfigureAppConfiguration((context, config) =>
+                .ConfigureAppConfiguration((_, config) =>
                 {
-                    config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                     ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                     config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                 })

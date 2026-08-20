@@ -31,6 +31,10 @@ public static class PrismatCommunicationHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SimulateOptions? simulationOptions, ILogger initialLogger)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger, simulationOptions)
             .AddPrismatCommunication(simulationOptions, initialLogger)
             .ConfigureServices((_, services) =>
@@ -45,9 +49,8 @@ public static class PrismatCommunicationHostBuilder
             })
             .ConfigureWebHost(h =>
                 h.UseKestrel()
-                    .ConfigureAppConfiguration((context, config) =>
+                    .ConfigureAppConfiguration((_, config) =>
                     {
-                        config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
                         config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
                     })

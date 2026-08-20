@@ -5,6 +5,9 @@
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
+
+        <PackageReference Include="Gebhardt.Core.Hosting" />
+        <PackageReference Include="Gebhardt.Core.EntityFrameworkCore" />
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
         <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
