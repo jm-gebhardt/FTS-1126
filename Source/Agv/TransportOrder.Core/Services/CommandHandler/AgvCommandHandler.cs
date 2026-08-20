@@ -1768,8 +1768,8 @@ public class AgvCommandHandler :
                     await context.Publish(new CancelOrAbortActionGroup(actionGroup.CorrelationId));
                     continue;
                 }
-                await PublishNodeStateChange(context, node);
             }
+            await PublishNodeStateChange(context, node);
         }
 
         foreach (var moveToQueue in actionGroups.Where(a => parkers.All(p => p != a.Actions.First().Target.Node?.Id) && a is { IsMovingCargo: false, IsChargingOrder: false, IsManual: false }))
@@ -1888,8 +1888,8 @@ public class AgvCommandHandler :
             return;
         }
 
-        await context.Publish(new ChargingNodeSelectedForAgv(nonChargingAgvId, chargingNode.Id));
         await PublishNodeStateChange(context, chargingNode);
+        await context.Publish(new ChargingNodeSelectedForAgv(nonChargingAgvId, chargingNode.Id));
         await context.Publish(new AbortChargeAction(chargingAgv.CorrelationId));
     }
 
