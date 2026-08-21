@@ -1,0 +1,15 @@
+{
+  "$schema": "https://gbsd.io/schemas/migrations.schema.json",
+  "srcRoot": "Source/Agv",
+  "objRoot": "Source/artifacts/obj",
+  "contexts": [
+    {
+      "context": "StationCommunicationDbContext",
+      "providers": [
+        {
+          "project": "StationCommunication.Persistence.Ef"
+        }
+      ]
+    }
+  ]
+}
