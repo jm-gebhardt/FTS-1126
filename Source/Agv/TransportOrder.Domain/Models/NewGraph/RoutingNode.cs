@@ -37,28 +37,31 @@ public class RoutingNode : RoutingResource
     [UsedImplicitly]
     public IReadOnlyCollection<RoutingEdge> OutgoingEdges => _outgoingEdges;
 
+    /// <summary>
+    /// The parent node of this routing node.
+    /// </summary>
+    public Node ParentNode => (Node)Parent;
+
     /// <inheritdoc cref="RoutingNode"/>
-    public RoutingNode(Guid id, GraphResource parent, AgvType agvType, LoadState loadState, double theta) : base(id, parent, agvType)
+    public RoutingNode(Guid id, Node parent, AgvType agvType, LoadState loadState, double theta) : base(id, parent, agvType)
     {
         LoadState = loadState;
         Theta = theta;
     }
 
     /// <summary>
-    /// Efcore
+    /// Required by EF Core for materializing RoutingNode instances from the database.
     /// </summary>
     public RoutingNode()
     {
         LoadState = null!;
     }
 
-    [UsedImplicitly]
     internal void AddIncomingEdge(RoutingEdge routingEdge)
     {
         _incomingEdges.Add(routingEdge);
     }
 
-    [UsedImplicitly]
     internal void AddOutgoingEdge(RoutingEdge routingEdge)
     {
         _outgoingEdges.Add(routingEdge);    

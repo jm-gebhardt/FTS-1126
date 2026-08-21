@@ -38,6 +38,16 @@ public class Node : GraphResource
     /// </summary>
     public IReadOnlyCollection<Edge> OutgoingEdges => _outgoingEdges;
 
+    /// <summary>
+    /// Collection of routing nodes associated with this node.
+    /// </summary>
+    public IEnumerable<RoutingNode> RoutingNodes => Children.OfType<RoutingNode>();
+
+    /// <summary>
+    /// Collection of routing edges associated with this node.
+    /// </summary>
+    public IEnumerable<RoutingEdge> RoutingEdges => Children.OfType<RoutingEdge>();
+
     /// <inheritdoc cref="Node"/>
     public Node(Guid id, string? name, string? description, double x, double y, string? levelId) : base(id, name, description)
     {

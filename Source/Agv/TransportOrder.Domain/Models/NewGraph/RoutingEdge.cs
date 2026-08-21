@@ -66,7 +66,7 @@ public class RoutingEdge : RoutingResource
     }
 
     /// <summary>
-    /// Efcore
+    /// Required by EF Core for materializing RoutingEdge instances from the database.
     /// </summary>
     public RoutingEdge()
     {

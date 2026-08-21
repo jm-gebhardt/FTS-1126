@@ -12,6 +12,8 @@ public class RoutingNodeEntityConfiguration : IEntityTypeConfiguration<RoutingNo
     {
         builder.Property(e => e.Theta);
 
+        builder.Ignore(e => e.ParentNode);
+
         builder.OwnsOne(e => e.LoadState, l =>
         {
             l.Property(s => s.IsLoaded).HasColumnName(nameof(LoadState.IsLoaded));
