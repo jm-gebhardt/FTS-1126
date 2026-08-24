@@ -36,7 +36,7 @@ stages:
     dockerImageName: 'gebhardt/fleet-manager/station-communication'
     useNerdbankVersioning: true
     workingDirectory: '$(Build.Repository.LocalPath)/Source'
-    testTarget: '$(Build.Repository.LocalPath)/Source/Agv/StationCommunication.Test/**/*.csproj'
+    testTarget: '$(Build.Repository.LocalPath)/Source/Agv/StationCommunicationTest/**/*.csproj'
     nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
     servicePublishProject: './Agv/StationCommunication/StationCommunication.csproj'
     entryPointProjectName: 'StationCommunication'
