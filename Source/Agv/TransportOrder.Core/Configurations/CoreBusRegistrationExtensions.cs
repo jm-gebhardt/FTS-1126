@@ -24,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.AgvType;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
+using Gebhardt.Acc.TransportOrder.Messages.Commands.NewGraph;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
@@ -94,6 +95,11 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<ActionStartLatencyEventHandler>();
         busRegistrationConfigurator.AddConsumer<LogEntryEventHandler>();
         busRegistrationConfigurator.AddConsumer<LogEntryCommandHandler>();
+        busRegistrationConfigurator.AddConsumer<NewGraphCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(1);
+            partitioner.PartitionMessageById<AddNewGraph, NewGraphCommandHandler>(c);
+        });
 
         return busRegistrationConfigurator;
     }
@@ -224,6 +230,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
         busRegistrationConfigurator.AddConsumer<StationTypeRequestHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxEventHandler>();
+        busRegistrationConfigurator.AddConsumer<NewGraphEventHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(1);

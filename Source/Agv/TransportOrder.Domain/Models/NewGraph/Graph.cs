@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
+using CommonGraph = Gebhardt.Acc.Common.Domain.Models.NewGraph.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
@@ -8,32 +9,41 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 [PublicAPI]
 public class Graph
 {
-    [UsedImplicitly]
-    private readonly List<Node> _nodes = [];
-
-    [UsedImplicitly]
-    private readonly List<Edge> _edges = [];
-    
-    [UsedImplicitly]
-    private readonly List<Station> _stations = [];
-
-    /// <summary>
-    /// Unique identifier of the graph.
-    /// </summary>
-    public Guid Id { get; } = Guid.NewGuid();
-
     /// <summary>
     /// Collection of nodes in the graph.
     /// </summary>
-    public IReadOnlyCollection<Node> Nodes => _nodes;
+    public List<Node> Nodes { get; } = [];
 
     /// <summary>
     /// Collection of edges in the graph.
     /// </summary>
-    public IReadOnlyCollection<Edge> Edges => _edges;
+    public List<Edge> Edges { get; } = [];
 
     /// <summary>
     /// Collection of stations in the graph.
     /// </summary>
-    public IReadOnlyCollection<Station> Stations => _stations;
+    public List<Station> Stations { get; } = [];
+
+    /// <summary>
+    /// For deserialization.
+    /// </summary>
+    public Graph()
+    {
+    }
+
+    /// <summary>
+    /// Generates a graph from a <see cref="CommonGraph"/>.
+    /// </summary>
+    /// <param name="commonGraph">The <see cref="CommonGraph"/>.</param>
+    public static Graph FromCommon(CommonGraph commonGraph)
+    {
+        var graph = new Graph();
+        Dictionary<Guid, Node> nodesById = commonGraph.Nodes.Select(Node.FromCommon).ToDictionary(n => n.Id);
+
+        graph.Nodes.AddRange(nodesById.Values);
+        graph.Edges.AddRange(commonGraph.Edges.Select(e => Edge.FromCommon(e, nodesById)));
+        graph.Stations.AddRange(commonGraph.Stations.Select(s => Station.FromCommon(s, nodesById)));
+
+        return graph;
+    }
 }

@@ -1,0 +1,557 @@
+﻿{
+  "metaInformation": {
+    "projectIdentification": "Mini",
+    "creator": "ScaliRo GmbH",
+    "exportTimestamp": "2026-07-30T10:01:00.86Z",
+    "lifVersion": "1.0.0"
+  },
+  "layouts": [
+    {
+      "layoutId": "Layout",
+      "layoutVersion": "1",
+      "layoutLevelId": "0",
+      "nodes": [
+        {
+          "nodeId": "2",
+          "mapId": "MAP_ID",
+          "nodePosition": {
+            "x": 2.663,
+            "y": 0.007
+          },
+          "vehicleTypeNodeProperties": [
+            {
+              "vehicleTypeId": "scaliro.forklift"
+            },
+            {
+              "vehicleTypeId": "scaliro.safety"
+            },
+            {
+              "vehicleTypeId": "scaliro.omnidirectional"
+            },
+            {
+              "vehicleTypeId": "scaliro.unidirectional"
+            },
+            {
+              "vehicleTypeId": "scaliro.differential"
+            },
+            {
+              "vehicleTypeId": "scaliro.default"
+            }
+          ]
+        },
+        {
+          "nodeId": "3",
+          "mapId": "MAP_ID",
+          "nodePosition": {
+            "x": 2.6829429424565747,
+            "y": 1.8807044052250612
+          },
+          "vehicleTypeNodeProperties": [
+            {
+              "vehicleTypeId": "scaliro.forklift"
+            },
+            {
+              "vehicleTypeId": "scaliro.safety"
+            },
+            {
+              "vehicleTypeId": "scaliro.omnidirectional"
+            },
+            {
+              "vehicleTypeId": "scaliro.unidirectional"
+            },
+            {
+              "vehicleTypeId": "scaliro.differential"
+            },
+            {
+              "vehicleTypeId": "scaliro.default"
+            }
+          ]
+        },
+        {
+          "nodeId": "4",
+          "mapId": "MAP_ID",
+          "nodePosition": {
+            "x": 0.1953805668016205,
+            "y": 0.002141700404858966
+          },
+          "vehicleTypeNodeProperties": [
+            {
+              "vehicleTypeId": "scaliro.forklift"
+            },
+            {
+              "vehicleTypeId": "scaliro.safety"
+            },
+            {
+              "vehicleTypeId": "scaliro.omnidirectional"
+            },
+            {
+              "vehicleTypeId": "scaliro.unidirectional"
+            },
+            {
+              "vehicleTypeId": "scaliro.differential"
+            },
+            {
+              "vehicleTypeId": "scaliro.default"
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "edgeId": "2-4",
+          "startNodeId": "4",
+          "endNodeId": "2",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 0.0,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 0.1953805668016205,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 0.750713900134954,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 2.1076666666666664,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-4_1",
+          "startNodeId": "4",
+          "endNodeId": "2",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 3.141592653589793,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 0.1953805668016205,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 0.750713900134954,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 2.1076666666666664,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-4_Reverse",
+          "startNodeId": "2",
+          "endNodeId": "4",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 0.0,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 2.1076666666666664,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 0.750713900134954,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 0.1953805668016205,
+                    "y": 0.002141700404858966
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-4_1_Reverse",
+          "startNodeId": "2",
+          "endNodeId": "4",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 3.141592653589793,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 2.1076666666666664,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 0.750713900134954,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 0.1953805668016205,
+                    "y": 0.002141700404858966
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-3",
+          "startNodeId": "2",
+          "endNodeId": "3",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 0.0,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.4473333333333333
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.440371071891728
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.8807044052250612
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-3_1",
+          "startNodeId": "2",
+          "endNodeId": "3",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 3.141592653589793,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.4473333333333333
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.440371071891728
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.8807044052250612
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-3_Reverse",
+          "startNodeId": "3",
+          "endNodeId": "2",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 0.0,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.8807044052250612
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.440371071891728
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.4473333333333333
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "2-3_1_Reverse",
+          "startNodeId": "3",
+          "endNodeId": "2",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 3.141592653589793,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.8807044052250612
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.440371071891728
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.4473333333333333
+                  },
+                  {
+                    "x": 2.663,
+                    "y": 0.007
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "3-4_Reverse",
+          "startNodeId": "4",
+          "endNodeId": "3",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 0.0,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 0.1953805668016205,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 0.6297139001349551,
+                    "y": 0.4364750337381914
+                  },
+                  {
+                    "x": 2.248609609123241,
+                    "y": 1.4463710718917286
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.8807044052250612
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "edgeId": "3-4_1_Reverse",
+          "startNodeId": "4",
+          "endNodeId": "3",
+          "vehicleTypeEdgeProperties": [
+            {
+              "vehicleTypeId": "scaliro.differential",
+              "vehicleOrientation": 3.141592653589793,
+              "orientationType": "TANGENTIAL",
+              "rotationAllowed": false,
+              "trajectory": {
+                "degree": 3,
+                "knotVector": [
+                  0.0,
+                  0.0,
+                  0.0,
+                  0.0,
+                  1.0,
+                  1.0,
+                  1.0,
+                  1.0
+                ],
+                "controlPoints": [
+                  {
+                    "x": 0.1953805668016205,
+                    "y": 0.002141700404858966
+                  },
+                  {
+                    "x": 0.6297139001349551,
+                    "y": 0.4364750337381914
+                  },
+                  {
+                    "x": 2.248609609123241,
+                    "y": 1.4463710718917286
+                  },
+                  {
+                    "x": 2.6829429424565747,
+                    "y": 1.8807044052250612
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "stations": [
+        {
+          "stationId": "Transfer Station 1",
+          "interactionNodeIds": [
+            "3"
+          ],
+          "stationHeight": 0.1,
+          "stationPosition": {
+            "x": 3.887,
+            "y": 1.876,
+            "theta": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

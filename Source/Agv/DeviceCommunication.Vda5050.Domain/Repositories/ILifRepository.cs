@@ -16,7 +16,7 @@ public interface ILifRepository
     /// <param name="file">The lif file.</param>
     /// <param name="addedLayouts">The layouts to add.</param>
     /// <param name="deletedLayouts">The layouts to delete.</param>
-    Task<bool> AddFileAsync(LifFile file, ICollection<Layout> addedLayouts, ICollection<Layout> deletedLayouts);
+    Task AddFileAsync(LifFile file, ICollection<Layout> addedLayouts, ICollection<Layout> deletedLayouts);
 
     /// <summary>
     /// Update lif layouts
@@ -24,7 +24,7 @@ public interface ILifRepository
     /// <param name="addedLayouts">The layouts to add.</param>
     /// <param name="deletedLayouts">The layouts to delete.</param>
     Task UpdateLayouts(ICollection<Layout> addedLayouts, ICollection<Layout> deletedLayouts);
-    
+
     /// <summary>
     /// Get all lif files.
     /// </summary>
@@ -43,7 +43,7 @@ public interface ILifRepository
     /// Delete lif file and related layouts.
     /// </summary>
     /// <param name="id">The id of the lif file.</param>
-    Task<bool> DeleteLifAsync(Guid id);
+    Task DeleteLifAsync(Guid id);
 
     /// <summary>
     /// Add lif layouts.

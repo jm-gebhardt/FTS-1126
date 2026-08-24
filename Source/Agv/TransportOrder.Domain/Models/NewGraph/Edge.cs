@@ -1,10 +1,24 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using JetBrains.Annotations;
+using CommonEdge = Gebhardt.Acc.Common.Domain.Models.NewGraph.Edge;
+
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
 /// Represents an edge in a graph, connecting two nodes.
 /// </summary>
+[PublicAPI]
 public class Edge : GraphResource
 {
+    /// <summary>
+    /// Id of the node the edge starts at.
+    /// </summary>
+    public Guid StartNodeId { get; }
+
+    /// <summary>
+    /// Id of the node the edge ends at.
+    /// </summary>
+    public Guid EndNodeId { get; }
+
     /// <summary>
     /// Start node of the edge.
     /// </summary>
@@ -20,14 +34,26 @@ public class Edge : GraphResource
     {
         StartNode = startNode;
         EndNode = endNode;
+        StartNodeId = startNode.Id;
+        EndNodeId = endNode.Id;
     }
 
     /// <summary>
-    /// Efcore
+    /// For deserialization.
     /// </summary>
-    public Edge(): base(Guid.NewGuid(), null, null)
+    public Edge() : base(Guid.NewGuid(), null, null)
     {
         StartNode = null!;
         EndNode = null!;
+    }
+
+    /// <summary>
+    /// Generates an Edge from a <see cref="CommonEdge"/>
+    /// </summary>
+    /// <param name="commonEdge">The <see cref="CommonEdge"/></param>
+    /// <param name="nodes">The nodes of the same graph, keyed by their id.</param>
+    public static Edge FromCommon(CommonEdge commonEdge, IReadOnlyDictionary<Guid, Node> nodes)
+    {
+        return new Edge(commonEdge.Id, commonEdge.Name, commonEdge.Description, nodes[commonEdge.StartNodeId], nodes[commonEdge.EndNodeId]);
     }
 }

@@ -78,7 +78,7 @@ public class LifRequestHandler(
         var (vdmaCollection, rawJson, validationResults) = await ExtractFileContent(file);
         if (vdmaCollection == null)
         {
-            lifFile = new LifFile { Id = Guid.NewGuid(), MetaInformation = new LifFileMetaInformation(uploadedTimestamp, fileName, fileSizeMb, uploadedBy) {ValidationResults = validationResults}};
+            lifFile = new LifFile { Id = Guid.NewGuid(), MetaInformation = new LifFileMetaInformation(uploadedTimestamp, fileName, fileSizeMb, uploadedBy) { ValidationResults = validationResults } };
             await context.RespondAsync(new LifValidationFailed(lifFile));
             return;
         }
@@ -143,9 +143,13 @@ public class LifRequestHandler(
         await ValidateLifCanBeDeleted(file);
 
         await TriggerGraphDeletion(context, file);
-        if (!await lifRepository.DeleteLifAsync(id))
+        try
         {
-            throw new LifDeletionFailedException("Failed to delete lif file");
+            await lifRepository.DeleteLifAsync(id);
+        }
+        catch (Exception ex)
+        {
+            throw new LifDeletionFailedException("Failed to delete lif file", ex);
         }
 
         logger.LogInformation("LIF file {Filename}/{Id} deleted", file.MetaInformation.Filename, id);

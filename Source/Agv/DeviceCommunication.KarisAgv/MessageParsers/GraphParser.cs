@@ -335,14 +335,14 @@ public class GraphParser
 
         if (_usability == AgvGraph.GraphUsability.Valid &&
             (_graph.Nodes == null || _graph.Nodes.Length == 0 ||
-             ParseNodes() == false))
+             !ParseNodes()))
         {
             _usability = AgvGraph.GraphUsability.InvalidNodes;
         }
 
         if (_usability == AgvGraph.GraphUsability.Valid &&
             (_graph.Edges == null || _graph.Edges.Length == 0 ||
-             ParseEdges() == false))
+             !ParseEdges()))
         {
             _usability = AgvGraph.GraphUsability.InvalidEdges;
         }

@@ -3,8 +3,15 @@
 /// <summary>
 /// Exception raised, when lif deletion failed
 /// </summary>
-public class LifDeletionFailedException: Exception
+public class LifDeletionFailedException : Exception
 {
     /// <inheritdoc/>
-    public LifDeletionFailedException(string message): base(message){}
+    public LifDeletionFailedException(string message) : base(message)
+    {
+    }
+
+    /// <inheritdoc/>
+    public LifDeletionFailedException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
 }

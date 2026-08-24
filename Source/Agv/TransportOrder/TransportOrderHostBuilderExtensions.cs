@@ -215,6 +215,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IEdgePolygonProvider, BezierEdgePolygonProvider>();
         services.AddSingleton<IMarginStrategy>(new SafetyMarginStrategy(0.2));
         services.AddTransient<IBoundingBoxRepository, EfBoundingBoxRepository>();
+        services.AddTransient<INewGraphRepository, NewGraphRepository>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

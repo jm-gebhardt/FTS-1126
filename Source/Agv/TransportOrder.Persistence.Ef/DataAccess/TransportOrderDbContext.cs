@@ -77,7 +77,6 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new BackgroundLayerEntityConfiguration());
         modelBuilder.ApplyConfiguration(new OwnedFilterTemplateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ResourceBoundingBoxEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new NewGraphEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewStationEntityConfiguration());

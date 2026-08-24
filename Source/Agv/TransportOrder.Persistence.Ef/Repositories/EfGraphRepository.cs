@@ -91,7 +91,7 @@ public class EfGraphRepository : IGraphRepository
         return await context.Set<AgvGraph>()
             .AsNoTracking()
             .AnyAsync(g => g.AgvCorrelationId == agvCorrelationId
-                        && g.Nodes.Any(n => n.TypeString.Contains(typeFilter)));
+                           && g.Nodes.Any(n => n.TypeString.Contains(typeFilter)));
     }
 
     /// <inheritdoc />
@@ -655,16 +655,16 @@ public class EfGraphRepository : IGraphRepository
 
             await context.Set<GraphNode>().AddRangeAsync(graphs.SelectMany(g => g.Nodes).ToList());
             await context.Set<GraphEdge>().AddRangeAsync(graphs.SelectMany(g => g.Edges).ToList());
-            
+
             await RemoveMapReferencesAsync(context, unusedNodeIds, unusedEdgeIds);
 
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            _logger.LogError("Updating agv type graphs failed, roll back transaction");
+            _logger.LogError(exception, "Updating agv type graphs failed, roll back transaction");
             await _loggingService.LogSystem(_logger, LogCodes.GraphConsolidationFailed,
                 "Updating Agv type graphs", "Updating agv type graphs failed, roll back transaction",
                 logLevel: LogLevel.Error);
@@ -735,18 +735,18 @@ public class EfGraphRepository : IGraphRepository
         List<AgvGraph> agvGraphs = await context.Set<AgvGraph>()
             .Include(g => g.Nodes)
             .Include(g => g.Edges)
-            .Where(g => g.Nodes.Any(n => unusedNodes.Contains(n.Id) || g.Edges.Any(e => unusedEdges.Contains(e.Id))) ).ToListAsync();
+            .Where(g => g.Nodes.Any(n => unusedNodes.Contains(n.Id) || g.Edges.Any(e => unusedEdges.Contains(e.Id)))).ToListAsync();
         foreach (var graph in agvGraphs)
         {
-           foreach (var node in graph.Nodes.Where(n => unusedNodes.Contains(n.Id)))
-           {
-               graph.Nodes.Remove(node);
-           }
-           foreach (var edge in graph.Edges.Where(e => unusedEdges.Contains(e.Id)))
-           {
-               graph.Edges.Remove(edge);
-           }
-           context.Update(graph);
+            foreach (var node in graph.Nodes.Where(n => unusedNodes.Contains(n.Id)))
+            {
+                graph.Nodes.Remove(node);
+            }
+            foreach (var edge in graph.Edges.Where(e => unusedEdges.Contains(e.Id)))
+            {
+                graph.Edges.Remove(edge);
+            }
+            context.Update(graph);
         }
     }
 

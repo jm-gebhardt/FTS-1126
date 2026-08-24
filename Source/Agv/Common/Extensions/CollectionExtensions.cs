@@ -23,4 +23,29 @@ public static class CollectionExtensions
         }
         return allAdded;
     }
+
+    /// <summary>
+    /// Adds all the key value pairs to the dictionary that do not already exist.
+    /// </summary>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <typeparam name="TValue">The value type.</typeparam>
+    /// <param name="dictionary">The dictionary to extend.</param>
+    /// <param name="kvEnumerable">The key-value enumerable to add to the dictionary.</param>
+    [PublicAPI]
+    public static bool AddRange<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> kvEnumerable) where TKey: notnull
+    {
+        bool allAdded = true;
+        foreach (KeyValuePair<TKey, TValue> kv in kvEnumerable)
+        {
+            if (dictionary.ContainsKey(kv.Key))
+            {
+                allAdded = false;
+            } 
+            else
+            {
+                dictionary.Add(kv.Key, kv.Value);
+            }
+        }
+        return allAdded;
+    }
 }

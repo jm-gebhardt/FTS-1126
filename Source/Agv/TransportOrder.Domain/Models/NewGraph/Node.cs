@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using CommonNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
@@ -7,12 +7,6 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 /// </summary>
 public class Node : GraphResource
 {
-    [UsedImplicitly]
-    private readonly List<Edge> _incomingEdges = [];
-
-    [UsedImplicitly]
-    private readonly List<Edge> _outgoingEdges = [];
-
     /// <summary>
     /// X position on the layout in reference to the global origin.
     /// </summary>
@@ -31,12 +25,12 @@ public class Node : GraphResource
     /// <summary>
     /// Collection of incoming edges to the node.
     /// </summary>
-    public IReadOnlyCollection<Edge> IncomingEdges => _incomingEdges;
+    public List<Edge> IncomingEdges { get; } = [];
 
     /// <summary>
     /// Collection of outgoing edges from the node.
     /// </summary>
-    public IReadOnlyCollection<Edge> OutgoingEdges => _outgoingEdges;
+    public List<Edge> OutgoingEdges { get; } = [];
 
     /// <summary>
     /// Collection of routing nodes associated with this node.
@@ -57,9 +51,18 @@ public class Node : GraphResource
     }
 
     /// <summary>
-    /// 
+    /// For deserialization.
     /// </summary>
     public Node() : base(Guid.NewGuid(), null, null)
     {
+    }
+
+    /// <summary>
+    /// Generates a node from a <see cref="CommonNode"/>.
+    /// </summary>
+    /// <param name="commonNode">The <see cref="CommonNode"/>.</param>
+    public static Node FromCommon(CommonNode commonNode)
+    {
+        return new Node(commonNode.Id, commonNode.Name, commonNode.Description, commonNode.X, commonNode.Y, commonNode.LevelId);
     }
 }

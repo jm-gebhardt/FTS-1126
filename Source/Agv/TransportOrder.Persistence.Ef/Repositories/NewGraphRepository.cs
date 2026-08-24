@@ -1,5 +1,5 @@
-using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Models;
@@ -9,35 +9,84 @@ using Microsoft.EntityFrameworkCore;
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
 /// <summary>
-///
+/// Provides access to the graph from DB.
 /// </summary>
-/// <param name="contextFactory"></param>
+/// <param name="contextFactory">The database context factory.</param>
 [UsedImplicitly]
-public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> contextFactory) :
-    EfRepository<Graph, TransportOrderDbContext, IDbContextFactory<TransportOrderDbContext>>(contextFactory)
+public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> contextFactory) : INewGraphRepository
 {
-    /// <summary>
-    /// Loads a graph with its nodes, edges and stations, each one's routing resources,
-    /// and conflicting resources.
-    /// </summary>
-    /// <param name="id">Id of the graph to load.</param>
-    [UsedImplicitly]
-    public async Task<Graph?> GetGraphById(Guid id)
+    private static async Task<Dictionary<Guid, Node>> AddOrUpdateNodesAsync(TransportOrderDbContext context, IReadOnlyCollection<Node> nodes)
     {
-        await using var context = await ContextFactory.CreateDbContextAsync();
+        List<Guid> nodeIds = nodes.Select(n => n.Id).ToList();
+        Dictionary<Guid, Node> storedNodes = await context.Set<Node>()
+            .Where(n => nodeIds.Contains(n.Id))
+            .ToDictionaryAsync(n => n.Id);
 
-        var graph = await context.Set<Graph>()
-            .Include(g => g.Nodes)
-            .Include(g => g.Edges)
-            .Include(g => g.Stations)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(g => g.Id == id);
-
-        if (graph is null)
+        foreach (var node in nodes)
         {
-            return null;
+            if (storedNodes.TryGetValue(node.Id, out var storedNode))
+            {
+                context.Entry(storedNode).CurrentValues.SetValues(node);
+
+                continue;
+            }
+
+            context.Add(node);
+            storedNodes.Add(node.Id, node);
         }
 
+        return storedNodes;
+    }
+
+    private static async Task AddOrUpdateEdgesAsync(TransportOrderDbContext context, IReadOnlyCollection<Edge> edges, Dictionary<Guid, Node> nodesById)
+    {
+        List<Guid> edgeIds = edges.Select(e => e.Id).ToList();
+        Dictionary<Guid, Edge> storedEdges = await context.Set<Edge>()
+            .Where(e => edgeIds.Contains(e.Id))
+            .ToDictionaryAsync(e => e.Id);
+
+        foreach (var edge in edges)
+        {
+            if (storedEdges.TryGetValue(edge.Id, out var storedEdge))
+            {
+                context.Entry(storedEdge).CurrentValues.SetValues(edge);
+
+                continue;
+            }
+
+            context.Add(new Edge(edge.Id, edge.Name, edge.Description, nodesById[edge.StartNodeId], nodesById[edge.EndNodeId]));
+        }
+    }
+
+    private static async Task AddOrUpdateStationsAsync(TransportOrderDbContext context, IReadOnlyCollection<Station> stations, Dictionary<Guid, Node> nodesById)
+    {
+        List<Guid> stationIds = stations.Select(s => s.Id).ToList();
+        Dictionary<Guid, Station> storedStations = await context.Set<Station>()
+            .Include(s => s.InteractionNodes)
+            .Where(s => stationIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id);
+
+        foreach (var station in stations)
+        {
+            List<Node> interactionNodes = station.InteractionNodes.Select(n => nodesById[n.Id]).ToList();
+
+            if (storedStations.TryGetValue(station.Id, out var storedStation))
+            {
+                context.Entry(storedStation).CurrentValues.SetValues(station);
+                storedStation.InteractionNodes.Clear();
+                storedStation.InteractionNodes.AddRange(interactionNodes);
+
+                continue;
+            }
+
+            var newStation = new Station(station.Id, station.Name, station.Description, station.StationHeight, station.X, station.Y, station.Theta);
+            newStation.InteractionNodes.AddRange(interactionNodes);
+            context.Add(newStation);
+        }
+    }
+
+    private static async Task LoadRoutingResourcesAsync(TransportOrderDbContext context, Graph graph)
+    {
         Dictionary<Guid, GraphResource> parentsById = new List<GraphResource>()
             .Concat(graph.Nodes)
             .Concat(graph.Edges)
@@ -81,7 +130,32 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
                 conflictingResource.AddConflictingResource(resource);
             }
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task<Graph> GetGraphAsync()
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        var graph = new Graph();
+        graph.Nodes.AddRange(await context.Set<Node>().ToListAsync());
+        graph.Edges.AddRange(await context.Set<Edge>().ToListAsync());
+        graph.Stations.AddRange(await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync());
+
+        await LoadRoutingResourcesAsync(context, graph);
 
         return graph;
+    }
+
+    /// <inheritdoc/>
+    public async Task AddOrUpdateGraphAsync(Graph graph)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        Dictionary<Guid, Node> nodesById = await AddOrUpdateNodesAsync(context, graph.Nodes);
+        await AddOrUpdateEdgesAsync(context, graph.Edges, nodesById);
+        await AddOrUpdateStationsAsync(context, graph.Stations, nodesById);
+
+        await context.SaveChangesAsync();
     }
 }

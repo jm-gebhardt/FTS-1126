@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using CommonStation = Gebhardt.Acc.Common.Domain.Models.NewGraph.Station;
+
+namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 /// <summary>
 /// Represents a station in the system. A station is a specific location where AGVs can interact with the environment, such as loading or unloading goods.
@@ -40,9 +42,23 @@ public class Station : GraphResource
     }
 
     /// <summary>
-    /// 
+    /// For deserialization.
     /// </summary>
     public Station() : base(Guid.NewGuid(), null, null)
     {
+    }
+
+    /// <summary>
+    /// Generates a station from a <see cref="CommonStation"/>.
+    /// </summary>
+    /// <param name="commonStation">The <see cref="CommonStation"/>.</param>
+    /// <param name="nodes">The nodes of the same graph, keyed by their id.</param>
+    public static Station FromCommon(CommonStation commonStation, IReadOnlyDictionary<Guid, Node> nodes)
+    {
+        var station = new Station(commonStation.Id, commonStation.Name, commonStation.Description, commonStation.StationHeight, commonStation.X, commonStation.Y, commonStation.Theta);
+
+        station.InteractionNodes.AddRange(commonStation.InteractionNodes.Select(n => nodes[n.Id]));
+
+        return station;
     }
 }

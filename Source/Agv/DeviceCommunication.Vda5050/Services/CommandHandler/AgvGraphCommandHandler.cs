@@ -45,6 +45,7 @@ public class AgvGraphCommandHandler(IBus bus, ILifRepository lifRepository, Time
         await BuildMap(context, agvCorrelationId, serialNumber, graph);
     }
 
+    [UsedImplicitly]
     private async Task BuildMap(ConsumeContext<PublishAgvGraph> context, Guid agvCorrelationId, string serialNumber, AgvGraph graph)
     {
         IRequestClient<GetDefaultMap> requestClient = context.CreateRequestClient<GetDefaultMap>(bus);

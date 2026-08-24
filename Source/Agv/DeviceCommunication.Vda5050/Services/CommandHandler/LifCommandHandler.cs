@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
+using Gebhardt.Acc.Common.Messages.NewGraph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
@@ -10,7 +11,6 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
@@ -23,7 +23,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 public class LifCommandHandler(
     ILifRepository lifRepository,
     ILogger<LifCommandHandler> logger,
-    INurbsEdgeBuilder edgeBuilder) : 
+    INurbsEdgeBuilder edgeBuilder) :
     IConsumer<StoreLayouts>,
     IConsumer<StoreLif>
 
@@ -68,6 +68,8 @@ public class LifCommandHandler(
     {
         var (lifFile, layoutCollection) = context.Message;
 
+        logger.LogInformation("Storing new layout collection");
+
         HashSet<string> vehicleTypeIds = layoutCollection.Layouts.SelectMany(l => l.GetSupportedVehicleTypes()).Distinct().ToHashSet();
         List<Layout> replaced = [];
         List<Layout> added = [];
@@ -100,30 +102,33 @@ public class LifCommandHandler(
 
         try
         {
-            if (await lifRepository.AddFileAsync(lifFile, added, replaced))
-            {
-                logger.LogInformation("Lif file {Filename} stored", lifFile.MetaInformation.Filename);
-                ICollection<string> layoutIds = layoutCollection.Layouts.Select(l => l.LayoutId).Distinct().ToList();
-
-                logger.LogInformation("Lif layouts stored. LayoutIds: [{LayoutIds}], VehicleTypeIds: [{VehicleTypeIds}]",
-                    string.Join(", ", layoutIds), string.Join(", ", vehicleTypeIds));
-
-                var layoutStored = new LayoutStored(layoutIds, vehicleTypeIds.ToList());
-                await context.Publish(layoutStored);
-
-                await context.Publish(new AgvTypeGraphUpdated(graphs));
-                await context.RespondAsync(new Success());
-            }
-            else
-            {
-                logger.LogWarning("Could not store lif {FileName}", lifFile.MetaInformation.Filename);
-                await context.RespondAsync(new LifStoringFailed());
-            }
+            await lifRepository.AddFileAsync(lifFile, added, replaced);
         }
-        catch (DbUpdateException ex)
+        catch (Exception ex)
         {
-            logger.LogError(ex.Message);
+            logger.LogError(ex, "Could not store lif {FileName}", lifFile.MetaInformation.Filename);
             await context.RespondAsync(new LifStoringFailed());
+
+            return;
         }
+
+        logger.LogInformation("Lif file {Filename} stored", lifFile.MetaInformation.Filename);
+        ICollection<string> layoutIds = layoutCollection.Layouts.Select(l => l.LayoutId).Distinct().ToList();
+
+        logger.LogInformation("Lif layouts stored. LayoutIds: [{LayoutIds}], VehicleTypeIds: [{VehicleTypeIds}]",
+            string.Join(", ", layoutIds), string.Join(", ", vehicleTypeIds));
+
+        var layoutStored = new LayoutStored(layoutIds, vehicleTypeIds.ToList());
+        await context.Publish(layoutStored);
+
+        await context.Publish(new AgvTypeGraphUpdated(graphs));
+
+        List<Layout> storedLayouts = added.Distinct().ToList();
+        if (storedLayouts.Count > 0)
+        {
+            await context.Publish(new NewGraphReceived(context.Message.CorrelationId, layoutCollection.ToGraph(storedLayouts)));
+        }
+
+        await context.RespondAsync(new Success());
     }
 }

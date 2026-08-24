@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -22,12 +22,12 @@ public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
         // explicitly here - a plain HasMany() on both sides is ambiguous and produces extra shadow FKs.
         builder.HasMany(e => e.IncomingEdges)
             .WithOne(e => e.EndNode)
-            .HasForeignKey("EndNodeId")
+            .HasForeignKey(e => e.EndNodeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(e => e.OutgoingEdges)
             .WithOne(e => e.StartNode)
-            .HasForeignKey("StartNodeId")
+            .HasForeignKey(e => e.StartNodeId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
