@@ -48,3 +48,29 @@ Thumbs.db
 NuGet.Config
 **/Resharper/
 dependabot-helper.csproj
+
+# This list is the only thing that decides what the Docker build restores: Agv/Dockerfile
+# derives its solution filter from the .csproj files left in the context, so anything excluded
+# here is never restored nor published. Keeping the test projects out means editing a test does
+# not rebuild all 21 service images. Explicit list on purpose, NO *Test* glob: Agv/TestPlanRunner/
+# is a production service and must stay in the context. When adding a NEW test project, add it
+# here (and to Agv/Tests.slnf). Forgetting this entry only costs rebuild time; restore still
+# succeeds.
+Agv/Common.Persistence.Ef.Test/
+Agv/Common.Testing/
+Agv/CommonTest/
+Agv/DeviceCommunication.Vda5050.Test/
+Agv/DeviceCommunicationTest/
+Agv/KaeserSidecar.Test/
+Agv/OrderTranslator.Test/
+Agv/PrismatCommunication.TelegramApiTestClient/
+Agv/PrismatCommunicationTest/
+Agv/Sidecar.Test/
+Agv/SmartLinkCommunicationTest/
+Agv/StationCommunicationTest/
+Agv/Statistics.Test/
+Agv/TestPlanRunner.Test/
+Agv/TransportOrder.Test/
+Agv/TriggerServiceTest/
+Agv/WCSCommunicationTest/
+**/TestResults/

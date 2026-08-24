@@ -30,8 +30,19 @@ COPY Directory.Packages.props Directory.Build.props ./
 COPY --parents Agv/**/*.csproj ./
 COPY Agv/SharedProjectSettings.csproj Agv/NuGet.Config Agv/CompileAgv.sln ./Agv/
 
-# Restore the whole solution once. The package cache mount is shared across services and across
-# runs, so packages are downloaded only when a version actually changes.
+# Restore CompileAgv.sln minus the projects .dockerignore kept out of the build context: every
+# solution project whose .csproj actually arrived here goes into the filter. The test projects are
+# excluded (see .dockerignore), so editing a test never invalidates the service images. Deriving
+# the filter instead of committing it means a new production project cannot be forgotten, and a
+# .csproj that is not in the solution yet is skipped instead of failing the build with MSB5028.
+RUN cd Agv && \
+    { printf '{"solution":{"path":"CompileAgv.sln","projects":['; \
+      grep -o '"[^"]*\.csproj"' CompileAgv.sln | tr -d '"' | sed 's|[\]|/|g' | sort -u \
+        | while read -r p; do [ -f "$p" ] && printf '"%s",' "$p"; done | sed 's|,$||'; \
+      printf ']}}'; } > CompileAgv.Docker.slnf
+
+# The package cache mount is shared across services and across runs, so packages are downloaded
+# only when a version actually changes.
 RUN --mount=type=secret,id=nuget_pat \
     --mount=type=cache,target=/root/.nuget/packages \
     if [ -f /run/secrets/nuget_pat ]; then \
@@ -41,7 +52,7 @@ RUN --mount=type=secret,id=nuget_pat \
             --store-password-in-clear-text \
             --configfile ./Agv/NuGet.Config; \
     fi && \
-    dotnet restore -r $(cat /tmp/rid) Agv/CompileAgv.sln
+    dotnet restore -r $(cat /tmp/rid) Agv/CompileAgv.Docker.slnf
 
 # Build stage: PROJECT-specific. Brings in the full source and publishes one service.
 FROM restore AS build-env
