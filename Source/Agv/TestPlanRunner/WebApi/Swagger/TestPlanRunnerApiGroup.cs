@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TestPlanRunner.WebApi.Swagger;
 public class TestPlanRunnerApiGroup : ApiGroup
 {
     /// <inheritdoc />
-    public override string Name => "rest";
+    public override string Name => "v1-rest";
 
     /// <inheritdoc />
     public override string Title => "Test Plan Runner API";

@@ -6,6 +6,7 @@
   </PropertyGroup>
   <Import Project="..\SharedProjectSettings.csproj" />
   <ItemGroup>
+      <PackageReference Include="Gebhardt.Core.Hosting" />
       <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
       <PackageReference Include="MassTransit.Prometheus" />
       <PackageReference Include="MassTransit.EntityFrameworkCore" />
@@ -18,6 +19,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Gebhardt.Core.EntityFrameworkCore" />
       <PackageReference Include="MassTransit" />
       <PackageReference Include="JetBrains.Annotations" />
       <PackageReference Include="MassTransit.Quartz" />

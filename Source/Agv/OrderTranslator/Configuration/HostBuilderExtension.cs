@@ -6,6 +6,7 @@ using Gebhardt.Acc.OrderTranslator.Domain.Services;
 using Gebhardt.Acc.OrderTranslator.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.OrderTranslator.Persistence.Ef.Repositories;
 using Gebhardt.Acc.OrderTranslator.Services.BackgroundServices;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -76,7 +77,8 @@ public static class HostBuilderExtension
 
                 services.AddDbContextFactory<OrderTranslatorDbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(OrderTranslatorDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)  
+                                               ??context.Configuration.GetConnectionString(OrderTranslatorDbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<OrderTranslatorDbContext>.MigrationTableName);

@@ -11,6 +11,7 @@ using Gebhardt.Acc.StationCommunication.Persistence.Ef.Repositories;
 using Gebhardt.Acc.StationCommunication.Services;
 using Gebhardt.Acc.StationCommunication.Services.BackgroundServices;
 using Gebhardt.Acc.StationCommunication.SimulationMode;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -81,7 +82,8 @@ public static class HostBuilderExtension
                 services.AddSingleton<ActiveChannelKeyProvider>();
                 services.AddDbContextFactory<StationCommunicationDbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(StationCommunicationDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ??context.Configuration.GetConnectionString(StationCommunicationDbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<StationCommunicationDbContext>.MigrationTableName);

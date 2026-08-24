@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Logging;
 using Gebhardt.Acc.Provisioning.Configuration;
 using Gebhardt.Acc.Provisioning.Services;
+using Gebhardt.Core.Hosting.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,10 @@ var initialLogger = InitialLogger.Create<Program>();
 try
 {
     var hostBuilder = Host.CreateDefaultBuilder(args)
+        .ConfigureAppConfiguration((context, conf) =>
+        {
+            conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+        })
         .ConfigureLogging(conf => { conf.SetMinimumLevel(LogLevel.Information); })
         .ConfigureServices((context, services) =>
         {

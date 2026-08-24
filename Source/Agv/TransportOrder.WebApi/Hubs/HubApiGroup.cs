@@ -10,7 +10,7 @@ public class HubApiGroup : ApiGroup
     /// <summary>
     /// Api group name to be used with SignalRHub attribute
     /// </summary>
-    public const string GroupName = "signalr";
+    public const string GroupName = "v1-signalr";
 
     /// <inheritdoc />
     public override string Name => GroupName;

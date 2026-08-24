@@ -25,6 +25,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Gebhardt.Core.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Configuration;
 
@@ -71,7 +72,7 @@ public static class HostBuilderExtension
                             var serializerFactory = new SystemTextJsonRawMessageSerializerFactory();
                             configurator.AddSerializer(serializerFactory, false);
                         });
-                        services.AddOptions<MassTransitHostOptions>()
+                    services.AddOptions<MassTransitHostOptions>()
                         .Configure(options =>
                         {
                             options.WaitUntilStarted = true;
@@ -96,10 +97,16 @@ public static class HostBuilderExtension
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
             hostBuilder.ConfigureServices((context, services) =>
             {
-                services.ConfigureTracing(context.Configuration);
+                if (!context.HostingEnvironment.IsEnvironment("SwaggerCli"))
+                {
+                    services.ConfigureTracing(context.Configuration);
+                }
+
                 services.AddDbContextFactory<DeviceCommunicationVda5050DbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationVda5050DbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(
+                                                   DeviceCommunicationVda5050DbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationVda5050DbContext>.MigrationTableName);

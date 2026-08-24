@@ -16,7 +16,7 @@ public sealed class ConfigurationTypeManager : IConfigurationTypeManager
     {
         foreach (var assembly in assemblies)
         {
-            IEnumerable<ConfigurationType> configurationTypes = assembly.GetTypes()
+            IEnumerable<ConfigurationType> configurationTypes = GetLoadableTypes(assembly)
                 .Where(t => t.IsAssignableTo(typeof(ISettings)) && t is { IsInterface: false, IsGenericParameter: false, IsGenericType: false })
                 .Select(t => new ConfigurationType(t, ShouldAutoSeedToDatabase(t)));
 
@@ -24,6 +24,18 @@ public sealed class ConfigurationTypeManager : IConfigurationTypeManager
             {
                 yield return configurationType;
             }
+        }
+    }
+
+    private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException exception)
+        {
+            return exception.Types.Where(type => type != null).Cast<Type>();
         }
     }
 
