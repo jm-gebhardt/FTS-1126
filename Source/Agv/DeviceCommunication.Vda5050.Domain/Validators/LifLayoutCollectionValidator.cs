@@ -35,6 +35,7 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
             .WithState(_ => new LifValidationResult(ResourceType.General, null, Models.Lif.Severity.Err, "LIF layout collection must contain at least one layout"));
 
         RuleFor(x => x.Layouts).Custom(ValidateLayoutIds);
+        RuleFor(x => x.Layouts).Custom(ValidateElementIds);
 
         RuleForEach(x => x.Layouts).ChildRules(layout =>
         {
@@ -50,8 +51,6 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
 
             layout.RuleFor(l => l).Custom((l, context) =>
             {
-                ValidateElementIds(l, context);
-
                 HashSet<string> nodeIds = l.Nodes.Select(n => n.NodeId).ToHashSet();
 
                 ValidateEdges(l, nodeIds, context);
@@ -295,28 +294,29 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
         }
     }
 
-    private static void ValidateElementIds(Layout l, ValidationContext<Layout> context)
+    private static void ValidateElementIds(Layout[] layouts, ValidationContext<LifLayoutCollection> context)
     {
-        List<Station> duplicateStations = l.Stations.GroupBy(s => s.StationId).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
-        foreach (var duplicateStation in duplicateStations.DistinctBy(d => d.StationId))
+        IEnumerable<(Layout Layout, Station Station)> stations = layouts.SelectMany(l => l.Stations.Select(s => (Layout: l, Station: s)));
+        foreach (IGrouping<string, (Layout Layout, Station Station)> duplicateGroup in stations.GroupBy(x => x.Station.StationId).Where(g => g.Count() > 1))
         {
-            string message = $"StationId '{duplicateStation.StationId}' duplicated in layout '{l.LayoutId}'";
-            var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Station, duplicateStation.StationId, Models.Lif.Severity.Err, message) };
-            context.AddFailure(failure);
-        }
-        List<Edge> duplicateEdges = l.Edges.GroupBy(e => e.EdgeId).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
-        foreach (var duplicateEdge in duplicateEdges.DistinctBy(e => e.EdgeId))
-        {
-            string message = $"EdgeId '{duplicateEdge.EdgeId}' duplicated in layout '{l.LayoutId}'";
-            var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Edge, duplicateEdge.EdgeId, Models.Lif.Severity.Err, message) };
+            string message = $"StationId '{duplicateGroup.Key}' duplicated";
+            var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Station, duplicateGroup.Key, Models.Lif.Severity.Err, message) };
             context.AddFailure(failure);
         }
 
-        List<Node> duplicateNodes = l.Nodes.GroupBy(e => e.NodeId).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
-        foreach (var duplicateNode in duplicateNodes.DistinctBy(n => n.NodeId))
+        IEnumerable<(Layout Layout, Edge Edge)> edges = layouts.SelectMany(l => l.Edges.Select(e => (Layout: l, Edge: e)));
+        foreach (IGrouping<string, (Layout Layout, Edge Edge)> duplicateGroup in edges.GroupBy(x => x.Edge.EdgeId).Where(g => g.Count() > 1))
         {
-            string message = $"NodeId '{duplicateNode.NodeId}' duplicated in layout '{l.LayoutId}'";
-            var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Node, duplicateNode.NodeId, Models.Lif.Severity.Err, message) };
+            string message = $"EdgeId '{duplicateGroup.Key}' duplicated";
+            var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Edge, duplicateGroup.Key, Models.Lif.Severity.Err, message) };
+            context.AddFailure(failure);
+        }
+
+        IEnumerable<(Layout Layout, Node Node)> nodes = layouts.SelectMany(l => l.Nodes.Select(n => (Layout: l, Node: n)));
+        foreach (IGrouping<string, (Layout Layout, Node Node)> duplicateGroup in nodes.GroupBy(x => x.Node.NodeId).Where(g => g.Count() > 1))
+        {
+            string message = $"NodeId '{duplicateGroup.Key}' duplicated";
+            var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Node, duplicateGroup.Key, Models.Lif.Severity.Err, message) };
             context.AddFailure(failure);
         }
     }

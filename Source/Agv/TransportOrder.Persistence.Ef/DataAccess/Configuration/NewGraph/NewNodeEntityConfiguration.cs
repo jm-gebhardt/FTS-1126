@@ -30,7 +30,7 @@ public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
             .HasForeignKey(e => e.StartNodeId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
-        builder.Property(e => e.Description).HasMaxLength(DbStringLimits.Description);
+        builder.Property(e => e.ShortName).HasMaxLength(DbStringLimits.Description);
         builder.Ignore(e => e.RoutingNodes);
         builder.Ignore(e => e.RoutingEdges);
     }

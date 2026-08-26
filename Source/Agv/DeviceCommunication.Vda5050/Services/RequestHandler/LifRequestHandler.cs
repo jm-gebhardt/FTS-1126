@@ -82,15 +82,26 @@ public class LifRequestHandler(
             await context.RespondAsync(new LifValidationFailed(lifFile));
             return;
         }
+
         var lifLayoutCollection = vdmaCollection.ToLifLayoutCollection();
         lifFile = lifLayoutCollection.ToLifFile(uploadedTimestamp, fileName, fileSizeMb, uploadedBy);
         lifFile.RawJson = rawJson;
         lifFile.MetaInformation.ValidationResults = validationResults;
+
+        // Check if LIF with same creator exists (workaround until update logic is implemented)
+        if (await lifRepository.ExistsWithCreatorAsync(lifFile.LifCollectionMetaInformation.Creator))
+        {
+            validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, "A lif file with the same creator already exists"));
+            await context.RespondAsync(new LifValidationFailed(lifFile));
+            return;
+        }
+
         if (validationResults.Any(v => v.Severity == Severity.Err))
         {
             await context.RespondAsync(new LifValidationFailed(lifFile));
             return;
         }
+
         logger.LogInformation("LIF file '{FileName}' with {LayoutCount} layout(s) uploaded", fileName, lifFile.LayoutIds.Count);
 
         IRequestClient<StoreLif>? requestClient = context.CreateRequestClient<StoreLif>(bus);
@@ -216,6 +227,7 @@ public class LifRequestHandler(
             List<LifValidationResult> results = validationResult.Errors.Where(e => e.CustomState is LifValidationResult).Select(e => (LifValidationResult)e.CustomState).ToList();
             validationResults.AddRange(results);
         }
+
         return (lifLayoutCollection, rawJson, validationResults);
     }
 

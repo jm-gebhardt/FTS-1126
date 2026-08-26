@@ -1,11 +1,8 @@
-﻿using JetBrains.Annotations;
-
-namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
+﻿namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 
 /// <summary>
 /// Represents a node in the graph.
 /// </summary>
-[PublicAPI]
 public record Node : GraphResource
 {
     /// <summary>
@@ -23,18 +20,8 @@ public record Node : GraphResource
     /// </summary>
     public string? LevelId { get; }
 
-    /// <summary>
-    /// Collection of incoming edges to the node.
-    /// </summary>
-    public IReadOnlyCollection<Edge> IncomingEdges { get; } = [];
-
-    /// <summary>
-    /// Collection of outgoing edges from the node.
-    /// </summary>
-    public IReadOnlyCollection<Edge> OutgoingEdges { get; } = [];
-
     /// <inheritdoc cref="Node"/>
-    public Node(Guid id, string? name, string? description, double x, double y, string? levelId) : base(id, name, description)
+    public Node(Guid id, string name, string shortName, double x, double y, string? levelId) : base(id, name, shortName)
     {
         X = x;
         Y = y;

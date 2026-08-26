@@ -30,7 +30,7 @@ public class Edge : GraphResource
     public Node EndNode { get; }
 
     /// <inheritdoc cref="Edge"/>
-    public Edge(Guid id, string? name, string? description, Node startNode, Node endNode) : base(id, name, description)
+    public Edge(Guid id, string name, string shortName, Node startNode, Node endNode) : base(id, name, shortName)
     {
         StartNode = startNode;
         EndNode = endNode;
@@ -41,7 +41,7 @@ public class Edge : GraphResource
     /// <summary>
     /// For deserialization.
     /// </summary>
-    public Edge() : base(Guid.NewGuid(), null, null)
+    public Edge() : base(Guid.Empty, null!, null!)
     {
         StartNode = null!;
         EndNode = null!;
@@ -54,6 +54,6 @@ public class Edge : GraphResource
     /// <param name="nodes">The nodes of the same graph, keyed by their id.</param>
     public static Edge FromCommon(CommonEdge commonEdge, IReadOnlyDictionary<Guid, Node> nodes)
     {
-        return new Edge(commonEdge.Id, commonEdge.Name, commonEdge.Description, nodes[commonEdge.StartNodeId], nodes[commonEdge.EndNodeId]);
+        return new Edge(commonEdge.Id, commonEdge.Name, commonEdge.ShortName, nodes[commonEdge.StartNodeId], nodes[commonEdge.EndNodeId]);
     }
 }

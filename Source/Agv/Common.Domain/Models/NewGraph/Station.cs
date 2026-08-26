@@ -9,9 +9,9 @@ namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 public record Station : GraphResource
 {
     /// <summary>
-    /// These are the nodes that represent the position at which interaction with this station takes place.
+    /// These are Ids of the nodes that represent the position at which interaction with this station takes place.
     /// </summary>
-    public List<Node> InteractionNodes { get; init; } = [];
+    public List<Guid> InteractionNodeIds { get; init; } = [];
 
     /// <summary>
     /// Absolute physical height of the station in meters.
@@ -34,7 +34,7 @@ public record Station : GraphResource
     public double? Theta { get; }
 
     /// <inheritdoc cref="Station"/>
-    public Station(Guid id, string? name, string? description, double? stationHeight, double x, double y, double? theta) : base(id, name, description)
+    public Station(Guid id, string name, string shortName, double? stationHeight, double x, double y, double? theta) : base(id, name, shortName)
     {
         StationHeight = stationHeight;
         X = x;

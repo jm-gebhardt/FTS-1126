@@ -42,19 +42,19 @@ public class NewGraphRepositoryTest
         var edgeAcId = Guid.NewGuid();
         var stationId = Guid.NewGuid();
 
-        var nodeA = new Node(nodeAId, Fixture.NodeAName, null, 0, 0, null);
-        var nodeB = new Node(nodeBId, Fixture.NodeBName, null, 1, 1, null);
+        var nodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
+        var nodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
             [nodeA, nodeB],
-            [new Edge(edgeAbId, Fixture.EdgeAbName, null, nodeA, nodeB)],
+            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA, nodeB)],
             [Fixture.CreateStation(stationId, nodeA)]));
 
-        var movedNodeA = new Node(nodeAId, Fixture.NodeAName, null, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null);
-        var reuploadedNodeB = new Node(nodeBId, Fixture.NodeBName, null, 1, 1, null);
-        var nodeC = new Node(nodeCId, Fixture.NodeCName, null, 2, 2, null);
+        var movedNodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null);
+        var reuploadedNodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
+        var nodeC = new Node(nodeCId, Fixture.NodeCName, Fixture.NodeCName, 2, 2, null);
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
             [movedNodeA, reuploadedNodeB, nodeC],
-            [new Edge(edgeAbId, Fixture.EdgeAbName, null, movedNodeA, reuploadedNodeB), new Edge(edgeAcId, Fixture.EdgeAcName, null, movedNodeA, nodeC)],
+            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, movedNodeA, reuploadedNodeB), new Edge(edgeAcId, Fixture.EdgeAcName, Fixture.EdgeAcName, movedNodeA, nodeC)],
             [Fixture.CreateStation(stationId, nodeC)]));
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
@@ -69,7 +69,7 @@ public class NewGraphRepositoryTest
     {
         var fixture = new Fixture();
         var nodeId = Guid.NewGuid();
-        var node = new Node(nodeId, Fixture.NodeAName, null, 0, 0, null);
+        var node = new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph([node]));
 
         var agvType = new AgvType(Guid.NewGuid(), Fixture.AgvTypeName);
@@ -77,7 +77,7 @@ public class NewGraphRepositoryTest
         await fixture.AddRoutingResourcesAsync((routingNode, nodeId));
 
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
-            [new Node(nodeId, Fixture.NodeAName, null, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null)]));
+            [new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null)]));
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
         var loadedNode = loaded.Nodes.ShouldHaveSingleItem();
@@ -102,10 +102,10 @@ public class NewGraphRepositoryTest
     {
         var fixture = new Fixture();
 
-        var nodeA = new Node(Guid.NewGuid(), Fixture.NodeAName, null, 0, 0, null);
-        var nodeB = new Node(Guid.NewGuid(), Fixture.NodeBName, null, 1, 1, null);
-        var edge = new Edge(Guid.NewGuid(), Fixture.EdgeAbName, null, nodeA, nodeB);
-        var station = new Station(Guid.NewGuid(), Fixture.StationName, null, null, 0, 0, null);
+        var nodeA = new Node(Guid.NewGuid(), Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
+        var nodeB = new Node(Guid.NewGuid(), Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
+        var edge = new Edge(Guid.NewGuid(), Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA, nodeB);
+        var station = new Station(Guid.NewGuid(), Fixture.StationName, Fixture.StationName, null, 0, 0, null);
         await fixture.AddResourcesAsync([nodeA, nodeB], [edge], [station]);
 
         var agvType = new AgvType(Guid.NewGuid(), Fixture.AgvTypeName);

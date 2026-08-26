@@ -99,6 +99,14 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     }
 
     /// <inheritdoc cref="ILifRepository"/>
+    public async Task<bool> ExistsWithCreatorAsync(string creator)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync();
+        return await context.Set<LifFile>()
+            .AnyAsync(f => f.LifCollectionMetaInformation.Creator.ToLower().Trim() == creator.ToLower().Trim());
+    }
+
+    /// <inheritdoc cref="ILifRepository"/>
     public async Task<(ICollection<LifFile> lifs, ICollection<Layout> layouts)> GetLifsByVehicleTypeIdsAsync(string[] vehicleTypeIds)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();

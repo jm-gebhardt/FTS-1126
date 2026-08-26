@@ -1,38 +1,36 @@
-﻿using JetBrains.Annotations;
-
-namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
+﻿namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 
 /// <summary>
 /// Represents a resource in the graph.
 /// </summary>
-[PublicAPI]
 public abstract record GraphResource
 {
     /// <summary>
     /// Unique identifier for the graph resource.
     /// </summary>
-    public Guid Id { get; }  // unique identifier derived from LifId + resourceType + nodeId/edgeId/stationId      e.g.: ToGuid("Karis/Node/N1")  ToGuid("Still/Node/N1")?
+    public Guid Id { get; }
 
     /// <summary>
     /// Name of the graph resource.
     /// </summary>
-    public string? Name { get; }
+    public string Name { get; }
     
     /// <summary>
-    /// Description of the graph resource.
+    /// Short name of the graph resource.
     /// </summary>
-    public string? Description { get; }
+    public string ShortName { get; }
     
     /// <summary>
     /// Collection of child routing resources.
     /// </summary>
+    // ReSharper disable once UnusedMember.Global
     public IReadOnlyCollection<GraphResource> Children { get; } = [];
 
     /// <inheritdoc cref="GraphResource"/>
-    protected GraphResource(Guid id, string? name, string? description)
+    protected GraphResource(Guid id, string name, string shortName)
     {
         Id = id;
         Name = name;
-        Description = description;
+        ShortName = shortName;
     }
 }

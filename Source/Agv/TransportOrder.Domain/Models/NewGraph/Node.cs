@@ -43,7 +43,7 @@ public class Node : GraphResource
     public IEnumerable<RoutingEdge> RoutingEdges => Children.OfType<RoutingEdge>();
 
     /// <inheritdoc cref="Node"/>
-    public Node(Guid id, string? name, string? description, double x, double y, string? levelId) : base(id, name, description)
+    public Node(Guid id, string name, string shortName, double x, double y, string? levelId) : base(id, name, shortName)
     {
         X = x;
         Y = y;
@@ -53,7 +53,7 @@ public class Node : GraphResource
     /// <summary>
     /// For deserialization.
     /// </summary>
-    public Node() : base(Guid.NewGuid(), null, null)
+    public Node() : base(Guid.NewGuid(), null!, null!)
     {
     }
 
@@ -63,6 +63,6 @@ public class Node : GraphResource
     /// <param name="commonNode">The <see cref="CommonNode"/>.</param>
     public static Node FromCommon(CommonNode commonNode)
     {
-        return new Node(commonNode.Id, commonNode.Name, commonNode.Description, commonNode.X, commonNode.Y, commonNode.LevelId);
+        return new Node(commonNode.Id, commonNode.Name, commonNode.ShortName, commonNode.X, commonNode.Y, commonNode.LevelId);
     }
 }

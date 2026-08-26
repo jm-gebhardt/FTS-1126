@@ -190,6 +190,71 @@ public class LifLayoutCollectionValidatorTest
     }
 
     [TestMethod]
+    public async Task Validate_DuplicateNodeIdAcrossLayouts_ReportsErr()
+    {
+        var n1 = LifGenerator.GenerateNode("n1");
+        var n2 = LifGenerator.GenerateNode("n2");
+        var edge1 = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var layout1 = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge1]);
+
+        var n1OtherLayout = LifGenerator.GenerateNode("n1");
+        var n3 = LifGenerator.GenerateNode("n3");
+        var edge2 = LifGenerator.GenerateEdge("e2", "n1", "n3", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var layout2 = LifGenerator.GenerateLayout("layout-2", nodes: [n1OtherLayout, n3], edges: [edge2]);
+
+        var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
+
+        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.ErrorMessage.Contains("NodeId") && e.ErrorMessage.Contains("'n1'") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
+    }
+
+    [TestMethod]
+    public async Task Validate_DuplicateEdgeIdAcrossLayouts_ReportsErr()
+    {
+        var n1 = LifGenerator.GenerateNode("n1");
+        var n2 = LifGenerator.GenerateNode("n2");
+        var edge1 = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var layout1 = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge1]);
+
+        var n3 = LifGenerator.GenerateNode("n3");
+        var n4 = LifGenerator.GenerateNode("n4");
+        var edge1OtherLayout = LifGenerator.GenerateEdge("e1", "n3", "n4", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var layout2 = LifGenerator.GenerateLayout("layout-2", nodes: [n3, n4], edges: [edge1OtherLayout]);
+
+        var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
+
+        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.ErrorMessage.Contains("EdgeId") && e.ErrorMessage.Contains("'e1'") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
+    }
+
+    [TestMethod]
+    public async Task Validate_DuplicateStationIdAcrossLayouts_ReportsErr()
+    {
+        var n1 = LifGenerator.GenerateNode("n1");
+        var n2 = LifGenerator.GenerateNode("n2");
+        var edge1 = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var station1 = LifGenerator.GenerateStation("s1", ["n1"]);
+        var layout1 = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge1], stations: [station1]);
+
+        var n3 = LifGenerator.GenerateNode("n3");
+        var n4 = LifGenerator.GenerateNode("n4");
+        var edge2 = LifGenerator.GenerateEdge("e2", "n3", "n4", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var station1OtherLayout = LifGenerator.GenerateStation("s1", ["n3"]);
+        var layout2 = LifGenerator.GenerateLayout("layout-2", nodes: [n3, n4], edges: [edge2], stations: [station1OtherLayout]);
+
+        var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
+
+        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.ErrorMessage.Contains("StationId") && e.ErrorMessage.Contains("'s1'") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
+    }
+
+    [TestMethod]
     public async Task Validate_EdgeWithoutVehicleTypeEdgeProperties_ReportsErr()
     {
         var n1 = LifGenerator.GenerateNode("n1");

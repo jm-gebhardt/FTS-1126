@@ -33,7 +33,7 @@ public class Station : GraphResource
     public double? Theta { get; }
 
     /// <inheritdoc cref="Station"/>
-    public Station(Guid id, string? name, string? description, double? stationHeight, double x, double y, double? theta) : base(id, name, description)
+    public Station(Guid id, string name, string shortName, double? stationHeight, double x, double y, double? theta) : base(id, name, shortName)
     {
         StationHeight = stationHeight;
         X = x;
@@ -44,7 +44,7 @@ public class Station : GraphResource
     /// <summary>
     /// For deserialization.
     /// </summary>
-    public Station() : base(Guid.NewGuid(), null, null)
+    public Station() : base(Guid.NewGuid(), null!, null!)
     {
     }
 
@@ -55,9 +55,9 @@ public class Station : GraphResource
     /// <param name="nodes">The nodes of the same graph, keyed by their id.</param>
     public static Station FromCommon(CommonStation commonStation, IReadOnlyDictionary<Guid, Node> nodes)
     {
-        var station = new Station(commonStation.Id, commonStation.Name, commonStation.Description, commonStation.StationHeight, commonStation.X, commonStation.Y, commonStation.Theta);
+        var station = new Station(commonStation.Id, commonStation.Name, commonStation.ShortName, commonStation.StationHeight, commonStation.X, commonStation.Y, commonStation.Theta);
 
-        station.InteractionNodes.AddRange(commonStation.InteractionNodes.Select(n => nodes[n.Id]));
+        station.InteractionNodes.AddRange(commonStation.InteractionNodeIds.Select(i => nodes[i]));
 
         return station;
     }

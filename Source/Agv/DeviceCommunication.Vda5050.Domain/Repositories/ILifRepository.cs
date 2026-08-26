@@ -32,6 +32,13 @@ public interface ILifRepository
     Task<ICollection<LifFile>> GetAllFilesAsync();
 
     /// <summary>
+    /// Check whether a lif file with the given creator already exists.
+    /// </summary>
+    /// <param name="creator">The creator to check for.</param>
+    /// <returns>True, if a lif file with the given creator exists.</returns>
+    Task<bool> ExistsWithCreatorAsync(string creator);
+
+    /// <summary>
     /// Get a lif file.
     /// </summary>
     /// <param name="id">The id of the lif file.</param>

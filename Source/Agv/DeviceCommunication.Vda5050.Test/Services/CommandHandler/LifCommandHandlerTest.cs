@@ -20,11 +20,11 @@ public class LifCommandHandlerTest
         newGraphReceived.CorrelationId.ShouldBe(fixture.StoreLif.CorrelationId);
         newGraphReceived.Graph.Nodes.Select(n => n.Id).ShouldBe(
         [
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StartNodeId),
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EndNodeId)
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
         ], true);
-        newGraphReceived.Graph.Edges.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EdgeId));
-        newGraphReceived.Graph.Stations.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StationId));
+        newGraphReceived.Graph.Edges.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalEdgeId(NewGraphGenerator.EdgeId));
+        newGraphReceived.Graph.Stations.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalStationId(NewGraphGenerator.StationId));
     }
 
     [TestMethod]
@@ -62,8 +62,8 @@ public class LifCommandHandlerTest
 
         newGraphReceived.Graph.Nodes.Select(n => n.Id).ShouldBe(
         [
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StartNodeId, NewGraphGenerator.OtherLayoutId),
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EndNodeId, NewGraphGenerator.OtherLayoutId)
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
         ], true);
     }
 }

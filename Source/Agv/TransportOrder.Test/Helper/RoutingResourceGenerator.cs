@@ -9,7 +9,7 @@ public static class RoutingResourceGenerator
 {
     public static RoutingResource GenerateResource(params RoutingResource[] conflictingResources)
     {
-        var parent = new Node(Guid.NewGuid(), null, null, 0, 0, null);
+        var parent = new Node(Guid.NewGuid(), "node", "n", 0, 0, null);
         var agvType = new AgvType(Guid.NewGuid(), "TestAgvType");
         var resource = new RoutingNode(Guid.NewGuid(), parent, agvType, new LoadState(false), 0);
 
@@ -23,7 +23,7 @@ public static class RoutingResourceGenerator
 
     public static RoutingNode CreateRoutingNode(AgvType agvType, double x = 0, double y = 0, Node? parentNode = null)
     {
-        parentNode ??= new Node(Guid.NewGuid(), null, null, x, y, null);
+        parentNode ??= new Node(Guid.NewGuid(), "node", "n", x, y, null);
         var routingNode = new RoutingNode(Guid.NewGuid(), parentNode, agvType, new LoadState(false), 0);
         parentNode.AddChild(routingNode);
         return routingNode;
@@ -31,7 +31,7 @@ public static class RoutingResourceGenerator
 
     public static RoutingEdge CreateRoutingEdge(RoutingNode startNode, RoutingNode endNode, double length, double? maxSpeed = 1.0, Edge? parentEdge = null)
     {
-        parentEdge ??= new Edge(Guid.NewGuid(), null, null, startNode.ParentNode, endNode.ParentNode);
+        parentEdge ??= new Edge(Guid.NewGuid(), "edge", "e", startNode.ParentNode, endNode.ParentNode);
 
         var edge = new RoutingEdge(Guid.NewGuid(), parentEdge, startNode.AgvType, startNode, endNode, length, false, maxSpeed, null, null);
         startNode.AddOutgoingEdge(edge);

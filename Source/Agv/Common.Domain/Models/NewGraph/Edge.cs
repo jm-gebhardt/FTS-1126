@@ -19,7 +19,7 @@ public record Edge : GraphResource
     public Guid EndNodeId { get; }
 
     /// <inheritdoc cref="Edge"/>
-    public Edge(Guid id, string? name, string? description, Guid startNodeId, Guid endNodeId) : base(id, name, description)
+    public Edge(Guid id, string name, string shortName, Guid startNodeId, Guid endNodeId) : base(id, name, shortName)
     {
         StartNodeId = startNodeId;
         EndNodeId = endNodeId;

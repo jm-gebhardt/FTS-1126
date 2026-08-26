@@ -1,9 +1,6 @@
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helper;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
-
-using CommonEdge = Common.Domain.Models.NewGraph.Edge;
 
 /// <summary>
 /// An edge.
@@ -71,27 +68,5 @@ public class Edge
     public Guid? GetFleetManagerEdgeIdForVehicle(string vehicleType)
     {
         return VehicleTypeEdgeProperties.SingleOrDefault(v => v.VehicleTypeId == vehicleType)?.FleetManagerEdgeId;
-    }
-
-    /// <summary>
-    /// Generates a <see cref="Common.Domain.Models.NewGraph.Edge"/> from this lif edge.
-    /// </summary>
-    /// <param name="edgeId">The id of the graph edge.</param>
-    /// <param name="levelId">The level id.</param>
-    /// <param name="nodes">The nodes of the graph.</param>
-    /// <param name="layoutId">The layout id.</param>
-    /// <param name="projectIdentifier">The project identifier.</param>
-    public CommonEdge ToGraphEdge(Guid edgeId, string? levelId, Dictionary<Guid, Common.Domain.Models.NewGraph.Node> nodes, string layoutId, string projectIdentifier)
-    {
-        bool hasStartNode = nodes.TryGetValue(LifHelper.GenerateInternalId(StartNodeId, layoutId, projectIdentifier), out var graphStartNode);
-        bool hasEndNode = nodes.TryGetValue(LifHelper.GenerateInternalId(EndNodeId, layoutId, projectIdentifier), out var graphEndNode);
-        if (!hasStartNode || !hasEndNode)
-        {
-            // This should have already been caught in lif validation
-            throw new ArgumentException($"Node {(hasStartNode ? EndNodeId : StartNodeId)} referenced in edge {layoutId} - {EdgeId} does not exist.");
-        }
-
-        // Valid null suppression because if one of the nodes is null the previous exception would have been thrown.
-        return new CommonEdge(edgeId, null, null, graphStartNode!.Id, graphEndNode!.Id);
     }
 }

@@ -15,6 +15,7 @@ public static class NewGraphGenerator
     public const string StationId = "StationId";
 
     private const string ProjectIdentification = "TestProject";
+    private const string Creator = "Gebhardt";
     private const string LayoutId = "LayoutId";
     private const string LayoutVersion = "V1";
     private const string FileName = "lif.json";
@@ -24,7 +25,7 @@ public static class NewGraphGenerator
 
     private static MetaInformation GenerateMetaInformation()
     {
-        return new MetaInformation("Test", DateTimeOffset.UtcNow, LayoutVersion, ProjectIdentification);
+        return new MetaInformation(Creator, DateTimeOffset.UtcNow, LayoutVersion, ProjectIdentification);
     }
 
     private static Node GenerateNode(string nodeId, double x, double y, string vehicleTypeId = VehicleTypeId)
@@ -59,8 +60,18 @@ public static class NewGraphGenerator
             new LifFileMetaInformation(uploadTimestamp, FileName, 1, UploadedBy));
     }
 
-    public static Guid GenerateInternalId(string lifId, string layoutId = LayoutId)
+    public static Guid GenerateInternalNodeId(string nodeId)
     {
-        return LifHelper.GenerateInternalId(lifId, layoutId, ProjectIdentification);
+        return InternalIdGenerator.GetNodeId(Creator, nodeId, out _);
+    }
+
+    public static Guid GenerateInternalEdgeId(string edgeId)
+    {
+        return InternalIdGenerator.GetEdgeId(Creator, edgeId, out _);
+    }
+
+    public static Guid GenerateInternalStationId(string stationId)
+    {
+        return InternalIdGenerator.GetStationId(Creator, stationId, out _);
     }
 }

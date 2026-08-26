@@ -15,11 +15,11 @@ public static class NewGraphGenerator
 
     public static Graph GenerateGraph(Guid? stationInteractionNodeId = null)
     {
-        var startNode = new Node(Guid.NewGuid(), StartNodeName, null, 0, 0, LevelId);
-        var endNode = new Node(Guid.NewGuid(), EndNodeName, null, 1, 1, LevelId);
-        var edge = new Edge(Guid.NewGuid(), EdgeName, null, startNode.Id, endNode.Id);
-        var interactionNode = stationInteractionNodeId is null ? endNode : new Node(stationInteractionNodeId.Value, UnknownNodeName, null, 2, 2, LevelId);
-        var station = new Station(Guid.NewGuid(), StationName, null, 0.5, 1, 1, 0) { InteractionNodes = [interactionNode] };
+        var startNode = new Node(Guid.NewGuid(), StartNodeName, StartNodeName, 0, 0, LevelId);
+        var endNode = new Node(Guid.NewGuid(), EndNodeName, EndNodeName, 1, 1, LevelId);
+        var edge = new Edge(Guid.NewGuid(), EdgeName, EdgeName, startNode.Id, endNode.Id);
+        var interactionNode = stationInteractionNodeId is null ? endNode : new Node(stationInteractionNodeId.Value, UnknownNodeName, UnknownNodeName, 2, 2, LevelId);
+        var station = new Station(Guid.NewGuid(), StationName, StationName, 0.5, 1, 1, 0) { InteractionNodeIds = [interactionNode.Id] };
         List<Node> nodes = [startNode, endNode];
         List<Edge> edges = [edge];
         List<Station> stations = [station];

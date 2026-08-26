@@ -96,14 +96,4 @@ public class Node
     {
         return VehicleTypeNodeProperties.SingleOrDefault(v => v.VehicleTypeId == vehicleType)?.FleetManagerNodeId;
     }
-
-    /// <summary>
-    /// Generates a <see cref="Common.Domain.Models.NewGraph.Node"/> from this node.
-    /// </summary>
-    /// <param name="nodeId">The node id.</param>
-    /// <param name="levelId">The level id.</param>
-    public Common.Domain.Models.NewGraph.Node ToGraphNode(Guid nodeId, string? levelId)
-    {
-        return new Common.Domain.Models.NewGraph.Node(nodeId, NodeName, NodeDescription, NodePosition.X, NodePosition.Y, levelId);
-    }
 }

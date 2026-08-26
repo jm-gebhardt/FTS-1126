@@ -15,12 +15,12 @@ public abstract class GraphResource
     /// <summary>
     /// Name of the graph resource.
     /// </summary>
-    public string? Name { get; }
+    public string Name { get; }
 
     /// <summary>
     /// Description of the graph resource.
     /// </summary>
-    public string? Description { get; }
+    public string ShortName { get; }
 
     /// <summary>
     /// Collection of child routing resources.
@@ -28,11 +28,11 @@ public abstract class GraphResource
     public IReadOnlyCollection<RoutingResource> Children => _children;
 
     /// <inheritdoc cref="GraphResource"/>
-    protected GraphResource(Guid id, string? name, string? description)
+    protected GraphResource(Guid id, string name, string shortName)
     {
         Id = id;
         Name = name;
-        Description = description;
+        ShortName = shortName;
     }
 
     /// <summary>

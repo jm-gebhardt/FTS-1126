@@ -54,7 +54,7 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
                 continue;
             }
 
-            context.Add(new Edge(edge.Id, edge.Name, edge.Description, nodesById[edge.StartNodeId], nodesById[edge.EndNodeId]));
+            context.Add(new Edge(edge.Id, edge.Name, edge.ShortName, nodesById[edge.StartNodeId], nodesById[edge.EndNodeId]));
         }
     }
 
@@ -79,7 +79,7 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
                 continue;
             }
 
-            var newStation = new Station(station.Id, station.Name, station.Description, station.StationHeight, station.X, station.Y, station.Theta);
+            var newStation = new Station(station.Id, station.Name, station.ShortName, station.StationHeight, station.X, station.Y, station.Theta);
             newStation.InteractionNodes.AddRange(interactionNodes);
             context.Add(newStation);
         }

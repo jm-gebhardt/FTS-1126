@@ -28,9 +28,9 @@ public class NewGraphTest
 
         graph.Nodes.Select(n => n.Id).ShouldBe(
         [
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StartNodeId),
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EndNodeId)
-        ], true);
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
+        ], ignoreOrder: true);
     }
 
     [TestMethod]
@@ -40,15 +40,15 @@ public class NewGraphTest
 
         var graph = layoutCollection.ToGraph(layoutCollection.Layouts);
 
-        var startNodeId = NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StartNodeId);
-        var endNodeId = NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EndNodeId);
+        var startNodeId = NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId);
+        var endNodeId = NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId);
         var edge = graph.Edges.ShouldHaveSingleItem();
-        edge.Id.ShouldBe(NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EdgeId));
+        edge.Id.ShouldBe(NewGraphGenerator.GenerateInternalEdgeId(NewGraphGenerator.EdgeId));
         edge.StartNodeId.ShouldBe(startNodeId);
         edge.EndNodeId.ShouldBe(endNodeId);
         var station = graph.Stations.ShouldHaveSingleItem();
-        station.Id.ShouldBe(NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StationId));
-        station.InteractionNodes.ShouldHaveSingleItem().Id.ShouldBe(startNodeId);
+        station.Id.ShouldBe(NewGraphGenerator.GenerateInternalStationId(NewGraphGenerator.StationId));
+        station.InteractionNodeIds.ShouldHaveSingleItem().ShouldBe(startNodeId);
     }
 
     [TestMethod]
@@ -59,25 +59,5 @@ public class NewGraphTest
         var graph = layoutCollection.ToGraph(layoutCollection.Layouts);
 
         graph.Nodes.ShouldAllBe(n => n.LevelId == NewGraphGenerator.LevelId);
-    }
-
-    [TestMethod]
-    public void ConvertToGraph_MultipleLayouts_MergesEveryLayoutIntoOneGraph()
-    {
-        var layoutCollection = NewGraphGenerator.GenerateCollection(
-            NewGraphGenerator.GenerateLayout(),
-            NewGraphGenerator.GenerateLayout(NewGraphGenerator.OtherLayoutId));
-
-        var graph = layoutCollection.ToGraph(layoutCollection.Layouts);
-
-        graph.Nodes.Select(n => n.Id).ShouldBe(
-        [
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StartNodeId),
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EndNodeId),
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.StartNodeId, NewGraphGenerator.OtherLayoutId),
-            NewGraphGenerator.GenerateInternalId(NewGraphGenerator.EndNodeId, NewGraphGenerator.OtherLayoutId)
-        ], true);
-        graph.Edges.Count.ShouldBe(2);
-        graph.Stations.Count.ShouldBe(2);
     }
 }

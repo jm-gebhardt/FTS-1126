@@ -45,38 +45,69 @@ public class LifLayoutCollection
     /// <param name="layouts">The layouts to generate the graph from.</param>
     public Graph ToGraph(IReadOnlyCollection<Layout> layouts)
     {
-        Dictionary<Guid, CommonNode> nodes = [];
-        Dictionary<Guid, CommonEdge> edges = [];
-        Dictionary<Guid, CommonStation> stations = [];
+        string lifId = MetaInformation.Creator;
 
-        string projectId = MetaInformation.ProjectIdentification;
+        List<CommonNode> nodes = layouts.SelectMany(layout => GetNodes(lifId, layout)).ToList();
+        List<CommonEdge> edges = layouts.SelectMany(layout => GetEdges(lifId, layout)).ToList();
+        List<CommonStation> stations = layouts.SelectMany(layout => GetStations(lifId, layout)).ToList();
 
-        foreach (var layout in layouts)
-        {
-            Dictionary<Guid, CommonNode> layoutNodes = layout.Nodes.ToDictionary(
-                n => LifHelper.GenerateInternalId(n.NodeId, layout.LayoutId, projectId),
-                n => n.ToGraphNode(LifHelper.GenerateInternalId(n.NodeId, layout.LayoutId, projectId), layout.LayoutLevelId)
-            );
-
-            foreach (var (nodeId, node) in layoutNodes)
-            {
-                nodes[nodeId] = node;
-            }
-
-            foreach (var edge in layout.Edges)
-            {
-                var edgeId = LifHelper.GenerateInternalId(edge.EdgeId, layout.LayoutId, projectId);
-                edges[edgeId] = edge.ToGraphEdge(edgeId, layout.LayoutLevelId, layoutNodes, layout.LayoutId, projectId);
-            }
-
-            foreach (var station in layout.Stations)
-            {
-                var stationId = LifHelper.GenerateInternalId(station.StationId, layout.LayoutId, projectId);
-                stations[stationId] = station.ToGraphStation(stationId, layout.LayoutId, projectId, layoutNodes);
-            }
-        }
         // TODO: routing objects
 
-        return new Graph(nodes.Values.ToList(), edges.Values.ToList(), stations.Values.ToList());
+        return new Graph(nodes, edges, stations);
+    }
+
+    private static List<CommonNode> GetNodes(string lifId, Layout layout)
+    {
+        List<CommonNode> nodes = [];
+
+        foreach (var node in layout.Nodes)
+        {
+            var internalId = InternalIdGenerator.GetNodeId(lifId, node.NodeId, out string name);
+
+            nodes.Add(new CommonNode(internalId, name, node.NodeId, node.NodePosition.X, node.NodePosition.Y, layout.LayoutLevelId));
+        }
+
+        return nodes;
+    }
+
+    private static List<CommonEdge> GetEdges(string lifId, Layout layout)
+    {
+        List<CommonEdge> edges = [];
+
+        foreach (var edge in layout.Edges)
+        {
+            var internalId = InternalIdGenerator.GetEdgeId(lifId, edge.EdgeId, out string name);
+            var internalStartNodeId = InternalIdGenerator.GetNodeId(lifId, edge.StartNodeId, out _);
+            var internalEndNodeId = InternalIdGenerator.GetNodeId(lifId, edge.EndNodeId, out _);
+
+            edges.Add(new CommonEdge(internalId, name, edge.EdgeId, internalStartNodeId, internalEndNodeId));
+        }
+
+        return edges;
+    }
+
+    private static List<CommonStation> GetStations(string lifId, Layout layout)
+    {
+        List<CommonStation> stations = [];
+
+        foreach (var station in layout.Stations)
+        {
+            var internalId = InternalIdGenerator.GetStationId(lifId, station.StationId, out string name);
+            List<Guid> internalInteractionNodeIds = station.InteractionNodeIds.Select(id => InternalIdGenerator.GetNodeId(lifId, id, out _)).ToList();
+
+            if (station.StationPosition is not { } stationPosition)
+            {
+                throw new ArgumentException($"Station {layout.LayoutId} - {station.StationName} has no position");
+            }
+
+            var commonStation = new CommonStation(internalId, name, station.StationId, station.StationHeight, stationPosition.X, stationPosition.Y, stationPosition.Theta)
+            {
+                InteractionNodeIds = internalInteractionNodeIds
+            };
+
+            stations.Add(commonStation);
+        }
+
+        return stations;
     }
 }

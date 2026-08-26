@@ -28,7 +28,6 @@ public class NewGraphEventHandlerTest
         addNewGraph.Graph.Nodes.Select(n => n.Id).ShouldBe(receivedGraph.Nodes.Select(n => n.Id), true);
         addNewGraph.Graph.Edges.Select(e => e.Id).ShouldBe(receivedGraph.Edges.Select(e => e.Id), true);
         addNewGraph.Graph.Stations.Select(s => s.Id).ShouldBe(receivedGraph.Stations.Select(s => s.Id), true);
-        addNewGraph.Graph.Stations.Single().InteractionNodes.Select(n => n.Id)
-            .ShouldBe(receivedGraph.Stations.Single().InteractionNodes.Select(n => n.Id), true);
+        addNewGraph.Graph.Stations.Single().InteractionNodeIds.ShouldBe(receivedGraph.Stations.Single().InteractionNodeIds, true);
     }
 }
