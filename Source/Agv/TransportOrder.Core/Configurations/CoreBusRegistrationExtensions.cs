@@ -608,7 +608,7 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetStation>();
         configurator.AddRequestClient<TryLockStation>();
         configurator.AddRequestClient<TryUnlockStation>();
-        configurator.AddRequestClient<UnblockStation>();
+        configurator.AddRequestClient<Gebhardt.Acc.TransportOrder.Messages.Requests.Stations.UnblockStation>();
         configurator.AddRequestClient<SendJamStateRequest>();
 
         configurator.AddConsumer<AgvStationRequestHandler>();
