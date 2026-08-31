@@ -29,7 +29,6 @@ public class EfQueueRepository(
             }
         }
 
-        context.Add(queue);
         await context.AddAsync(queue);
         await context.SaveChangesAsync();
     }
