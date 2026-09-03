@@ -148,7 +148,7 @@ stages:
   - template: backend-template-2.yml@templates
     parameters:
       serviceName: 'monorepo'
-      buildTarget: '/Source/Agv/CompileAgv.sln'
+      buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/CompileAgv.sln'
       testTarget: '$(Build.Repository.LocalPath)/Source/Agv/**Tests/**/*.csproj'
       servicePublishProjects: ${{ parameters.services }}
       serviceMigrations: ${{ parameters.services }}
