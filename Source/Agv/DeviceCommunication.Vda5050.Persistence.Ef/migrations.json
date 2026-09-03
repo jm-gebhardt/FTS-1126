@@ -1,0 +1,15 @@
+{
+  "$schema": "https://gbsd.io/schemas/migrations.schema.json",
+  "srcRoot": "Source/Agv",
+  "objRoot": "Source/artifacts/obj",
+  "contexts": [
+    {
+      "context": "DeviceCommunicationVda5050DbContext",
+      "providers": [
+        {
+          "project": "DeviceCommunication.Vda5050.Persistence.Ef"
+        }
+      ]
+    }
+  ]
+}

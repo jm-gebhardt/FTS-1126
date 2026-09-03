@@ -12,11 +12,15 @@ try
 {
     var hostBuilder = DeviceCommunicationVda5050HostBuilder.CreateHostBuilder(args, initialLogger);
     var host = hostBuilder.Build();
-    using (var scope = host.Services.CreateScope())
+    if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli"))
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<DeviceCommunicationVda5050DbContext>();
-        await dbContext.Database.MigrateAsync();
+        using (var scope = host.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DeviceCommunicationVda5050DbContext>();
+            await dbContext.Database.MigrateAsync();
+        }
     }
+
     host.Run();
     return 0;
 }

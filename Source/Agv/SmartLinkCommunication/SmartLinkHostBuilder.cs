@@ -5,6 +5,9 @@ using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.SmartLinkCommunication.Models;
 using Gebhardt.Acc.SmartLinkCommunication.Services;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +30,10 @@ public static class SmartLinkHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, Config config)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 services.AddScoped<IIoActionExecutionService, IoActionExecutionService>();
@@ -57,6 +64,11 @@ public static class SmartLinkHostBuilder
                 .Configure(app =>
                 {
                     app.UseMetricServer();
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapHealthProbes();
+                    });
                 })
             );
 

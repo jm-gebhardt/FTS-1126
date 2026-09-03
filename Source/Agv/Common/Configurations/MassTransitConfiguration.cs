@@ -1,5 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Configurations.Attributes;
 using Gebhardt.Acc.Common.Configurations.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Gebhardt.Acc.Common.Configurations;
 
@@ -31,21 +32,32 @@ public record MassTransitConfiguration : SettingsBase<MassTransitConfiguration>
     /// Management API Port
     /// </summary>
     public ushort? ManagementApiPort { get; init; } = 15672;
-
+    
     /// <summary>
-    /// Password
+    /// Backward-compatible.
     /// </summary>
-    public string? Password { get; init; } = "PutYourPasswordHere";
+    public string? Password { get; init; }  
+    
+    /// <summary>  
+    /// Password from env RabbitMQ__Pass.  
+    /// </summary>  
+    [ConfigurationKeyName("Pass")]  
+    public string? Pass { get; init; }  
+
+    /// <summary>  
+    /// Returns the effective password from new env first, then legacy key.  
+    /// </summary>  
+    public string GetResolvedPassword() => Pass ?? Password ?? string.Empty;
 
     /// <summary>
     /// Port
     /// </summary>
     public ushort? Port { get; init; } = 5672;
 
-    /// <summary>
-    /// Create RabbitMQ URL
-    /// </summary>
-    public string Url => $"amqp://{User}:{Uri.EscapeDataString(Password!)}@{Host}:{Port}";
+    /// <summary>  
+    /// Create RabbitMQ URL  
+    /// </summary>  
+    public string Url => $"amqp://{User}:{Uri.EscapeDataString(GetResolvedPassword())}@{Host}:{Port}";  
 
     /// <summary>
     /// Path to check certificate expiration

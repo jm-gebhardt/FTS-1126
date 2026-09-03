@@ -28,7 +28,7 @@ public class CertificateExpirationRequestHandler : IConsumer<GetCertificateExpir
             BaseAddress = new Uri($"{config.Schema}://{config.Host}:{config.ManagementApiPort}")
         };
 
-        byte[] byteArray = Encoding.ASCII.GetBytes($"{config.User}:{config.Password}");
+        byte[] byteArray = Encoding.ASCII.GetBytes($"{config.User}:{config.GetResolvedPassword()}");
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
     }
 
