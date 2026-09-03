@@ -177,7 +177,6 @@ stages:
               publishDocker: true
               publishNuget: false
               publishMigrator: ${{ service.publishMigrator }}
-              migrationsManifest: ${{ service.migrationsManifest }}
               serviceName: ${{ service.serviceName }}
               entryPointProjectName: ${{ service.entryPointProjectName }}
               nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
@@ -200,7 +199,6 @@ stages:
               publishDocker: true
               publishNuget: false
               publishMigrator: ${{ service.publishMigrator }}
-              migrationsManifest: ${{ service.migrationsManifest }}
               dockerImageArtifactName: ${{ service.artifactName }}
               migratorImageArtifactName: ${{ service.migratorArtifactName }}
               acrServiceConnection: $(acrServiceConnection)
