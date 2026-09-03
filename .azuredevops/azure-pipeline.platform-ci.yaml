@@ -130,7 +130,7 @@ parameters:
         artifactName: 'docker-image-wcs-communication'
         migratorArtifactName: 'migrator-image-wcs-communication'
         generateMigrationsScript: ''
-        migrationsManifest: 'Source/Agv/WCSCommunication.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/WCSCommunication/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/wcs-communication'
         publishMigrator: true
         
