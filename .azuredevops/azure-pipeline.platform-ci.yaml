@@ -28,8 +28,8 @@ parameters:
         migrationsOutputPath: 'artifacts/db/migrations/statistics'
         migrationsArtifactName: 'migrations-statistics'
         publishMigrator: true
-      - serviceName: 'DeviceCommunication.Vda5050'
-        stagePrefix: 'DeviceCommunication.Vda5050'
+      - serviceName: 'DeviceCommunication_Vda5050'
+        stagePrefix: 'DeviceCommunication_Vda5050'
         servicePublishProject: 'Source/Agv/DeviceCommunication.Vda5050/DeviceCommunication.Vda5050.csproj'
         entryPointProjectName: 'DeviceCommunication.Vda5050'
         rootNamespace: 'Gebhardt.Acc.DeviceCommunication.Vda5050'
