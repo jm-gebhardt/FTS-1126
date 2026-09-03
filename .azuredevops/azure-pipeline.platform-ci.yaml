@@ -141,9 +141,6 @@ resources:
       name: Architecture/Gebhardt.Platform.CI
       ref: refs/heads/main
 
-variables:
-  - group: 'Architecture - CI'
-
 stages:
   # Shared path: restore/build the large solution once, publish every selected app with --no-build,
   # then run tests and static analysis once for the whole solution. Disabling the package toggles
