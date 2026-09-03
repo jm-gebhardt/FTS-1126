@@ -63,7 +63,7 @@ parameters:
         artifactName: 'docker-image-prismat-communication'
         migratorArtifactName: 'migrator-image-prismat-communication'
         generateMigrationsScript: ''
-        migrationsManifest: 'Source/Agv/PrismatCommunication.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/PrismatCommunication/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/prismat-communication'
         publishMigrator: true
         migrationsArtifactName: 'migrations-prismat-communication'
