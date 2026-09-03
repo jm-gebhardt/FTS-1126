@@ -162,6 +162,7 @@ stages:
       openApiEnabled: false
       runContractPromotion: false
       forcePush: false
+      nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
   
   # Fan out after the shared validation. Each stage consumes its service directory from the common
   # publish/migrations artifacts and writes uniquely named runtime and migrator image artifacts.
@@ -178,6 +179,7 @@ stages:
               publishMigrator: ${{ service.publishMigrator }}
               serviceName: ${{ service.serviceName }}
               entryPointProjectName: ${{ service.entryPointProjectName }}
+              nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
               rootNamespace: ${{ service.rootNamespace }}
               dockerImageName: ${{ service.dockerImageName }}
               dockerImageArtifactName: ${{ service.artifactName }}
