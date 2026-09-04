@@ -17,7 +17,7 @@ parameters:
     default:
       - serviceName: 'Statistics'
         stagePrefix: 'Statistics'
-        servicePublishProject: 'Source/Agv/Statistic/Statistics.csproj'
+        servicePublishProject: 'Source/Agv/Statistics/Statistics.csproj'
         entryPointProjectName: 'Statistics'
         rootNamespace: 'Gebhardt.Acc.Statistics'
         dockerImageName: 'gebhardt/fleet-manager/statistics'
