@@ -24,7 +24,7 @@ parameters:
         artifactName: 'docker-image-statistics'
         migratorArtifactName: 'migrator-image-statistics'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/Statistics.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/Statistics.Persistence.Ef/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/statistics'
         migrationsArtifactName: 'migrations-statistics'
         publishMigrator: true
@@ -37,7 +37,7 @@ parameters:
         artifactName: 'docker-image-device-communication-vda5050'
         migratorArtifactName: 'migrator-image-device-communication-vda5050'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.Vda5050.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/DeviceCommunication.Vda5050.Persistence.Ef/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/device-communication-vda5050'
         migrationsArtifactName: 'migrations-device-communication-vda5050'
         publishMigrator: true
@@ -50,7 +50,7 @@ parameters:
         artifactName: 'docker-image-order-translator'
         migratorArtifactName: 'migrator-image-order-translator'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/OrderTranslator.Persistence.Ef/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/order-translator'
         migrationsArtifactName: 'migrations-order-translator'
         publishMigrator: true
@@ -63,7 +63,7 @@ parameters:
         artifactName: 'docker-image-prismat-communication'
         migratorArtifactName: 'migrator-image-prismat-communication'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/PrismatCommunication/migrations.json'
+        migrationsManifest: 'Source/Agv/PrismatCommunication/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/prismat-communication'
         publishMigrator: true
         migrationsArtifactName: 'migrations-prismat-communication'
@@ -96,7 +96,7 @@ parameters:
         artifactName: 'docker-image-station-communication'
         migratorArtifactName: 'migrator-image-station-communication'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/StationCommunication.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/StationCommunication.Persistence.Ef/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/station-communication'
         migrationsArtifactName: 'migrations-station-communication'
         publishMigrator: true
@@ -120,7 +120,7 @@ parameters:
         migratorArtifactName: 'migrator-image-transport-order'        
         migrationsArtifactName: 'migrations-transport-order'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder.Persistence.Ef/migrations.json'
+        migrationsManifest: 'Source/Agv/TransportOrder.Persistence.Ef/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/transport-order'
         publishMigrator: true
       - serviceName: 'WCSCommunication'
@@ -133,7 +133,7 @@ parameters:
         migratorArtifactName: 'migrator-image-wcs-communication'
         migrationsArtifactName: 'migrations-wcs-communication'
         generateMigrationsScript: ''
-        migrationsManifest: '$(Build.Repository.LocalPath)/Source/Agv/WCSCommunication/migrations.json'
+        migrationsManifest: 'Source/Agv/WCSCommunication/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/wcs-communication'
         publishMigrator: true
         
