@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
       <AssemblyName>Gebhardt.Acc.DeviceCommunication.Vda5050</AssemblyName>
+      <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <Import Project="..\SharedProjectSettings.csproj" />
   <ItemGroup>

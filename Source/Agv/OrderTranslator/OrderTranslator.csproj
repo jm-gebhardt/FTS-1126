@@ -3,6 +3,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.OrderTranslator</AssemblyName>
         <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Gebhardt.Core.WebApi" />

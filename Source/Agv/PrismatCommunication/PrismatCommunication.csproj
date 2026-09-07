@@ -2,6 +2,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.PrismatCommunication</AssemblyName>
         <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>
