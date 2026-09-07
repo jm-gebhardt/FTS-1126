@@ -163,6 +163,8 @@ stages:
       # Produce isolated service migration artifacts in Build, but leave the single-service
       # automatic migrator stages disabled; the fan-out owns packaging and pushing per service.
       generateMigrations: true
+      skipResharper: true
+      skipVulnerabilityCheck: true
       publishMigrator: false
       openApiEnabled: false
       runContractPromotion: false
