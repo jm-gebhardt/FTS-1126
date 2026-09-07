@@ -2,7 +2,6 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.SmartLinkCommunication</AssemblyName>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

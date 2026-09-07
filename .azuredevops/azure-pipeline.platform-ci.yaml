@@ -152,7 +152,10 @@ stages:
     parameters:
       serviceName: 'monorepo'
       buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/CompileAgv.sln'
-      testTarget: '$(Build.Repository.LocalPath)/Source/Agv/**Test/**/*.csproj'
+      testTarget: |
+        $(Build.Repository.LocalPath)/Source/Agv/**/*Test/*.csproj
+        !$(Build.Repository.LocalPath)/Source/Agv/CommonTest/**/*.csproj
+      workingDirectory: '$(Build.Repository.LocalPath)/Source'
       servicePublishProjects: ${{ parameters.services }}
       serviceMigrations: ${{ parameters.services }}
       publishApp: true
