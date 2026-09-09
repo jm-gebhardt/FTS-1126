@@ -1,3 +1,4 @@
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
@@ -10,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.TrafficManagement.Routes.Generation;
 [TestClass]
 public class RouteGeneratorTest
 {
-    private static readonly AgvType _agvType = new(Guid.NewGuid(), "TestAgvType");
+    private static readonly AgvType _agvType = AgvTypeGenerator.GenerateAgvType();
 
     [TestMethod]
     public void CreateRoute_RequestWithoutTargetCandidates_ReturnsNull()

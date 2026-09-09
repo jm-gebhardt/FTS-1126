@@ -114,7 +114,7 @@ public class VehicleTypeEdgeProperty
     public Trajectory? Trajectory { get; set; }
 
     /// <summary>
-    /// Orientation of the vehicle while traversing the edge, in degrees. Range: [0.0 ... 360.0]
+    /// Orientation of the vehicle while traversing the edge, in radians.
     /// </summary>
     public double? VehicleOrientation { get; set; }
 

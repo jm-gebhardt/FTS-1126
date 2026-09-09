@@ -13,7 +13,7 @@ public static class NewGraphGenerator
     public const string EdgeName = "start-end";
     public const string StationName = "station";
 
-    public static Graph GenerateGraph(Guid? stationInteractionNodeId = null)
+    public static Graph GenerateGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
     {
         var startNode = new Node(Guid.NewGuid(), StartNodeName, StartNodeName, 0, 0, LevelId);
         var endNode = new Node(Guid.NewGuid(), EndNodeName, EndNodeName, 1, 1, LevelId);
@@ -24,6 +24,23 @@ public static class NewGraphGenerator
         List<Edge> edges = [edge];
         List<Station> stations = [station];
 
+        if (withRoutingResources)
+        {
+            AddRoutingResources(startNode, edge);
+        }
+
         return new Graph(nodes, edges, stations);
+    }
+
+    private static void AddRoutingResources(Node startNode, Edge edge)
+    {
+        var agvTypeId = Guid.NewGuid();
+        var loadStateId = Guid.NewGuid();
+
+        var trajectory = new Trajectory(new List<ControlPoint> { new(0, 0), new(1, 1), new(2, 0) }, [0, 0, 0, 1, 1, 1]);
+
+        startNode.RoutingNodes.Add(new RoutingNode(Guid.NewGuid(), agvTypeId, loadStateId, 1));
+        edge.RoutingEdges.Add(new RoutingEdge(Guid.NewGuid(), agvTypeId, Guid.NewGuid(), Guid.NewGuid(), 1.5, 0.5, OrientationType.Tangential, 0.1, 0.2, true, 1.0, 0.5, trajectory));
+        edge.RoutingEdges.Add(new ActionRoutingEdge(Guid.NewGuid(), agvTypeId, Guid.NewGuid(), Guid.NewGuid(), 1.5, 0.5, OrientationType.Tangential, 0.1, 0.2, true, 1.0, 0.5, trajectory, RoutingActionType.Pick));
     }
 }

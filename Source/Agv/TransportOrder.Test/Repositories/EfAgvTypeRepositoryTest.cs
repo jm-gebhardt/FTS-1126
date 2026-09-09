@@ -36,7 +36,16 @@ public class EfAgvTypeRepositoryTest
         await fixture.Repository.AddOrUpdateAsync(agvType, CancellationToken.None);
 
         var persisted = await fixture.Repository.GetAgvTypeAsync(AgvTypeRepositoryTestFixture.AgvTypeIdentifier.ToGuid(), CancellationToken.None);
-        persisted.ShouldBe(agvType);
+        persisted.ShouldNotBeNull();
+        persisted.Id.ShouldBe(agvType.Id);
+        persisted.AgvTypeIdentifier.ShouldBe(agvType.AgvTypeIdentifier);
+        persisted.Manufacturer.ShouldBe(agvType.Manufacturer);
+        persisted.SeriesName.ShouldBe(agvType.SeriesName);
+        persisted.Length.ShouldBe(agvType.Length);
+        persisted.Width.ShouldBe(agvType.Width);
+        persisted.Acknowledged.ShouldBe(agvType.Acknowledged);
+        persisted.ReportedByAgv.ShouldBe(agvType.ReportedByAgv);
+        persisted.LoadStates.ShouldBeNull(); // LoadStates are not included
     }
 
     [TestMethod]

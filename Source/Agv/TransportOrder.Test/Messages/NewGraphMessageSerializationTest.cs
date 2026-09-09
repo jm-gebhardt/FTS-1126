@@ -18,6 +18,16 @@ public class NewGraphMessageSerializationTest
     }
 
     [TestMethod]
+    public void NewGraphReceived_WithRoutingResources_SerializesAllProperties()
+    {
+        var message = new NewGraphReceived(Guid.NewGuid(), NewGraphGenerator.GenerateGraph(withRoutingResources: true));
+
+        var fixture = new MessageSerialisationTestFixture();
+
+        fixture.ValidateSerialization(message);
+    }
+
+    [TestMethod]
     public void AddNewGraph_ValidData_SerializesAllProperties()
     {
         var message = new AddNewGraph(Guid.NewGuid(), NewGraphGenerator.GenerateGraph());

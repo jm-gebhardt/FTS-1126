@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 
@@ -8,5 +7,4 @@ namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 /// <param name="Nodes">The nodes of the graph.</param>
 /// <param name="Edges">The edges connecting the nodes.</param>
 /// <param name="Stations">The stations of the graph.</param>
-[PublicAPI]
 public record Graph(IReadOnlyCollection<Node> Nodes, IReadOnlyCollection<Edge> Edges, IReadOnlyCollection<Station> Stations);

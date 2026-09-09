@@ -15,6 +15,7 @@ public class LifCommandHandlerTestFixture : MassTransitConsumerTestFixture<LifCo
     private static readonly DateTime _uploadTimestamp = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private readonly Mock<ILifRepository> _lifRepository = new();
+    private readonly Mock<IAgvTypeRepository> _agvTypeRepository = new();
     private readonly List<LifFile> _storedFiles = [];
     private readonly List<Layout> _storedLayouts = [];
 
@@ -29,9 +30,13 @@ public class LifCommandHandlerTestFixture : MassTransitConsumerTestFixture<LifCo
         _lifRepository.Setup(r => r.GetLifsByVehicleTypeIdsAsync(It.IsAny<string[]>()))
             .ReturnsAsync(() => ((ICollection<LifFile>)_storedFiles, (ICollection<Layout>)_storedLayouts));
 
+        _agvTypeRepository.Setup(r => r.GetAgvTypeIdentifiersAsync())
+            .ReturnsAsync(NewGraphGenerator.AgvTypeIdentifiers);
+
         AddServices(s =>
         {
             s.AddSingleton(_lifRepository.Object);
+            s.AddSingleton(_agvTypeRepository.Object);
             s.AddSingleton(Mock.Of<INurbsEdgeBuilder>());
         });
         Build();

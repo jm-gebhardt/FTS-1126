@@ -15,6 +15,7 @@ public class AgvTypeProfile : Profile
     public AgvTypeProfile()
     {
         CreateMap<AgvTypeInfo, AgvType>()
-            .ForMember(a => a.Id, opt => opt.Ignore());
+            .ForMember(a => a.Id, opt => opt.Ignore())
+            .ForMember(a => a.LoadStates, opt => opt.Ignore());
     }
 }

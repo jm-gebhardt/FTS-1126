@@ -14,7 +14,7 @@ public class AgvTypeEntityConfiguration : IEntityTypeConfiguration<AgvType>
     public void Configure(EntityTypeBuilder<AgvType> builder)
     {
         builder.ToTable(AgvTypeTableName);
-        builder.ConfigureAllProperties();
+        builder.ConfigureAllProperties(except: [nameof(AgvType.LoadStates)]);
 
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedNever();
@@ -22,5 +22,10 @@ public class AgvTypeEntityConfiguration : IEntityTypeConfiguration<AgvType>
         builder.Property(e => e.Manufacturer).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.SeriesName).HasMaxLength(DbStringLimits.Description);
         builder.HasIndex(e => e.AgvTypeIdentifier).IsUnique();
+
+        builder.HasMany(e => e.LoadStates)
+            .WithOne()
+            .HasForeignKey("AgvTypeId")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

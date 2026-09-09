@@ -22,6 +22,12 @@ public interface IAgvTypeRepository
     public Task<AgvType?> GetAgvTypeAsync(string agvTypeIdentifier);
 
     /// <summary>
+    /// Get a dictionary of agv type identifiers by their identifiers.
+    /// </summary>
+    /// <returns>A dictionary of AGV types keyed by their identifiers.</returns>
+    public Task<Dictionary<string, Guid>> GetAgvTypeIdentifiersAsync();
+
+    /// <summary>
     /// Adds a new AGV type.
     /// </summary>
     /// <param name="agvType">The AGV type to add.</param>

@@ -1,5 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helper;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using JetBrains.Annotations;
 using VdmaBlockingType = Vdma.Lif.BlockingType;
@@ -70,7 +70,7 @@ public static class VdmaLifExtensions
         public Layout ToLayout(MetaInformation metaInformation)
         {
             var l = new Layout(
-                id: layout.GetId(metaInformation),
+                id: InternalIdGenerator.GetLayoutId(metaInformation.Creator, layout.LayoutId),
                 layoutId: layout.LayoutId,
                 layoutVersion: layout.LayoutVersion,
                 edges: layout.Edges.Select(e => e.ToEdge()).ToArray(),
@@ -85,16 +85,6 @@ public static class VdmaLifExtensions
                 station.FleetManagerNodeIds = l.Nodes.Where(n => station.InteractionNodeIds.Contains(n.NodeId)).SelectMany(n => n.GetFleetManagerNodeIds()).Distinct().ToArray();
             }
             return l;
-        }
-        
-        /// <summary>
-        /// Get the layout id from layout properties and collection meta information.
-        /// </summary>
-        /// <param name="metaInformation">Layout collection meta information.</param>
-        /// <returns>A unique id.</returns>
-        public Guid GetId(MetaInformation metaInformation)
-        {
-            return $"{metaInformation.ProjectIdentification}-{metaInformation.LifVersion}-{layout.LayoutLevelId}-{layout.LayoutId}".ToGuid();
         }
     }
 

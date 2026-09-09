@@ -5,8 +5,8 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Graph;
 
 public static class NewGraphGenerator
 {
-    public const string VehicleTypeId = "vt1";
-    public const string OtherVehicleTypeId = "vt2";
+    private const string VehicleTypeId = "vt1";
+    private const string OtherVehicleTypeId = "vt2";
     public const string OtherLayoutId = "OtherLayoutId";
     public const string LevelId = "Level1";
     public const string StartNodeId = "N1";
@@ -23,6 +23,8 @@ public static class NewGraphGenerator
 
     public static LifLayoutCollection SampleCollection { get; } = GenerateCollection(GenerateLayout());
 
+    public static Dictionary<string, Guid> AgvTypeIdentifiers { get; } = new() { { VehicleTypeId, Guid.NewGuid() }, { OtherVehicleTypeId, Guid.NewGuid() } };
+
     private static MetaInformation GenerateMetaInformation()
     {
         return new MetaInformation(Creator, DateTimeOffset.UtcNow, LayoutVersion, ProjectIdentification);
@@ -35,14 +37,27 @@ public static class NewGraphGenerator
 
     public static Layout GenerateLayout(string layoutId = LayoutId, string? layoutLevelId = LevelId, string vehicleTypeId = VehicleTypeId)
     {
+        string startNodeId = BuildLayoutScopedId(StartNodeId, layoutId);
+        string endNodeId = BuildLayoutScopedId(EndNodeId, layoutId);
+        string edgeId = BuildLayoutScopedId(EdgeId, layoutId);
+        string stationId = BuildLayoutScopedId(StationId, layoutId);
+
         return new Layout(
             Guid.NewGuid(),
             layoutId,
             LayoutVersion,
-            [new Edge(EdgeId, EndNodeId, StartNodeId, [new VehicleTypeEdgeProperty(Guid.NewGuid(), vehicleTypeId)])],
-            [GenerateNode(StartNodeId, 1, 2, vehicleTypeId), GenerateNode(EndNodeId, 2, 1, vehicleTypeId)],
-            [new Station(Guid.NewGuid(), StationId, [StartNodeId], [Guid.NewGuid()], stationPosition: new StationPosition(1, 1))],
+            [new Edge(edgeId, endNodeId, startNodeId, [new VehicleTypeEdgeProperty(Guid.NewGuid(), vehicleTypeId)])],
+            [GenerateNode(startNodeId, 1, 2, vehicleTypeId), GenerateNode(endNodeId, 2, 1, vehicleTypeId)],
+            [new Station(Guid.NewGuid(), stationId, [startNodeId], [Guid.NewGuid()], stationPosition: new StationPosition(1, 1))],
             layoutLevelId: layoutLevelId);
+    }
+
+    /// <summary>
+    /// Ensures node, edge and station ids are unique across layouts with different layout ids while keeping the ids of the default layout unchanged.
+    /// </summary>
+    private static string BuildLayoutScopedId(string baseId, string layoutId)
+    {
+        return layoutId == LayoutId ? baseId : $"{baseId}_{layoutId}";
     }
 
     public static LifLayoutCollection GenerateCollection(params Layout[] layouts)
@@ -60,18 +75,18 @@ public static class NewGraphGenerator
             new LifFileMetaInformation(uploadTimestamp, FileName, 1, UploadedBy));
     }
 
-    public static Guid GenerateInternalNodeId(string nodeId)
+    public static Guid GenerateInternalNodeId(string nodeId, string layoutId = LayoutId)
     {
-        return InternalIdGenerator.GetNodeId(Creator, nodeId, out _);
+        return InternalIdGenerator.GetNodeId(Creator, BuildLayoutScopedId(nodeId, layoutId), out _);
     }
 
-    public static Guid GenerateInternalEdgeId(string edgeId)
+    public static Guid GenerateInternalEdgeId(string edgeId, string layoutId = LayoutId)
     {
-        return InternalIdGenerator.GetEdgeId(Creator, edgeId, out _);
+        return InternalIdGenerator.GetEdgeId(Creator, BuildLayoutScopedId(edgeId, layoutId), out _);
     }
 
-    public static Guid GenerateInternalStationId(string stationId)
+    public static Guid GenerateInternalStationId(string stationId, string layoutId = LayoutId)
     {
-        return InternalIdGenerator.GetStationId(Creator, stationId, out _);
+        return InternalIdGenerator.GetStationId(Creator, BuildLayoutScopedId(stationId, layoutId), out _);
     }
 }

@@ -1,4 +1,6 @@
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.LIF.LifToGraphConversion;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Graph;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Domain.Models;
@@ -11,7 +13,7 @@ public class NewGraphTest
     {
         var layoutCollection = NewGraphGenerator.SampleCollection;
 
-        var graph = layoutCollection.ToGraph(layoutCollection.Layouts);
+        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Edges.Count.ShouldBe(1);
         graph.Nodes.Count.ShouldBe(2);
@@ -19,17 +21,19 @@ public class NewGraphTest
     }
 
     [TestMethod]
-    public void ConvertToGraph_SubsetOfLayouts_OnlyConvertsTheGivenLayouts()
+    public void ConvertToGraph_ValidData_ConvertsAllLayouts()
     {
         var layout = NewGraphGenerator.GenerateLayout();
         var layoutCollection = NewGraphGenerator.GenerateCollection(layout, NewGraphGenerator.GenerateLayout(NewGraphGenerator.OtherLayoutId));
 
-        var graph = layoutCollection.ToGraph([layout]);
+        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Nodes.Select(n => n.Id).ShouldBe(
         [
             NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
-            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId),
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId, NewGraphGenerator.OtherLayoutId),
+            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId, NewGraphGenerator.OtherLayoutId)
         ], ignoreOrder: true);
     }
 
@@ -38,7 +42,7 @@ public class NewGraphTest
     {
         var layoutCollection = NewGraphGenerator.GenerateCollection(NewGraphGenerator.GenerateLayout());
 
-        var graph = layoutCollection.ToGraph(layoutCollection.Layouts);
+        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         var startNodeId = NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId);
         var endNodeId = NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId);
@@ -56,7 +60,7 @@ public class NewGraphTest
     {
         var layoutCollection = NewGraphGenerator.GenerateCollection(NewGraphGenerator.GenerateLayout());
 
-        var graph = layoutCollection.ToGraph(layoutCollection.Layouts);
+        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Nodes.ShouldAllBe(n => n.LevelId == NewGraphGenerator.LevelId);
     }

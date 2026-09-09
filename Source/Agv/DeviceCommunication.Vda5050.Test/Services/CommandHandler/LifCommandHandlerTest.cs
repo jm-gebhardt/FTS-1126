@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Messages.NewGraph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Graph;
 using Shouldly;
@@ -28,17 +27,6 @@ public class LifCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_StoreLifOlderThanTheStoredLif_DoesNotPublishNewGraphReceived()
-    {
-        var fixture = new LifCommandHandlerTestFixture().WithNewerStoredLif(NewGraphGenerator.VehicleTypeId);
-
-        await fixture.PublishMessageAsync(fixture.StoreLif);
-
-        await fixture.ShouldHavePublishedAsync<LayoutStored>();
-        await fixture.ShouldNotHavePublishedAsync<NewGraphReceived>();
-    }
-
-    [TestMethod]
     public async Task Consume_StoringTheLifFails_DoesNotPublishNewGraphReceived()
     {
         var fixture = new LifCommandHandlerTestFixture().WithFailingStore();
@@ -47,23 +35,5 @@ public class LifCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<LifStoringFailed>();
         await fixture.ShouldNotHavePublishedAsync<NewGraphReceived>();
-    }
-
-    [TestMethod]
-    public async Task Consume_StoreLifPartiallyTakenOver_PublishesOnlyTheTakenOverLayouts()
-    {
-        var fixture = new LifCommandHandlerTestFixture()
-            .WithLayouts(
-                NewGraphGenerator.GenerateLayout(),
-                NewGraphGenerator.GenerateLayout(NewGraphGenerator.OtherLayoutId, vehicleTypeId: NewGraphGenerator.OtherVehicleTypeId))
-            .WithNewerStoredLif(NewGraphGenerator.VehicleTypeId);
-
-        var newGraphReceived = await fixture.PublishAndGetFirstMessageAsync<StoreLif, NewGraphReceived>(fixture.StoreLif);
-
-        newGraphReceived.Graph.Nodes.Select(n => n.Id).ShouldBe(
-        [
-            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
-            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
-        ], true);
     }
 }

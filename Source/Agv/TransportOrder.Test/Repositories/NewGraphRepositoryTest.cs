@@ -1,3 +1,4 @@
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
@@ -72,8 +73,8 @@ public class NewGraphRepositoryTest
         var node = new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph([node]));
 
-        var agvType = new AgvType(Guid.NewGuid(), Fixture.AgvTypeName);
-        var routingNode = new RoutingNode(Guid.NewGuid(), node, agvType, new LoadState(false), 0);
+        var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
+        var routingNode = new RoutingNode(Guid.NewGuid(), node, agvType, new LoadState(Guid.NewGuid(), false), 0);
         await fixture.AddRoutingResourcesAsync((routingNode, nodeId));
 
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
@@ -108,9 +109,9 @@ public class NewGraphRepositoryTest
         var station = new Station(Guid.NewGuid(), Fixture.StationName, Fixture.StationName, null, 0, 0, null);
         await fixture.AddResourcesAsync([nodeA, nodeB], [edge], [station]);
 
-        var agvType = new AgvType(Guid.NewGuid(), Fixture.AgvTypeName);
-        var routingNodeA = new RoutingNode(Guid.NewGuid(), nodeA, agvType, new LoadState(false), 0);
-        var routingNodeB = new RoutingNode(Guid.NewGuid(), nodeB, agvType, new LoadState(false), 0);
+        var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
+        var routingNodeA = new RoutingNode(Guid.NewGuid(), nodeA, agvType, new LoadState(Guid.NewGuid(), false), 0);
+        var routingNodeB = new RoutingNode(Guid.NewGuid(), nodeB, agvType, new LoadState(Guid.NewGuid(), false), 0);
         var routingEdge = new RoutingEdge(Guid.NewGuid(), edge, agvType, routingNodeA, routingNodeB, 5.0, true, null, null, null);
 
         await fixture.AddRoutingResourcesAsync(

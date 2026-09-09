@@ -1,3 +1,4 @@
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
@@ -10,8 +11,8 @@ public static class RoutingResourceGenerator
     public static RoutingResource GenerateResource(params RoutingResource[] conflictingResources)
     {
         var parent = new Node(Guid.NewGuid(), "node", "n", 0, 0, null);
-        var agvType = new AgvType(Guid.NewGuid(), "TestAgvType");
-        var resource = new RoutingNode(Guid.NewGuid(), parent, agvType, new LoadState(false), 0);
+        var agvType = AgvTypeGenerator.GenerateAgvType();
+        var resource = new RoutingNode(Guid.NewGuid(), parent, agvType, new LoadState(Guid.NewGuid(), false), 0);
 
         foreach (var conflictingResource in conflictingResources)
         {
@@ -24,7 +25,7 @@ public static class RoutingResourceGenerator
     public static RoutingNode CreateRoutingNode(AgvType agvType, double x = 0, double y = 0, Node? parentNode = null)
     {
         parentNode ??= new Node(Guid.NewGuid(), "node", "n", x, y, null);
-        var routingNode = new RoutingNode(Guid.NewGuid(), parentNode, agvType, new LoadState(false), 0);
+        var routingNode = new RoutingNode(Guid.NewGuid(), parentNode, agvType, new LoadState(Guid.NewGuid(), false), 0);
         parentNode.AddChild(routingNode);
         return routingNode;
     }

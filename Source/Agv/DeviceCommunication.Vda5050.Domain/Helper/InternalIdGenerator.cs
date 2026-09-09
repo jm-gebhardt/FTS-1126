@@ -8,6 +8,14 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helper;
 public static class InternalIdGenerator
 {
     /// <summary>
+    /// Deterministically generates a layout Id from lif information.
+    /// </summary>
+    public static Guid GetLayoutId(string lifId, string layoutId)
+    {
+        return $"{lifId}.{layoutId}".ToGuid();
+    }
+
+    /// <summary>
     /// Deterministically generates a node Id from lif information.
     /// </summary>
     public static Guid GetNodeId(string lifId, string nodeId, out string name) => GetInternalId("N", lifId, nodeId, out name);

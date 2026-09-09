@@ -90,4 +90,20 @@ public class MathematicsTest
     {
         Mathematics.OrientationToXAxis(Vector2.Zero, Vector2.Zero).ShouldBe(double.NaN);
     }
+
+    [TestMethod]
+    [DataRow(0, 0)]
+    [DataRow(Math.PI, Math.PI)]
+    [DataRow(-Math.PI, Math.PI)]
+    [DataRow(Math.PI / 2, Math.PI / 2)]
+    [DataRow(3 * Math.PI, Math.PI)]
+    [DataRow(-3 * Math.PI, Math.PI)]
+    [DataRow(2 * Math.PI, 0)]
+    [DataRow(-2 * Math.PI, 0)]
+    [DataRow(4 * Math.PI + 0.5, 0.5)]
+    [DataRow(-4 * Math.PI - 0.5, -0.5)]
+    public void NormalizeAngle_ValidData_CorrectResult(double angle, double expectedResult)
+    {
+        Mathematics.NormalizeAngle(angle).ShouldBe(expectedResult, 0.0001);
+    }
 }

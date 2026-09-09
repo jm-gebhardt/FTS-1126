@@ -50,6 +50,28 @@ public static class Mathematics
     }
 
     /// <summary>
+    /// Normalizes an angle in radians to the range  (-π ... π].
+    /// </summary>
+    /// <param name="angle">The angle in radians to normalize.</param>
+    /// <returns>The normalized angle in radians, in the range (-π ... π].</returns>
+    public static double NormalizeAngle(double angle)
+    {
+        const double twoPi = 2 * Math.PI;
+        angle %= twoPi;
+
+        if (angle <= -Math.PI)
+        {
+            angle += twoPi;
+        }
+        else if (angle > Math.PI)
+        {
+            angle -= twoPi;
+        }
+
+        return angle;
+    }
+
+    /// <summary>
     /// Calculates the orientation angle of a vector relative to the positive X-axis.
     /// </summary>
     /// <param name="start">The starting point of the vector.</param>

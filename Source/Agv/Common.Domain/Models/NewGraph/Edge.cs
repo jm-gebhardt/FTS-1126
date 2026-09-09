@@ -18,6 +18,11 @@ public record Edge : GraphResource
     /// </summary>
     public Guid EndNodeId { get; }
 
+    /// <summary>
+    /// List of routing edges associated with this edge.
+    /// </summary>
+    public List<RoutingEdge> RoutingEdges { get; init; } = [];
+
     /// <inheritdoc cref="Edge"/>
     public Edge(Guid id, string name, string shortName, Guid startNodeId, Guid endNodeId) : base(id, name, shortName)
     {

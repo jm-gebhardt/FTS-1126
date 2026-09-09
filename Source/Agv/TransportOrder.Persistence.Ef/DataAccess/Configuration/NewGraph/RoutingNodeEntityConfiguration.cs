@@ -14,10 +14,10 @@ public class RoutingNodeEntityConfiguration : IEntityTypeConfiguration<RoutingNo
 
         builder.Ignore(e => e.ParentNode);
 
-        builder.OwnsOne(e => e.LoadState, l =>
-        {
-            l.Property(s => s.IsLoaded).HasColumnName(nameof(LoadState.IsLoaded));
-        });
+        builder.HasOne(e => e.LoadState)
+            .WithMany()
+            .HasForeignKey("LoadStateId")
+            .OnDelete(DeleteBehavior.Restrict);
 
         // RoutingEdge has two references to RoutingNode (StartNode/EndNode), so the inverse collections
         // must be paired explicitly - a plain HasMany() on both sides would be ambiguous.

@@ -41,6 +41,7 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new AgvEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvDataEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvTypeEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new LoadStateEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvErrorEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AgvGraphEntityConfiguration());
         modelBuilder.ApplyConfiguration(new GraphEdgeEntityConfiguration());
@@ -80,7 +81,6 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new NewEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewStationEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new NewAgvTypeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new RoutingResourceEntityConfiguration());
         modelBuilder.ApplyConfiguration(new RoutingNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new RoutingEdgeEntityConfiguration());

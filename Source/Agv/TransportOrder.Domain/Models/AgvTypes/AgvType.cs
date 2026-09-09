@@ -37,6 +37,11 @@ public record AgvType : IAgvType
     /// <inheritdoc/>
     public bool ReportedByAgv { get; init; }
 
+    /// <summary>
+    /// Collection of load states supported by this AGV type. Hardcoded to two states: loaded and unloaded. This is a temporary solution until the load states are derived from factsheet/loadSpecification.
+    /// </summary>
+    public IReadOnlyCollection<LoadState> LoadStates { get; init; } 
+
     /// <inheritdoc cref="AgvType"/>
     public AgvType(string agvTypeIdentifier,
         string manufacturer,
@@ -54,6 +59,11 @@ public record AgvType : IAgvType
         Width = width;
         Acknowledged = acknowledged;
         ReportedByAgv = reportedByAgv;
+        LoadStates = new List<LoadState>()
+        {
+            new($"{agvTypeIdentifier}_unloaded".ToGuid(), false),
+            new($"{agvTypeIdentifier}_loaded".ToGuid(), true)
+        };
     }
 
     /// <summary>For serialization.</summary>
@@ -62,6 +72,7 @@ public record AgvType : IAgvType
         AgvTypeIdentifier = null!;
         Manufacturer = null!;
         SeriesName = null!;
+        LoadStates = null!;
     }
 
     /// <summary>

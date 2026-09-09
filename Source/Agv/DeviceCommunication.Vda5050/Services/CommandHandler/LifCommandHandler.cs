@@ -5,6 +5,7 @@ using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.NewGraph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.LIF.LifToGraphConversion;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
@@ -22,6 +23,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.CommandHandler;
 [UsedImplicitly]
 public class LifCommandHandler(
     ILifRepository lifRepository,
+    IAgvTypeRepository agvTypeRepository,
     ILogger<LifCommandHandler> logger,
     INurbsEdgeBuilder edgeBuilder) :
     IConsumer<StoreLayouts>,
@@ -70,39 +72,9 @@ public class LifCommandHandler(
 
         logger.LogInformation("Storing new layout collection");
 
-        HashSet<string> vehicleTypeIds = layoutCollection.Layouts.SelectMany(l => l.GetSupportedVehicleTypes()).Distinct().ToHashSet();
-        List<Layout> replaced = [];
-        List<Layout> added = [];
-        (ICollection<LifFile> uploadedFiles, ICollection<Layout> uploadedLayouts) = await lifRepository.GetLifsByVehicleTypeIdsAsync(vehicleTypeIds.ToArray());
-
-        List<Graph> graphs = [];
-        foreach (string vehicleTypeId in vehicleTypeIds)
-        {
-            List<Layout> newLayoutsForVehicle = layoutCollection.Layouts.Where(l => l.GetSupportedVehicleTypes().Contains(vehicleTypeId)).ToList();
-            List<Layout> uploadedLayoutsForVehicle = uploadedLayouts.Where(l => l.GetSupportedVehicleTypes().Contains(vehicleTypeId)).ToList();
-            List<LifFile> files = uploadedFiles.Where(f => f.SupportedVehicleTypes.Contains(vehicleTypeId)).ToList();
-            if (files.Count == 0)
-            {
-                added.AddRange(newLayoutsForVehicle);
-                graphs.AddRange(newLayoutsForVehicle.ToGraph(vehicleTypeId, edgeBuilder));
-                replaced.AddRange(uploadedLayoutsForVehicle);
-                continue;
-            }
-            foreach (var file in files)
-            {
-                if (file.MetaInformation.UploadTimestamp >= lifFile.MetaInformation.UploadTimestamp)
-                {
-                    continue;
-                }
-                added.AddRange(newLayoutsForVehicle);
-                graphs.AddRange(newLayoutsForVehicle.ToGraph(vehicleTypeId, edgeBuilder));
-                replaced.AddRange(uploadedLayoutsForVehicle);
-            }
-        }
-
         try
         {
-            await lifRepository.AddFileAsync(lifFile, added, replaced);
+            await lifRepository.AddFileAsync(lifFile, layoutCollection.Layouts, []);
         }
         catch (Exception ex)
         {
@@ -114,20 +86,18 @@ public class LifCommandHandler(
 
         logger.LogInformation("Lif file {Filename} stored", lifFile.MetaInformation.Filename);
         ICollection<string> layoutIds = layoutCollection.Layouts.Select(l => l.LayoutId).Distinct().ToList();
+        ICollection<string> vehicleTypeIds = layoutCollection.Layouts.SelectMany(l => l.GetSupportedVehicleTypes()).Distinct().ToList();
 
-        logger.LogInformation("Lif layouts stored. LayoutIds: [{LayoutIds}], VehicleTypeIds: [{VehicleTypeIds}]",
-            string.Join(", ", layoutIds), string.Join(", ", vehicleTypeIds));
+        logger.LogInformation("Lif layouts stored. LayoutIds: [{LayoutIds}], VehicleTypeIds: [{VehicleTypeIds}]", string.Join(", ", layoutIds), string.Join(", ", vehicleTypeIds));
+
+        Dictionary<string, Guid> agvTypeIdentifiers = await agvTypeRepository.GetAgvTypeIdentifiersAsync();
+
+        var graph = LifToGraphConverter.ToGraph(layoutCollection, agvTypeIdentifiers, logger);
 
         var layoutStored = new LayoutStored(layoutIds, vehicleTypeIds.ToList());
         await context.Publish(layoutStored);
 
-        await context.Publish(new AgvTypeGraphUpdated(graphs));
-
-        List<Layout> storedLayouts = added.Distinct().ToList();
-        if (storedLayouts.Count > 0)
-        {
-            await context.Publish(new NewGraphReceived(context.Message.CorrelationId, layoutCollection.ToGraph(storedLayouts)));
-        }
+        await context.Publish(new NewGraphReceived(context.Message.CorrelationId, graph));
 
         await context.RespondAsync(new Success());
     }

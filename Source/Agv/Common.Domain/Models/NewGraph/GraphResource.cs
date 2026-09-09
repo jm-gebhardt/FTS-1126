@@ -20,12 +20,6 @@ public abstract record GraphResource
     /// </summary>
     public string ShortName { get; }
     
-    /// <summary>
-    /// Collection of child routing resources.
-    /// </summary>
-    // ReSharper disable once UnusedMember.Global
-    public IReadOnlyCollection<GraphResource> Children { get; } = [];
-
     /// <inheritdoc cref="GraphResource"/>
     protected GraphResource(Guid id, string name, string shortName)
     {

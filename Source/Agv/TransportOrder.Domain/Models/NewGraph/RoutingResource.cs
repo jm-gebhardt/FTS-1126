@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 

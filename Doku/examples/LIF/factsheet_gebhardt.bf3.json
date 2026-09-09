@@ -1,0 +1,147 @@
+{
+  "headerId": 1,
+  "timestamp": "2026-06-29T12:00:00.000Z",
+  "version": "2.1.0",
+  "manufacturer": "gebhardt",
+  "serialNumber": "AGV01",
+  "typeSpecification": {
+    "seriesName": "bf3",
+    "seriesDescription": "bf3",
+    "agvKinematic": "DIFF",
+    "agvClass": "CONVEYOR",
+    "maxLoadMass": 1500,
+    "localizationTypes": [
+      "NATURAL"
+    ],
+    "navigationTypes": [
+      "AUTONOMOUS",
+      "VIRTUAL_LINE_GUIDED"
+    ]
+  },
+  "physicalParameters": {
+    "speedMin": 0.05,
+    "speedMax": 1.5,
+    "accelerationMax": 0.3,
+    "decelerationMax": 0.5,
+    "heightMin": 1.1,
+    "heightMax": 1.6,
+    "width": 0.8,
+    "length": 1.3
+  },
+  "protocolFeatures": {
+    "agvActions": [],
+    "optionalParameters": [
+      {
+        "parameter": "order.nodes.nodePosition",
+        "support": "REQUIRED"
+      },
+      {
+        "parameter": "order.nodes.nodePosition.allowedDeviationXY",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.nodes.nodePosition.allowedDeviationTheta",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.edges.maxSpeed",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.edges.orientation",
+        "support": "REQUIRED"
+      },
+      {
+        "parameter": "order.edges.rotationAllowed",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.edges.maxRotationSpeed",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.edges.trajectory",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.edges.corridor",
+        "support": "SUPPORTED"
+      },
+      {
+        "parameter": "order.edges.corridor.corridorRefPoint",
+        "support": "REQUIRED"
+      }
+    ]
+  },
+  "agvGeometry": {
+    "wheelDefinitions": [
+      {
+        "type": "DRIVE",
+        "diameter": 0.2,
+        "width": 0.05,
+        "isActiveDriven": true,
+        "isActiveSteered": false,
+        "position": {
+          "x": 0,
+          "y": 0.36,
+          "theta": 0
+        }
+      },
+      {
+        "type": "DRIVE",
+        "diameter": 0.2,
+        "width": 0.05,
+        "isActiveDriven": true,
+        "isActiveSteered": false,
+        "position": {
+          "x": 0,
+          "y": -0.36,
+          "theta": 0
+        }
+      }
+    ],
+    "envelopes2d": [
+      {
+        "polygonPoints": [
+          {
+            "x": -0.65,
+            "y": -0.4
+          },
+          {
+            "x": 0.65,
+            "y": -0.4
+          },
+          {
+            "x": 0.65,
+            "y": 0.4
+          },
+          {
+            "x": -0.65,
+            "y": 0.4
+          }
+        ],
+        "set": "bounding_box"
+      }
+    ]
+  },
+  "loadSpecification": {
+    "loadPositions": [
+      "CONVEYOR"
+    ],
+    "loadSets": [
+      {
+        "setName": "DEFAULT",
+        "loadType": "EPAL"
+      }
+    ]
+  },
+  "protocolLimits": {
+    "maxStringLens": {},
+    "maxArrayLens": {},
+    "timing": {
+      "minOrderInterval": 5,
+      "minStateInterval": 1
+    }
+  }
+}
+

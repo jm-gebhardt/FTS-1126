@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Logging;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.TrafficManagement;
@@ -15,7 +16,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.TrafficManagement.Routes.Manager;
 /// </summary>
 internal sealed class RouteManagerTestFixture : MassTransitTestFixture
 {
-    private static readonly AgvType _agvType = new(Guid.NewGuid(), "TestAgvType");
+    private static readonly AgvType _agvType = AgvTypeGenerator.GenerateAgvType();
 
     public ReservationManager ReservationManager { get; }
 

@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helper;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Shouldly;
 using VdmaBlockingType = Vdma.Lif.BlockingType;
@@ -422,20 +423,20 @@ public class VdmaLifExtensionsTest
         var meta = new MetaInformation("c", DateTimeOffset.UtcNow, "1.0", "proj-1");
         var layout = new VdmaLayout { LayoutId = "L1", LayoutLevelId = "floor1" };
 
-        var id1 = layout.GetId(meta);
-        var id2 = layout.GetId(meta);
+        var id1 = InternalIdGenerator.GetLayoutId(meta.Creator, layout.LayoutId);
+        var id2 = InternalIdGenerator.GetLayoutId(meta.Creator, layout.LayoutId);
 
         id1.ShouldBe(id2);
     }
 
     [TestMethod]
-    public void GetId_DifferentProjectIdentification_ReturnsDifferentGuids()
+    public void GetId_DifferentCreators_ReturnsDifferentGuids()
     {
-        var meta1 = new MetaInformation("c", DateTimeOffset.UtcNow, "1.0", "proj-1");
-        var meta2 = new MetaInformation("c", DateTimeOffset.UtcNow, "1.0", "proj-2");
+        var meta1 = new MetaInformation("creator1", DateTimeOffset.UtcNow, "1.0", "proj-1");
+        var meta2 = new MetaInformation("creator2", DateTimeOffset.UtcNow, "1.0", "proj-1");
         var layout = new VdmaLayout { LayoutId = "L1", LayoutLevelId = "floor1" };
 
-        layout.GetId(meta1).ShouldNotBe(layout.GetId(meta2));
+        InternalIdGenerator.GetLayoutId(meta1.Creator, layout.LayoutId).ShouldNotBe(InternalIdGenerator.GetLayoutId(meta2.Creator, layout.LayoutId));
     }
 
     [TestMethod]
