@@ -1,16 +1,25 @@
-﻿using CommandLine;
+﻿using FluentValidation;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
+using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Validators;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.BackgroundServices;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.StateMachines;
 using MassTransit;
 using MassTransit.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -93,19 +102,24 @@ public static class HostBuilderExtension
         /// <summary>
         /// Add vda5050 simulator service
         /// </summary>
-        public IHostBuilder AddSimulator(string[] args, ILogger initialLogger)
+        public IHostBuilder AddSimulator()
         {
-            var parser = new Parser(cfg => cfg.CaseInsensitiveEnumValues = true);
-            Options? simulationOptions = null;
-            parser.ParseArguments<Options>(args)
-                .WithParsed(o => { simulationOptions = o; });
-
-            initialLogger.LogInformation("Simulating {NAgvs} agvs", simulationOptions?.Agvs);
-
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
-            hostBuilder.ConfigureServices((_, services) =>
+            hostBuilder.ConfigureServices((context, services) =>
             {
-                services.AddSingleton(_ => simulationOptions!);
+                services.AddDbContextFactory<Vda5050SimulatorDbContext>(builder =>
+                {
+                    string? connectionString = context.Configuration.GetConnectionString(Vda5050SimulatorDbContext.ConfigSectionName);
+                    builder.UseSqlServer(connectionString, m =>
+                    {
+                        m.MigrationsHistoryTable(IDbContext<Vda5050SimulatorDbContext>.MigrationTableName);
+                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
+                });
+                services.AddTransient<ISimulatedAgvTypeConfigurationRepository, EfSimulatedAgvTypeConfigurationRepository>();
+                services.AddTransient<IValidator<SimulatedAgvTypeConfiguration>, SimulatedAgvTypeConfigurationValidator>();
+                services.AddSingleton<ISimulatedAgvSpawner, SimulatedAgvSpawner>();
                 services.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
                 services.AddSingleton(TimeProvider.System);
                 services.AddHostedService<AgvProvider>();
@@ -117,7 +131,7 @@ public static class HostBuilderExtension
                     // convert time zones using converter that can handle Windows/Linux differences
                     q.UseTimeZoneConverter();
                 });
-                services.AddSingleton<IAgvCache, AgvCache>();
+                services.AddSingleton<IAgvOperatingModeCache, AgvOperatingModeCache>();
                 services.AddSingleton<IAgvStateCache, AgvStateCache>();
                 services.AddTransient<INurbsEdgeBuilder, TinySplineEdgeBuilder>();
                 // Sequence counters for topics wise header id incrementation for messages sent by the agv.

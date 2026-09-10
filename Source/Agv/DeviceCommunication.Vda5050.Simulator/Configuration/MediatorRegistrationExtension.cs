@@ -23,6 +23,12 @@ public static class MediatorRegistrationExtension
             configurator.AddRequestClient<RequestAgvState>();
             configurator.AddRequestClient<RequestAddLoad>();
             configurator.AddRequestClient<RequestRemoveLoad>();
+            configurator.AddConsumer<SimulatedAgvTypeConfigurationRequestHandler>();
+            configurator.AddRequestClient<RequestAddAgvTypeConfiguration>();
+            configurator.AddRequestClient<RequestUpdateAgvTypeConfiguration>();
+            configurator.AddRequestClient<RequestDeleteAgvTypeConfiguration>();
+            configurator.AddRequestClient<RequestAgvTypeConfiguration>();
+            configurator.AddRequestClient<RequestAgvTypeConfigurations>();
             return configurator;
         }
     }

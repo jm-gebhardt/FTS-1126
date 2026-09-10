@@ -24,7 +24,7 @@ public static class DeviceCommunicationVda5050SimulatorHostBuilder
     {
         return GebhardtStartup.CreateHostBuilder(args)
             .AddMassTransit(initialLogger)
-            .AddSimulator(args, initialLogger)
+            .AddSimulator()
             .ConfigureWebHost(host =>
             {
                 host.UseKestrel()

@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
@@ -60,7 +59,7 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// <summary>
     /// The agv configuration.
     /// </summary>
-    public AgvConfiguration Configuration { get; }
+    public AgvConfiguration Configuration { get; private set; }
 
     /// <summary>
     /// The current state of the agv.
@@ -152,7 +151,6 @@ public class SimulatedAgv : SagaStateMachineInstance
 
     private readonly INurbsEdgeBuilder _edgeBuilder;
     private readonly bool _generateError;
-    private readonly IAgvCache _agvCache;
 
     /// <inheritdoc cref="SimulatedAgv"/>
     public SimulatedAgv(Guid correlationId,
@@ -165,7 +163,6 @@ public class SimulatedAgv : SagaStateMachineInstance
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
         INurbsEdgeBuilder edgeBuilder,
-        IAgvCache agvCache,
         string? currentState = null,
         bool generateError = false)
     {
@@ -185,7 +182,6 @@ public class SimulatedAgv : SagaStateMachineInstance
         _edgeBuilder = edgeBuilder;
         _generateError = generateError;
         OperatingMode = AgvOperatingMode.Automatic;
-        _agvCache = agvCache;
     }
 
     /// <summary>
@@ -253,9 +249,8 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// Switch the operating mode of the agv.
     /// </summary>
     /// <param name="operatingMode"></param>
-    public async Task SwitchOperatingMode(AgvOperatingMode operatingMode)
+    public void SwitchOperatingMode(AgvOperatingMode operatingMode)
     {
-        await _agvCache.AddOrUpdateAsync(CorrelationId, operatingMode);
         OperatingMode = operatingMode;
         if (!IsInAutomaticMode)
         {
@@ -272,6 +267,33 @@ public class SimulatedAgv : SagaStateMachineInstance
         {
             Error = null;
         }
+    }
+
+    /// <summary>
+    /// Take the agv offline.
+    /// </summary>
+    public void GoOffline()
+    {
+        IsOnline = false;
+    }
+
+    /// <summary>
+    /// Bring the agv online.
+    /// </summary>
+    public void GoOnline()
+    {
+        IsOnline = true;
+    }
+
+    /// <summary>
+    /// Apply a new configuration to the agv.
+    /// </summary>
+    /// <param name="configuration">The configuration to apply.</param>
+    public void ApplyConfiguration(AgvConfiguration configuration)
+    {
+        Configuration = configuration;
+        BatteryChargeRate = configuration.BatteryChargeRate;
+        BatteryDischargeRate = configuration.BatteryDischargeRate;
     }
 
     /// <summary>

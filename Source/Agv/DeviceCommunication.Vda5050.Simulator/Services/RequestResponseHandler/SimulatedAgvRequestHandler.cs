@@ -15,7 +15,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.RequestRes
 /// Handles requests for simulated agv management
 /// </summary>
 [UsedImplicitly]
-public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logger, IAgvCache agvCache, IBus bus, IAgvStateCache stateCache) :
+public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logger, IAgvOperatingModeCache operatingModeCache, IBus bus, IAgvStateCache stateCache) :
     IConsumer<RequestOperatingModeSwitch>,
     IConsumer<RequestSetToPosition>,
     IConsumer<RequestAgvState>,
@@ -24,7 +24,7 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
 {
     private async Task RequireOperatingModeAsync(Guid agvCorrelationId, AgvOperatingMode requiredMode)
     {
-        var mode = await agvCache.GetOperatingModeAsync(agvCorrelationId);
+        var mode = await operatingModeCache.GetOperatingModeAsync(agvCorrelationId);
         if (mode != requiredMode)
         {
             throw new AgvOperatingModeNotAllowedException(agvCorrelationId, mode, requiredMode);
@@ -36,7 +36,7 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
     {
         var (agvCorrelationId, operatingMode) = context.Message;
 
-        if (!await agvCache.ExistsAsync(agvCorrelationId))
+        if (!await operatingModeCache.ExistsAsync(agvCorrelationId))
         {
             throw new AgvNotFoundException(agvCorrelationId);
         }
@@ -50,7 +50,7 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
     public async Task Consume(ConsumeContext<RequestSetToPosition> context)
     {
         var (agvCorrelationId, position) = context.Message;
-        var mode = await agvCache.GetOperatingModeAsync(agvCorrelationId);
+        var mode = await operatingModeCache.GetOperatingModeAsync(agvCorrelationId);
         if (mode == AgvOperatingMode.Automatic)
         {
             throw new AgvOperatingModeNotAllowedException(agvCorrelationId, mode);
@@ -64,7 +64,7 @@ public class SimulatedAgvRequestHandler(ILogger<SimulatedAgvRequestHandler> logg
     public async Task Consume(ConsumeContext<RequestAgvState> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        if (!await agvCache.ExistsAsync(agvCorrelationId))
+        if (!await operatingModeCache.ExistsAsync(agvCorrelationId))
         {
             throw new AgvNotFoundException(agvCorrelationId);
         }

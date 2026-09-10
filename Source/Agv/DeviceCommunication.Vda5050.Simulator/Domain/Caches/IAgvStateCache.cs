@@ -21,4 +21,10 @@ public interface IAgvStateCache : IConcurrentDictionaryProvider<Guid, MqttState>
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <returns>The latest state, or null.</returns>
     Task<MqttState?> TryGetAsync(Guid agvCorrelationId);
+
+    /// <summary>
+    /// Remove the latest state of an agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    Task RemoveAsync(Guid agvCorrelationId);
 }

@@ -16,20 +16,20 @@ public class SimulatedAgvRequestHandlerTestFixture : MediatorTestFixture<Request
     public const string LoadType = "pallet";
     public const string LoadPosition = "front";
 
-    private readonly Mock<IAgvCache> _agvCache = new();
+    private readonly Mock<IAgvOperatingModeCache> _operatingModeCache = new();
     private readonly Mock<IAgvStateCache> _stateCache = new();
 
     public SimulatedAgvRequestHandlerTestFixture()
     {
-        _agvCache.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
-        _agvCache.Setup(x => x.GetOperatingModeAsync(It.IsAny<Guid>())).ReturnsAsync(AgvOperatingMode.Manual);
+        _operatingModeCache.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(true);
+        _operatingModeCache.Setup(x => x.GetOperatingModeAsync(It.IsAny<Guid>())).ReturnsAsync(AgvOperatingMode.Manual);
         _stateCache.Setup(x => x.TryGetAsync(It.IsAny<Guid>())).ReturnsAsync((MqttState?)null);
     }
 
     public SimulatedAgvRequestHandlerTestFixture WithUnknownAgv()
     {
-        _agvCache.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
-        _agvCache.Setup(x => x.GetOperatingModeAsync(It.IsAny<Guid>())).ThrowsAsync(new AgvNotFoundException(Guid.Empty));
+        _operatingModeCache.Setup(x => x.ExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        _operatingModeCache.Setup(x => x.GetOperatingModeAsync(It.IsAny<Guid>())).ThrowsAsync(new AgvNotFoundException(Guid.Empty));
         return this;
     }
 
@@ -41,7 +41,7 @@ public class SimulatedAgvRequestHandlerTestFixture : MediatorTestFixture<Request
 
     public SimulatedAgvRequestHandlerTestFixture WithOperatingMode(AgvOperatingMode operatingMode)
     {
-        _agvCache.Setup(x => x.GetOperatingModeAsync(It.IsAny<Guid>())).ReturnsAsync(operatingMode);
+        _operatingModeCache.Setup(x => x.GetOperatingModeAsync(It.IsAny<Guid>())).ReturnsAsync(operatingMode);
         return this;
     }
 
@@ -49,7 +49,7 @@ public class SimulatedAgvRequestHandlerTestFixture : MediatorTestFixture<Request
     {
         AddServices(s =>
         {
-            s.AddSingleton(_agvCache.Object);
+            s.AddSingleton(_operatingModeCache.Object);
             s.AddSingleton(_stateCache.Object);
         });
         base.Build();

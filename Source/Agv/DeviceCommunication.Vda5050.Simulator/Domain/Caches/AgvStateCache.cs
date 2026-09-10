@@ -18,4 +18,10 @@ public class AgvStateCache : ConcurrentDictionaryProvider<Guid, MqttState>, IAgv
         ConcurrentDict.TryGetValue(agvCorrelationId, out var state);
         return Task.FromResult(state);
     }
+
+    /// <inheritdoc cref="IAgvStateCache"/>
+    public Task RemoveAsync(Guid agvCorrelationId)
+    {
+        return Task.FromResult(ConcurrentDict.TryRemove(agvCorrelationId, out _));
+    }
 }

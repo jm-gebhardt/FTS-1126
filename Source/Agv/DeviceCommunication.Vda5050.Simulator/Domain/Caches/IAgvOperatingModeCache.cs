@@ -4,9 +4,9 @@ using Gebhardt.Acc.Common.Domain.Models;
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 
 /// <summary>
-/// Provides an agv cache.
+/// Provides a cache for the operating mode of each simulated agv.
 /// </summary>
-public interface IAgvCache : IConcurrentDictionaryProvider<Guid, AgvOperatingMode>
+public interface IAgvOperatingModeCache : IConcurrentDictionaryProvider<Guid, AgvOperatingMode>
 {
     /// <summary>
     /// Get the current operating mode of the agv.
@@ -27,4 +27,10 @@ public interface IAgvCache : IConcurrentDictionaryProvider<Guid, AgvOperatingMod
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     /// <param name="mode">The new agv mode.</param>
     Task AddOrUpdateAsync(Guid agvCorrelationId, AgvOperatingMode mode);
+
+    /// <summary>
+    /// Remove the operating mode of an agv.
+    /// </summary>
+    /// <param name="agvCorrelationId">The agv correlation id.</param>
+    Task RemoveAsync(Guid agvCorrelationId);
 }

@@ -12,8 +12,20 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
 [TestClass]
 public class SimulatedAgvStateMachineTest
 {
-    private static AgvConfiguration CreateConfiguration(string serialNumber = "simagv0")
-        => new(serialNumber);
+    private static AgvConfiguration CreateConfiguration(string serialNumber = "simagv0",
+        int stateUpdateIntervalMs = SimulatedAgvStateMachineTestFixture.StateUpdateIntervalMs,
+        int visualizationUpdateIntervalMs = SimulatedAgvStateMachineTestFixture.VisualizationUpdateIntervalMs,
+        double batteryChargeRate = SimulatedAgvTypeConfiguration.DefaultBatteryChargeRate,
+        double batteryDischargeRate = SimulatedAgvTypeConfiguration.DefaultBatteryDischargeRate)
+    {
+        return new AgvConfiguration(serialNumber, SimulatedAgvStateMachineTestFixture.MapId, SimulatedAgvStateMachineTestFixture.Manufacturer)
+        {
+            StateUpdateIntervalMs = stateUpdateIntervalMs,
+            VisualizationUpdateIntervalMs = visualizationUpdateIntervalMs,
+            BatteryChargeRate = batteryChargeRate,
+            BatteryDischargeRate = batteryDischargeRate
+        };
+    }
 
     private static Order CreateOrder(string[] nodeIds)
     {
@@ -403,8 +415,6 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new CreateAgv(config));
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
-        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
-        // resulting MqttState to be sure the mutation has actually happened.
         await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
 
         var saga = fixture.GetSaga(config);
@@ -423,8 +433,6 @@ public class SimulatedAgvStateMachineTest
         fixture.GetSaga(config).CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.BusyMoving));
 
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
-        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
-        // resulting MqttState to be sure the mutation has actually happened.
         await fixture.GetFirstPublishedMessageAsync<MqttState>(3);
 
         var saga = fixture.GetSaga(config);
@@ -441,8 +449,6 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new StartOrder(config.CorrelationId, CreateOrder(["A", "B"])));
 
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
-        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
-        // resulting MqttState to be sure the mutation has actually happened.
         await fixture.GetFirstPublishedMessageAsync<MqttState>(3);
 
         var saga = fixture.GetSaga(config);
@@ -458,8 +464,6 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new CreateAgv(config));
 
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Automatic));
-        // SwitchOperatingMode awaits an IAgvCache write before mutating the saga, so wait for the
-        // resulting MqttState to be sure the mutation has actually happened.
         await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
 
         var saga = fixture.GetSaga(config);
@@ -493,9 +497,6 @@ public class SimulatedAgvStateMachineTest
         fixture.GetSaga(config).Error.ShouldNotBeNull().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
 
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Automatic));
-        // SwitchOperatingMode's handler awaits an IAgvCache write before mutating the saga, so the
-        // message is marked "consumed" before that mutation completes. Wait for the MqttState this
-        // handler publishes as its final step to be sure the saga has actually been updated.
         await fixture.GetFirstPublishedMessageAsync<MqttState>(3);
 
         var saga = fixture.GetSaga(config);
@@ -560,5 +561,104 @@ public class SimulatedAgvStateMachineTest
 
         ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
         states.Last().Loads.ShouldNotBeNull().ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgv_PublishesOfflineMqttConnection()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new RemoveAgv(config.CorrelationId));
+
+        var connection = fixture.GetPublishedMessages<MqttConnection>().Last();
+        connection.SerialNumber.ShouldBe(config.SerialNumber);
+        connection.Manufacturer.ShouldBe(config.Manufacturer);
+        connection.ConnectionState.ShouldBe(MqttConnectionState.OFFLINE);
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgv_SetsAgvOffline()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new RemoveAgv(config.CorrelationId));
+
+        var saga = fixture.GetSaga(config);
+        saga.IsOnline.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgv_FinalizesSaga()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new RemoveAgv(config.CorrelationId));
+
+        await fixture.ShouldHaveRemovedSagaAsync(config.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task Consume_RemoveAgv_ClearsCachesOfAgv()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new RemoveAgv(config.CorrelationId));
+
+        fixture.ShouldHaveClearedCaches(config.CorrelationId);
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvConfiguration_AppliesConfigurationToSaga()
+    {
+        var config = CreateConfiguration();
+        var changedConfig = CreateConfiguration(stateUpdateIntervalMs: SimulatedAgvStateMachineTestFixture.ChangedStateUpdateIntervalMs,
+            visualizationUpdateIntervalMs: SimulatedAgvStateMachineTestFixture.ChangedVisualizationUpdateIntervalMs,
+            batteryChargeRate: SimulatedAgvStateMachineTestFixture.ChangedBatteryChargeRate,
+            batteryDischargeRate: SimulatedAgvStateMachineTestFixture.ChangedBatteryDischargeRate);
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new UpdateAgvConfiguration(changedConfig));
+
+        var saga = fixture.GetSaga(config);
+        saga.Configuration.StateUpdateIntervalMs.ShouldBe(SimulatedAgvStateMachineTestFixture.ChangedStateUpdateIntervalMs);
+        saga.Configuration.VisualizationUpdateIntervalMs.ShouldBe(SimulatedAgvStateMachineTestFixture.ChangedVisualizationUpdateIntervalMs);
+        saga.BatteryChargeRate.ShouldBe(SimulatedAgvStateMachineTestFixture.ChangedBatteryChargeRate);
+        saga.BatteryDischargeRate.ShouldBe(SimulatedAgvStateMachineTestFixture.ChangedBatteryDischargeRate);
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvConfiguration_KeepsAgvOnline()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new UpdateAgvConfiguration(CreateConfiguration(stateUpdateIntervalMs: SimulatedAgvStateMachineTestFixture.ChangedStateUpdateIntervalMs)));
+
+        var saga = fixture.GetSaga(config);
+        saga.IsOnline.ShouldBeTrue();
+        saga.CurrentState.ShouldBe(nameof(SimulatedAgvStateMachine.Idle));
+    }
+
+    [TestMethod]
+    public async Task Consume_UpdateAgvConfiguration_PublishesMqttState()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new UpdateAgvConfiguration(CreateConfiguration(stateUpdateIntervalMs: SimulatedAgvStateMachineTestFixture.ChangedStateUpdateIntervalMs)));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
+        state.SerialNumber.ShouldBe(config.SerialNumber);
     }
 }

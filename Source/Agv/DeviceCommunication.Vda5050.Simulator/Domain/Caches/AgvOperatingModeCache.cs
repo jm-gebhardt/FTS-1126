@@ -4,10 +4,10 @@ using Gebhardt.Acc.Common.Domain.Models;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 
-/// <inheritdoc cref="IAgvCache"/>
-public class AgvCache: ConcurrentDictionaryProvider<Guid, AgvOperatingMode>, IAgvCache
+/// <inheritdoc cref="IAgvOperatingModeCache"/>
+public class AgvOperatingModeCache : ConcurrentDictionaryProvider<Guid, AgvOperatingMode>, IAgvOperatingModeCache
 {
-    /// <inheritdoc cref="IAgvCache"/>
+    /// <inheritdoc cref="IAgvOperatingModeCache"/>
     public Task<AgvOperatingMode> GetOperatingModeAsync(Guid agvCorrelationId)
     {
         bool exists = ConcurrentDict.TryGetValue(agvCorrelationId, out var operatingMode);
@@ -18,15 +18,21 @@ public class AgvCache: ConcurrentDictionaryProvider<Guid, AgvOperatingMode>, IAg
         return Task.FromResult(operatingMode);
     }
 
-    /// <inheritdoc cref="IAgvCache"/>
+    /// <inheritdoc cref="IAgvOperatingModeCache"/>
     public Task<bool> ExistsAsync(Guid agvCorrelationId)
     {
         return Task.FromResult(ConcurrentDict.ContainsKey(agvCorrelationId));
     }
 
-    /// <inheritdoc cref="IAgvCache"/>
+    /// <inheritdoc cref="IAgvOperatingModeCache"/>
     public Task AddOrUpdateAsync(Guid agvCorrelationId, AgvOperatingMode mode)
     {
         return Task.FromResult(ConcurrentDict.AddOrUpdate(agvCorrelationId, mode, (_, _) => mode));
+    }
+
+    /// <inheritdoc cref="IAgvOperatingModeCache"/>
+    public Task RemoveAsync(Guid agvCorrelationId)
+    {
+        return Task.FromResult(ConcurrentDict.TryRemove(agvCorrelationId, out _));
     }
 }

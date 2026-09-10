@@ -15,7 +15,9 @@ namespace Gebhardt.Acc.Common.Consumer;
 public class BaseMqttConsumerDefinition<T> : ConsumerDefinition<T> where T : class, IConsumer
 {
     /// <summary>
-    /// Configures the consumer as mqtt consumer and uses JSON raw deserializer for the messages that are consumed
+    /// Configures the consumer as mqtt consumer and uses JSON raw deserializer for the messages that are consumed.
+    /// A broker endpoint accepts any message type because its routing key already selects the messages, while an
+    /// in-memory endpoint shares one queue and therefore keeps filtering by message type.
     /// </summary>
     /// <param name="endpointConfigurator"></param>
     /// <param name="consumerConfigurator"></param>
@@ -23,17 +25,10 @@ public class BaseMqttConsumerDefinition<T> : ConsumerDefinition<T> where T : cla
     protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<T> consumerConfigurator,
         IRegistrationContext context)
     {
-        endpointConfigurator.ConfigureConsumeTopology = endpointConfigurator is IInMemoryEndpointConfiguration;
+        bool isInMemoryEndpoint = endpointConfigurator is IInMemoryEndpointConfiguration;
 
-        // Real AGVs publish raw MQTT bytes with no MassTransit message-type headers at all, so
-        // SystemTextJsonRawSerializerContext.IsSupportedMessageType<T>() already accepts them
-        // unconditionally (SupportedMessageTypes.Length == 0) without needing AnyMessageType.
-        // Omitting AnyMessageType here (falling back to RawSerializerOptions.Default, matching
-        // SystemTextJsonRawMessageSerializerFactory's own default used on the publish side) keeps
-        // that production behavior unchanged, while enabling type-based filtering for messages
-        // that *do* carry MassTransit headers — e.g. on a shared in-memory test bus, so a
-        // same-topic MqttOrder isn't misparsed by an MqttState consumer.
-        endpointConfigurator.UseRawJsonDeserializer();
+        endpointConfigurator.ConfigureConsumeTopology = isInMemoryEndpoint;
+        endpointConfigurator.UseRawJsonDeserializer(isInMemoryEndpoint ? RawSerializerOptions.Default : RawSerializerOptions.AnyMessageType);
         endpointConfigurator.DefaultContentType = SystemTextJsonRawMessageSerializer.JsonContentType;
 
         IEnumerable<Type> messages = typeof(T).GetInterfaces().Where(i => i.IsGenericType && i.Name.Contains(nameof(IConsumer))).Select(t => t.GenericTypeArguments.First());

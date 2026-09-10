@@ -1,11 +1,5 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
-using MassTransit;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Repositories;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -14,46 +8,47 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.Background
 /// <summary>
 /// Provides a service to generate simulated agvs.
 /// </summary>
-public class AgvProvider(Options options, ILogger<AgvProvider> logger, IAgvCache agvCache, IBus bus) : BackgroundService
+public class AgvProvider(
+    ILogger<AgvProvider> logger,
+    ISimulatedAgvTypeConfigurationRepository configurationRepository,
+    ISimulatedAgvSpawner spawner) : BackgroundService
 {
+    private async Task SpawnAsync(SimulatedAgvTypeConfiguration configuration, CancellationToken stoppingToken)
+    {
+        try
+        {
+            await spawner.ApplyAsync(null, configuration, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to create the simulated AGVs of agv type {AgvTypeIdentifier}", configuration.AgvTypeIdentifier);
+        }
+    }
+
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        ICollection<GraphNode>? graphNodes = await TryGetExistingGraphNodesAsync(stoppingToken);
-
-        logger.LogInformation("Creating {Agvs} with base serial number {Base}", options.Agvs, options.SerialNumberBase);
-        IEnumerable<Task> tasks = options.SimulatedSerialNumbers().Select(serialNumber => CreateAgv(graphNodes, serialNumber, stoppingToken));
-        await Task.WhenAll(tasks);
-    }
-
-    private async Task CreateAgv(ICollection<GraphNode>? graphNodes, string serialNumber,  CancellationToken stoppingToken)
-    {
-        var config = new AgvConfiguration(serialNumber, options.MapId, options.Manufacturer);
-        await agvCache.AddOrUpdateAsync(config.CorrelationId, AgvOperatingMode.Automatic);
-        await bus.Publish(
-            new CreateAgv(config, graphNodes),
-            stoppingToken);
-    }
-
-    private async Task<ICollection<GraphNode>?> TryGetExistingGraphNodesAsync(CancellationToken cancellationToken)
-    {
-        IRequestClient<GetGraph> getGraphClient = bus.CreateRequestClient<GetGraph>();
         try
         {
-            Response<GotGraph> response = await getGraphClient.GetResponse<GotGraph>(new GetGraph(Guid.NewGuid()), cancellationToken);
-            ICollection<GraphNode> nodes = response.Message.Graph.Nodes;
-            if (nodes.Count == 0)
+            IReadOnlyCollection<SimulatedAgvTypeConfiguration> configurations = await configurationRepository.GetAllAsync();
+
+            logger.LogInformation("Creating simulated AGVs for {AgvTypes} configured AGV types", configurations.Count);
+            foreach (var configuration in configurations)
             {
-                logger.LogInformation("Existing graph is empty; AGVs will wait for GraphUpdated to initialize position");
-                return null;
+                await SpawnAsync(configuration, stoppingToken);
             }
-            logger.LogInformation("Retrieved existing graph with {NodeCount} nodes for AGV initialization", nodes.Count);
-            return nodes;
         }
-        catch (RequestException ex)
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
-            logger.LogWarning(ex, "Could not retrieve existing graph; AGVs will wait for GraphUpdated to initialize position");
-            return null;
+            logger.LogInformation("Creating simulated AGVs was cancelled during shutdown");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to read the simulation configurations, no simulated AGVs were created");
         }
     }
 }

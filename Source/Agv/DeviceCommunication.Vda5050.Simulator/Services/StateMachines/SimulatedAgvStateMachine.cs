@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
@@ -96,6 +95,16 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// </summary>
     public Event<RemoveLoad> RemoveLoadEvent { get; private set; } = null!;
 
+    /// <summary>
+    /// <see cref="RemoveAgv"/> received.
+    /// </summary>
+    public Event<RemoveAgv> RemoveAgvEvent { get; private set; } = null!;
+
+    /// <summary>
+    /// <see cref="UpdateAgvConfiguration"/> received.
+    /// </summary>
+    public Event<UpdateAgvConfiguration> UpdateAgvConfigurationEvent { get; private set; } = null!;
+
     #region Schedules
     /// <summary>
     /// Internal message to schedule sending status update
@@ -118,52 +127,38 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// Trigger for scheduled signalling of position.
     /// </summary>
     public Schedule<SimulatedAgv, SchedulePositionUpdate> SignalPositionSchedule { get; private set; } = null!;
-
-    private IScheduleConfigurator<SimulatedAgv, ScheduleStatusUpdate> _statusUpdateScheduleConfiguration = null!;
-    private IScheduleConfigurator<SimulatedAgv, SchedulePositionUpdate> _signalPositionScheduleConfiguration = null!;
     #endregion
 
-    /// <summary>
-    /// Interval for signalling position in [ms]
-    /// </summary>
-    public int SignalPositionIntervalMs { get; set; }
-
-    /// <summary>
-    /// Interval for updating status in [ms]
-    /// </summary>
-    public int StatusUpdateIntervalMs { get; set; }
-
-    private readonly Options _options;
     private readonly ILogger<SimulatedAgvStateMachine> _logger;
     private readonly TimeProvider _timeProvider;
     private readonly IMapper _mapper;
     private readonly INurbsEdgeBuilder _edgeBuilder;
     private readonly IAgvStateCache _stateCache;
+    private readonly IAgvOperatingModeCache _operatingModeCache;
 
     /// <inheritdoc/>
     public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger,
-        Options options,
         TimeProvider timeProvider,
         ISequenceCounter<IStateHeaderId> stateHeaderId,
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
-        IAgvCache agvCache,
+        IAgvOperatingModeCache operatingModeCache,
         IMapper mapper, INurbsEdgeBuilder edgeBuilder, IAgvStateCache stateCache)
     {
-        _options = options;
         _logger = logger;
         _timeProvider = timeProvider;
         _mapper = mapper;
         _edgeBuilder = edgeBuilder;
         _stateCache = stateCache;
-        SignalPositionIntervalMs = options.VisualizationUpdateInterval;
-        StatusUpdateIntervalMs = options.StateUpdateInterval;
+        _operatingModeCache = operatingModeCache;
 
-        SetSagaFactory(stateHeaderId, visualizationHeaderId, connectionHeaderId, agvCache);
+        SetSagaFactory(stateHeaderId, visualizationHeaderId, connectionHeaderId);
+        SetMissingInstanceHandling();
         SetScheduler();
         InstanceState(x => x.CurrentState);
 
-        Initially(SetInitialCreateAgvHandler());
+        Initially(CreateAgvHandler());
+        DuringAny(CreateAgvHandler());
         DuringAny(GraphUpdateHandler());
         DuringAny(UpdatePositionHandler());
         DuringAny(SetSignalPositionHandler());
@@ -177,13 +172,9 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         DuringAny(SwitchOperatingModeHandler());
         DuringAny(AddLoadHandler());
         DuringAny(RemoveLoadHandler());
+        DuringAny(RemoveAgvHandler());
+        DuringAny(UpdateAgvConfigurationHandler());
         SetCompletedWhenFinalized(); // Delete when finalized
-    }
-
-    private void SetUpdateIntervals()
-    {
-        _statusUpdateScheduleConfiguration.Delay = TimeSpan.FromMilliseconds(StatusUpdateIntervalMs);
-        _signalPositionScheduleConfiguration.Delay = TimeSpan.FromMilliseconds(SignalPositionIntervalMs);
     }
 
     /// <summary>
@@ -191,28 +182,33 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// </summary>
     private void SetSagaFactory(ISequenceCounter<IStateHeaderId> stateHeaderId,
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
-        ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
-        IAgvCache agvCache)
+        ISequenceCounter<IConnectionHeaderId> connectionHeaderId)
     {
         Event(() => CreateAgvEvent, e =>
             {
-                e.SetSagaFactory(context =>
-                {
-                    var saga = new SimulatedAgv(context.Message.CorrelationId,
-                        context.Message.Configuration,
-                        GetInitialBatteryCharge(),
-                        _options.BatteryChargeRate,
-                        _options.BatteryDischargeRate,
-                        _timeProvider,
-                        stateHeaderId,
-                        visualizationHeaderId,
-                        connectionHeaderId,
-                        _edgeBuilder, agvCache);
-                    SetUpdateIntervals();
-                    return saga;
-                });
+                e.SetSagaFactory(context => new SimulatedAgv(context.Message.CorrelationId,
+                    context.Message.Configuration,
+                    GetInitialBatteryCharge(context.Message.Configuration),
+                    context.Message.Configuration.BatteryChargeRate,
+                    context.Message.Configuration.BatteryDischargeRate,
+                    _timeProvider,
+                    stateHeaderId,
+                    visualizationHeaderId,
+                    connectionHeaderId,
+                    _edgeBuilder));
             }
         );
+    }
+
+    private void SetMissingInstanceHandling()
+    {
+        Event(() => RemoveAgvEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => UpdateAgvConfigurationEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => UpdatePositionEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => StartChargingEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => StopChargingEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => AbortOrderEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => GraphUpdatedEvent, e => e.OnMissingInstance(m => m.Discard()));
     }
 
     private void SetScheduler()
@@ -221,45 +217,70 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             s => s.SendStatusUpdateTokenId,
             configuration =>
             {
-                _statusUpdateScheduleConfiguration = configuration;
-                configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
+                configuration.Delay = TimeSpan.FromMilliseconds(SimulatedAgvTypeConfiguration.DefaultStateUpdateIntervalMs);
+                configuration.Received = r =>
+                {
+                    r.CorrelateById(context => context.Message.CorrelationId);
+                    r.OnMissingInstance(m => m.Discard());
+                };
             });
 
         Schedule(() => SignalPositionSchedule,
             s => s.SignalPositionTokenId,
             configuration =>
             {
-                _signalPositionScheduleConfiguration = configuration;
-                configuration.Received = r => r.CorrelateById(context => context.Message.CorrelationId);
+                configuration.Delay = TimeSpan.FromMilliseconds(SimulatedAgvTypeConfiguration.DefaultVisualizationUpdateIntervalMs);
+                configuration.Received = r =>
+                {
+                    r.CorrelateById(context => context.Message.CorrelationId);
+                    r.OnMissingInstance(m => m.Discard());
+                };
             });
     }
 
-    private int GetInitialBatteryCharge()
+    private static int GetInitialBatteryCharge(AgvConfiguration configuration)
     {
-        int maxDeviation = _options.InitialBatteryChargeDeviation;
-        int calculatedBatteryCharge = _options.InitialBatteryCharge + Random.Shared.Next(-maxDeviation, maxDeviation + 1);
         const int safetyAgainstDeadBirth = 5;
-        int initialBatteryCharge = Math.Clamp(calculatedBatteryCharge, SimulatedAgv.AliveChargeThreshold + safetyAgainstDeadBirth, (int)SimulatedAgv.MaxCharge);
-        return initialBatteryCharge;
+        return Math.Clamp(configuration.InitialBatteryCharge, SimulatedAgv.AliveChargeThreshold + safetyAgainstDeadBirth, (int)SimulatedAgv.MaxCharge);
     }
 
-    private EventActivityBinder<SimulatedAgv, CreateAgv> SetInitialCreateAgvHandler()
+    private EventActivityBinder<SimulatedAgv, CreateAgv> CreateAgvHandler()
     {
         return When(CreateAgvEvent)
-            .Then(c =>
+            .ThenAsync(async c =>
             {
                 _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.ApplyConfiguration(c.Message.Configuration);
+                c.Saga.GoOnline();
                 if (c.Message.InitialGraphNodes is { Count: > 0 } nodes)
                 {
                     c.Saga.InitializePosition(nodes);
                 }
+                await _operatingModeCache.AddOrUpdateAsync(c.Saga.CorrelationId, c.Saga.OperatingMode);
             })
             .ThenAsync(PublishConnection)
             .ThenAsync(PublishState)
             .ThenAsync(PublishVisualization)
+            .Unschedule(StatusUpdateSchedule)
+            .Unschedule(SignalPositionSchedule)
             .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), GetStatusUpdateInterval)
             .Schedule(SignalPositionSchedule, c => new SchedulePositionUpdate(c.Saga.CorrelationId), GetPositionUpdateInterval)
             .TransitionTo(Idle);
+    }
+
+    private EventActivityBinder<SimulatedAgv, UpdateAgvConfiguration> UpdateAgvConfigurationHandler()
+    {
+        return When(UpdateAgvConfigurationEvent)
+            .Then(c =>
+            {
+                _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(UpdateAgvConfiguration), c.Message.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.ApplyConfiguration(c.Message.Configuration);
+            })
+            .Unschedule(StatusUpdateSchedule)
+            .Unschedule(SignalPositionSchedule)
+            .Schedule(StatusUpdateSchedule, c => new ScheduleStatusUpdate(c.Saga.CorrelationId), GetStatusUpdateInterval)
+            .Schedule(SignalPositionSchedule, c => new SchedulePositionUpdate(c.Saga.CorrelationId), GetPositionUpdateInterval)
+            .ThenAsync(PublishState);
     }
 
     private EventActivityBinder<SimulatedAgv, ScheduleStatusUpdate> SetSendAgvStatusHandler()
@@ -287,20 +308,40 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .ThenAsync(async c =>
             {
                 _logger.LogInformation("{MessageType} {CorrelationId} received", nameof(SwitchOperatingMode), c.Saga.CorrelationId);
-                await c.Saga.SwitchOperatingMode(c.Message.OperatingMode);
+                c.Saga.SwitchOperatingMode(c.Message.OperatingMode);
+                await _operatingModeCache.AddOrUpdateAsync(c.Saga.CorrelationId, c.Saga.OperatingMode);
             })
             .If(c => !c.Saga.IsInAutomaticMode, t => t.TransitionTo(Idle))
             .ThenAsync(PublishState);
     }
 
-    private TimeSpan GetStatusUpdateInterval(SagaConsumeContext<SimulatedAgv> context)
+    private EventActivityBinder<SimulatedAgv, RemoveAgv> RemoveAgvHandler()
     {
-        return TimeSpan.FromMilliseconds(StatusUpdateIntervalMs);
+        return When(RemoveAgvEvent)
+            .Then(c =>
+            {
+                _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(RemoveAgv), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.GoOffline();
+            })
+            .ThenAsync(PublishConnection)
+            .Unschedule(StatusUpdateSchedule)
+            .Unschedule(SignalPositionSchedule)
+            .ThenAsync(async c =>
+            {
+                await _operatingModeCache.RemoveAsync(c.Saga.CorrelationId);
+                await _stateCache.RemoveAsync(c.Saga.CorrelationId);
+            })
+            .Finalize();
     }
 
-    private TimeSpan GetPositionUpdateInterval(SagaConsumeContext<SimulatedAgv> context)
+    private static TimeSpan GetStatusUpdateInterval(SagaConsumeContext<SimulatedAgv> context)
     {
-        return TimeSpan.FromMilliseconds(SignalPositionIntervalMs);
+        return TimeSpan.FromMilliseconds(context.Saga.Configuration.StateUpdateIntervalMs);
+    }
+
+    private static TimeSpan GetPositionUpdateInterval(SagaConsumeContext<SimulatedAgv> context)
+    {
+        return TimeSpan.FromMilliseconds(context.Saga.Configuration.VisualizationUpdateIntervalMs);
     }
 
     private EventActivityBinder<SimulatedAgv, UpdatePosition> UpdatePositionHandler()

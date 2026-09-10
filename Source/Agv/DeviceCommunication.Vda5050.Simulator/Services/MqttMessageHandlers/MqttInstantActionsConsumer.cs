@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Configuration;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using JetBrains.Annotations;
@@ -15,13 +14,13 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.MqttMessag
 /// Provides a consumer for instant actions.
 /// </summary>
 [UsedImplicitly]
-public class MqttInstantActionsConsumer(ILogger<MqttInstantActionsConsumer> logger, Options options) :
+public class MqttInstantActionsConsumer(ILogger<MqttInstantActionsConsumer> logger, IAgvOperatingModeCache operatingModeCache) :
     IConsumer<MqttInstantActions>
 {
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<MqttInstantActions> context)
     {
-        if (!options.IsSimulatedAgv(context.Message.Manufacturer, context.Message.SerialNumber))
+        if (!await operatingModeCache.ExistsAsync(context.Message.SerialNumber.ToGuid()))
         {
             return;
         }
@@ -48,7 +47,7 @@ public class MqttInstantActionsConsumer(ILogger<MqttInstantActionsConsumer> logg
         {
             return;
         }
-        await context.Publish(new UpdatePosition(context.Message.SerialNumber.ToGuid(), new AgvPosition() { Theta = theta.Value, X = x.Value, Y = y.Value, Z = 0, PositionInitialized = true }, lastNodeId));
+        await context.Publish(new UpdatePosition(context.Message.SerialNumber.ToGuid(), new AgvPosition { Theta = theta.Value, X = x.Value, Y = y.Value, Z = 0, PositionInitialized = true }, lastNodeId));
     }
 
     private async Task ExtractChargingActions(ConsumeContext<MqttInstantActions> context)
