@@ -1,8 +1,11 @@
-﻿namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// Represents a resource in the graph.
 /// </summary>
+[PublicAPI]
 public abstract class GraphResource
 {
     private readonly List<RoutingResource> _children = [];
@@ -25,6 +28,7 @@ public abstract class GraphResource
     /// <summary>
     /// Collection of child routing resources.
     /// </summary>
+    // ReSharper disable once MemberCanBeProtected.Global
     public IReadOnlyCollection<RoutingResource> Children => _children;
 
     /// <inheritdoc cref="GraphResource"/>

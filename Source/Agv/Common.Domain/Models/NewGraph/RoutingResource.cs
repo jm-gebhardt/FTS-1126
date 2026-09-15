@@ -24,4 +24,11 @@ public abstract record RoutingResource
         Id = id;
         AgvTypeId = agvTypeId;
     }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    protected RoutingResource()
+    {
+    }
 }

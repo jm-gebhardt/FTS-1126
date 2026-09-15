@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Reservations;

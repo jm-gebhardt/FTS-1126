@@ -1,6 +1,6 @@
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
-using DomainGraph = Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph.Graph;
+using DomainGraph = Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Models.NewGraph;
 

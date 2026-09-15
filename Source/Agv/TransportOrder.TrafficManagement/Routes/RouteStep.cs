@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Reservations;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Routes;

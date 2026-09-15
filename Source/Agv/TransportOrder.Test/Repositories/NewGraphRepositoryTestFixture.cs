@@ -1,4 +1,4 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
@@ -24,18 +24,14 @@ public class NewGraphRepositoryTestFixture : TransportOrderDbFixture
 
     public static Station CreateStation(Guid id, params Node[] interactionNodes)
     {
-        var station = new Station(id, StationName, StationName, null, 0, 0, null);
-        station.InteractionNodes.AddRange(interactionNodes);
+        var station = new Station(id, StationName, StationName, 0, 0, 0, 0, interactionNodes.Select(n => n.Id).ToList());
 
         return station;
     }
 
-    public static Graph CreateGraph(Node[] nodes, Edge[]? edges = null, Station[]? stations = null)
+    public static GraphSegment CreateGraph(Node[] nodes, Edge[]? edges = null, Station[]? stations = null)
     {
-        var graph = new Graph();
-        graph.Nodes.AddRange(nodes);
-        graph.Edges.AddRange(edges ?? []);
-        graph.Stations.AddRange(stations ?? []);
+        var graph = new GraphSegment(nodes, edges ?? [], stations ?? []);
 
         return graph;
     }
@@ -55,7 +51,7 @@ public class NewGraphRepositoryTestFixture : TransportOrderDbFixture
         await using var context = await ContextFactory.CreateDbContextAsync();
         foreach (var (resource, parentId) in resources)
         {
-            context.Add(resource).Property(RoutingResourceEntityConfiguration.ParentId).CurrentValue = parentId;
+            context.Add(resource).Property(NewNodeEntityConfiguration.ParentId).CurrentValue = parentId;
         }
         await context.SaveChangesAsync();
     }

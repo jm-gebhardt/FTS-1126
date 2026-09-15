@@ -35,6 +35,13 @@ public record ActionRoutingEdge : RoutingEdge
     {
         ActionType = actionType;
     }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    public ActionRoutingEdge()
+    {
+    }
 }
 
 /// <summary>

@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
 
 internal class NewGraphEventHandlerTestFixture : MassTransitConsumerTestFixture<NewGraphEventHandler>
 {
-    public NewGraphReceived NewGraphReceived { get; } = new(Guid.NewGuid(), NewGraphGenerator.GenerateGraph());
+    public NewGraphSegmentReceived NewGraphSegmentReceived { get; } = new(Guid.NewGuid(), NewGraphGenerator.GenerateGraph());
 
     public NewGraphEventHandlerTestFixture()
     {

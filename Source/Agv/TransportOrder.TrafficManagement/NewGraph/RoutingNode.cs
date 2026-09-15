@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// A node in the routing graph. Each routing node has an associated AGV type, a load state, and a theta value.
@@ -48,14 +48,6 @@ public class RoutingNode : RoutingResource
     {
         LoadState = loadState;
         Theta = theta;
-    }
-
-    /// <summary>
-    /// Required by EF Core for materializing RoutingNode instances from the database.
-    /// </summary>
-    public RoutingNode()
-    {
-        LoadState = null!;
     }
 
     internal void AddIncomingEdge(RoutingEdge routingEdge)

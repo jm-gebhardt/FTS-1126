@@ -1,5 +1,5 @@
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.AgvSettings;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.BackgroundEditor;
@@ -34,6 +34,8 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         // EF discovers GraphResource as a shared root once it's reachable and demands the key be configured there
         // instead of on each derived type.
         modelBuilder.Ignore<GraphResource>();
+        // RoutingResource is a base class for RoutingNode/RoutingEdge, but it is not mapped to a table itself
+        modelBuilder.Ignore<RoutingResource>();
 
         modelBuilder.ApplyConfiguration(new WaitingPointActionEntityConfiguration());
         modelBuilder.ApplyConfiguration(new DecisionPointActionEntityConfiguration());
@@ -81,7 +83,6 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new NewEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NewStationEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new RoutingResourceEntityConfiguration());
         modelBuilder.ApplyConfiguration(new RoutingNodeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new RoutingEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ActionRoutingEdgeEntityConfiguration());

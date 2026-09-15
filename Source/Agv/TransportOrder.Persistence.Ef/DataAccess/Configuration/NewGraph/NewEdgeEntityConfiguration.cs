@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,11 +12,28 @@ public class NewEdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
     public void Configure(EntityTypeBuilder<Edge> builder)
     {
         builder.ToTable("New" + nameof(Edge));
+
         builder.HasKey(e => e.Id);
-        // StartNode/EndNode are configured from the Node side (see NewNodeEntityConfiguration), paired
-        // with Node.IncomingEdges/OutgoingEdges - do not also configure HasOne() here, it would be ambiguous.
+        builder.Property(e => e.Id).ValueGeneratedNever();
+
         builder.Property(e => e.ShortName).HasMaxLength(DbStringLimits.Description);
-        builder.Ignore(e => e.Children);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
+
+        builder.HasOne<Node>()
+            .WithMany()
+            .HasForeignKey(e => e.StartNodeId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.ClientCascade);
+
+        builder.HasOne<Node>()
+            .WithMany()
+            .HasForeignKey(e => e.EndNodeId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.ClientCascade);
+
+        builder.HasMany(e => e.RoutingEdges)
+            .WithOne()
+            .HasForeignKey(NewNodeEntityConfiguration.ParentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -11,12 +11,12 @@ public record Edge : GraphResource
     /// <summary>
     /// Start node of the edge.
     /// </summary>
-    public Guid StartNodeId { get; }
+    public Guid StartNodeId { get; init; }
 
     /// <summary>
     /// End node of the edge.
     /// </summary>
-    public Guid EndNodeId { get; }
+    public Guid EndNodeId { get; init; }
 
     /// <summary>
     /// List of routing edges associated with this edge.
@@ -28,5 +28,12 @@ public record Edge : GraphResource
     {
         StartNodeId = startNodeId;
         EndNodeId = endNodeId;
+    }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    public Edge()
+    {
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// Represents a resource in the routing graph. Each resource has a unique identifier, an associated AGV type, and a reference to its parent graph resource. 
@@ -41,16 +41,6 @@ public abstract class RoutingResource
         Id = id;
         Parent = parent;
         AgvType = agvType;
-    }
-
-    /// <summary>
-    /// Efcore
-    /// </summary>
-    protected RoutingResource()
-    {
-        Id = Guid.NewGuid();
-        Parent = null!;
-        AgvType = null!;
     }
 
     /// <summary>

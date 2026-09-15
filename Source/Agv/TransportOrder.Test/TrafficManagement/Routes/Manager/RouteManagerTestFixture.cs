@@ -1,9 +1,9 @@
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Logging;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.TrafficManagement;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Reservations;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Generation;

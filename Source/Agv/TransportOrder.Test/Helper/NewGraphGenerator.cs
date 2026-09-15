@@ -13,13 +13,13 @@ public static class NewGraphGenerator
     public const string EdgeName = "start-end";
     public const string StationName = "station";
 
-    public static Graph GenerateGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
+    public static GraphSegment GenerateGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
     {
         var startNode = new Node(Guid.NewGuid(), StartNodeName, StartNodeName, 0, 0, LevelId);
         var endNode = new Node(Guid.NewGuid(), EndNodeName, EndNodeName, 1, 1, LevelId);
         var edge = new Edge(Guid.NewGuid(), EdgeName, EdgeName, startNode.Id, endNode.Id);
         var interactionNode = stationInteractionNodeId is null ? endNode : new Node(stationInteractionNodeId.Value, UnknownNodeName, UnknownNodeName, 2, 2, LevelId);
-        var station = new Station(Guid.NewGuid(), StationName, StationName, 0.5, 1, 1, 0) { InteractionNodeIds = [interactionNode.Id] };
+        var station = new Station(Guid.NewGuid(), StationName, StationName, 1, 1, 0, 0.5, [interactionNode.Id]);
         List<Node> nodes = [startNode, endNode];
         List<Edge> edges = [edge];
         List<Station> stations = [station];
@@ -29,7 +29,7 @@ public static class NewGraphGenerator
             AddRoutingResources(startNode, edge);
         }
 
-        return new Graph(nodes, edges, stations);
+        return new GraphSegment(nodes, edges, stations);
     }
 
     private static void AddRoutingResources(Node startNode, Edge edge)

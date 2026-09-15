@@ -1,5 +1,5 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 

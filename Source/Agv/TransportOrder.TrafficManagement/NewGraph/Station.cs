@@ -1,6 +1,6 @@
 using CommonStation = Gebhardt.Acc.Common.Domain.Models.NewGraph.Station;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// Represents a station in the system. A station is a specific location where AGVs can interact with the environment, such as loading or unloading goods.
@@ -33,19 +33,13 @@ public class Station : GraphResource
     public double? Theta { get; }
 
     /// <inheritdoc cref="Station"/>
+    // ReSharper disable once MemberCanBePrivate.Global
     public Station(Guid id, string name, string shortName, double? stationHeight, double x, double y, double? theta) : base(id, name, shortName)
     {
         StationHeight = stationHeight;
         X = x;
         Y = y;
         Theta = theta;
-    }
-
-    /// <summary>
-    /// For deserialization.
-    /// </summary>
-    public Station() : base(Guid.NewGuid(), null!, null!)
-    {
     }
 
     /// <summary>

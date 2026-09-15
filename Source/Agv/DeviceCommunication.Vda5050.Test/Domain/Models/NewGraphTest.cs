@@ -13,7 +13,7 @@ public class NewGraphTest
     {
         var layoutCollection = NewGraphGenerator.SampleCollection;
 
-        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
+        var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Edges.Count.ShouldBe(1);
         graph.Nodes.Count.ShouldBe(2);
@@ -26,7 +26,7 @@ public class NewGraphTest
         var layout = NewGraphGenerator.GenerateLayout();
         var layoutCollection = NewGraphGenerator.GenerateCollection(layout, NewGraphGenerator.GenerateLayout(NewGraphGenerator.OtherLayoutId));
 
-        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
+        var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Nodes.Select(n => n.Id).ShouldBe(
         [
@@ -42,7 +42,7 @@ public class NewGraphTest
     {
         var layoutCollection = NewGraphGenerator.GenerateCollection(NewGraphGenerator.GenerateLayout());
 
-        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
+        var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         var startNodeId = NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId);
         var endNodeId = NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId);
@@ -60,7 +60,7 @@ public class NewGraphTest
     {
         var layoutCollection = NewGraphGenerator.GenerateCollection(NewGraphGenerator.GenerateLayout());
 
-        var graph = LifToGraphConverter.ToGraph(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
+        var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, NewGraphGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Nodes.ShouldAllBe(n => n.LevelId == NewGraphGenerator.LevelId);
     }

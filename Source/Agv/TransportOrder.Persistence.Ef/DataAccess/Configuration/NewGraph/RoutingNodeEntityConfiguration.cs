@@ -1,4 +1,5 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,25 +11,19 @@ public class RoutingNodeEntityConfiguration : IEntityTypeConfiguration<RoutingNo
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<RoutingNode> builder)
     {
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedNever();
+
+        builder.HasOne<AgvType>()
+            .WithMany()
+            .HasForeignKey(e => e.AgvTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(e => e.Theta);
 
-        builder.Ignore(e => e.ParentNode);
-
-        builder.HasOne(e => e.LoadState)
+        builder.HasOne<LoadState>()
             .WithMany()
-            .HasForeignKey("LoadStateId")
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // RoutingEdge has two references to RoutingNode (StartNode/EndNode), so the inverse collections
-        // must be paired explicitly - a plain HasMany() on both sides would be ambiguous.
-        builder.HasMany(e => e.IncomingEdges)
-            .WithOne(e => e.EndNode)
-            .HasForeignKey("EndNodeId")
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(e => e.OutgoingEdges)
-            .WithOne(e => e.StartNode)
-            .HasForeignKey("StartNodeId")
+            .HasForeignKey(e => e.LoadStateId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

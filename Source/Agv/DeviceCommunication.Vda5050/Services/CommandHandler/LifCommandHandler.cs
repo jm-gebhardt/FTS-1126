@@ -92,12 +92,12 @@ public class LifCommandHandler(
 
         Dictionary<string, Guid> agvTypeIdentifiers = await agvTypeRepository.GetAgvTypeIdentifiersAsync();
 
-        var graph = LifToGraphConverter.ToGraph(layoutCollection, agvTypeIdentifiers, logger);
+        var graphSegment = LifToGraphConverter.ToGraphSegment(layoutCollection, agvTypeIdentifiers, logger);
 
         var layoutStored = new LayoutStored(layoutIds, vehicleTypeIds.ToList());
         await context.Publish(layoutStored);
 
-        await context.Publish(new NewGraphReceived(context.Message.CorrelationId, graph));
+        await context.Publish(new NewGraphSegmentReceived(context.Message.CorrelationId, graphSegment));
 
         await context.RespondAsync(new Success());
     }

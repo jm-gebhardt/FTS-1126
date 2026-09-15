@@ -13,14 +13,14 @@ using OrientationType = Gebhardt.Acc.Common.Domain.Models.NewGraph.OrientationTy
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.LIF.LifToGraphConversion;
 
 /// <summary>
-/// Converts LIF layouts into a <see cref="Graph"/>.
+/// Converts LIF layouts into a <see cref="GraphSegment"/>.
 /// </summary>
 public static class LifToGraphConverter
 {
     /// <summary>
     /// Generates one graph out of the given layouts.
     /// </summary>
-    public static Graph ToGraph(LifLayoutCollection layoutCollection, IReadOnlyDictionary<string, Guid> agvTypeIdentifiers, ILogger logger)
+    public static GraphSegment ToGraphSegment(LifLayoutCollection layoutCollection, IReadOnlyDictionary<string, Guid> agvTypeIdentifiers, ILogger logger)
     {
         var container = new GraphContainer(agvTypeIdentifiers)
                         {
@@ -34,9 +34,9 @@ public static class LifToGraphConverter
         AddRoutingNodes(container, logger);
         AddRoutingEdges(container, logger);
 
-        var graph = new Graph(container.GetNodes(), container.GetEdges(), container.GetStations());
+        var graphSegment = new GraphSegment(container.GetNodes(), container.GetEdges(), container.GetStations());
 
-        return graph;
+        return graphSegment;
     }
 
     private static void AddNodes(Layout layout, GraphContainer container)
@@ -65,18 +65,15 @@ public static class LifToGraphConverter
     {
         foreach (var station in layout.Stations)
         {
-            var internalId = InternalIdGenerator.GetStationId(container.LifId, station.StationId, out string name);
-            List<Guid> internalInteractionNodeIds = station.InteractionNodeIds.Select(id => InternalIdGenerator.GetNodeId(container.LifId, id, out _)).ToList();
+            var stationId = InternalIdGenerator.GetStationId(container.LifId, station.StationId, out string name);
+            List<Guid> interactionNodeIds = station.InteractionNodeIds.Select(id => InternalIdGenerator.GetNodeId(container.LifId, id, out _)).ToList();
 
             if (station.StationPosition is not { } stationPosition)
             {
                 throw new ArgumentException($"Station {layout.LayoutId} - {station.StationName} has no position");
             }
 
-            var commonStation = new CommonStation(internalId, name, station.StationId, station.StationHeight, stationPosition.X, stationPosition.Y, stationPosition.Theta)
-            {
-                InteractionNodeIds = internalInteractionNodeIds
-            };
+            var commonStation = new CommonStation(stationId, name, station.StationId, stationPosition.X, stationPosition.Y, stationPosition.Theta, station.StationHeight, interactionNodeIds);
 
             container.Add(commonStation);
         }
@@ -249,7 +246,7 @@ public static class LifToGraphConverter
                                                 edgeProperty.MaxSpeed,
                                                 edgeProperty.MaxRotationSpeed,
                                                 trajectory));
-    }
+        }
 
     /// <summary>
     /// Gets the load state ids based on the given load restriction. Simplified temporary logic with hardcoded load state ids which are matching in TransportOrder.

@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 
@@ -8,37 +9,76 @@ namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 [PublicAPI]
 public record Station : GraphResource
 {
-    /// <summary>
-    /// These are Ids of the nodes that represent the position at which interaction with this station takes place.
-    /// </summary>
-    public List<Guid> InteractionNodeIds { get; init; } = [];
-
-    /// <summary>
-    /// Absolute physical height of the station in meters.
-    /// </summary>
-    public double? StationHeight { get; }
+    private IReadOnlyList<Node> _interactionNodes = new List<Node>();
+    private IReadOnlyList<Guid> _interactionNodeIds = new List<Guid>();
 
     /// <summary>
     /// X position of the station on the layout in reference to the global origin.
     /// </summary>
-    public double X { get; }
+    public double X { get; init; }
 
     /// <summary>
     /// Y position of the station on the layout in reference to the global origin.
     /// </summary>
-    public double Y { get; }
+    public double Y { get; init; }
 
     /// <summary>
     /// Absolute orientation of the station in radians.
     /// </summary>
-    public double? Theta { get; }
+    public double? Theta { get; init; }
+
+    /// <summary>
+    /// These are Ids of the nodes that represent the position at which interaction with this station takes place. Used for serialization and deserialization purposes.
+    /// </summary>
+    public IReadOnlyList<Guid> InteractionNodeIds
+    {
+        get => _interactionNodeIds;
+        init => _interactionNodeIds = value;
+    }
+
+    /// <summary>
+    /// The nodes that represent the position at which interaction with this station takes place.
+    /// </summary>
+    [JsonIgnore]
+    public IReadOnlyList<Node> InteractionNodes
+    {
+        get => _interactionNodes;
+        init
+        {
+            _interactionNodes = value;
+            _interactionNodeIds = value.Select(n => n.Id).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Absolute physical height of the station in meters.
+    /// </summary>
+    public double? StationHeight { get; init; }
 
     /// <inheritdoc cref="Station"/>
-    public Station(Guid id, string name, string shortName, double? stationHeight, double x, double y, double? theta) : base(id, name, shortName)
+    public Station(Guid id, string name, string shortName, double x, double y, double? theta, double? stationHeight, List<Guid> interactionNodeIds) : base(id, name, shortName)
     {
         StationHeight = stationHeight;
+        InteractionNodeIds = interactionNodeIds;
         X = x;
         Y = y;
         Theta = theta;
+    }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    public Station()
+    {
+        InteractionNodeIds = [];
+    }
+
+    /// <summary>
+    /// Updates the interaction nodes of the station and their corresponding Ids.
+    /// </summary>
+    public void UpdateInteractionNodes(IEnumerable<Node> interactionNodes)
+    {
+        _interactionNodes = interactionNodes.ToList();
+        _interactionNodeIds = _interactionNodes.Select(n => n.Id).ToList();
     }
 }

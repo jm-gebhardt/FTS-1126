@@ -1,5 +1,5 @@
-﻿using Gebhardt.Acc.Common.Persistence.Ef;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Persistence.Ef;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,17 +12,22 @@ public class NewStationEntityConfiguration : IEntityTypeConfiguration<Station>
     public void Configure(EntityTypeBuilder<Station> builder)
     {
         builder.ToTable("New" + nameof(Station));
+
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.X);
-        builder.Property(e => e.Y);
-        builder.Property(e => e.StationHeight);
-        builder.Property(e => e.Theta);
+        builder.Property(e => e.Id).ValueGeneratedNever();
+
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.ShortName).HasMaxLength(DbStringLimits.Description);
-        builder.Ignore(e => e.Children);
+
+        builder.Property(e => e.X);
+        builder.Property(e => e.Y);
+        builder.Property(e => e.Theta);
+        builder.Property(e => e.StationHeight);
+
+        builder.Ignore(e => e.InteractionNodeIds);
 
         builder.HasMany(e => e.InteractionNodes)
             .WithMany()
-            .UsingEntity(j => j.ToTable(nameof(Station.InteractionNodes)));
+            .UsingEntity(j => j.ToTable("NewStationInteractionNodes"));
     }
 }

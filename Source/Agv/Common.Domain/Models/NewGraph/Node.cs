@@ -35,4 +35,11 @@ public record Node : GraphResource
         Y = y;
         LevelId = levelId;
     }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    public Node()
+    {
+    }
 }

@@ -1,7 +1,8 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
+﻿using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// An edge in the routing graph on which an action can be run.
@@ -10,16 +11,28 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 public class ActionRoutingEdge : RoutingEdge
 {
     /// <inheritdoc/>
-    public ActionRoutingEdge(Guid id, GraphResource parent, AgvType agvType, RoutingNode startNode, RoutingNode endNode, double length, bool rotationAllowed, double? maxSpeed, double? maxRotationSpeed, Trajectory? trajectory, RoutingActionType actionType) : base(id, parent, agvType, startNode, endNode, length, rotationAllowed, maxSpeed, maxRotationSpeed, trajectory)
+    public ActionRoutingEdge(Guid id,
+        GraphResource parent,
+        AgvType agvType,
+        RoutingNode startNode,
+        RoutingNode endNode,
+        double length,
+        bool rotationAllowed,
+        double? maxSpeed,
+        double? maxRotationSpeed,
+        Trajectory? trajectory,
+        RoutingActionType actionType) : base(id,
+        parent,
+        agvType,
+        startNode,
+        endNode,
+        length,
+        rotationAllowed,
+        maxSpeed,
+        maxRotationSpeed,
+        trajectory)
     {
         ActionType = actionType;
-    }
-
-    /// <summary>
-    /// Efcore
-    /// </summary>
-    public ActionRoutingEdge()
-    {
     }
 
     /// <summary>

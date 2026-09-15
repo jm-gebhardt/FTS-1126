@@ -1,8 +1,6 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.NewGraph;
-using Gebhardt.Acc.TransportOrder.Persistence.Ef.Models;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +25,6 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
             if (storedNodes.TryGetValue(node.Id, out var storedNode))
             {
                 context.Entry(storedNode).CurrentValues.SetValues(node);
-
                 continue;
             }
 
@@ -38,7 +35,7 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
         return storedNodes;
     }
 
-    private static async Task AddOrUpdateEdgesAsync(TransportOrderDbContext context, IReadOnlyCollection<Edge> edges, Dictionary<Guid, Node> nodesById)
+    private static async Task AddOrUpdateEdgesAsync(TransportOrderDbContext context, IReadOnlyCollection<Edge> edges)
     {
         List<Guid> edgeIds = edges.Select(e => e.Id).ToList();
         Dictionary<Guid, Edge> storedEdges = await context.Set<Edge>()
@@ -50,11 +47,10 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
             if (storedEdges.TryGetValue(edge.Id, out var storedEdge))
             {
                 context.Entry(storedEdge).CurrentValues.SetValues(edge);
-
                 continue;
             }
 
-            context.Add(new Edge(edge.Id, edge.Name, edge.ShortName, nodesById[edge.StartNodeId], nodesById[edge.EndNodeId]));
+            context.Add(edge);
         }
     }
 
@@ -68,67 +64,17 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
 
         foreach (var station in stations)
         {
-            List<Node> interactionNodes = station.InteractionNodes.Select(n => nodesById[n.Id]).ToList();
+            List<Node> interactionNodes = station.InteractionNodeIds.Select(id => nodesById[id]).ToList();
 
             if (storedStations.TryGetValue(station.Id, out var storedStation))
             {
                 context.Entry(storedStation).CurrentValues.SetValues(station);
-                storedStation.InteractionNodes.Clear();
-                storedStation.InteractionNodes.AddRange(interactionNodes);
-
+                storedStation.UpdateInteractionNodes(interactionNodes);
                 continue;
             }
 
-            var newStation = new Station(station.Id, station.Name, station.ShortName, station.StationHeight, station.X, station.Y, station.Theta);
-            newStation.InteractionNodes.AddRange(interactionNodes);
-            context.Add(newStation);
-        }
-    }
-
-    private static async Task LoadRoutingResourcesAsync(TransportOrderDbContext context, Graph graph)
-    {
-        Dictionary<Guid, GraphResource> parentsById = new List<GraphResource>()
-            .Concat(graph.Nodes)
-            .Concat(graph.Edges)
-            .ToDictionary(p => p.Id);
-        List<Guid> parentIds = parentsById.Keys.ToList();
-
-        List<RoutingResource> routingResources = await context.Set<RoutingResource>()
-            .Include(r => r.AgvType)
-            .Include(r => ((RoutingEdge)r).StartNode)
-            .Include(r => ((RoutingEdge)r).EndNode)
-            .Include(r => ((RoutingNode)r).IncomingEdges)
-            .Include(r => ((RoutingNode)r).OutgoingEdges)
-            // ReSharper disable once EntityFramework.ClientSideDbFunctionCall
-            .Where(r => parentIds.Contains(EF.Property<Guid>(r, RoutingResourceEntityConfiguration.ParentId)))
-            .AsSplitQuery()
-            .ToListAsync();
-
-        foreach (var routingResource in routingResources)
-        {
-            var parentId = context.Entry(routingResource).Property<Guid>(RoutingResourceEntityConfiguration.ParentId).CurrentValue;
-            if (parentsById.TryGetValue(parentId, out var parent))
-            {
-                routingResource.AttachParent(parent);
-                parent.AddChild(routingResource);
-            }
-        }
-
-        Dictionary<Guid, RoutingResource> routingResourcesById = routingResources.ToDictionary(r => r.Id);
-        List<Guid> resourceIds = routingResourcesById.Keys.ToList();
-
-        List<RoutingResourceConflict> conflicts = await context.Set<RoutingResourceConflict>()
-            .Where(c => resourceIds.Contains(c.ResourceId) || resourceIds.Contains(c.ConflictingResourceId))
-            .ToListAsync();
-
-        foreach (var conflict in conflicts)
-        {
-            if (routingResourcesById.TryGetValue(conflict.ResourceId, out var resource) &&
-                routingResourcesById.TryGetValue(conflict.ConflictingResourceId, out var conflictingResource))
-            {
-                resource.AddConflictingResource(conflictingResource);
-                conflictingResource.AddConflictingResource(resource);
-            }
+            station.UpdateInteractionNodes(interactionNodes);
+            context.Add(station);
         }
     }
 
@@ -137,24 +83,23 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        var graph = new Graph();
-        graph.Nodes.AddRange(await context.Set<Node>().ToListAsync());
-        graph.Edges.AddRange(await context.Set<Edge>().ToListAsync());
-        graph.Stations.AddRange(await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync());
+        List<Node> nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync();
+        List<Edge> edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync();
+        List<Station> stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync();
 
-        await LoadRoutingResourcesAsync(context, graph);
+        var graph = new Graph(nodes, edges, stations);
 
         return graph;
     }
 
     /// <inheritdoc/>
-    public async Task AddOrUpdateGraphAsync(Graph graph)
+    public async Task AddOrUpdateGraphAsync(GraphSegment graphSegment)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        Dictionary<Guid, Node> nodesById = await AddOrUpdateNodesAsync(context, graph.Nodes);
-        await AddOrUpdateEdgesAsync(context, graph.Edges, nodesById);
-        await AddOrUpdateStationsAsync(context, graph.Stations, nodesById);
+        Dictionary<Guid, Node> nodesById = await AddOrUpdateNodesAsync(context, graphSegment.Nodes);
+        await AddOrUpdateEdgesAsync(context, graphSegment.Edges);
+        await AddOrUpdateStationsAsync(context, graphSegment.Stations, nodesById);
 
         await context.SaveChangesAsync();
     }

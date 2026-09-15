@@ -1,7 +1,8 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
+﻿using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// An edge in the routing graph. Each routing edge connects two routing nodes and represents a possible transition between them.
@@ -64,14 +65,5 @@ public class RoutingEdge : RoutingResource
         MaxSpeed = maxSpeed;
         MaxRotationSpeed = maxRotationSpeed;
         Trajectory = trajectory;
-    }
-
-    /// <summary>
-    /// Required by EF Core for materializing RoutingEdge instances from the database.
-    /// </summary>
-    public RoutingEdge()
-    {
-        StartNode = null!;
-        EndNode = null!;
     }
 }

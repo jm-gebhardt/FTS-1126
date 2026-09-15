@@ -10,30 +10,30 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Services.CommandHandler;
 public class LifCommandHandlerTest
 {
     [TestMethod]
-    public async Task Consume_StoreLif_PublishesNewGraphReceivedForTheStoredLayouts()
+    public async Task Consume_StoreLif_PublishesNewGraphSegmentReceivedForTheStoredLayouts()
     {
         var fixture = new LifCommandHandlerTestFixture();
 
-        var newGraphReceived = await fixture.PublishAndGetFirstMessageAsync<StoreLif, NewGraphReceived>(fixture.StoreLif);
+        var newGraphReceived = await fixture.PublishAndGetFirstMessageAsync<StoreLif, NewGraphSegmentReceived>(fixture.StoreLif);
 
         newGraphReceived.CorrelationId.ShouldBe(fixture.StoreLif.CorrelationId);
-        newGraphReceived.Graph.Nodes.Select(n => n.Id).ShouldBe(
+        newGraphReceived.GraphSegment.Nodes.Select(n => n.Id).ShouldBe(
         [
             NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
             NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
         ], true);
-        newGraphReceived.Graph.Edges.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalEdgeId(NewGraphGenerator.EdgeId));
-        newGraphReceived.Graph.Stations.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalStationId(NewGraphGenerator.StationId));
+        newGraphReceived.GraphSegment.Edges.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalEdgeId(NewGraphGenerator.EdgeId));
+        newGraphReceived.GraphSegment.Stations.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalStationId(NewGraphGenerator.StationId));
     }
 
     [TestMethod]
-    public async Task Consume_StoringTheLifFails_DoesNotPublishNewGraphReceived()
+    public async Task Consume_StoringTheLifFails_DoesNotPublishNewGraphSegmentReceived()
     {
         var fixture = new LifCommandHandlerTestFixture().WithFailingStore();
 
         await fixture.PublishMessageAsync(fixture.StoreLif);
 
         await fixture.ShouldHavePublishedAsync<LifStoringFailed>();
-        await fixture.ShouldNotHavePublishedAsync<NewGraphReceived>();
+        await fixture.ShouldNotHavePublishedAsync<NewGraphSegmentReceived>();
     }
 }

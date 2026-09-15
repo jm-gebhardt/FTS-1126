@@ -98,7 +98,7 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<NewGraphCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(1);
-            partitioner.PartitionMessageById<AddNewGraph, NewGraphCommandHandler>(c);
+            partitioner.PartitionMessageById<AddNewGraphSegment, NewGraphCommandHandler>(c);
         });
 
         return busRegistrationConfigurator;

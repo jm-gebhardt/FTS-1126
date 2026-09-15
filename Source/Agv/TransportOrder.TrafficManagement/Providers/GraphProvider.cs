@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;

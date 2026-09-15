@@ -5,7 +5,7 @@ using LifEdge = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif.Edge;
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.LIF.LifToGraphConversion;
 
 /// <summary>
-/// Mutable container used while converting a LIF layout into a <see cref="Common.Domain.Models.NewGraph.Graph"/>.
+/// Mutable container used while converting a LIF layout into a <see cref="Common.Domain.Models.NewGraph.GraphSegment"/>.
 /// Collects nodes, edges and stations as they are created, deduplicates routing nodes and resolves AGV type identifiers by vehicle type id.
 /// </summary>
 internal class GraphContainer(IReadOnlyDictionary<string, Guid> agvTypeIdentifiers)

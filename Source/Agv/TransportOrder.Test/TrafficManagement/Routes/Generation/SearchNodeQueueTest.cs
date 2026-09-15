@@ -1,4 +1,6 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Generation;
 using Shouldly;
 
@@ -7,11 +9,13 @@ namespace Gebhardt.Acc.TransportOrder.Test.TrafficManagement.Routes.Generation;
 [TestClass]
 public class SearchNodeQueueTest
 {
+    private static readonly AgvType _agvType = AgvTypeGenerator.GenerateAgvType();
+
     [TestMethod]
     public void TryEnqueue_EmptyQueue_ReturnsTrueAndNodeIsDequeued()
     {
         var queue = new SearchNodeQueue();
-        var searchNode = CreateSearchNode(new RoutingNode(), 1);
+        var searchNode = CreateSearchNode(RoutingResourceGenerator.CreateRoutingNode(_agvType), 1);
 
         bool enqueued = queue.TryEnqueue(searchNode);
 
@@ -35,9 +39,9 @@ public class SearchNodeQueueTest
     public void TryDequeue_MultipleNodes_ReturnsNodesOrderedByTotalCost()
     {
         var queue = new SearchNodeQueue();
-        var expensiveSearchNode = CreateSearchNode(new RoutingNode(), 5);
-        var cheapSearchNode = CreateSearchNode(new RoutingNode(), 1);
-        var mediumSearchNode = CreateSearchNode(new RoutingNode(), 3);
+        var expensiveSearchNode = CreateSearchNode(RoutingResourceGenerator.CreateRoutingNode(_agvType), 5);
+        var cheapSearchNode = CreateSearchNode(RoutingResourceGenerator.CreateRoutingNode(_agvType), 1);
+        var mediumSearchNode = CreateSearchNode(RoutingResourceGenerator.CreateRoutingNode(_agvType), 3);
 
         queue.TryEnqueue(expensiveSearchNode);
         queue.TryEnqueue(cheapSearchNode);
@@ -50,7 +54,7 @@ public class SearchNodeQueueTest
     public void TryEnqueue_DominatedNodeForSameRoutingNode_ReturnsFalseAndKeepsExistingNode()
     {
         var queue = new SearchNodeQueue();
-        var routingNode = new RoutingNode();
+        var routingNode = RoutingResourceGenerator.CreateRoutingNode(_agvType);
         var dominatingSearchNode = CreateSearchNode(routingNode, 5);
         var dominatedSearchNode = CreateSearchNode(routingNode, 8);
         queue.TryEnqueue(dominatingSearchNode);
@@ -65,7 +69,7 @@ public class SearchNodeQueueTest
     public void TryEnqueue_BetterNodeForSameRoutingNode_ReplacesExistingNode()
     {
         var queue = new SearchNodeQueue();
-        var routingNode = new RoutingNode();
+        var routingNode = RoutingResourceGenerator.CreateRoutingNode(_agvType);
         var dominatedSearchNode = CreateSearchNode(routingNode, 8);
         var dominatingSearchNode = CreateSearchNode(routingNode, 5);
         queue.TryEnqueue(dominatedSearchNode);
@@ -80,7 +84,7 @@ public class SearchNodeQueueTest
     public void TryEnqueue_EqualTotalCostForSameRoutingNode_ReturnsFalseAndKeepsExistingNode()
     {
         var queue = new SearchNodeQueue();
-        var routingNode = new RoutingNode();
+        var routingNode = RoutingResourceGenerator.CreateRoutingNode(_agvType);
         var firstSearchNode = CreateSearchNode(routingNode, 5);
         var secondSearchNode = CreateSearchNode(routingNode, 5, firstSearchNode);
         queue.TryEnqueue(firstSearchNode);
@@ -95,7 +99,7 @@ public class SearchNodeQueueTest
     public void TryEnqueue_AfterDequeueOfSameRoutingNode_KeepsDominationCheckAcrossProcessedNodes()
     {
         var queue = new SearchNodeQueue();
-        var routingNode = new RoutingNode();
+        var routingNode = RoutingResourceGenerator.CreateRoutingNode(_agvType);
         var processedSearchNode = CreateSearchNode(routingNode, 5);
         var dominatedSearchNode = CreateSearchNode(routingNode, 8);
         var dominatingSearchNode = CreateSearchNode(routingNode, 2);

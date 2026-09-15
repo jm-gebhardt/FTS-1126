@@ -1,4 +1,4 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -18,6 +18,6 @@ public interface INewGraphRepository
     /// <summary>
     /// Merges the given graph into the stored one, adding unknown resources and updating known ones.
     /// </summary>
-    /// <param name="graph">The graph to merge in.</param>
-    Task AddOrUpdateGraphAsync(Graph graph);
+    /// <param name="graphSegment">The graph segment to merge in.</param>
+    Task AddOrUpdateGraphAsync(GraphSegment graphSegment);
 }

@@ -1,6 +1,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Route;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Manager;
 using Shouldly;

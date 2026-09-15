@@ -97,6 +97,13 @@ public record RoutingEdge : RoutingResource
         VehicleOrientation = vehicleOrientation;
         OrientationType = orientationType;
     }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    public RoutingEdge()
+    {
+    }
 }
 
 /// <summary>

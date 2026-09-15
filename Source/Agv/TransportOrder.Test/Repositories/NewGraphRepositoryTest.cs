@@ -1,5 +1,4 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 using Fixture = Gebhardt.Acc.TransportOrder.Test.Repositories.NewGraphRepositoryTestFixture;
@@ -16,7 +15,7 @@ public class NewGraphRepositoryTest
         var commonGraph = NewGraphGenerator.GenerateGraph();
         var commonEdge = commonGraph.Edges.Single();
 
-        await fixture.GraphRepository.AddOrUpdateGraphAsync(Graph.FromCommon(commonGraph));
+        await fixture.GraphRepository.AddOrUpdateGraphAsync(commonGraph);
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
         loaded.Nodes.Select(n => n.Id).ShouldBe(commonGraph.Nodes.Select(n => n.Id), true);
@@ -47,7 +46,7 @@ public class NewGraphRepositoryTest
         var nodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
             [nodeA, nodeB],
-            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA, nodeB)],
+            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA.Id, nodeB.Id)],
             [Fixture.CreateStation(stationId, nodeA)]));
 
         var movedNodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null);
@@ -55,7 +54,7 @@ public class NewGraphRepositoryTest
         var nodeC = new Node(nodeCId, Fixture.NodeCName, Fixture.NodeCName, 2, 2, null);
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
             [movedNodeA, reuploadedNodeB, nodeC],
-            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, movedNodeA, reuploadedNodeB), new Edge(edgeAcId, Fixture.EdgeAcName, Fixture.EdgeAcName, movedNodeA, nodeC)],
+            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, movedNodeA.Id, reuploadedNodeB.Id), new Edge(edgeAcId, Fixture.EdgeAcName, Fixture.EdgeAcName, movedNodeA.Id, nodeC.Id)],
             [Fixture.CreateStation(stationId, nodeC)]));
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
@@ -74,7 +73,7 @@ public class NewGraphRepositoryTest
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph([node]));
 
         var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
-        var routingNode = new RoutingNode(Guid.NewGuid(), node, agvType, new LoadState(Guid.NewGuid(), false), 0);
+        var routingNode = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid(), 0);
         await fixture.AddRoutingResourcesAsync((routingNode, nodeId));
 
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
@@ -83,7 +82,7 @@ public class NewGraphRepositoryTest
         var loaded = await fixture.GraphRepository.GetGraphAsync();
         var loadedNode = loaded.Nodes.ShouldHaveSingleItem();
         loadedNode.X.ShouldBe(Fixture.MovedNodePosition);
-        loadedNode.Children.ShouldHaveSingleItem().Id.ShouldBe(routingNode.Id);
+        loadedNode.RoutingNodes.ShouldHaveSingleItem().Id.ShouldBe(routingNode.Id);
     }
 
     [TestMethod]
@@ -105,14 +104,15 @@ public class NewGraphRepositoryTest
 
         var nodeA = new Node(Guid.NewGuid(), Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
         var nodeB = new Node(Guid.NewGuid(), Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
-        var edge = new Edge(Guid.NewGuid(), Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA, nodeB);
-        var station = new Station(Guid.NewGuid(), Fixture.StationName, Fixture.StationName, null, 0, 0, null);
+        var edge = new Edge(Guid.NewGuid(), Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA.Id, nodeB.Id);
+        var station = new Station(Guid.NewGuid(), Fixture.StationName, Fixture.StationName,  0, 0, null, null, []);
         await fixture.AddResourcesAsync([nodeA, nodeB], [edge], [station]);
 
         var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
-        var routingNodeA = new RoutingNode(Guid.NewGuid(), nodeA, agvType, new LoadState(Guid.NewGuid(), false), 0);
-        var routingNodeB = new RoutingNode(Guid.NewGuid(), nodeB, agvType, new LoadState(Guid.NewGuid(), false), 0);
-        var routingEdge = new RoutingEdge(Guid.NewGuid(), edge, agvType, routingNodeA, routingNodeB, 5.0, true, null, null, null);
+        var routingNodeA = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid() , 0);
+        var routingNodeB = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid() , 0);
+        var routingEdge = new RoutingEdge(Guid.NewGuid(), agvType.Id, routingNodeA.Id, routingNodeB.Id, 5.0, Math.PI, OrientationType.Tangential,  null, null,
+            false, null, null, null);
 
         await fixture.AddRoutingResourcesAsync(
             (routingNodeA, nodeA.Id),
@@ -129,22 +129,17 @@ public class NewGraphRepositoryTest
         var loadedNodeB = loaded.Nodes.Single(n => n.Id == nodeB.Id);
         var loadedEdge = loaded.Edges.Single();
 
-        var attachedRoutingNodeA = loadedNodeA.Children.ShouldHaveSingleItem().ShouldBeOfType<RoutingNode>();
+        var attachedRoutingNodeA = loadedNodeA.RoutingNodes.ShouldHaveSingleItem().ShouldBeOfType<RoutingNode>();
         attachedRoutingNodeA.Id.ShouldBe(routingNodeA.Id);
-        attachedRoutingNodeA.Parent.ShouldBeSameAs(loadedNodeA);
-        attachedRoutingNodeA.AgvType.Id.ShouldBe(agvType.Id);
+        attachedRoutingNodeA.AgvTypeId.ShouldBe(agvType.Id);
 
-        var attachedRoutingNodeB = loadedNodeB.Children.ShouldHaveSingleItem().ShouldBeOfType<RoutingNode>();
+        var attachedRoutingNodeB = loadedNodeB.RoutingNodes.ShouldHaveSingleItem().ShouldBeOfType<RoutingNode>();
         attachedRoutingNodeB.Id.ShouldBe(routingNodeB.Id);
-        attachedRoutingNodeB.Parent.ShouldBeSameAs(loadedNodeB);
 
-        var attachedRoutingEdge = loadedEdge.Children.ShouldHaveSingleItem().ShouldBeOfType<RoutingEdge>();
+        var attachedRoutingEdge = loadedEdge.RoutingEdges.ShouldHaveSingleItem().ShouldBeOfType<RoutingEdge>();
         attachedRoutingEdge.Id.ShouldBe(routingEdge.Id);
-        attachedRoutingEdge.Parent.ShouldBeSameAs(loadedEdge);
 
-        attachedRoutingEdge.StartNode.ShouldBeSameAs(attachedRoutingNodeA);
-        attachedRoutingEdge.EndNode.ShouldBeSameAs(attachedRoutingNodeB);
-        attachedRoutingNodeA.OutgoingEdges.ShouldContain(e => e.Id == routingEdge.Id);
-        attachedRoutingNodeB.IncomingEdges.ShouldContain(e => e.Id == routingEdge.Id);
+        attachedRoutingEdge.StartNodeId.ShouldBe(attachedRoutingNodeA.Id);
+        attachedRoutingEdge.EndNodeId.ShouldBe(attachedRoutingNodeB.Id);
     }
 }

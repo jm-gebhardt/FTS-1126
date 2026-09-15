@@ -24,4 +24,11 @@ public record RoutingNode : RoutingResource
         LoadStateId = loadStateId;
         Theta = theta;
     }
+
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
+    public RoutingNode()
+    {
+    }
 }

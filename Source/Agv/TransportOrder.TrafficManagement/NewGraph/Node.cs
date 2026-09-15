@@ -1,10 +1,12 @@
+using JetBrains.Annotations;
 using CommonNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// Represents a node in the graph.
 /// </summary>
+[PublicAPI]
 public class Node : GraphResource
 {
     /// <summary>
@@ -48,13 +50,6 @@ public class Node : GraphResource
         X = x;
         Y = y;
         LevelId = levelId;
-    }
-
-    /// <summary>
-    /// For deserialization.
-    /// </summary>
-    public Node() : base(Guid.NewGuid(), null!, null!)
-    {
     }
 
     /// <summary>

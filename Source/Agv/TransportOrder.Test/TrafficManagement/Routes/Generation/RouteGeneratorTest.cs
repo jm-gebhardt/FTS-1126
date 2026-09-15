@@ -1,6 +1,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Generation;
 using Microsoft.Extensions.Logging.Abstractions;

@@ -12,16 +12,16 @@ public class NewGraphCommandHandlerTest
     public async Task Consume_AddNewGraph_SavesTheGraphWithItsResources()
     {
         var fixture = new NewGraphCommandHandlerTestFixture();
-        var commandGraph = fixture.AddNewGraph.Graph;
+        var commandGraph = fixture.AddNewGraphSegment.GraphSegment;
 
-        await fixture.PublishMessageAsync(fixture.AddNewGraph);
+        await fixture.PublishMessageAsync(fixture.AddNewGraphSegment);
 
-        var savedGraph = fixture.SavedGraphs.ShouldHaveSingleItem();
+        var savedGraph = fixture.SavedGraphSegments.ShouldHaveSingleItem();
         savedGraph.Nodes.Select(n => n.Id).ShouldBe(commandGraph.Nodes.Select(n => n.Id), true);
         savedGraph.Edges.Select(e => e.Id).ShouldBe(commandGraph.Edges.Select(e => e.Id), true);
         savedGraph.Stations.Select(s => s.Id).ShouldBe(commandGraph.Stations.Select(s => s.Id), true);
-        savedGraph.Stations.Single().InteractionNodes.ShouldHaveSingleItem()
-            .ShouldBeSameAs(savedGraph.Nodes.Single(n => n.Name == NewGraphGenerator.EndNodeName));
+        savedGraph.Stations.Single().InteractionNodeIds.ShouldHaveSingleItem()
+            .ShouldBe(savedGraph.Nodes.Single(n => n.Name == NewGraphGenerator.EndNodeName).Id);
     }
 
     [TestMethod]
@@ -29,8 +29,8 @@ public class NewGraphCommandHandlerTest
     {
         var fixture = new NewGraphCommandHandlerTestFixture().WithFailingRepository();
 
-        await fixture.PublishMessageAsync(fixture.AddNewGraph);
+        await fixture.PublishMessageAsync(fixture.AddNewGraphSegment);
 
-        await fixture.ShouldHavePublishedAsync<Fault<AddNewGraph>>();
+        await fixture.ShouldHavePublishedAsync<Fault<AddNewGraphSegment>>();
     }
 }

@@ -20,7 +20,9 @@ public record Trajectory
         Degree = degree;
     }
 
-    /// <inheritdoc cref="Trajectory"/>
+    /// <summary>
+    /// Parameterless constructor for EF Core.
+    /// </summary>
     public Trajectory()
     {
     }
@@ -28,17 +30,17 @@ public record Trajectory
     /// <summary>
     /// Control points defining the trajectory.
     /// </summary>
-    public IReadOnlyList<ControlPoint> ControlPoints { get; set; } = [];
+    public IReadOnlyList<ControlPoint> ControlPoints { get; init; } = [];
 
     /// <summary>
     /// Degree of the trajectory curve. Default is 1. Range: [1 ... 3]
     /// </summary>
-    public long? Degree { get; set; }
+    public long? Degree { get; init; }
 
     /// <summary>
     /// Knot vector for the trajectory.
     /// </summary>
-    public double[] KnotVector { get; set; } = [];
+    public double[] KnotVector { get; init; } = [];
 
     /// <summary>
     /// Calculates the approximated length of the trajectory in meters.

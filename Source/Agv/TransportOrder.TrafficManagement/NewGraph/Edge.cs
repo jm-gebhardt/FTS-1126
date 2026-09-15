@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using CommonEdge = Gebhardt.Acc.Common.Domain.Models.NewGraph.Edge;
 
-namespace Gebhardt.Acc.TransportOrder.Domain.Models.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 
 /// <summary>
 /// Represents an edge in a graph, connecting two nodes.
@@ -36,15 +36,6 @@ public class Edge : GraphResource
         EndNode = endNode;
         StartNodeId = startNode.Id;
         EndNodeId = endNode.Id;
-    }
-
-    /// <summary>
-    /// For deserialization.
-    /// </summary>
-    public Edge() : base(Guid.Empty, null!, null!)
-    {
-        StartNode = null!;
-        EndNode = null!;
     }
 
     /// <summary>
