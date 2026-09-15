@@ -1,8 +1,10 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using System.Numerics;
+using GraphNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
@@ -15,15 +17,15 @@ public class BezierEdgePolygonProvider : EdgePolygonProviderBase
     private const double StepSize = 0.1;
 
     /// <inheritdoc/>
-    public override bool Supports(EdgeType edgeType)
+    public override bool Supports(Trajectory? trajectory)
     {
-        return edgeType is EdgeType.Bezier2 or EdgeType.Bezier3 or EdgeType.Bezier5;
+        return trajectory is not null && trajectory.Degree >= 2;
     }
 
     /// <inheritdoc/>
-    public override double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to)
+    public override double GetDirectionAtEndpoint(RoutingEdge edge, GraphNode startNode, GraphNode endNode)
     {
-        var bezier = new Bezier(edge.VariantParameters.Select(cp => cp.ToVector2()).ToList());
+        var bezier = CreateBezier(edge);
 
         (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] frames = bezier.GetSamples(2);
 
@@ -33,15 +35,15 @@ public class BezierEdgePolygonProvider : EdgePolygonProviderBase
     }
 
     /// <inheritdoc/>
-    public override Polygon GetPolygon(GraphEdge edge, GraphNode from, GraphNode to, AgvData agvData, IReadOnlyList<IMarginStrategy> margins)
+    public override Polygon GetPolygon(RoutingEdge edge, GraphNode startNode, GraphNode endNode, IAgvType agvType, IReadOnlyList<IMarginStrategy> margins)
     {
         int steps = Math.Max((int)Math.Ceiling(edge.Length / StepSize), 2);
 
-        var samplePolygon = GetEdgeSamplePolygon(edge, agvData, margins, 0); //todo: get tangential orientation form graph model and assert it is constant for the whole edge
+        var samplePolygon = GetEdgeSamplePolygon(edge, agvType, margins, 0); //todo: get tangential orientation form graph model and assert it is constant for the whole edge
 
         (var innerVertex, var outerVertex, List<Vector2> startCap, List<Vector2> endCap) = SplitPolygon(samplePolygon.Points.Select(p => p.ToVector2()).ToList());
 
-        var bezier = new Bezier(edge.VariantParameters.Select(cp => cp.ToVector2()).ToList());
+        var bezier = CreateBezier(edge);
 
         (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] frames = bezier.GetSamples(steps);
 
@@ -73,6 +75,20 @@ public class BezierEdgePolygonProvider : EdgePolygonProviderBase
         List<PolygonPoint> polygonPoints = outline.Select(p => new PolygonPoint(p.X, p.Y)).ToList();
 
         return new Polygon(polygonPoints);
+    }
+
+    /// <summary>
+    /// Builds the Bezier curve spanned by the control points of the edge's trajectory.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The edge has no trajectory.</exception>
+    private static Bezier CreateBezier(RoutingEdge edge)
+    {
+        if (edge.Trajectory is null)
+        {
+            throw new InvalidOperationException($"Edge {edge.Id} has no trajectory to build a Bezier curve from.");
+        }
+
+        return new Bezier(edge.Trajectory.ControlPoints.Select(cp => new Vector2((float)cp.X, (float)cp.Y)).ToList());
     }
 
     /// <summary>

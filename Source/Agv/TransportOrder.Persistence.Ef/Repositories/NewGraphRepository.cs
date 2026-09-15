@@ -103,4 +103,20 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
 
         await context.SaveChangesAsync();
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> RoutingNodeExistsAsync(Guid id)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        return await context.Set<RoutingNode>().AsNoTracking().AnyAsync(n => n.Id == id);
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> RoutingEdgeExistsAsync(Guid id)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        return await context.Set<RoutingEdge>().AsNoTracking().AnyAsync(e => e.Id == id);
+    }
 }

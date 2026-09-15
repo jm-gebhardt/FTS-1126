@@ -22,6 +22,9 @@ public class AgvDb : IAgvDb
     public IGraphRepository Graphs { get; }
 
     /// <inheritdoc cref="IAgvDb"/>>
+    public INewGraphRepository NewGraphs { get; }
+
+    /// <inheritdoc cref="IAgvDb"/>>
     public IAgvRepository Agvs { get; }
 
     /// <inheritdoc cref="IAgvDb"/>>
@@ -42,6 +45,7 @@ public class AgvDb : IAgvDb
         IAgvErrorRepository errors,
         ICargoRepository cargos,
         IGraphRepository graphs,
+        INewGraphRepository newGraphs,
         IAgvRepository agvs,
         IAgvSettingsProvider settings,
         IZoneRepository zones,
@@ -53,6 +57,7 @@ public class AgvDb : IAgvDb
         Errors = errors;
         Cargos = cargos;
         Graphs = graphs;
+        NewGraphs = newGraphs;
         Agvs = agvs;
         AgvSettings = settings;
         Zones = zones;

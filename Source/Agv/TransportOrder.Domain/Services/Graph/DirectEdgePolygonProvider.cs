@@ -1,9 +1,10 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 using System.Numerics;
+using GraphNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
@@ -14,41 +15,41 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 public class DirectEdgePolygonProvider : EdgePolygonProviderBase
 {
     /// <inheritdoc/>
-    public override bool Supports(EdgeType edgeType)
+    public override bool Supports(Trajectory? trajectory)
     {
-        return edgeType is EdgeType.Direct 
-                        or EdgeType.Polypath or EdgeType.Slanted; // to provide a fallback for edge types that are not supported yet
-    }
-    
-    /// <inheritdoc/>
-    public override double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to)
-    {
-        double dx = to.X - (double)from.X;
-        double dy = to.Y - (double)from.Y;
-        return Math.Atan2(dy, dx);
+        return trajectory is null || trajectory.Degree is null || trajectory.Degree <= 1;
     }
 
     /// <inheritdoc/>
-    public override Polygon GetPolygon(GraphEdge edge, GraphNode from, GraphNode to, AgvData agvData, IReadOnlyList<IMarginStrategy> margins)
+    public override double GetDirectionAtEndpoint(RoutingEdge edge, GraphNode startNode, GraphNode endNode)
     {
-        var samplePolygon = GetEdgeSamplePolygon(edge, agvData, margins, 0); //todo: get tangential orientation form graph model and assert it is constant for the whole edge
+        return Math.Atan2(endNode.Y - startNode.Y, endNode.X - startNode.X);
+    }
+
+    /// <inheritdoc/>
+    public override Polygon GetPolygon(RoutingEdge edge, GraphNode startNode, GraphNode endNode, IAgvType agvType, IReadOnlyList<IMarginStrategy> margins)
+    {
+        var samplePolygon = GetEdgeSamplePolygon(edge, agvType, margins, 0); //todo: get tangential orientation form graph model and assert it is constant for the whole edge
 
         (_, _, List<Vector2> startCap, List<Vector2> endCap) = SplitPolygon(samplePolygon.Points.Select(p => p.ToVector2()).ToList());
 
-        var vector = new Vector2(to.X - from.X, to.Y - from.Y);
+        var from = new Vector2((float)startNode.X, (float)startNode.Y);
+        var to = new Vector2((float)endNode.X, (float)endNode.Y);
+
+        var vector = to - from;
         var tangent = vector.LengthSquared() < Mathematics.FloatComparator ? Vector2.UnitX : Vector2.Normalize(vector);
         var normal = new Vector2(-tangent.Y, tangent.X);
 
-        var ring = new List<Vector2>( startCap.Count + endCap.Count);
+        var ring = new List<Vector2>(startCap.Count + endCap.Count);
 
-        var startFrame = (new Vector2(from.X, from.Y), tangent, normal);
+        var startFrame = (from, tangent, normal);
 
         foreach (var vertex in startCap)
         {
             ring.Add(Transform(startFrame, vertex));
         }
 
-        var endFrame = (new Vector2(to.X, to.Y), tangent, normal);
+        var endFrame = (to, tangent, normal);
 
         foreach (var vertex in endCap)
         {

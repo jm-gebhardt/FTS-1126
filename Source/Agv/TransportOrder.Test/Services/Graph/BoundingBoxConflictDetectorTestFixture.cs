@@ -1,12 +1,14 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
+using RoutingGraph = Gebhardt.Acc.Common.Domain.Models.NewGraph.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.Graph;
 
 public class BoundingBoxConflictDetectorTestFixture
 {
     private readonly List<ResourceBoundingBox> _boxes = [];
-    private Common.Domain.Models.Graphs.Graph _graph = new();
+    private RoutingGraph _graph = RoutingGraphGenerator.GenerateGraph();
 
     public BoundingBoxConflictDetector Detector => new(_boxes, _graph);
 
@@ -16,7 +18,7 @@ public class BoundingBoxConflictDetectorTestFixture
         return this;
     }
 
-    public BoundingBoxConflictDetectorTestFixture WithGraph(Common.Domain.Models.Graphs.Graph graph)
+    public BoundingBoxConflictDetectorTestFixture WithGraph(RoutingGraph graph)
     {
         _graph = graph;
         return this;

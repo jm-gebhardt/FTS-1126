@@ -1,9 +1,8 @@
-using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
+using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
+using AgvTypeGenerator = Gebhardt.Acc.Common.Testing.Helpers.AgvTypeGenerator;
+using Fixture = Gebhardt.Acc.TransportOrder.Test.Services.Graph.GraphBoundingBoxCalculatorTestFixture;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.Graph;
 
@@ -13,17 +12,15 @@ public class GraphBoundingBoxCalculatorTests
     [TestMethod]
     public void CalculateNode_NodeWithIncidentEdge_OrientsBoxAlongEdge()
     {
-        const string centerNodeName = "center";
-        const string northNodeName = "north";
-        var center = NodeGenerator.GenerateNode(x: 0, y: 0, theta: 0f, nodeName: centerNodeName);
-        var north = NodeGenerator.GenerateNode(x: 0, y: 5, nodeName: northNodeName);
-        var edge = EdgeGenerator.Generate(centerNodeName, northNodeName);
-        var graph = GraphGenerator.Generate([center, north], [edge]);
-        var agvData = AgvDataGenerator.GenerateAgvData(length: 4.0, width: 2.0);
+        var center = RoutingGraphGenerator.GenerateNode(0, 0);
+        var north = RoutingGraphGenerator.GenerateNode(0, 5);
+        var edge = RoutingGraphGenerator.GenerateEdge(center, north);
+        var graph = RoutingGraphGenerator.GenerateGraph([center, north], [edge]);
+        var agvType = AgvTypeGenerator.GenerateAgvTypeInfo(length: Fixture.AgvLength, width: Fixture.AgvWidth);
 
-        var box = new GraphBoundingBoxCalculatorTestFixture()
+        var box = new Fixture()
             .WithGraph(graph)
-            .Calculator.CalculateNode(center, agvData, []);
+            .Calculator.CalculateNode(RoutingGraphGenerator.GetRoutingNode(center), agvType, []);
 
         box.Polygon.Points.Max(p => Math.Abs(p.X)).ShouldBe(1.0, 1e-6);
         box.Polygon.Points.Max(p => Math.Abs(p.Y)).ShouldBe(2.0, 1e-6);
@@ -32,17 +29,15 @@ public class GraphBoundingBoxCalculatorTests
     [TestMethod]
     public void CalculateNode_NodeAtEdgeEnd_OrientsBoxAlongEdge()
     {
-        const string centerNodeName = "center";
-        const string fromNodeName = "south";
-        var center = NodeGenerator.GenerateNode(x: 0, y: 0, theta: 0f, nodeName: centerNodeName);
-        var south = NodeGenerator.GenerateNode(x: 0, y: -5, nodeName: fromNodeName);
-        var edge = EdgeGenerator.Generate(fromNodeName, centerNodeName);
-        var graph = GraphGenerator.Generate([center, south], [edge]);
-        var agvData = AgvDataGenerator.GenerateAgvData(length: 4.0, width: 2.0);
+        var center = RoutingGraphGenerator.GenerateNode(0, 0);
+        var south = RoutingGraphGenerator.GenerateNode(0, -5);
+        var edge = RoutingGraphGenerator.GenerateEdge(south, center);
+        var graph = RoutingGraphGenerator.GenerateGraph([center, south], [edge]);
+        var agvType = AgvTypeGenerator.GenerateAgvTypeInfo(length: Fixture.AgvLength, width: Fixture.AgvWidth);
 
-        var box = new GraphBoundingBoxCalculatorTestFixture()
+        var box = new Fixture()
             .WithGraph(graph)
-            .Calculator.CalculateNode(center, agvData, []);
+            .Calculator.CalculateNode(RoutingGraphGenerator.GetRoutingNode(center), agvType, []);
 
         box.Polygon.Points.Max(p => Math.Abs(p.X)).ShouldBe(1.0, 1e-6);
         box.Polygon.Points.Max(p => Math.Abs(p.Y)).ShouldBe(2.0, 1e-6);
@@ -51,14 +46,13 @@ public class GraphBoundingBoxCalculatorTests
     [TestMethod]
     public void CalculateNode_IsolatedNode_FallsBackToTheta()
     {
-        const string nodeName = "isolated";
-        var node = NodeGenerator.GenerateNode(x: 0, y: 0, theta: (float)(Math.PI / 2), nodeName: nodeName);
-        var graph = GraphGenerator.Generate([node]);
-        var agvData = AgvDataGenerator.GenerateAgvData(length: 4.0, width: 2.0);
+        var node = RoutingGraphGenerator.GenerateNode(0, 0, Math.PI / 2);
+        var graph = RoutingGraphGenerator.GenerateGraph([node]);
+        var agvType = AgvTypeGenerator.GenerateAgvTypeInfo(length: Fixture.AgvLength, width: Fixture.AgvWidth);
 
-        var box = new GraphBoundingBoxCalculatorTestFixture()
+        var box = new Fixture()
             .WithGraph(graph)
-            .Calculator.CalculateNode(node, agvData, []);
+            .Calculator.CalculateNode(RoutingGraphGenerator.GetRoutingNode(node), agvType, []);
 
         box.Polygon.Points.Max(p => Math.Abs(p.X)).ShouldBe(1.0, 1e-6);
         box.Polygon.Points.Max(p => Math.Abs(p.Y)).ShouldBe(2.0, 1e-6);
@@ -67,38 +61,36 @@ public class GraphBoundingBoxCalculatorTests
     [TestMethod]
     public void CalculateNode_ProviderReportsDirection_OrientsBoxAlongProviderDirection()
     {
-        const string centerNodeName = "center";
-        const string eastNodeName = "east";
-        var center = NodeGenerator.GenerateNode(x: 0, y: 0, theta: 0f, nodeName: centerNodeName);
-        var east = NodeGenerator.GenerateNode(x: 5, y: 0, nodeName: eastNodeName);
-        var edge = EdgeGenerator.Generate(centerNodeName, eastNodeName);
-        var graph = GraphGenerator.Generate([center, east], [edge]);
-        var agvData = AgvDataGenerator.GenerateAgvData(length: 4.0, width: 2.0);
+        var center = RoutingGraphGenerator.GenerateNode(0, 0);
+        var east = RoutingGraphGenerator.GenerateNode(5, 0);
+        var edge = RoutingGraphGenerator.GenerateEdge(center, east);
+        var graph = RoutingGraphGenerator.GenerateGraph([center, east], [edge]);
+        var agvType = AgvTypeGenerator.GenerateAgvTypeInfo(length: Fixture.AgvLength, width: Fixture.AgvWidth);
 
-        var box = new GraphBoundingBoxCalculatorTestFixture()
+        var box = new Fixture()
             .WithGraph(graph)
-            .WithProviders(new EdgePolygonProviderMock(Math.PI / 2))
-            .Calculator.CalculateNode(center, agvData, []);
+            .WithProviderDirection(Math.PI / 2)
+            .Calculator.CalculateNode(RoutingGraphGenerator.GetRoutingNode(center), agvType, []);
 
         box.Polygon.Points.Max(p => Math.Abs(p.X)).ShouldBe(1.0, 1e-6);
         box.Polygon.Points.Max(p => Math.Abs(p.Y)).ShouldBe(2.0, 1e-6);
     }
 
-    private class EdgePolygonProviderMock(double direction) : IEdgePolygonProvider
+    [TestMethod]
+    public void CalculateAll_GraphWithNodeAndEdge_ReturnsBoxPerRoutingResource()
     {
-        public bool Supports(EdgeType edgeType)
-        {
-            return true;
-        }
+        var from = RoutingGraphGenerator.GenerateNode(0, 0);
+        var to = RoutingGraphGenerator.GenerateNode(5, 0);
+        var edge = RoutingGraphGenerator.GenerateEdge(from, to);
+        var graph = RoutingGraphGenerator.GenerateGraph([from, to], [edge]);
+        var agvType = AgvTypeGenerator.GenerateAgvTypeInfo(RoutingGraphGenerator.AgvTypeIdentifier,
+            length: Fixture.AgvLength, width: Fixture.AgvWidth);
 
-        public Polygon GetPolygon(GraphEdge edge, GraphNode from, GraphNode to, AgvData agvData, IReadOnlyList<IMarginStrategy> margins)
-        {
-            return new Polygon([new PolygonPoint(0, 0), new PolygonPoint(1, 0), new PolygonPoint(0, 1)]);
-        }
+        IReadOnlyList<ResourceBoundingBox> boxes = new Fixture()
+            .WithGraph(graph)
+            .Calculator.CalculateAll(agvType, []);
 
-        public double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to)
-        {
-            return direction;
-        }
+        boxes.Count(b => b.ResourceType == ResourceType.Node).ShouldBe(2);
+        boxes.Count(b => b.ResourceType == ResourceType.Edge).ShouldBe(1);
     }
 }

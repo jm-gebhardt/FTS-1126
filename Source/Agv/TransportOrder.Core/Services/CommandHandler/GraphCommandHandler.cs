@@ -8,6 +8,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Graph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -18,7 +19,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 /// Consumer for <see cref="UpdateGraphRequest"/>.
 /// </summary>
 [UsedImplicitly]
-public class GraphCommandHandler : 
+public class GraphCommandHandler :
     IConsumer<UpdateGraphRequest>,
     IConsumer<AgvGraphChanged>,
     IConsumer<AgvTypeGraphUpdated>,
@@ -52,7 +53,7 @@ public class GraphCommandHandler :
         {
             await context.Publish(new SaveMaps(context.Message.Maps, context.Message.CorrelationId));
         }
-       
+
         _logger.LogInformation("Graph {CorrelationId} updated", context.Message.CorrelationId);
         await context.Publish(new GraphUpdated(context.Message.CorrelationId, graph, context.Message.Maps), context.CancellationToken);
         await context.RespondAsync(new Success());
@@ -61,10 +62,10 @@ public class GraphCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AgvGraphChanged> context)
     {
-        if(!await _graphRepository.ConsolidateGraphAsync())
+        if (!await _graphRepository.ConsolidateGraphAsync())
         {
-           await _loggingService.LogAgv(_logger, LogLevel.Error, LogCodes.AgvConsolidatingGlobalGraph, context.Message.CorrelationId, string.Empty, "AGV Graph Consolidation Failed", "AGV Graph Consolidation Failed");
-           return;
+            await _loggingService.LogAgv(_logger, LogLevel.Error, LogCodes.AgvConsolidatingGlobalGraph, context.Message.CorrelationId, string.Empty, "AGV Graph Consolidation Failed", "AGV Graph Consolidation Failed");
+            return;
         }
         await context.Publish(new GlobalGraphConsolidated());
     }
@@ -82,6 +83,8 @@ public class GraphCommandHandler :
         {
             await _stationRepository.AddStations(graph);
         }
+
+        await context.Publish(new AgvTypeGraphsChanged(context.CorrelationId ?? NewId.NextGuid()));
     }
 
     /// <inheritdoc />
@@ -93,6 +96,8 @@ public class GraphCommandHandler :
             await context.RespondAsync(new Failed());
             return;
         }
+
+        await context.Publish(new AgvTypeGraphsChanged(context.CorrelationId ?? NewId.NextGuid()));
         await context.RespondAsync(new Success());
     }
 }

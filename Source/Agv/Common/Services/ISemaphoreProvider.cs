@@ -210,10 +210,16 @@ public class SemaphoreProvider<T>(ILogger<SemaphoreProvider<T>> logger) : ISemap
 }
 
 /// <inheritdoc />
-public class KeyedSemaphoreProvider<TSemaphore>(IConcurrentDictionaryProvider<ISemaphoreProvider<TSemaphore>> concurrentDictionaryProvider, ILogger<SemaphoreProvider<TSemaphore>> logger)
-    : IKeyedSemaphoreProvider<TSemaphore>
+public class KeyedSemaphoreProvider<TKey, TSemaphore>(IConcurrentDictionaryProvider<TKey, ISemaphoreProvider<TSemaphore>> concurrentDictionaryProvider, ILogger<SemaphoreProvider<TSemaphore>> logger)
+    : IKeyedSemaphoreProvider<TKey, TSemaphore>
+    where TKey : notnull
     where TSemaphore : class
 {
     /// <inheritdoc />
-    public ISemaphoreProvider<TSemaphore> Get(Guid key) => concurrentDictionaryProvider.ConcurrentDict.GetOrAdd(key, _ => new SemaphoreProvider<TSemaphore>(logger));
+    public ISemaphoreProvider<TSemaphore> Get(TKey key) => concurrentDictionaryProvider.ConcurrentDict.GetOrAdd(key, _ => new SemaphoreProvider<TSemaphore>(logger));
 }
+
+/// <inheritdoc cref="IKeyedSemaphoreProvider{TSemaphore}"/>
+public class KeyedSemaphoreProvider<TSemaphore>(IConcurrentDictionaryProvider<ISemaphoreProvider<TSemaphore>> concurrentDictionaryProvider, ILogger<SemaphoreProvider<TSemaphore>> logger)
+    : KeyedSemaphoreProvider<Guid, TSemaphore>(concurrentDictionaryProvider, logger), IKeyedSemaphoreProvider<TSemaphore>
+    where TSemaphore : class;

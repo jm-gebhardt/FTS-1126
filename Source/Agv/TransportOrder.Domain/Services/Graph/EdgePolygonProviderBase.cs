@@ -1,8 +1,9 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
 using System.Numerics;
+using GraphNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
@@ -13,28 +14,30 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 public abstract class EdgePolygonProviderBase : IEdgePolygonProvider
 {
     /// <inheritdoc/>
-    public abstract bool Supports(EdgeType edgeType);
+    public abstract bool Supports(Trajectory? trajectory);
 
     /// <inheritdoc/>
-    public abstract double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to);
+    public abstract double GetDirectionAtEndpoint(RoutingEdge edge, GraphNode startNode, GraphNode endNode);
 
     /// <inheritdoc/>
-    public abstract Polygon GetPolygon(GraphEdge edge, GraphNode from, GraphNode to, AgvData agvData, IReadOnlyList<IMarginStrategy> margins);
+    public abstract Polygon GetPolygon(RoutingEdge edge, GraphNode startNode, GraphNode endNode, IAgvType agvType, IReadOnlyList<IMarginStrategy> margins);
 
     /// <summary>
     /// Gets the polygon representing the AGV with applied margins for the edge at a specific sample position.
     /// </summary>
     /// <returns>The polygon representing the AGV with applied margins.</returns>
-    protected Polygon GetEdgeSamplePolygon(GraphEdge edge, AgvData agvData, IReadOnlyList<IMarginStrategy> marginStrategies, double tangentialAgvOrientation)
+    protected Polygon GetEdgeSamplePolygon(RoutingEdge edge, IAgvType agvType, IReadOnlyList<IMarginStrategy> marginStrategies, double tangentialAgvOrientation)
     {
-        double halfLength = agvData.Length / 2;
-        double halfWidth= agvData.Width / 2;
-        
+        double halfLength = agvType.Length / 2;
+        double halfWidth = agvType.Width / 2;
+
         // Local corners CCW: front-left, back-left, back-right, front-right
-        var agvPolygon = new Polygon([new PolygonPoint(halfLength, halfWidth), 
-                                            new PolygonPoint(-halfLength, halfWidth), 
-                                            new PolygonPoint(-halfLength, -halfWidth), 
-                                            new PolygonPoint(halfLength, -halfWidth)]);
+        var agvPolygon = new Polygon([
+            new PolygonPoint(halfLength, halfWidth),
+            new PolygonPoint(-halfLength, halfWidth),
+            new PolygonPoint(-halfLength, -halfWidth),
+            new PolygonPoint(halfLength, -halfWidth)
+        ]);
 
         var rotatedPolygon = agvPolygon.Rotate(tangentialAgvOrientation);
 
@@ -63,7 +66,7 @@ public abstract class EdgePolygonProviderBase : IEdgePolygonProvider
         List<Vector2> endCap = BoundaryChain(vertices, innerIndex, outerIndex);
         List<Vector2> startCap = BoundaryChain(vertices, outerIndex, innerIndex);
 
-        return (innerVertex, outerVertex,startCap, endCap);
+        return (innerVertex, outerVertex, startCap, endCap);
     }
 
     /// <summary>

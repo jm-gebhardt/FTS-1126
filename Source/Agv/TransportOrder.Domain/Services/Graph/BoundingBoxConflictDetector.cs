@@ -1,6 +1,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using CommonGraph = Gebhardt.Acc.Common.Domain.Models.Graphs.Graph;
 using JetBrains.Annotations;
+using RoutingGraph = Gebhardt.Acc.Common.Domain.Models.NewGraph.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
@@ -15,19 +15,19 @@ public class BoundingBoxConflictDetector
     private readonly Dictionary<Guid, (Guid FromNodeId, Guid ToNodeId)> _edgeEndpoints;
 
     /// <inheritdoc cref="BoundingBoxConflictDetector"/>
-    /// <param name="boundingBoxes">One bounding box per resource, pre-selected for the worst-case AGV type.</param>
+    /// <param name="boundingBoxes">One bounding box per routing resource.</param>
     /// <param name="graph">The graph used to determine resource adjacency.</param>
-    public BoundingBoxConflictDetector(IReadOnlyList<ResourceBoundingBox> boundingBoxes, CommonGraph graph)
+    public BoundingBoxConflictDetector(IReadOnlyList<ResourceBoundingBox> boundingBoxes, RoutingGraph graph)
     {
         _boundingBoxes = boundingBoxes;
         _adjacency = [];
         _edgeEndpoints = [];
 
-        foreach (var edge in graph.Edges)
+        foreach (var edge in graph.Edges.SelectMany(e => e.RoutingEdges))
         {
-            _adjacency.Add((edge.FromNodeId, edge.Id));
-            _adjacency.Add((edge.ToNodeId, edge.Id));
-            _edgeEndpoints[edge.Id] = (edge.FromNodeId, edge.ToNodeId);
+            _adjacency.Add((edge.StartNodeId, edge.Id));
+            _adjacency.Add((edge.EndNodeId, edge.Id));
+            _edgeEndpoints[edge.Id] = (edge.StartNodeId, edge.EndNodeId);
         }
     }
 

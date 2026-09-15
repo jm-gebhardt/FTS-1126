@@ -16,5 +16,9 @@ public class BoundingBoxProfile : Profile
     {
         CreateMap<ResourceBoundingBox, ResourceBoundingBoxContent>(MemberList.Destination)
             .ForMember(dest => dest.Polygon, opt => opt.MapFrom(src => src.Polygon.Points));
+
+        CreateMap<ResourceConflict, BoundingBoxConflictContent>(MemberList.Destination)
+            .ForCtorParam(nameof(BoundingBoxConflictContent.ResourceAId), opt => opt.MapFrom(src => src.ResourceId))
+            .ForCtorParam(nameof(BoundingBoxConflictContent.ResourceBId), opt => opt.MapFrom(src => src.ConflictingResourceId));
     }
 }

@@ -234,8 +234,13 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<BoundingBoxCommandHandler>(c =>
         {
             var partitioner = c.CreatePartitioner(1);
-            partitioner.PartitionMessageById<CalculateBoundingBoxes, BoundingBoxCommandHandler>(c);
-            partitioner.PartitionMessageById<CalculateBoundingBoxesForAgvType, BoundingBoxCommandHandler>(c);
+            partitioner.PartitionMessageById<RecalculateBoundingBoxes, BoundingBoxCommandHandler>(c);
+        });
+        busRegistrationConfigurator.AddConsumer<RoutingResourceConflictEventHandler>();
+        busRegistrationConfigurator.AddConsumer<RoutingResourceConflictCommandHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(1);
+            partitioner.PartitionMessageById<DetectGraphConflicts, RoutingResourceConflictCommandHandler>(c);
         });
         busRegistrationConfigurator.AddConsumer<NodeStationEventHandler>();
         busRegistrationConfigurator.AddConsumer<QueueEventHandler>();

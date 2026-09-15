@@ -1,6 +1,6 @@
 using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Graph;
 using JetBrains.Annotations;
@@ -14,13 +14,13 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 [UsedImplicitly]
 public class BoundingBoxRequestHandler : IConsumer<GetBoundingBoxes>
 {
-    private readonly IBoundingBoxRepository _boundingBoxRepository;
+    private readonly IBoundingBoxService _boundingBoxService;
     private readonly IMapper _mapper;
 
     /// <inheritdoc cref="BoundingBoxRequestHandler"/>
-    public BoundingBoxRequestHandler(IBoundingBoxRepository boundingBoxRepository, IMapper mapper)
+    public BoundingBoxRequestHandler(IBoundingBoxService boundingBoxService, IMapper mapper)
     {
-        _boundingBoxRepository = boundingBoxRepository;
+        _boundingBoxService = boundingBoxService;
         _mapper = mapper;
     }
 
@@ -30,12 +30,12 @@ public class BoundingBoxRequestHandler : IConsumer<GetBoundingBoxes>
         IReadOnlyList<ResourceBoundingBox> boxes;
         if (context.Message.ResourceId.HasValue)
         {
-            var box = await _boundingBoxRepository.GetAsync(context.Message.ResourceId.Value, context.Message.AgvType);
+            var box = await _boundingBoxService.GetAsync(context.Message.ResourceId.Value, context.Message.AgvType);
             boxes = box != null ? [box] : [];
         }
         else
         {
-            boxes = await _boundingBoxRepository.GetByAgvTypeAsync(context.Message.AgvType);
+            boxes = await _boundingBoxService.GetByAgvTypeAsync(context.Message.AgvType);
         }
 
         var content = _mapper.Map<List<ResourceBoundingBoxContent>>(boxes);

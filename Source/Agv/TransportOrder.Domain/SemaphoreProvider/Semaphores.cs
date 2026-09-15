@@ -6,6 +6,11 @@
 public interface IAgvsSemaphore;
 
 /// <summary>
+/// Provides an interface for the bounding box calculation semaphore service.
+/// </summary>
+public interface IBoundingBoxCalculationSemaphore;
+
+/// <summary>
 /// Provides an interface for the charging semaphore service.
 /// </summary>
 public interface IChargingSemaphore;

@@ -24,6 +24,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
@@ -185,6 +186,8 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IBackgroundEditorRepository, EfBackgroundEditorRepository>();
 
         services.AddTransient<IGraphRepository, EfGraphRepository>();
+        services.AddTransient<INewGraphRepository, NewGraphRepository>();
+        services.AddTransient<IRoutingResourceConflictRepository, EfRoutingResourceConflictRepository>();
         services.AddTransient<INodeRepository, GraphNodeRepository>();
         services.AddTransient<IMaintenanceLogRepository, EfMaintenanceLogRepository>();
 
@@ -214,8 +217,12 @@ public static class TransportOrderHostBuilderExtensions
         services.AddSingleton<IEdgePolygonProvider, DirectEdgePolygonProvider>();
         services.AddSingleton<IEdgePolygonProvider, BezierEdgePolygonProvider>();
         services.AddSingleton<IMarginStrategy>(new SafetyMarginStrategy(0.2));
-        services.AddTransient<IBoundingBoxRepository, EfBoundingBoxRepository>();
-        services.AddTransient<INewGraphRepository, NewGraphRepository>();
+        services.AddSingleton<IBoundingBoxCacheProvider, BoundingBoxCache>();
+        services.AddSingleton<IConcurrentDictionaryProvider<string, ISemaphoreProvider<IBoundingBoxCalculationSemaphore>>,
+            ConcurrentDictionaryProvider<string, ISemaphoreProvider<IBoundingBoxCalculationSemaphore>>>();
+        services.AddSingleton<IKeyedSemaphoreProvider<string, IBoundingBoxCalculationSemaphore>,
+            KeyedSemaphoreProvider<string, IBoundingBoxCalculationSemaphore>>();
+        services.AddTransient<IBoundingBoxService, BoundingBoxService>();
     }
 
     private static void RegisterValidators(IServiceCollection services)

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.TransportOrder.Messages.Commands.NewGraph;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Graph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Shouldly;
@@ -25,6 +26,16 @@ public class NewGraphCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_AddNewGraph_PublishesAgvTypeGraphsChangedWithTheCommandCorrelationId()
+    {
+        var fixture = new NewGraphCommandHandlerTestFixture();
+
+        var graphsChanged = await fixture.PublishAndGetFirstMessageAsync<AddNewGraphSegment, AgvTypeGraphsChanged>(fixture.AddNewGraphSegment);
+
+        graphsChanged.CorrelationId.ShouldBe(fixture.AddNewGraphSegment.CorrelationId);
+    }
+
+    [TestMethod]
     public async Task Consume_RepositoryThrows_FaultsInsteadOfSwallowing()
     {
         var fixture = new NewGraphCommandHandlerTestFixture().WithFailingRepository();
@@ -32,5 +43,15 @@ public class NewGraphCommandHandlerTest
         await fixture.PublishMessageAsync(fixture.AddNewGraphSegment);
 
         await fixture.ShouldHavePublishedAsync<Fault<AddNewGraphSegment>>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RepositoryThrows_DoesNotPublishAgvTypeGraphsChanged()
+    {
+        var fixture = new NewGraphCommandHandlerTestFixture().WithFailingRepository();
+
+        await fixture.PublishMessageAsync(fixture.AddNewGraphSegment);
+
+        await fixture.ShouldNotHavePublishedAsync<AgvTypeGraphsChanged>();
     }
 }

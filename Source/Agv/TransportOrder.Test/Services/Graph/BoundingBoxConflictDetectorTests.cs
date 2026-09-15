@@ -1,5 +1,4 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
@@ -41,14 +40,16 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void Detect_AdjacentNodeAndEdge_ExcludesConflict()
     {
-        var edge = EdgeGenerator.Generate();
-        var graph = GraphGenerator.Generate(edges: [edge]);
+        var fromNode = RoutingGraphGenerator.GenerateNode(0, 0);
+        var toNode = RoutingGraphGenerator.GenerateNode(2, 0);
+        var edge = RoutingGraphGenerator.GenerateEdge(fromNode, toNode);
+        var graph = RoutingGraphGenerator.GenerateGraph([fromNode, toNode], [edge]);
 
         IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
-                BoundingBoxGenerator.SquareBox(edge.FromNodeId, ResourceType.Node, 0, 0, 1),
-                BoundingBoxGenerator.SquareBox(edge.Id, ResourceType.Edge, 1, 0, 1))
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingNode(fromNode).Id, ResourceType.Node, 0, 0, 1),
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edge).Id, ResourceType.Edge, 1, 0, 1))
             .Detector.Detect();
 
         result.ShouldBeEmpty();
@@ -57,15 +58,18 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void Detect_TwoEdgesSharingANode_ExcludesConflict()
     {
-        var edgeA = EdgeGenerator.Generate("a", "shared");
-        var edgeB = EdgeGenerator.Generate("shared", "b");
-        var graph = GraphGenerator.Generate(edges: [edgeA, edgeB]);
+        var nodeA = RoutingGraphGenerator.GenerateNode(0, 0);
+        var sharedNode = RoutingGraphGenerator.GenerateNode(2, 0);
+        var nodeB = RoutingGraphGenerator.GenerateNode(4, 0);
+        var edgeA = RoutingGraphGenerator.GenerateEdge(nodeA, sharedNode);
+        var edgeB = RoutingGraphGenerator.GenerateEdge(sharedNode, nodeB);
+        var graph = RoutingGraphGenerator.GenerateGraph([nodeA, sharedNode, nodeB], [edgeA, edgeB]);
 
         IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
-                BoundingBoxGenerator.SquareBox(edgeA.Id, ResourceType.Edge, 0, 0, 1),
-                BoundingBoxGenerator.SquareBox(edgeB.Id, ResourceType.Edge, 1, 0, 1))
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id, ResourceType.Edge, 0, 0, 1),
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeB).Id, ResourceType.Edge, 1, 0, 1))
             .Detector.Detect();
 
         result.ShouldBeEmpty();
@@ -74,15 +78,19 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void Detect_TwoOverlappingEdgesWithoutSharedNode_ReturnsOneConflict()
     {
-        var edgeA = EdgeGenerator.Generate("a", "b");
-        var edgeB = EdgeGenerator.Generate("c", "d");
-        var graph = GraphGenerator.Generate(edges: [edgeA, edgeB]);
+        var nodeA = RoutingGraphGenerator.GenerateNode(0, 0);
+        var nodeB = RoutingGraphGenerator.GenerateNode(2, 0);
+        var nodeC = RoutingGraphGenerator.GenerateNode(0, 2);
+        var nodeD = RoutingGraphGenerator.GenerateNode(2, 2);
+        var edgeA = RoutingGraphGenerator.GenerateEdge(nodeA, nodeB);
+        var edgeB = RoutingGraphGenerator.GenerateEdge(nodeC, nodeD);
+        var graph = RoutingGraphGenerator.GenerateGraph([nodeA, nodeB, nodeC, nodeD], [edgeA, edgeB]);
 
         IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
-                BoundingBoxGenerator.SquareBox(edgeA.Id, ResourceType.Edge, 0, 0, 1),
-                BoundingBoxGenerator.SquareBox(edgeB.Id, ResourceType.Edge, 1, 0, 1))
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id, ResourceType.Edge, 0, 0, 1),
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeB).Id, ResourceType.Edge, 1, 0, 1))
             .Detector.Detect();
 
         result.Count.ShouldBe(1);
@@ -153,19 +161,19 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void DetectFor_AdjacentEdges_AreExcluded()
     {
-        const string fromNode = "a";
-        const string sharedNode = "shared";
-        const string toNode = "b";
-        var edgeA = EdgeGenerator.Generate(fromNode, sharedNode);
-        var edgeB = EdgeGenerator.Generate(sharedNode, toNode);
-        var graph = GraphGenerator.Generate(edges: [edgeA, edgeB]);
+        var nodeA = RoutingGraphGenerator.GenerateNode(0, 0);
+        var sharedNode = RoutingGraphGenerator.GenerateNode(2, 0);
+        var nodeB = RoutingGraphGenerator.GenerateNode(4, 0);
+        var edgeA = RoutingGraphGenerator.GenerateEdge(nodeA, sharedNode);
+        var edgeB = RoutingGraphGenerator.GenerateEdge(sharedNode, nodeB);
+        var graph = RoutingGraphGenerator.GenerateGraph([nodeA, sharedNode, nodeB], [edgeA, edgeB]);
 
         IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
-                BoundingBoxGenerator.SquareBox(edgeA.Id, ResourceType.Edge, 0, 0, 1.0),
-                BoundingBoxGenerator.SquareBox(edgeB.Id, ResourceType.Edge, 1, 0, 1.0))
-            .Detector.DetectFor(edgeA.Id);
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id, ResourceType.Edge, 0, 0, 1.0),
+                BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeB).Id, ResourceType.Edge, 1, 0, 1.0))
+            .Detector.DetectFor(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id);
 
         result.ShouldBeEmpty();
     }

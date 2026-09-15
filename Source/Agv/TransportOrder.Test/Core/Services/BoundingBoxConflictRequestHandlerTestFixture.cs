@@ -1,53 +1,61 @@
-using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using AutoMapper;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+using Gebhardt.Acc.TransportOrder.Messages.Profiles;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Graph;
-using Gebhardt.Acc.TransportOrder.Test.Helper;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Core.Services;
 
 public class BoundingBoxConflictRequestHandlerTestFixture
     : MediatorTestFixture<GetBoundingBoxConflicts, BoundingBoxConflictRequestHandler, MockConsumer>
 {
-    private readonly Mock<IBoundingBoxRepository> _boundingBoxRepository = new();
+    public static readonly Guid NodeId = Guid.NewGuid();
+    public static readonly Guid EdgeId = Guid.NewGuid();
+    public static readonly Guid OtherResourceId = Guid.NewGuid();
+    public static readonly Guid UnknownId = Guid.NewGuid();
+
+    private readonly Mock<IRoutingResourceConflictRepository> _conflictRepository = new();
     private readonly Mock<IAgvDb> _agvDb = new();
+    private readonly List<ResourceConflict> _conflicts = [];
 
     public BoundingBoxConflictRequestHandlerTestFixture()
     {
-        _agvDb.Setup(x => x.Graphs.GetGraphAsync()).ReturnsAsync(new Graph());
-        _agvDb.Setup(x => x.Agvs.GetAllAgvsAsync()).ReturnsAsync(Array.Empty<Agv>());
-        _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>()))
-            .ReturnsAsync(Array.Empty<AgvData>());
-        _boundingBoxRepository.Setup(x => x.GetByAgvTypeAsync(It.IsAny<string>()))
-            .ReturnsAsync(Array.Empty<ResourceBoundingBox>());
+        _agvDb.Setup(x => x.NewGraphs.RoutingNodeExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+        _agvDb.Setup(x => x.NewGraphs.RoutingEdgeExistsAsync(It.IsAny<Guid>())).ReturnsAsync(false);
+
+        _conflictRepository.Setup(x => x.GetAllAsync()).ReturnsAsync(() => _conflicts);
+        _conflictRepository.Setup(x => x.GetByResourceAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid resourceId) => _conflicts
+                .Where(c => c.ResourceId == resourceId || c.ConflictingResourceId == resourceId)
+                .ToList());
     }
 
-    public BoundingBoxConflictRequestHandlerTestFixture WithGraph(Graph graph)
+    protected override IEnumerable<Profile> GetProfiles()
     {
-        _agvDb.Setup(x => x.Graphs.GetGraphAsync()).ReturnsAsync(graph);
+        return [new BoundingBoxProfile()];
+    }
+
+    public BoundingBoxConflictRequestHandlerTestFixture WithConflicts(params ResourceConflict[] conflicts)
+    {
+        _conflicts.AddRange(conflicts);
         return this;
     }
 
-    public BoundingBoxConflictRequestHandlerTestFixture WithAgvData(params AgvData[] agvDatas)
+    public BoundingBoxConflictRequestHandlerTestFixture WithNode(Guid nodeId)
     {
-        Agv[] agvs = agvDatas.Select(d => AgvGenerator.GenerateRawAgv(d.AgvCorrelationId, "")).ToArray();
-        _agvDb.Setup(x => x.Agvs.GetAllAgvsAsync()).ReturnsAsync(agvs);
-        _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>()))
-            .ReturnsAsync(agvDatas);
+        _agvDb.Setup(x => x.NewGraphs.RoutingNodeExistsAsync(nodeId)).ReturnsAsync(true);
         return this;
     }
 
-    public BoundingBoxConflictRequestHandlerTestFixture WithBoxesByAgvType(string agvType, params ResourceBoundingBox[] boxes)
+    public BoundingBoxConflictRequestHandlerTestFixture WithEdge(Guid edgeId)
     {
-        _boundingBoxRepository.Setup(x => x.GetByAgvTypeAsync(agvType)).ReturnsAsync(boxes);
+        _agvDb.Setup(x => x.NewGraphs.RoutingEdgeExistsAsync(edgeId)).ReturnsAsync(true);
         return this;
     }
 
@@ -55,7 +63,7 @@ public class BoundingBoxConflictRequestHandlerTestFixture
     {
         AddServices(s =>
         {
-            s.AddTransient(_ => _boundingBoxRepository.Object);
+            s.AddTransient(_ => _conflictRepository.Object);
             s.AddTransient(_ => _agvDb.Object);
         });
 

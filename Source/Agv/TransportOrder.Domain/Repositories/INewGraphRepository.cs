@@ -20,4 +20,16 @@ public interface INewGraphRepository
     /// </summary>
     /// <param name="graphSegment">The graph segment to merge in.</param>
     Task AddOrUpdateGraphAsync(GraphSegment graphSegment);
+
+    /// <summary>
+    /// Indicates whether a routing node with the given id is persisted.
+    /// </summary>
+    /// <param name="id">Id of the routing node.</param>
+    Task<bool> RoutingNodeExistsAsync(Guid id);
+
+    /// <summary>
+    /// Indicates whether a routing edge with the given id is persisted.
+    /// </summary>
+    /// <param name="id">Id of the routing edge.</param>
+    Task<bool> RoutingEdgeExistsAsync(Guid id);
 }

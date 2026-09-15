@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Memory;
 
@@ -56,5 +57,6 @@ public interface ICache<TKey, TValue>
     /// <summary>
     /// Returns a snapshot of all keys currently in the cache.
     /// </summary>
+    [PublicAPI]
     IReadOnlyCollection<TKey> GetKeys();
 }

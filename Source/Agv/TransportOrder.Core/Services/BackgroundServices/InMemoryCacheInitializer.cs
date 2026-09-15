@@ -16,7 +16,6 @@ public class InMemoryCacheInitializer(
     ICargoRepository cargoRepository,
     IAgvErrorRepository errorRepository,
     IAgvPositionRepository agvPositionRepository,
-    IBoundingBoxRepository boundingBoxRepository,
     IBus bus
 ) : BackgroundService
 {
@@ -26,8 +25,7 @@ public class InMemoryCacheInitializer(
         await Task.WhenAll(InitializeTriggers(),
             cargoRepository.LoadInMemoryCache(),
             errorRepository.LoadInMemoryCache(),
-            agvPositionRepository.RestorePersistedPositionsAsync(stoppingToken),
-            boundingBoxRepository.LoadInMemoryCache()
+            agvPositionRepository.RestorePersistedPositionsAsync(stoppingToken)
         );
     }
 

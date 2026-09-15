@@ -35,6 +35,11 @@ public interface IAgvDb : IUnitOfWork
     IGraphRepository Graphs { get; }
 
     /// <summary>
+    /// Gets the <see cref="INewGraphRepository"/>.
+    /// </summary>
+    INewGraphRepository NewGraphs { get; }
+
+    /// <summary>
     /// Gets the <see cref="IAgvRepository"/>.
     /// </summary>
     IAgvRepository Agvs { get; }

@@ -1,6 +1,6 @@
-using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.BoundingBox;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Graph;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -8,10 +8,10 @@ using Microsoft.Extensions.Logging;
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
 /// <summary>
-/// Publishes bounding box calculation commands when the graph or AGV fleet changes.
+/// Publishes bounding box recalculation commands when the graph or its AGV type assignments change.
 /// </summary>
 [PublicAPI]
-public class BoundingBoxEventHandler : IConsumer<GraphUpdated>, IConsumer<AgvDataReceived>
+public class BoundingBoxEventHandler : IConsumer<GraphUpdated>, IConsumer<AgvTypeGraphsChanged>
 {
     private readonly ILogger<BoundingBoxEventHandler> _logger;
 
@@ -25,13 +25,13 @@ public class BoundingBoxEventHandler : IConsumer<GraphUpdated>, IConsumer<AgvDat
     public async Task Consume(ConsumeContext<GraphUpdated> context)
     {
         _logger.LogInformation("Graph updated. Triggering bounding box recalculation");
-        await context.Publish(new CalculateBoundingBoxes(context.Message.CorrelationId, context.Message.Graph));
+        await context.Publish(new RecalculateBoundingBoxes(context.Message.CorrelationId));
     }
 
     /// <inheritdoc/>
-    public async Task Consume(ConsumeContext<AgvDataReceived> context)
+    public async Task Consume(ConsumeContext<AgvTypeGraphsChanged> context)
     {
-        _logger.LogInformation("AGV data received for type \"{AgvType}\". Triggering bounding box calculation", context.Message.Data.Type);
-        await context.Publish(new CalculateBoundingBoxesForAgvType(context.Message.CorrelationId, context.Message.Data));
+        _logger.LogInformation("AGV type graphs changed. Triggering bounding box recalculation");
+        await context.Publish(new RecalculateBoundingBoxes(context.Message.CorrelationId));
     }
 }

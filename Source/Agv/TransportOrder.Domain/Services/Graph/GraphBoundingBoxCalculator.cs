@@ -1,72 +1,131 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
-using CommonGraph = Gebhardt.Acc.Common.Domain.Models.Graphs.Graph;
 using JetBrains.Annotations;
+using GraphNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
+using RoutingGraph = Gebhardt.Acc.Common.Domain.Models.NewGraph.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
 /// <summary>
-/// Computes oriented bounding box polygons for every node and edge in a graph for a given AGV type.
+/// Computes oriented bounding box polygons for every routing node and routing edge in a graph for a given AGV type.
 /// </summary>
 [PublicAPI]
 public class GraphBoundingBoxCalculator
 {
-    private readonly CommonGraph _graph;
     private readonly IReadOnlyList<IEdgePolygonProvider> _providers;
-    private readonly Dictionary<Guid, GraphNode> _nodesById;
-    private readonly Dictionary<Guid, double> _nodeOrientations;
+    private readonly IReadOnlyDictionary<Guid, GraphNode> _nodesByRoutingNodeId;
+    private readonly IReadOnlyList<RoutingNode> _routingNodes;
+    private readonly IReadOnlyList<RoutingEdge> _routingEdges;
+    private readonly IReadOnlyDictionary<Guid, IReadOnlyList<RoutingEdge>> _incidentEdgesByRoutingNodeId;
 
     /// <inheritdoc cref="GraphBoundingBoxCalculator"/>
-    public GraphBoundingBoxCalculator(CommonGraph graph, IEnumerable<IEdgePolygonProvider> providers)
+    public GraphBoundingBoxCalculator(RoutingGraph graph, IEnumerable<IEdgePolygonProvider> providers)
     {
-        _graph = graph;
         _providers = providers.ToList();
-        _nodesById = graph.Nodes.ToDictionary(n => n.Id);
-        _nodeOrientations = [];
-
-        foreach (var edge in graph.Edges)
-        {
-            var from = _nodesById[edge.FromNodeId];
-            var to = _nodesById[edge.ToNodeId];
-            var provider = SelectProvider(edge.Variant);
-            _nodeOrientations.TryAdd(edge.FromNodeId, provider.GetDirectionAtEndpoint(edge, from, to));
-            _nodeOrientations.TryAdd(edge.ToNodeId, provider.GetDirectionAtEndpoint(edge, from, to));
-        }
+        _nodesByRoutingNodeId = graph.Nodes
+            .SelectMany(n => n.RoutingNodes, (node, routingNode) => (routingNode.Id, Node: node))
+            .ToDictionary(pair => pair.Id, pair => pair.Node);
+        _routingNodes = graph.Nodes.SelectMany(n => n.RoutingNodes).ToList();
+        _routingEdges = graph.Edges.SelectMany(e => e.RoutingEdges)
+            .Where(IsNodeToNode)
+            .ToList();
+        _incidentEdgesByRoutingNodeId = BuildIncidentEdges(_routingEdges);
     }
 
-    private IEdgePolygonProvider SelectProvider(EdgeType edgeType)
+    private static IReadOnlyDictionary<Guid, IReadOnlyList<RoutingEdge>> BuildIncidentEdges(IReadOnlyList<RoutingEdge> routingEdges)
     {
-        return _providers.First(p => p.Supports(edgeType));
+        var incidentEdges = new Dictionary<Guid, List<RoutingEdge>>();
+
+        foreach (var routingEdge in routingEdges)
+        {
+            AddIncidentEdge(incidentEdges, routingEdge.StartNodeId, routingEdge);
+        }
+
+        foreach (var routingEdge in routingEdges)
+        {
+            AddIncidentEdge(incidentEdges, routingEdge.EndNodeId, routingEdge);
+        }
+
+        return incidentEdges.ToDictionary(pair => pair.Key, pair => (IReadOnlyList<RoutingEdge>)pair.Value);
+    }
+
+    private static void AddIncidentEdge(Dictionary<Guid, List<RoutingEdge>> incidentEdges, Guid routingNodeId, RoutingEdge routingEdge)
+    {
+        if (!incidentEdges.TryGetValue(routingNodeId, out List<RoutingEdge>? edges))
+        {
+            edges = [];
+            incidentEdges[routingNodeId] = edges;
+        }
+
+        edges.Add(routingEdge);
+    }
+
+    private bool IsNodeToNode(RoutingEdge edge)
+    {
+        return _nodesByRoutingNodeId.ContainsKey(edge.StartNodeId) && _nodesByRoutingNodeId.ContainsKey(edge.EndNodeId);
+    }
+
+    private IEdgePolygonProvider SelectProvider(Trajectory? trajectory)
+    {
+        return _providers.First(p => p.Supports(trajectory));
+    }
+
+    private GraphNode GetRequiredNode(Guid routingNodeId)
+    {
+        if (!_nodesByRoutingNodeId.TryGetValue(routingNodeId, out var node))
+        {
+            throw new InvalidOperationException($"Routing node {routingNodeId} is not attached to a graph node.");
+        }
+
+        return node;
+    }
+
+    private double GetOrientation(RoutingNode routingNode)
+    {
+        var incidentEdge = _incidentEdgesByRoutingNodeId.GetValueOrDefault(routingNode.Id, []).FirstOrDefault();
+        if (incidentEdge is null)
+        {
+            return routingNode.Theta;
+        }
+
+        return SelectProvider(incidentEdge.Trajectory)
+            .GetDirectionAtEndpoint(incidentEdge, GetRequiredNode(incidentEdge.StartNodeId), GetRequiredNode(incidentEdge.EndNodeId));
     }
 
     /// <summary>
-    /// Calculates bounding boxes for all nodes and edges in the graph.
+    /// Calculates bounding boxes for all routing nodes and routing edges of the given AGV type.
     /// </summary>
-    public IReadOnlyList<ResourceBoundingBox> CalculateAll(AgvData agvData, IReadOnlyList<IMarginStrategy> margins)
+    public IReadOnlyList<ResourceBoundingBox> CalculateAll(IAgvType agvType, IReadOnlyList<IMarginStrategy> margins)
     {
-        var results = new List<ResourceBoundingBox>(_graph.Nodes.Count + _graph.Edges.Count);
-        foreach (var node in _graph.Nodes)
+        var agvTypeId = AgvType.IdFromIdentifier(agvType.AgvTypeIdentifier);
+        var results = new List<ResourceBoundingBox>(_routingNodes.Count + _routingEdges.Count);
+
+        foreach (var routingNode in _routingNodes.Where(n => n.AgvTypeId == agvTypeId))
         {
-            results.Add(CalculateNode(node, agvData, margins));
+            results.Add(CalculateNode(routingNode, agvType, margins));
         }
 
-        foreach (var edge in _graph.Edges)
+        foreach (var routingEdge in _routingEdges.Where(e => e.AgvTypeId == agvTypeId))
         {
-            results.Add(CalculateEdge(edge, agvData, margins));
+            results.Add(CalculateEdge(routingEdge, agvType, margins));
         }
 
         return results;
     }
 
     /// <summary>
-    /// Calculates the bounding box for a single node. The box is oriented along the node's first incident edge, isolated nodes fall back to Theta/>.
+    /// Calculates the bounding box for a single routing node. The box is oriented along the node's first incident edge, isolated nodes fall back to their theta.
     /// </summary>
-    public ResourceBoundingBox CalculateNode(GraphNode node, AgvData agvData, IReadOnlyList<IMarginStrategy> margins)
+    /// <exception cref="InvalidOperationException">The routing node is not attached to a graph node.</exception>
+    public ResourceBoundingBox CalculateNode(RoutingNode routingNode, IAgvType agvType, IReadOnlyList<IMarginStrategy> margins)
     {
-        double hL = agvData.Length / 2;
-        double hW = agvData.Width / 2;
-        double theta = _nodeOrientations.TryGetValue(node.Id, out double edgeTheta) ? edgeTheta : node.Theta;
+        var node = GetRequiredNode(routingNode.Id);
+
+        double hL = agvType.Length / 2;
+        double hW = agvType.Width / 2;
+        double theta = GetOrientation(routingNode);
         double cosT = Math.Cos(theta);
         double sinT = Math.Sin(theta);
 
@@ -82,30 +141,28 @@ public class GraphBoundingBoxCalculator
         return new ResourceBoundingBox
         {
             Id = Guid.NewGuid(),
-            ResourceId = node.Id,
+            ResourceId = routingNode.Id,
             ResourceType = ResourceType.Node,
-            AgvType = agvData.Type,
+            AgvType = agvType.AgvTypeIdentifier,
             Polygon = polygon,
             CalculatedAt = DateTime.UtcNow
         };
     }
 
     /// <summary>
-    /// Calculates the bounding box for a single edge.
+    /// Calculates the bounding box for a single routing edge.
     /// </summary>
-    public ResourceBoundingBox CalculateEdge(GraphEdge edge, AgvData agvData, IReadOnlyList<IMarginStrategy> margins)
+    public ResourceBoundingBox CalculateEdge(RoutingEdge routingEdge, IAgvType agvType, IReadOnlyList<IMarginStrategy> margins)
     {
-        var fromNode = _nodesById[edge.FromNodeId];
-        var toNode = _nodesById[edge.ToNodeId];
-        var provider = SelectProvider(edge.Variant);
-        var polygon = provider.GetPolygon(edge, fromNode, toNode, agvData, margins);
+        var polygon = SelectProvider(routingEdge.Trajectory)
+            .GetPolygon(routingEdge, GetRequiredNode(routingEdge.StartNodeId), GetRequiredNode(routingEdge.EndNodeId), agvType, margins);
 
         return new ResourceBoundingBox
         {
             Id = Guid.NewGuid(),
-            ResourceId = edge.Id,
+            ResourceId = routingEdge.Id,
             ResourceType = ResourceType.Edge,
-            AgvType = agvData.Type,
+            AgvType = agvType.AgvTypeIdentifier,
             Polygon = polygon,
             CalculatedAt = DateTime.UtcNow
         };

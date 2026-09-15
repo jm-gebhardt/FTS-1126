@@ -1,7 +1,8 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using JetBrains.Annotations;
+using GraphNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 
@@ -12,17 +13,17 @@ namespace Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
 public interface IEdgePolygonProvider
 {
     /// <summary>
-    /// Returns true when this provider can handle the given edge type.
+    /// Returns true when this provider can handle the given trajectory.
     /// </summary>
-    bool Supports(EdgeType edgeType);
+    bool Supports(Trajectory? trajectory);
 
     /// <summary>
-    /// Returns the polygon (margins applied) for edge enclosed by agvData.
+    /// Returns the polygon (margins applied) swept by the given AGV type along the edge.
     /// </summary>
-    Polygon GetPolygon(GraphEdge edge, GraphNode from, GraphNode to, AgvData agvData, IReadOnlyList<IMarginStrategy> margins);
+    Polygon GetPolygon(RoutingEdge edge, GraphNode startNode, GraphNode endNode, IAgvType agvType, IReadOnlyList<IMarginStrategy> margins);
 
     /// <summary>
     /// Returns the AGV driving direction in radians at the given endpoint of the edge.
     /// </summary>
-    double GetDirectionAtEndpoint(GraphEdge edge, GraphNode from, GraphNode to);
+    double GetDirectionAtEndpoint(RoutingEdge edge, GraphNode startNode, GraphNode endNode);
 }

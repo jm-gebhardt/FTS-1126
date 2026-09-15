@@ -1,5 +1,6 @@
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.NewGraph;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Graph;
 using JetBrains.Annotations;
 using MassTransit;
 
@@ -12,8 +13,9 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 public class NewGraphCommandHandler(INewGraphRepository repository) : IConsumer<AddNewGraphSegment>
 {
     /// <inheritdoc/>
-    public Task Consume(ConsumeContext<AddNewGraphSegment> context)
+    public async Task Consume(ConsumeContext<AddNewGraphSegment> context)
     {
-        return repository.AddOrUpdateGraphAsync(context.Message.GraphSegment);
+        await repository.AddOrUpdateGraphAsync(context.Message.GraphSegment);
+        await context.Publish(new AgvTypeGraphsChanged(context.Message.CorrelationId));
     }
 }
