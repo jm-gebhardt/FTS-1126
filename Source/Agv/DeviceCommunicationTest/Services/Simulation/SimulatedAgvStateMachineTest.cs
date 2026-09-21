@@ -174,7 +174,9 @@ public class SimulatedAgvStateMachineTest
         var routePlan = RoutePlanGenerator.Build(route.nodes, route.edges);
         var startNode = nodes.First(n => n.Id == route.nodes.First().Id);
         var destination = route.nodes.Last();
-        var agvSaga = SimulatedAgvSagaGenerator.Generate(simulationSpeed: 2, agvGraph: graph, currentNode: startNode);
+        // Keep the simulated run short so the test remains fast in CI while still verifying
+        // that the action starts and completes end-to-end.
+        var agvSaga = SimulatedAgvSagaGenerator.Generate(simulationSpeed: 20, agvGraph: graph, currentNode: startNode);
         var fixture = new SimulatedAgvStateMachineTestFixture()
             .WithAgv(agvSaga)
             .Build();
@@ -191,7 +193,6 @@ public class SimulatedAgvStateMachineTest
 
         // action finished
         (await fixture.TestHarness.Sent.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
-        (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
 
         //wait until saga is updated
         await fixture.WaitUntil(agvSaga, s =>
@@ -204,7 +205,10 @@ public class SimulatedAgvStateMachineTest
             {
                 s.AgvStatus.Busy.ShouldBeFalse();
                 s.LastNodeId.ShouldBe(destination.Id);
-            });
+            },
+            timeoutInMs: 1000);
+
+        (await fixture.SagaHarness.Consumed.Any<SimulatedAgvStateMachine.ScheduleFinishAction>()).ShouldBeTrue();
 
         await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
         var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
