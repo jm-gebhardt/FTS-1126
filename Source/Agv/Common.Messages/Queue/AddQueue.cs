@@ -5,4 +5,9 @@
 /// </summary>
 /// <param name="Name">The queue name.</param>
 /// <param name="Nodes">The nodes of the queue.</param>
-public record AddQueue(string Name, ICollection<QueueNode> Nodes);
+public record AddQueue(string Name, ICollection<QueueNode> Nodes)
+{
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"AddQueue {{ Name = {Name}, Nodes = [{string.Join(", ", Nodes.Select(n => n.Node.Name))}] }}";
+}
