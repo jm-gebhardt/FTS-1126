@@ -10,6 +10,7 @@ using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
+using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
@@ -51,6 +52,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using DeleteBackground = Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image.DeleteBackground;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RemoveAgvFromZone = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZone;
@@ -281,6 +283,14 @@ public static class CoreBusRegistrationExtensions
             var partitioner = c.CreatePartitioner(PartitionCount);
             c.Message<AdjustAgvFillQuantity>(x =>
                 x.UsePartitioner(partitioner, p => p.Message.CorrelationId));
+            c.Message<AddQueue>(x =>
+            {
+                x.UseMessageRetry(r =>
+                {
+                    r.Interval(6, TimeSpan.FromSeconds(5));
+                    r.Handle<DbUpdateException>();
+                });
+            });
         });
 
         busRegistrationConfigurator.AddConsumer<SimulationCommandHandler>();
