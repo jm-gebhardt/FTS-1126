@@ -96,7 +96,20 @@ public abstract class MassTransitTestFixture : FixtureBase
         where T : class, CorrelatedBy<TKey>
     {
         await TestHarness.Bus.Publish(message);
-        (await (filter != null ? ConsumedMessages.Any(filter) : ConsumedMessages.Any<T>(s => s.Context.Message.CorrelationId != null && s.Context.Message.CorrelationId.Equals(message.CorrelationId)))).ShouldBeTrue();
+        
+        var timeout = TimeSpan.FromSeconds(10);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        while (stopwatch.Elapsed < timeout)
+        {
+            if (await (filter != null ? ConsumedMessages.Any(filter) : ConsumedMessages.Any<T>(s => s.Context.Message.CorrelationId != null && s.Context.Message.CorrelationId.Equals(message.CorrelationId))))
+            {
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+        false.ShouldBeTrue("Message was not consumed within timeout period [{timeout.TotalSeconds:0}s]");
     }
 
     /// <summary>
