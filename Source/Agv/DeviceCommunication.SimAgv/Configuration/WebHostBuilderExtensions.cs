@@ -4,6 +4,7 @@ using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Controllers;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Swagger;
+using Gebhardt.Core.WebApi.Extensions;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -113,6 +114,7 @@ public static class WebHostBuilderExtension
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHealthProbes(); 
             endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
             {
                 Predicate = _ => true
