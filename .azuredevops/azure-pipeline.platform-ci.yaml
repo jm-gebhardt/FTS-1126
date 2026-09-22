@@ -157,6 +157,19 @@ parameters:
         migrationsManifest: 'Source/Agv/WCSCommunication/migrations.json'
         migrationsOutputPath: 'artifacts/db/migrations/wcs-communication'
         publishMigrator: true
+      - serviceName: 'TriggerService'
+        stagePrefix: 'TriggerService'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/TriggerService/TriggerService.csproj'
+        entryPointProjectName: 'TriggerService'
+        rootNamespace: 'Gebhardt.Acc.TriggerService'
+        dockerImageName: 'gebhardt/fleet-manager/trigger-service'
+        artifactName: 'docker-image-trigger-service'
+        migratorArtifactName: 'migrator-image-trigger-service'
+        migrationsArtifactName: 'migrations-trigger-service'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/TriggerService/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/trigger-service'
+        publishMigrator: true
         
 resources:
   repositories:
