@@ -1,17 +1,15 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// A node in the routing graph. Each routing node has an associated AGV type, a load state, and a theta value.
 /// </summary>
 public class RoutingNode : RoutingResource
 {
-    [UsedImplicitly]
     private readonly List<RoutingEdge> _incomingEdges = [];
     
-    [UsedImplicitly]
     private readonly List<RoutingEdge> _outgoingEdges = [];
 
     /// <summary>
@@ -50,12 +48,12 @@ public class RoutingNode : RoutingResource
         Theta = theta;
     }
 
-    internal void AddIncomingEdge(RoutingEdge routingEdge)
+    internal void AttachIncomingEdge(RoutingEdge routingEdge)
     {
         _incomingEdges.Add(routingEdge);
     }
 
-    internal void AddOutgoingEdge(RoutingEdge routingEdge)
+    internal void AttachOutgoingEdge(RoutingEdge routingEdge)
     {
         _outgoingEdges.Add(routingEdge);    
     }

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TransportOrder.Domain\TransportOrder.Domain.csproj" />
+    <ProjectReference Include="..\TransportOrder.Messages\TransportOrder.Messages.csproj" />
   </ItemGroup>
 
   <ItemGroup>

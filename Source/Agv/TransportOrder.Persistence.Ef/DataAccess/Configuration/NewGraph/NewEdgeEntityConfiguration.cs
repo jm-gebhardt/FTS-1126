@@ -8,6 +8,11 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Ne
 /// <inheritdoc/>
 public class NewEdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
 {
+    /// <summary>
+    /// The name of the Edge ID foreign key property of the RoutingResources.
+    /// </summary>
+    public const string EdgeId = "EdgeId";
+
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<Edge> builder)
     {
@@ -33,7 +38,7 @@ public class NewEdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
 
         builder.HasMany(e => e.RoutingEdges)
             .WithOne()
-            .HasForeignKey(NewNodeEntityConfiguration.ParentId)
+            .HasForeignKey(EdgeId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// Represents a resource in the routing graph. Each resource has a unique identifier, an associated AGV type, and a reference to its parent graph resource. 

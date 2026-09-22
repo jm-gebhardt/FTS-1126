@@ -1,7 +1,7 @@
-using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Agvs;
 
 /// <summary>
 /// Provider for AGV information. Holds relevant information in-memory and updates it based on incoming events. This is a placeholder for later implementation.

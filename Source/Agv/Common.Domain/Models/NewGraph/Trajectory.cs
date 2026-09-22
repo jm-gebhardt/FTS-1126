@@ -30,7 +30,7 @@ public record Trajectory
     /// <summary>
     /// Control points defining the trajectory.
     /// </summary>
-    public IReadOnlyList<ControlPoint> ControlPoints { get; init; } = [];
+    public IReadOnlyList<ControlPoint> ControlPoints { get; init; } = new List<ControlPoint>();
 
     /// <summary>
     /// Degree of the trajectory curve. Default is 1. Range: [1 ... 3]

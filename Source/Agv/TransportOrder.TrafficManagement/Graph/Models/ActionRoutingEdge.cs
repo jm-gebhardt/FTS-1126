@@ -2,7 +2,7 @@
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// An edge in the routing graph on which an action can be run.
@@ -17,6 +17,10 @@ public class ActionRoutingEdge : RoutingEdge
         RoutingNode startNode,
         RoutingNode endNode,
         double length,
+        double? vehicleOrientation,
+        OrientationType orientationType,
+        double? rotationAtStart,
+        double? rotationAtEnd,
         bool rotationAllowed,
         double? maxSpeed,
         double? maxRotationSpeed,
@@ -27,6 +31,10 @@ public class ActionRoutingEdge : RoutingEdge
         startNode,
         endNode,
         length,
+        vehicleOrientation,
+        orientationType,
+        rotationAtStart,
+        rotationAtEnd,
         rotationAllowed,
         maxSpeed,
         maxRotationSpeed,
@@ -40,17 +48,4 @@ public class ActionRoutingEdge : RoutingEdge
     /// </summary>
     [UsedImplicitly]
     public RoutingActionType ActionType { get; }
-}
-
-/// <summary>
-/// The type of the action.
-/// </summary>
-[PublicAPI]
-public enum RoutingActionType
-{
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    Pick,
-    Drop,
-    Rotate
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

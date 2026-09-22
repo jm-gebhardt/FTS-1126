@@ -1,5 +1,5 @@
-using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Agvs;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Manager;
 

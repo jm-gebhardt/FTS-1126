@@ -10,7 +10,7 @@ namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 public record Station : GraphResource
 {
     private IReadOnlyList<Node> _interactionNodes = new List<Node>();
-    private IReadOnlyList<Guid> _interactionNodeIds = new List<Guid>();
+    private IReadOnlyList<Guid>? _interactionNodeIds;
 
     /// <summary>
     /// X position of the station on the layout in reference to the global origin.
@@ -32,7 +32,7 @@ public record Station : GraphResource
     /// </summary>
     public IReadOnlyList<Guid> InteractionNodeIds
     {
-        get => _interactionNodeIds;
+        get => _interactionNodeIds ?? InteractionNodes.Select(n => n.Id).ToList();
         init => _interactionNodeIds = value;
     }
 
@@ -43,11 +43,7 @@ public record Station : GraphResource
     public IReadOnlyList<Node> InteractionNodes
     {
         get => _interactionNodes;
-        init
-        {
-            _interactionNodes = value;
-            _interactionNodeIds = value.Select(n => n.Id).ToList();
-        }
+        init => _interactionNodes = value;
     }
 
     /// <summary>
@@ -70,7 +66,6 @@ public record Station : GraphResource
     /// </summary>
     public Station()
     {
-        InteractionNodeIds = [];
     }
 
     /// <summary>

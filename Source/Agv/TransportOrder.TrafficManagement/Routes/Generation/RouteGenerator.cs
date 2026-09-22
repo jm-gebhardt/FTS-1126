@@ -1,4 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 

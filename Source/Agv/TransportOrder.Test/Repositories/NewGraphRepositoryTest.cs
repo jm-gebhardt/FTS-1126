@@ -74,7 +74,7 @@ public class NewGraphRepositoryTest
 
         var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
         var routingNode = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid(), 0);
-        await fixture.AddRoutingResourcesAsync((routingNode, nodeId));
+        await fixture.AddRoutingResourcesAsync((routingNode, node));
 
         await fixture.GraphRepository.AddOrUpdateGraphAsync(Fixture.CreateGraph(
             [new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null)]));
@@ -115,9 +115,9 @@ public class NewGraphRepositoryTest
             false, null, null, null);
 
         await fixture.AddRoutingResourcesAsync(
-            (routingNodeA, nodeA.Id),
-            (routingNodeB, nodeB.Id),
-            (routingEdge, edge.Id));
+            (routingNodeA, nodeA),
+            (routingNodeB, nodeB),
+            (routingEdge, edge));
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
 

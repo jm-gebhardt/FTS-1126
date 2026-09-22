@@ -16,6 +16,6 @@ public class NewGraphCommandHandler(INewGraphRepository repository) : IConsumer<
     public async Task Consume(ConsumeContext<AddNewGraphSegment> context)
     {
         await repository.AddOrUpdateGraphAsync(context.Message.GraphSegment);
-        await context.Publish(new AgvTypeGraphsChanged(context.Message.CorrelationId));
+        await context.Publish(new NewGraphUpdated(context.Message.GraphSegment));
     }
 }

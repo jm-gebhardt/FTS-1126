@@ -13,6 +13,9 @@ public static class NewGraphGenerator
     public const string EdgeName = "start-end";
     public const string StationName = "station";
 
+    public static readonly Guid RoutingAgvTypeId = Guid.NewGuid();
+    public static readonly Guid RoutingLoadStateId = Guid.NewGuid();
+
     public static GraphSegment GenerateGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
     {
         var startNode = new Node(Guid.NewGuid(), StartNodeName, StartNodeName, 0, 0, LevelId);
@@ -34,13 +37,11 @@ public static class NewGraphGenerator
 
     private static void AddRoutingResources(Node startNode, Edge edge)
     {
-        var agvTypeId = Guid.NewGuid();
-        var loadStateId = Guid.NewGuid();
-
         var trajectory = new Trajectory(new List<ControlPoint> { new(0, 0), new(1, 1), new(2, 0) }, [0, 0, 0, 1, 1, 1]);
 
-        startNode.RoutingNodes.Add(new RoutingNode(Guid.NewGuid(), agvTypeId, loadStateId, 1));
-        edge.RoutingEdges.Add(new RoutingEdge(Guid.NewGuid(), agvTypeId, Guid.NewGuid(), Guid.NewGuid(), 1.5, 0.5, OrientationType.Tangential, 0.1, 0.2, true, 1.0, 0.5, trajectory));
-        edge.RoutingEdges.Add(new ActionRoutingEdge(Guid.NewGuid(), agvTypeId, Guid.NewGuid(), Guid.NewGuid(), 1.5, 0.5, OrientationType.Tangential, 0.1, 0.2, true, 1.0, 0.5, trajectory, RoutingActionType.Pick));
+        var routingNode = new RoutingNode(Guid.NewGuid(), RoutingAgvTypeId, RoutingLoadStateId, 1);
+        startNode.RoutingNodes.Add(routingNode);
+        edge.RoutingEdges.Add(new RoutingEdge(Guid.NewGuid(), RoutingAgvTypeId, routingNode.Id, routingNode.Id, 1.5, 0.5, OrientationType.Tangential, 0.1, 0.2, true, 1.0, 0.5, trajectory));
+        edge.RoutingEdges.Add(new ActionRoutingEdge(Guid.NewGuid(), RoutingAgvTypeId, routingNode.Id, routingNode.Id, 1.5, 0.5, OrientationType.Tangential, 0.1, 0.2, true, 1.0, 0.5, trajectory, RoutingActionType.Pick));
     }
 }

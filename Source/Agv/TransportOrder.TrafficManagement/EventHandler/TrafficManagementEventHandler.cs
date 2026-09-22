@@ -2,8 +2,10 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Route;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Graph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Agvs;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Manager;
 using JetBrains.Annotations;
 using MassTransit;
@@ -17,13 +19,14 @@ namespace Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
 /// (or configure multiple consumers to use the same receive endpoint with a concurrency limit).
 /// </summary>
 [UsedImplicitly]
-internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvider agvProvider, GraphProvider graphProvider, TrafficManagementTickState tickState, ILogger<TrafficManagementEventHandler> logger) :
+internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvider agvProvider, GraphManager graphManager, TrafficManagementTickState tickState, ILogger<TrafficManagementEventHandler> logger) :
     IConsumer<StartActionCommand>,
     IConsumer<UpdateActionCommand>,
     IConsumer<AbortAndStartActionCommand>,
     IConsumer<ActionAborted>,
     IConsumer<RouteStepsProcessed>,
-    IConsumer<TrafficManagementTick>
+    IConsumer<TrafficManagementTick>,
+    IConsumer<NewGraphUpdated>
 {
     private static readonly TimeSpan _minimumTickInterval = TimeSpan.FromTicks(TrafficManagementTickPublisher.TickInterval.Ticks * 4 / 5);
 
@@ -87,6 +90,11 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
         return Task.CompletedTask;
     }
 
+    public Task Consume(ConsumeContext<NewGraphUpdated> context)
+    {
+        return graphManager.AddGraphSegmentAsync(context.Message.GraphSegment, context.CancellationToken);
+    }
+
     private RouteRequest GetRouteRequestFromAgvAction(AgvAction agvAction, IRoutingAgv agv)
     {
         // mapping from GraphNode to new Node should not be necessary later
@@ -97,7 +105,7 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
             throw new InvalidOperationException("Target node name is null.");
         }
 
-        var targetNode = graphProvider.GetNodeByName(targetNodeName);
+        var targetNode = graphManager.GetNodeByName(targetNodeName);
 
         if (targetNode is null)
         {

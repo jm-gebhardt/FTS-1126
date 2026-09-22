@@ -173,7 +173,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IActionGroupRepository, EfActionGroupRepository>();
         services.AddTransient<IAgvRepository, AgvRepository>();
         services.AddTransient<IAgvDataRepository, EfAgvDataRepository>();
-        services.AddTransient<IAgvTypeRepository, EfAgvTypeRepository>();
+        services.AddSingleton<IAgvTypeRepository, EfAgvTypeRepository>();
         services.AddTransient<IStationRepository, EfStationRepository>();
         services.AddTransient<IZoneRepository, EfZoneRepository>();
         services.AddTransient<IQueueRepository, EfQueueRepository>();
@@ -186,7 +186,7 @@ public static class TransportOrderHostBuilderExtensions
         services.AddTransient<IBackgroundEditorRepository, EfBackgroundEditorRepository>();
 
         services.AddTransient<IGraphRepository, EfGraphRepository>();
-        services.AddTransient<INewGraphRepository, NewGraphRepository>();
+        services.AddSingleton<INewGraphRepository, NewGraphRepository>();
         services.AddTransient<IRoutingResourceConflictRepository, EfRoutingResourceConflictRepository>();
         services.AddTransient<INodeRepository, GraphNodeRepository>();
         services.AddTransient<IMaintenanceLogRepository, EfMaintenanceLogRepository>();

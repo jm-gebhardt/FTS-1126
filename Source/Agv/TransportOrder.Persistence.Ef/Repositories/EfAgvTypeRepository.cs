@@ -60,6 +60,6 @@ public class EfAgvTypeRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     public async Task<ICollection<AgvType>> GetAllAgvTypesAsync(CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await dbContext.Set<AgvType>().AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+        return await dbContext.Set<AgvType>().Include(t => t.LoadStates).AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
     }
 }

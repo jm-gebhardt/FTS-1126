@@ -1,5 +1,6 @@
-﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.Providers;
+﻿using Gebhardt.Acc.TransportOrder.TrafficManagement.Agvs;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Reservations;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Generation;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Manager;
@@ -20,14 +21,22 @@ public static class TrafficManagementServiceRegistrationExtensions
     public static void AddTrafficManagementServices(this IServiceCollection services)
     {
         services.TryAddSingleton(TimeProvider.System);
-        
+
         services.AddSingleton<ReservationManager>();
         services.AddSingleton<RouteGenerator>();
         services.AddSingleton<RouteManager>();
-        services.AddSingleton<GraphProvider>();
+        services.AddSingleton<GraphManager>();
         services.AddSingleton<AgvProvider>();
 
         services.AddSingleton<TrafficManagementTickState>();
         services.AddHostedService<TrafficManagementTickPublisher>();
+    }
+
+    /// <summary>
+    /// Adds the hosted service that loads the graph on startup.
+    /// </summary>
+    public static void AddTrafficManagementGraphInitializer(this IServiceCollection services)
+    {
+        services.AddHostedService<GraphInitializer>();
     }
 }

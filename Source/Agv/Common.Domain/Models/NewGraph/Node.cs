@@ -28,6 +28,11 @@ public record Node : GraphResource
     /// </summary>
     public List<RoutingNode> RoutingNodes { get; init; } = [];
 
+    /// <summary>
+    /// List of routing edges associated with this node.
+    /// </summary>
+    public List<RoutingEdge> RoutingEdges { get; init; } = [];
+
     /// <inheritdoc cref="Node"/>
     public Node(Guid id, string name, string shortName, double x, double y, string? levelId) : base(id, name, shortName)
     {

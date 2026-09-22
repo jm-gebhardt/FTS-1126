@@ -1,5 +1,10 @@
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+using Edge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Edge;
+using Node = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Node;
+using RoutingEdge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingEdge;
+using RoutingNode = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingNode;
+using RoutingResource = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingResource;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Helper;
 
@@ -26,7 +31,7 @@ public static class RoutingResourceGenerator
     {
         parentNode ??= new Node(Guid.NewGuid(), "node", "n", x, y, null);
         var routingNode = new RoutingNode(Guid.NewGuid(), parentNode, agvType, new LoadState(Guid.NewGuid(), false), 0);
-        parentNode.AddChild(routingNode);
+        parentNode.AddRoutingNode(routingNode);
         return routingNode;
     }
 
@@ -34,9 +39,9 @@ public static class RoutingResourceGenerator
     {
         parentEdge ??= new Edge(Guid.NewGuid(), "edge", "e", startNode.ParentNode, endNode.ParentNode);
 
-        var edge = new RoutingEdge(Guid.NewGuid(), parentEdge, startNode.AgvType, startNode, endNode, length, false, maxSpeed, null, null);
-        startNode.AddOutgoingEdge(edge);
-        endNode.AddIncomingEdge(edge);
+        var edge = new RoutingEdge(Guid.NewGuid(), parentEdge, startNode.AgvType, startNode, endNode, length, null, OrientationType.Tangential, null, null, false, maxSpeed, null, null);
+        startNode.AttachOutgoingEdge(edge);
+        endNode.AttachIncomingEdge(edge);
         return edge;
     }
 }

@@ -9,9 +9,9 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess.Configuration.Ne
 public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
 {
     /// <summary>
-    /// The name of the parent ID foreign key property of the RoutingResources.
+    /// The name of the node ID foreign key property of the RoutingResources.
     /// </summary>
-    public const string ParentId = "ParentId";
+    public const string NodeId = "NodeId";
 
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<Node> builder)
@@ -30,7 +30,12 @@ public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
 
         builder.HasMany(e => e.RoutingNodes)
             .WithOne()
-            .HasForeignKey(ParentId)
+            .HasForeignKey(NodeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(e => e.RoutingEdges)
+            .WithOne()
+            .HasForeignKey(NodeId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

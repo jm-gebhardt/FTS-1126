@@ -1,7 +1,6 @@
 using JetBrains.Annotations;
-using CommonNode = Gebhardt.Acc.Common.Domain.Models.NewGraph.Node;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// Represents a node in the graph.
@@ -9,6 +8,9 @@ namespace Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
 [PublicAPI]
 public class Node : GraphResource
 {
+    private readonly List<RoutingNode> _routingNodes = [];
+    private readonly List<RoutingEdge> _routingEdges = [];
+
     /// <summary>
     /// X position on the layout in reference to the global origin.
     /// </summary>
@@ -37,12 +39,12 @@ public class Node : GraphResource
     /// <summary>
     /// Collection of routing nodes associated with this node.
     /// </summary>
-    public IEnumerable<RoutingNode> RoutingNodes => Children.OfType<RoutingNode>();
+    public IReadOnlyCollection<RoutingNode> RoutingNodes => _routingNodes;
 
     /// <summary>
     /// Collection of routing edges associated with this node.
     /// </summary>
-    public IEnumerable<RoutingEdge> RoutingEdges => Children.OfType<RoutingEdge>();
+    public IReadOnlyCollection<RoutingEdge> RoutingEdges => _routingEdges;
 
     /// <inheritdoc cref="Node"/>
     public Node(Guid id, string name, string shortName, double x, double y, string? levelId) : base(id, name, shortName)
@@ -52,12 +54,13 @@ public class Node : GraphResource
         LevelId = levelId;
     }
 
-    /// <summary>
-    /// Generates a node from a <see cref="CommonNode"/>.
-    /// </summary>
-    /// <param name="commonNode">The <see cref="CommonNode"/>.</param>
-    public static Node FromCommon(CommonNode commonNode)
+    internal void AddRoutingNode(RoutingNode routingNode)
     {
-        return new Node(commonNode.Id, commonNode.Name, commonNode.ShortName, commonNode.X, commonNode.Y, commonNode.LevelId);
+        _routingNodes.Add(routingNode);
+    }
+
+    internal void AddRoutingEdge(RoutingEdge routingEdge)
+    {
+        _routingEdges.Add(routingEdge);
     }
 }

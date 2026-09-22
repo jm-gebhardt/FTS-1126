@@ -46,12 +46,19 @@ public class NewGraphRepositoryTestFixture : TransportOrderDbFixture
         await context.SaveChangesAsync();
     }
 
-    public async Task AddRoutingResourcesAsync(params (RoutingResource Resource, Guid ParentId)[] resources)
+    public async Task AddRoutingResourcesAsync(params (RoutingResource RoutingResource, GraphResource Parent)[] resources)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        foreach (var (resource, parentId) in resources)
+        foreach (var (routingResource, parent) in resources)
         {
-            context.Add(resource).Property(NewNodeEntityConfiguration.ParentId).CurrentValue = parentId;
+            string propertyName = parent switch
+            {
+                Node => NewNodeEntityConfiguration.NodeId,
+                Edge => NewEdgeEntityConfiguration.EdgeId,
+                _ => throw new InvalidOperationException($"Parent has an unsupported type: {parent.GetType().Name}")
+            };
+
+            context.Add(routingResource).Property(propertyName).CurrentValue = parent.Id;
         }
         await context.SaveChangesAsync();
     }

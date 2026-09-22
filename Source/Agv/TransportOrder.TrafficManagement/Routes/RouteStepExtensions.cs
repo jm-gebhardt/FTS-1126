@@ -1,6 +1,6 @@
 ﻿
 using Gebhardt.Acc.Common.Messages.Route.AgvActions;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.NewGraph;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Routes;
 

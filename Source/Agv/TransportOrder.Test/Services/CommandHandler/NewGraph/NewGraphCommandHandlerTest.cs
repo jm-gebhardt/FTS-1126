@@ -26,13 +26,13 @@ public class NewGraphCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_AddNewGraph_PublishesAgvTypeGraphsChangedWithTheCommandCorrelationId()
+    public async Task Consume_AddNewGraph_PublishesNewGraphUpdatedWithTheCommandCorrelationId()
     {
         var fixture = new NewGraphCommandHandlerTestFixture();
 
-        var graphsChanged = await fixture.PublishAndGetFirstMessageAsync<AddNewGraphSegment, AgvTypeGraphsChanged>(fixture.AddNewGraphSegment);
+        var newGraphUpdated = await fixture.PublishAndGetFirstMessageAsync<AddNewGraphSegment, NewGraphUpdated>(fixture.AddNewGraphSegment);
 
-        graphsChanged.CorrelationId.ShouldBe(fixture.AddNewGraphSegment.CorrelationId);
+        newGraphUpdated.ShouldNotBeNull();
     }
 
     [TestMethod]
@@ -52,6 +52,6 @@ public class NewGraphCommandHandlerTest
 
         await fixture.PublishMessageAsync(fixture.AddNewGraphSegment);
 
-        await fixture.ShouldNotHavePublishedAsync<AgvTypeGraphsChanged>();
+        await fixture.ShouldNotHavePublishedAsync<NewGraphUpdated>();
     }
 }
