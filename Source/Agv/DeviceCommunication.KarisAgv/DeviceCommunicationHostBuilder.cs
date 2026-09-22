@@ -20,6 +20,9 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Persistence.Repositories;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Services;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.States;
+using Gebhardt.Core.EntityFrameworkCore;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using HealthChecks.UI.Client;
 using MassTransit;
 using MassTransit.Configuration;
@@ -50,6 +53,10 @@ public static class DeviceCommunicationHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 services.AddSingleton<IConfigurationReader, InstantActionsConfigurationFileReader>();
@@ -144,7 +151,8 @@ public static class DeviceCommunicationHostBuilder
 
                 void ConfigureDbContextOptions(DbContextOptionsBuilder builder)
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(DeviceCommunicationDbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationDbContext>.MigrationTableName);
@@ -166,6 +174,7 @@ public static class DeviceCommunicationHostBuilder
                         app.UseRouting();
                         app.UseEndpoints(endpoints =>
                         {
+                            endpoints.MapHealthProbes();
                             endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions
                             {
                                 Predicate = _ => true
