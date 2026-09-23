@@ -10,6 +10,7 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
@@ -185,7 +186,13 @@ public class AgvRepository : IAgvRepository
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DbSet<Agv> dbSet = dbContext.Set<Agv>();
+        bool addStatusNotRequired= agv.AgvStatus == null || await dbSet.AnyAsync(a => a.CorrelationId == agv.CorrelationId && a.AgvStatus != null, cancellationToken);
         dbSet.Update(agv);
+        if (!addStatusNotRequired)
+        {
+            EntityEntry<AgvStatus>? statusEntry = dbContext.Entry(agv).Reference(a => a.AgvStatus).TargetEntry;
+            statusEntry?.State = EntityState.Added;
+        }
         return await dbContext.SaveChangesAsync(cancellationToken) > 0;
     }
 

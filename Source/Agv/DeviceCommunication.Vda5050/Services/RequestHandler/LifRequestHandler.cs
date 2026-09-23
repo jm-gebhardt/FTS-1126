@@ -12,7 +12,6 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
 using JetBrains.Annotations;
 using MassTransit;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -68,14 +67,14 @@ public class LifRequestHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UploadLif> context)
     {
-        (var uploadedTimestamp, var file, string uploadedBy) = context.Message;
+        (_, var uploadedTimestamp, byte[] content, string uploadedFileName, string contentType, string uploadedBy) = context.Message;
 
-        ValidateFile(file);
+        ValidateFile(content, uploadedFileName, contentType);
 
         LifFile lifFile;
-        string fileName = Path.GetFileName(file.FileName);
-        double fileSizeMb = file.Length / 1024.0 / 1024.0;
-        var (vdmaCollection, rawJson, validationResults) = await ExtractFileContent(file);
+        string fileName = Path.GetFileName(uploadedFileName);
+        double fileSizeMb = content.Length / 1024.0 / 1024.0;
+        (var vdmaCollection, byte[] rawJson, ICollection<LifValidationResult> validationResults) = await ExtractFileContent(content);
         if (vdmaCollection == null)
         {
             lifFile = new LifFile { Id = Guid.NewGuid(), MetaInformation = new LifFileMetaInformation(uploadedTimestamp, fileName, fileSizeMb, uploadedBy) { ValidationResults = validationResults } };
@@ -91,7 +90,7 @@ public class LifRequestHandler(
         // Check if LIF with same creator exists (workaround until update logic is implemented)
         if (await lifRepository.ExistsWithCreatorAsync(lifFile.LifCollectionMetaInformation.Creator))
         {
-            validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, "A lif file with the same creator already exists"));
+            validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, LifValidationMessages.CreatorAlreadyExists));
             await context.RespondAsync(new LifValidationFailed(lifFile));
             return;
         }
@@ -167,57 +166,52 @@ public class LifRequestHandler(
         await context.RespondAsync(new Success());
     }
 
-    private static void ValidateFile(IFormFile file)
+    private static void ValidateFile(byte[] content, string fileName, string contentType)
     {
-        if (file.Length == 0)
+        if (content.Length == 0)
         {
             throw new NoFileProvidedException();
         }
 
-        if (!file.ContentType.StartsWith(Vda5050Specifications.LifUploadFileType, StringComparison.OrdinalIgnoreCase))
+        if (!contentType.StartsWith(Vda5050Specifications.LifUploadFileType, StringComparison.OrdinalIgnoreCase))
         {
-            throw new WrongFileTypeException(file.ContentType, Vda5050Specifications.LifUploadFileType);
+            throw new WrongFileTypeException(contentType, Vda5050Specifications.LifUploadFileType);
         }
 
-        if (!file.FileName.EndsWith(".lif", StringComparison.OrdinalIgnoreCase) && !file.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        if (!fileName.EndsWith(".lif", StringComparison.OrdinalIgnoreCase) && !fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
         {
-            throw new WrongFileTypeException(file.FileName.Split(".").Last(), "json/JSON/lif/LIF");
+            throw new WrongFileTypeException(fileName.Split(".").Last(), "json/JSON/lif/LIF");
         }
     }
 
-    private async Task<(LifLayoutCollection? Collection, byte[] RawJson, ICollection<LifValidationResult>)> ExtractFileContent(IFormFile file)
+    private async Task<(LifLayoutCollection? Collection, byte[] RawJson, ICollection<LifValidationResult>)> ExtractFileContent(byte[] content)
     {
         LifLayoutCollection? lifLayoutCollection;
-        byte[] rawJson = [];
         List<LifValidationResult> validationResults = [];
 
         try
         {
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            rawJson = memoryStream.ToArray();
-
-            memoryStream.Position = 0;
-            using var reader = new StreamReader(memoryStream, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+            using var memoryStream = new MemoryStream(content);
+            using var reader = new StreamReader(memoryStream, true);
             string json = await reader.ReadToEndAsync();
 
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
-                Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true) }
+                Converters = { new JsonStringEnumConverter(null) }
             };
             lifLayoutCollection = JsonSerializer.Deserialize<LifLayoutCollection>(json, options);
         }
         catch (Exception ex)
         {
             validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, ex.Message));
-            return (null, rawJson, validationResults);
+            return (null, content, validationResults);
         }
 
         if (lifLayoutCollection == null)
         {
             validationResults.Add(new LifValidationResult(ResourceType.File, null, Severity.Err, "No lif layout collection"));
-            return (null, rawJson, validationResults);
+            return (null, content, validationResults);
         }
         var validationResult = await lifValidator.ValidateAsync(lifLayoutCollection);
         if (!validationResult.IsValid)
@@ -228,7 +222,7 @@ public class LifRequestHandler(
             validationResults.AddRange(results);
         }
 
-        return (lifLayoutCollection, rawJson, validationResults);
+        return (lifLayoutCollection, content, validationResults);
     }
 
     private async Task ValidateLifCanBeDeleted(LifFile lif)

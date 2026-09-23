@@ -124,6 +124,7 @@ public static class CoreBusRegistrationExtensions
             var partitioner = c.CreatePartitioner(PartitionCount);
             partitioner.PartitionMessageById<CheckAgvLoad, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<AgvErrorChanged, AgvCommandHandler>(c);
+            partitioner.PartitionMessageById<CreateAgv, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<UpdateAgvStatus, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<LeaveQueue, AgvCommandHandler>(c);
             partitioner.PartitionMessageById<SetAgvGraphExist, AgvCommandHandler>(c);

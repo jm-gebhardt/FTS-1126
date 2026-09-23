@@ -1,3 +1,4 @@
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;

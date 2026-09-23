@@ -2697,7 +2697,8 @@ public class AgvCommandHandlerTest
         await fixture.PublishMessageAsync(new CreateAgv(agv.CorrelationId, agv.SerialNumber, newAgvTypeId));
 
         agv.AgvTypeId.ShouldBe(newAgvTypeId);
-        fixture.AgvDb.Verify(r => r.Agvs.AddAgvAsync(agv), Times.Once());
+        fixture.AgvDb.Verify(r => r.Agvs.UpdateAgvAsync(agv, It.IsAny<CancellationToken>()), Times.Once());
+        fixture.AgvDb.Verify(r => r.Agvs.AddAgvAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>()), Times.Never());
         await fixture.ShouldNotHavePublishedAsync<AgvDiscovered>();
     }
 

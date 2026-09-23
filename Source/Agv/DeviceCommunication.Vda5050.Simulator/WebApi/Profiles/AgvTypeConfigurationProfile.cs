@@ -1,6 +1,6 @@
 using AutoMapper;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
 using JetBrains.Annotations;
 

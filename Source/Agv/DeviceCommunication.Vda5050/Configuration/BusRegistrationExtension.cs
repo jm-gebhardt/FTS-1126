@@ -77,6 +77,7 @@ public static class BusRegistrationExtension
             configurator.AddConsumer<AgvGraphCommandHandler>();
             configurator.AddConsumer<LayoutEventHandler>();
             configurator.AddConsumer<LifRequestHandler>();
+            configurator.AddConsumer<FactsheetRequestHandler>();
             configurator.AddConsumer<AgvEventHandler>();
             configurator.AddConsumer<GraphMerger>();
             configurator.AddRequestClient<GetDefaultMap>();

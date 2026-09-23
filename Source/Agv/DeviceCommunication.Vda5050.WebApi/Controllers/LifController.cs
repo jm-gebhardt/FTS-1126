@@ -27,6 +27,7 @@ public class LifController(
     IRequestClient<GetLifFile> getLifClient,
     IRequestClient<DeleteLifFile> deleteLifClient,
     IRequestClient<DownloadLifFile> downloadLifClient,
+    TimeProvider timeProvider,
     ILogger<LifController> logger,
     IMapper mapper) : Controller
 {
@@ -70,7 +71,12 @@ public class LifController(
         {
             return Unauthorized();
         }
-        Response<LifUploaded, LifValidationFailed> response= await uploadLifClient.GetResponse<LifUploaded, LifValidationFailed>(new UploadLif(DateTime.UtcNow, file, email));
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        byte[] content = memoryStream.ToArray();
+
+        var request = new UploadLif(Guid.NewGuid(), timeProvider.GetUtcNow().UtcDateTime, content, file.FileName, file.ContentType, email);
+        Response<LifUploaded, LifValidationFailed> response = await uploadLifClient.GetResponse<LifUploaded, LifValidationFailed>(request);
         FileMetaInformationDto? lifFile;
         if (response.Message is LifUploaded uploaded)
         {

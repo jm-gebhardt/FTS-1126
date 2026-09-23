@@ -1573,7 +1573,8 @@ public class AgvCommandHandler :
     /// </summary>
     private async Task CreateAgv(ConsumeContext<UpdateAgvStatus> context)
     {
-        (var correlationId, string agvSerialNumber, var agvStatus) = context.Message;
+        (var correlationId, string agvSerialNumber, var agvStatusMessageContent) = context.Message;
+        var agvStatus = _mapper.Map<AgvStatus>(agvStatusMessageContent);
 
         await _loggingService.LogAgv(_logger, LogLevel.Information, LogCodes.AgvDiscovered, correlationId, null, "AGV Discovered", $"AGV {agvSerialNumber} has been discovered",
             new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
@@ -1586,7 +1587,7 @@ public class AgvCommandHandler :
         );
 
         var settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv();
-        var agv = new Agv(correlationId, settingsGroup.Id, agvSerialNumber, _mapper.Map<AgvStatus>(agvStatus));
+        var agv = new Agv(correlationId, settingsGroup.Id, agvSerialNumber, agvStatus);
         settingsGroup = await _agvDb.AgvSettings.GetSettingsGroupForAgv(agv);
         agv.AgvSettingsGroup = settingsGroup.Id;
         bool graphExists = await _agvDb.Graphs.ExistsAsync(correlationId);
@@ -1597,6 +1598,7 @@ public class AgvCommandHandler :
 
         agv.TransitionToDiscovered(graphExists);
         await PublishDataRequestAsync(context, agv);
+
         await _agvDb.Agvs.AddAgvAsync(agv);
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
@@ -2164,7 +2166,14 @@ public class AgvCommandHandler :
             await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvTypeUpdated, correlationId, null, "AGV configuration invalid", $"AGV {agvSerialNumber} received invalid configuration",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
         }
-        await _agvDb.Agvs.AddAgvAsync(agv);
+        if (isNewAgv)
+        {
+            await _agvDb.Agvs.AddAgvAsync(agv);
+        }
+        else
+        {
+            await _agvDb.Agvs.UpdateAgvAsync(agv, context.CancellationToken);
+        }
 
         var agvMessageContent = _mapper.Map<Messages.MessageContent.Agv>(agv);
         if (isNewAgv)

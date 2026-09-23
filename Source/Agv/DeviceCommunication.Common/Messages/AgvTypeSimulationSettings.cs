@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
+namespace Gebhardt.Acc.DeviceCommunication.Common.Messages;
 
 /// <summary>
 /// Provides the tunables of a simulated agv type. A member that is null keeps the stored value, or falls back to the default when there is none.

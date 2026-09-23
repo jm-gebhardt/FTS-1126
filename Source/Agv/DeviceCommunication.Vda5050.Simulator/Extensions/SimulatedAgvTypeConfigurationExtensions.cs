@@ -1,6 +1,6 @@
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Extensions;
 

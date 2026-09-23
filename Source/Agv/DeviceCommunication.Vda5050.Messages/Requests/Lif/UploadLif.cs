@@ -1,44 +1,16 @@
 ﻿using JetBrains.Annotations;
-using Microsoft.AspNetCore.Http;
+using MassTransit;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
 
 /// <summary>
-/// Provides a command to upload a lif file
+/// Provides a command to upload a lif file.
 /// </summary>
+/// <param name="CorrelationId">The correlation id of the upload.</param>
+/// <param name="UploadTimestamp">The time the file was uploaded.</param>
+/// <param name="Content">The raw content of the lif file.</param>
+/// <param name="FileName">The name of the lif file.</param>
+/// <param name="ContentType">The content type of the lif file.</param>
+/// <param name="UploadedBy">The user that uploaded the lif file.</param>
 [PublicAPI]
-public record UploadLif
-{
-    /// <summary>
-    /// The time the file was uploaded.
-    /// </summary>
-    public DateTime UploadTimestamp { get; set; }
-
-    /// <summary>
-    /// The LIF file
-    /// </summary>
-    public IFormFile LifFile { get; set; } = null!;
-
-    /// <summary>
-    /// The user that uploaded the Lif file
-    /// </summary>
-    public string UploadedBy { get; set; } = string.Empty;
-
-    /// <inheritdoc cref="UploadLif" />
-    public UploadLif(DateTime uploadTimestamp, IFormFile lifFile, string uploadedBy)
-    {
-        UploadTimestamp = uploadTimestamp;
-        LifFile = lifFile;
-        UploadedBy = uploadedBy;
-    }
-
-    /// <summary>
-    /// Deconstruct the message.
-    /// </summary>
-    public void Deconstruct(out DateTime uploadTimestamp, out IFormFile lifFile, out string uploadedBy)
-    {
-        uploadTimestamp = UploadTimestamp;
-        lifFile = LifFile;
-        uploadedBy = UploadedBy;
-    }
-}
+public record UploadLif(Guid CorrelationId, DateTime UploadTimestamp, byte[] Content, string FileName, string ContentType, string UploadedBy) : CorrelatedBy<Guid>;

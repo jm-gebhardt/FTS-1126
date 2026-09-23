@@ -1,4 +1,4 @@
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
 using Shouldly;
 using Fixture = Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.WebApi.Profiles.AgvTypeConfigurationProfileTestFixture;

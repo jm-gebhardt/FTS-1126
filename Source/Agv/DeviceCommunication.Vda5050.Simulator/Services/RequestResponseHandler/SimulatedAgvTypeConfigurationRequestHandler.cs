@@ -1,5 +1,6 @@
 using FluentValidation;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Repositories;
@@ -25,7 +26,8 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
     IConsumer<RequestUpdateAgvTypeConfiguration>,
     IConsumer<RequestDeleteAgvTypeConfiguration>,
     IConsumer<RequestAgvTypeConfiguration>,
-    IConsumer<RequestAgvTypeConfigurations>
+    IConsumer<RequestAgvTypeConfigurations>,
+    IConsumer<EnsureSimulatedAgvTypeConfiguration>
 {
     private async Task ValidateAsync(SimulatedAgvTypeConfiguration configuration, CancellationToken cancellationToken)
     {
@@ -34,6 +36,13 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
         {
             throw new ValidationException(string.Join(" ", validationResult.Errors.Select(failure => failure.ErrorMessage)));
         }
+    }
+
+    private async Task AddConfigurationAsync(SimulatedAgvTypeConfiguration configuration, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Adding the simulation configuration of agv type {AgvTypeIdentifier} with {NoOfAgvs} agvs", configuration.AgvTypeIdentifier, configuration.NoOfAgvs);
+        await repository.AddAsync(configuration);
+        await spawner.ApplyAsync(null, configuration, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -47,10 +56,25 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
             throw new AgvTypeConfigurationAlreadyExistsException(agvTypeIdentifier);
         }
 
-        logger.LogInformation("Adding the simulation configuration of agv type {AgvTypeIdentifier} with {NoOfAgvs} agvs", agvTypeIdentifier, configuration.NoOfAgvs);
-        await repository.AddAsync(configuration);
-        await spawner.ApplyAsync(null, configuration, context.CancellationToken);
+        await AddConfigurationAsync(configuration, context.CancellationToken);
         await context.RespondAsync(new AgvTypeConfigurationResponse(configuration));
+    }
+
+    /// <inheritdoc/>
+    public async Task Consume(ConsumeContext<EnsureSimulatedAgvTypeConfiguration> context)
+    {
+        (_, string agvTypeIdentifier, var settings) = context.Message;
+        var configuration = new SimulatedAgvTypeConfiguration(agvTypeIdentifier).ApplySettings(settings);
+        if (await repository.GetAsync(configuration.Id) != null)
+        {
+            logger.LogInformation("The agv type {AgvTypeIdentifier} is already configured, skipping", agvTypeIdentifier);
+            await context.RespondAsync(new Success());
+            return;
+        }
+
+        await ValidateAsync(configuration, context.CancellationToken);
+        await AddConfigurationAsync(configuration, context.CancellationToken);
+        await context.RespondAsync(new Success());
     }
 
     /// <inheritdoc/>
