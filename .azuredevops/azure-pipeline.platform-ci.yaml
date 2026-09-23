@@ -41,6 +41,14 @@ parameters:
         migrationsOutputPath: 'artifacts/db/migrations/device-communication-vda5050'
         migrationsArtifactName: 'migrations-device-communication-vda5050'
         publishMigrator: true
+      - serviceName: 'DeviceCommunication.Vda5050.Simulator'
+        stagePrefix: 'DeviceCommunication_Vda5050_Simulator'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.Vda5050.Simulator/DeviceCommunication.Vda5050.Simulator.csproj'
+        entryPointProjectName: 'DeviceCommunication.Vda5050.Simulator'
+        rootNamespace: 'Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator'
+        dockerImageName: 'gebhardt/fleet-manager/device-communication.vda5050.simulator'
+        artifactName: 'docker-image-device-communication-vda5050-simulator'
+        publishMigrator: false
       - serviceName: 'DeviceCommunication.SimAgv'
         stagePrefix: 'DeviceCommunication_SimAgv'
         servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.SimAgv/DeviceCommunication.SimAgv.csproj'

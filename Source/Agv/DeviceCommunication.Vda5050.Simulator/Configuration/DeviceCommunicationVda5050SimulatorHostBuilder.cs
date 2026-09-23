@@ -1,6 +1,8 @@
 ﻿using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +24,7 @@ public static class DeviceCommunicationVda5050SimulatorHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) => { conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName); })
             .AddMassTransit(initialLogger)
             .AddSimulator(args, initialLogger)
             .ConfigureWebHost(host =>
@@ -33,6 +36,8 @@ public static class DeviceCommunicationVda5050SimulatorHostBuilder
                     })
                     .Configure(app =>
                     {
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints => { endpoints.MapHealthProbes(); });
                         app.UseMetricServer();
                         app.UseDeveloperExceptionPage();
                     });
