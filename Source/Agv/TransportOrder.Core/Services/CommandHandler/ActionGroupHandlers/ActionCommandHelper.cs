@@ -185,15 +185,30 @@ public class ActionCommandHelper
     /// <param name="actionGroup">The action group.</param>
     public async Task TryUpdateActionGroup(Domain.Models.ActionGroup.ActionGroup actionGroup)
     {
-        try
+        const int maxRetries = 5;
+        int delayMs = 250;
+
+        for (int attempt = 1; ; attempt++)
         {
-            await _actionGroupRepository.UpdateAsync(actionGroup);
-        }
-        catch (SqlException ex)
-        {
-            _logger.LogWarning("Update of action group caught {Exception}. Retrying ...", ex.Message);
-            await Task.Delay(1000);
-            await TryUpdateActionGroup(actionGroup);
+            try
+            {
+                await _actionGroupRepository.UpdateAsync(actionGroup);
+                return;
+            }
+            catch (SqlException ex) when (attempt < maxRetries)
+            {
+                _logger.LogWarning(ex,
+                    "Update of action group {ActionGroupId} failed (attempt {Attempt}/{MaxRetries}). Retrying in {Delay}ms",
+                    actionGroup.CorrelationId, attempt, maxRetries, delayMs);
+
+                await Task.Delay(delayMs);
+                delayMs *= 2; // exponential backoff
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "Update of action group {ActionGroupId} failed permanently", actionGroup.CorrelationId);
+                throw;
+            }
         }
     }
 
