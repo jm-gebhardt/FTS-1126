@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.PrismatCommunication;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 internal class Program
 {
     private static async Task<int> Main(string[] args)

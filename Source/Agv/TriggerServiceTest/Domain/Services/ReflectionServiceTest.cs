@@ -11,6 +11,7 @@ public class ReflectionServiceTest
 {
     private interface ITestInterface;
 
+    // ReSharper disable once ClassCannotBeInstantiated
     private class WithoutConstructor : ITestInterface
     {
         private WithoutConstructor(){}
