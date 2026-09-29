@@ -3,7 +3,7 @@ steps:
         echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
         dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
         dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
-        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.2.2
+        dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.2.3
         dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
         dotnet run $(ResharperDirectory)/check-suggestions.cs
         # Check logs.txt
