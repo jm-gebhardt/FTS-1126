@@ -29,7 +29,7 @@ variables:
 - name: NUGET_PACKAGES
   value: $(Pipeline.Workspace)/.nuget/packages
 - name: 'ReSharperVersion'
-  value: '2026.2.2'
+  value: '2026.2.3'
 
 stages:
 ################################################
