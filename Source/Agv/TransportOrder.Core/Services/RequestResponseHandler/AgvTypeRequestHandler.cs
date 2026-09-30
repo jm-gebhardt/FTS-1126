@@ -24,7 +24,7 @@ public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeReques
     IConsumer<RequestAgvTypeChangeAcknowledgement>
 {
     private static AgvTypeReadModel ToReadModel(AgvType agvType, IReadOnlySet<Guid> typeIdsWithGraph) =>
-        new(agvType.Id, agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, agvType.ReportedByAgv, typeIdsWithGraph.Contains(agvType.Id));
+        new(agvType.Id, agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, agvType.ReportedByAgv, typeIdsWithGraph.Contains(agvType.Id), agvType.RawData);
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestAgvTypeAcknowledgement> context)

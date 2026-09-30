@@ -24,7 +24,8 @@ public class AgvTypeProfileTest
             AgvTypeProfileTestFixture.Width,
             AgvTypeProfileTestFixture.Acknowledged,
             reportedByAgv,
-            AgvTypeProfileTestFixture.HasGraph);
+            AgvTypeProfileTestFixture.HasGraph,
+            "");
 
         var dto = fixture.Mapper.Map<AgvTypeDto>(readModel);
 

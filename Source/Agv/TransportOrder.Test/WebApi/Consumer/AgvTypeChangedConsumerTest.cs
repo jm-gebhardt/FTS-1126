@@ -26,7 +26,7 @@ public class AgvTypeChangedConsumerTest
     [TestMethod]
     public async Task Consume_AgvTypeAdded_ValidData_SendsAgvTypeCreated()
     {
-        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, acknowledged: false, reportedByAgv: true);
+        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, acknowledged: false, reportedByAgv: true, rawData: "");
         var typeInfo = AgvTypeGenerator.GenerateAgvTypeInfo(agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, agvType.ReportedByAgv);
         var fixture = new ConsumerHubTestFixture<AgvTypeChangedConsumer, IAgvTypePublisher>();
 
@@ -41,7 +41,7 @@ public class AgvTypeChangedConsumerTest
     [TestMethod]
     public async Task Consume_AgvTypeUpdated_ValidData_SendsAgvTypeUpdated()
     {
-        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, acknowledged: true, reportedByAgv: false);
+        var agvType = new AgvType("manufacturer-series", "manufacturer", "series", 1.5, 0.8, acknowledged: true, reportedByAgv: false, rawData: "");
         var typeInfo = AgvTypeGenerator.GenerateAgvTypeInfo(agvType.AgvTypeIdentifier, agvType.Manufacturer, agvType.SeriesName, agvType.Length, agvType.Width, agvType.Acknowledged, agvType.ReportedByAgv);
         var fixture = new ConsumerHubTestFixture<AgvTypeChangedConsumer, IAgvTypePublisher>();
 

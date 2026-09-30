@@ -42,4 +42,9 @@ public interface IAgvType
     /// Whether the AGV type was reported by an AGV itself.
     /// </summary>
     bool ReportedByAgv { get; }
+
+    /// <summary>
+    /// The raw data of the agv type.
+    /// </summary>
+    string RawData { get; }
 }

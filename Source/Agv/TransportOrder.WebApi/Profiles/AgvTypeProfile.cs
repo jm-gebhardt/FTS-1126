@@ -15,9 +15,13 @@ public class AgvTypeProfile : Profile
     /// <inheritdoc/>
     public AgvTypeProfile()
     {
-        CreateMap<AgvTypeReadModel, AgvTypeDto>();
+        CreateMap<AgvTypeReadModel, AgvTypeDto>()
+            .ForMember(d => d.Factsheet, o => o.MapFrom(r => r.RawData))
+            .ForMember(d => d.HasFactsheet, o => o.Ignore());
         CreateMap<AgvTypeInfo, AgvTypeDto>()
             .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.Factsheet, o => o.MapFrom(i => i.RawData))
+            .ForMember(d => d.HasFactsheet, o => o.Ignore())
             .ForMember(d => d.HasGraph, o => o.Ignore());
     }
 }

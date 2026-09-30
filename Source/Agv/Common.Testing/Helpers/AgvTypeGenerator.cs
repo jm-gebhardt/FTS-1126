@@ -12,6 +12,6 @@ public static class AgvTypeGenerator
         bool acknowledged = false,
         bool reportedByAgv = false)
     {
-        return new AgvTypeInfo(agvTypeIdentifier, manufacturer, seriesName, length, width, acknowledged, reportedByAgv);
+        return new AgvTypeInfo(agvTypeIdentifier, manufacturer, seriesName, length, width, acknowledged, "",reportedByAgv);
     }
 }

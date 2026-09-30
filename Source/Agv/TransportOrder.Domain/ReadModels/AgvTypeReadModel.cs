@@ -14,6 +14,7 @@ namespace Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 /// <param name="Acknowledged">Whether the AGV type has been acknowledged by an operator.</param>
 /// <param name="ReportedByAgv">Whether the AGV type was reported by an AGV itself,</param>
 /// <param name="HasGraph">Whether at least one AGV of this type has a graph.</param>
+/// <param name="RawData">The raw data of the type.</param>
 [PublicAPI]
 public record AgvTypeReadModel(
     Guid Id,
@@ -24,4 +25,5 @@ public record AgvTypeReadModel(
     double Width,
     bool Acknowledged,
     bool ReportedByAgv,
-    bool HasGraph);
+    bool HasGraph,
+    string RawData);

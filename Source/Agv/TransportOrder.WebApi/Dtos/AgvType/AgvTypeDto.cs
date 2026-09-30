@@ -52,4 +52,14 @@ public record AgvTypeDto
     /// Whether at least one AGV of this type has a graph.
     /// </summary>
     public bool HasGraph { get; set; }
+
+    /// <summary>
+    /// Whether this agv type has a factsheet.
+    /// </summary>
+    public bool HasFactsheet => Factsheet != null;
+
+    /// <summary>
+    /// The factsheet of this agv type.
+    /// </summary>
+    public string? Factsheet { get; set; }
 }

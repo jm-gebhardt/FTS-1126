@@ -29,6 +29,9 @@ public record AgvTypeInfo : IAgvType
     /// <inheritdoc/>
     public bool ReportedByAgv { get; init; }
 
+    /// <inheritdoc/>
+    public string RawData { get; init; }
+
     /// <inheritdoc cref="AgvTypeInfo"/>
     public AgvTypeInfo(string agvTypeIdentifier,
         string manufacturer,
@@ -36,6 +39,7 @@ public record AgvTypeInfo : IAgvType
         double length,
         double width,
         bool acknowledged,
+        string rawData,
         bool reportedByAgv)
     {
         AgvTypeIdentifier = agvTypeIdentifier;
@@ -45,5 +49,6 @@ public record AgvTypeInfo : IAgvType
         Width = width;
         Acknowledged = acknowledged;
         ReportedByAgv = reportedByAgv;
+        RawData = rawData;
     }
 }

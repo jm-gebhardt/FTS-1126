@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.AgvType;
 public class AgvTypeRequestHandlerTest
 {
     private static TransportOrder.Domain.Models.AgvTypes.AgvType CreateAgvType(string identifier = "AGV1", bool reportedByAgv = true) =>
-        new(identifier, "Gebhardt", "SeriesA", length: 1.5, width: 0.8, acknowledged: false, reportedByAgv: reportedByAgv);
+        new(identifier, "Gebhardt", "SeriesA", length: 1.5, width: 0.8, acknowledged: false, reportedByAgv: reportedByAgv, "");
 
     [TestMethod]
     public async Task Consume_RequestAgvTypeAcknowledgement_ExistingAgvType_PublishesAcknowledgeAgvTypeAndRespondsSuccess()

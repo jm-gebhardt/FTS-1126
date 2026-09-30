@@ -42,7 +42,7 @@ public class FactsheetProfile : Profile
                 f.TypeSpecification.SeriesName,
                 f.PhysicalParameters.Length,
                 f.PhysicalParameters.Width,
-                string.Empty,
+                f.ToString(),
                 acknowledged: true,
                 reportedByAgv: false))
             .ForAllMembers(opt => opt.Ignore());
