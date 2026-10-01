@@ -31,7 +31,7 @@ public class NewGraphRepositoryTestFixture : TransportOrderDbFixture
 
     public static GraphSegment CreateGraph(Node[] nodes, Edge[]? edges = null, Station[]? stations = null)
     {
-        var graph = new GraphSegment(nodes, edges ?? [], stations ?? []);
+        var graph = new GraphSegment(Guid.NewGuid(), nodes, edges ?? [], stations ?? []);
 
         return graph;
     }

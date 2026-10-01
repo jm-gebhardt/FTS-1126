@@ -24,11 +24,6 @@ public interface IAgvRepository
     Task<Agv> GetRequiredAgvAsync(Guid correlationId);
 
     /// <summary>
-    /// Get all agvs.
-    /// </summary>
-    Task<IReadOnlyCollection<Agv>> GetAllAsync();
-
-    /// <summary>
     /// Add or update an agv.
     /// </summary>
     /// <param name="agv">The agv.</param>

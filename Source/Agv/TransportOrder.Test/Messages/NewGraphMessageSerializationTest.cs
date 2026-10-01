@@ -11,7 +11,7 @@ public class NewGraphMessageSerializationTest
     [TestMethod]
     public void NewGraphReceived_ValidData_SerializesAllProperties()
     {
-        var message = new NewGraphSegmentReceived(Guid.NewGuid(), NewGraphGenerator.GenerateGraph());
+        var message = new NewGraphSegmentReceived(Guid.NewGuid(), NewGraphGenerator.GenerateSegmentGraph());
         var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);
@@ -20,7 +20,7 @@ public class NewGraphMessageSerializationTest
     [TestMethod]
     public void NewGraphReceived_WithRoutingResources_SerializesAllProperties()
     {
-        var message = new NewGraphSegmentReceived(Guid.NewGuid(), NewGraphGenerator.GenerateGraph(withRoutingResources: true));
+        var message = new NewGraphSegmentReceived(Guid.NewGuid(), NewGraphGenerator.GenerateSegmentGraph(withRoutingResources: true));
 
         var fixture = new MessageSerialisationTestFixture();
 
@@ -30,7 +30,7 @@ public class NewGraphMessageSerializationTest
     [TestMethod]
     public void AddNewGraph_ValidData_SerializesAllProperties()
     {
-        var message = new AddNewGraphSegment(Guid.NewGuid(), NewGraphGenerator.GenerateGraph());
+        var message = new AddNewGraphSegment(Guid.NewGuid(), NewGraphGenerator.GenerateSegmentGraph());
         var fixture = new MessageSerialisationTestFixture();
 
         fixture.ValidateSerialization(message);

@@ -100,10 +100,7 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
             Edge[] previousEdges = l.Edges.Where(e => string.Equals(e.EndNodeId, edge.StartNodeId, StringComparison.InvariantCultureIgnoreCase)).ToArray();
             foreach (var property in edge.VehicleTypeEdgeProperties)
             {
-                if (property.Trajectory != null)
-                {
-                    ValidateTrajectory(property.Trajectory, edge, property, l, startNode, endNode, context);
-                }
+                ValidateTrajectory(property.Trajectory, edge, property, l, startNode, endNode, context);
                 ValidateValueRanges(l, context, property, edge);
                 ValidateOrientation(l, context, property, edge, previousEdges);
             }
@@ -237,8 +234,14 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
         }
     }
 
-    private static void ValidateTrajectory(Vdma.Lif.Trajectory trajectory, Edge e, VehicleTypeEdgeProperty p, Layout l, Node? startNode, Node? endNode, ValidationContext<Layout> context)
+    private static void ValidateTrajectory(Vdma.Lif.Trajectory? trajectory, Edge e, VehicleTypeEdgeProperty p, Layout l, Node? startNode, Node? endNode, ValidationContext<Layout> context)
     {
+        if (trajectory is null)
+        {
+            // Rotation routing edges don't have a trajectory
+            return;
+        }
+
         long degree = trajectory.Degree ?? 1;
         int cpCount = trajectory.ControlPoints.Length;
         if (cpCount < 2)

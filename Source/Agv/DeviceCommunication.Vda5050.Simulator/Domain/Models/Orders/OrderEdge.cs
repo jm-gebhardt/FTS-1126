@@ -1,7 +1,5 @@
-using System.Numerics;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Services;
-using Gebhardt.Acc.Common.Domain.Utilities;
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using JetBrains.Annotations;
 
 // ReSharper disable InconsistentNaming
@@ -13,7 +11,11 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Order
 [PublicAPI]
 public class OrderEdge
 {
-    private Bezier _bezier = null!;
+    private static readonly TimeSpan FallbackTravelTime = TimeSpan.FromSeconds(1);
+
+    private static TimeSpan EstimateFromLength(double length, double agvSpeed) => length > 0 && agvSpeed > 0 ?
+        TimeSpan.FromSeconds(length / agvSpeed) :
+        FallbackTravelTime;
 
     /// <summary>
     /// Unique edge identification.
@@ -122,11 +124,6 @@ public class OrderEdge
     public ICollection<string> ActionIds => Actions.Select(a => a.ActionId).ToList();
 
     /// <summary>
-    /// The graph edge representation.
-    /// </summary>
-    public GraphEdge GraphEdge { get; set; } = null!;
-
-    /// <summary>
     /// The estimated travel time
     /// </summary>
     public TimeSpan EstimatedTravelTime { get; private set; }
@@ -139,106 +136,83 @@ public class OrderEdge
         Released = true;
     }
 
-    private static readonly TimeSpan FallbackTravelTime = TimeSpan.FromSeconds(1);
-
-    private static TimeSpan EstimateFromLength(double? length, float agvSpeed) => length is > 0 && agvSpeed > 0 ?
-        TimeSpan.FromSeconds(length.Value / agvSpeed) :
-        FallbackTravelTime;
-
     /// <summary>
     /// Prepare the edge for travel
     /// </summary>
-    public void Prepare(INurbsEdgeBuilder edgeBuilder, float agvSpeed)
+    public void Prepare(float maxAgvSpeed, OrderNode startNode, OrderNode endNode)
     {
-        var nurbs = Trajectory?.ToNurbs();
-        if (Trajectory == null || nurbs == null)
+        bool isRotationOnSpot = false;
+        double length = Trajectory?.CalculateLength() ?? GetLengthOfStraightEdge(startNode, endNode, out isRotationOnSpot);
+        if (!isRotationOnSpot)
         {
-            EstimatedTravelTime = EstimateFromLength(Length, agvSpeed);
+            double agvSpeed = MaxSpeed ?? maxAgvSpeed;
+            EstimatedTravelTime = EstimateFromLength(length, agvSpeed);
             return;
         }
-        List<Vector2> controlPoints = Trajectory.ControlPoints.Select(cp => new Vector2((float)cp.X, (float)cp.Y)).ToList();
-        if (controlPoints.Count >= 3)
-        {
-            _bezier = new Bezier(controlPoints);
-        }
-        GraphEdge = edgeBuilder.BuildFromNurbs(nurbs, StartNodeId.ToGuid(), EndNodeId.ToGuid(),Guid.NewGuid());
-        if (GraphEdge.Length == 0)
-        {
-            EstimatedTravelTime = TimeSpan.FromSeconds(1);
-            return;
-        }
-        EstimatedTravelTime = EstimateFromLength(GraphEdge.Length, agvSpeed);
-    }
 
+        // TODO kua: use rotation angle and rotation speed to calculate time
+        EstimatedTravelTime = FallbackTravelTime;
+    }
+    
     /// <summary>
     /// Get the position of the agv on the edge
     /// </summary>
     /// <param name="travelledFraction">The fraction of the edge that has been travelled.</param>
+    /// <param name="startNode">The edge's startNode</param>
+    /// <param name="endNode">The edge's endNode</param>
     /// <returns>The current agv position.</returns>
-    public AgvPosition GetPosition(double travelledFraction)
+    public AgvPosition GetPosition(double travelledFraction, OrderNode startNode, OrderNode endNode)
     {
-        if (Trajectory == null)
+        double travelledFractionInPercent = travelledFraction * 100;
+        if (Trajectory != null)
         {
-            return new AgvPosition() { X = 0, Y = 0, Theta = GetAgvOrientation(), Z = 0, PositionInitialized = true };
-        }
-        double interValPosition = Math.Clamp(travelledFraction, 0, 1);
-        if (Trajectory?.ControlPoints.Count >= 3)
-        {
-            var position = _bezier.DeCasteljau(interValPosition, out _, out _);
-            return new AgvPosition() { X = position.X, Y = position.Y, Theta = GetAgvOrientation(), Z = 0, PositionInitialized = true };
-        }
-        return GetPositionOnLinearEdge(interValPosition);
-    }
-
-    private AgvPosition GetPositionOnLinearEdge(double travelledFraction)
-    {
-        var sourceNode = Trajectory!.ControlPoints.First();
-        var targetNode = Trajectory!.ControlPoints.Last();
-        double length = Length ?? float.Epsilon;
-        double travelDistance = length * travelledFraction;
-        double deltaX = targetNode.X - sourceNode.X;
-        float x, y;
-        if (Math.Abs(deltaX) > float.Epsilon)
-        {
-            x = (float)(targetNode.X - (length - travelDistance) * deltaX / length);
-            y = (float)targetNode.Y;
-            if (Math.Abs(sourceNode.Y - targetNode.Y) > float.Epsilon)
-            {
-                y = (float)((targetNode.X - x) * (sourceNode.Y - targetNode.Y) / deltaX + targetNode.Y);
-            }
+            var position = Trajectory.CalculatePositionAtDistancePercent(travelledFractionInPercent, out double edgeOrientation);
+            double orientation = GetOrientation(edgeOrientation);
+            return new AgvPosition { X = (float)position.X, Y = (float)position.Y, Theta = (float)orientation, Z = 0, PositionInitialized = true };
         }
         else
         {
-            x = (float)sourceNode.X;
-            y = (float)((targetNode.Y - sourceNode.Y) * travelDistance / length + sourceNode.Y);
+            var position = GetPositionOnStraightEdge(travelledFractionInPercent, startNode, endNode, out double edgeOrientation);
+            double orientation = GetOrientation(edgeOrientation);
+            return new AgvPosition { X = (float)position.X, Y = (float)position.Y, Theta = (float)orientation, Z = 0, PositionInitialized = true };
         }
-        return new AgvPosition() { X = x, Y = y, Theta = GetAgvOrientation(), Z = 0, PositionInitialized = true };
     }
 
-    private float GetAgvOrientation()
+    private double GetOrientation(double currentEdgeOrientation)
     {
-        if (Orientation != null)
-        {
-            return (float)Orientation;
-        }
-        if (Trajectory == null)
+        double orientation = Orientation ?? 0;
+        var orientationType = OrientationType ?? Orders.OrientationType.TANGENTIAL;
+        
+        return orientationType == Orders.OrientationType.GLOBAL ? orientation : currentEdgeOrientation + orientation;
+    }
+
+    private PolygonPoint GetPositionOnStraightEdge(double percent, OrderNode startNode, OrderNode endNode, out double edgeOrientation)
+    {
+        var startNodePosition = ToPolygonPoint(startNode.NodePosition);
+        var endNodePosition = ToPolygonPoint(endNode.NodePosition);
+        var vector = endNodePosition - startNodePosition;
+        
+        // use start and end angle to calculate orientation 
+        edgeOrientation = vector.Angle;
+        return startNodePosition + vector*(percent/100);
+    }
+
+    private double GetLengthOfStraightEdge(OrderNode startNode, OrderNode endNode, out bool isRotationOnSpot)
+    {
+        var startNodePosition = ToPolygonPoint(startNode.NodePosition);
+        var endNodePosition = ToPolygonPoint(endNode.NodePosition);
+        isRotationOnSpot = startNodePosition == endNodePosition;
+        if (isRotationOnSpot)
         {
             return 0;
         }
-        List<Vector2> controlPoints = Trajectory.ControlPoints.Select(cp => new Vector2((float)cp.X, (float)cp.Y)).ToList();
-        var fromVector = controlPoints.First();
-        var toVector = controlPoints.Last();
-        if (toVector == Vector2.Zero && fromVector != Vector2.Zero)
-        {
-            // use tangent
-            toVector -= fromVector;
-        }
-        if (fromVector == Vector2.Zero && toVector != Vector2.Zero)
-        {
-            // use tangent
-            fromVector -= toVector;
-        }
-        return (float)(Math.Atan2(toVector.Y - fromVector.Y, toVector.X - fromVector.X) + Math.PI / 2);
+
+        return (endNodePosition - startNodePosition).Length;
+    }
+
+    private static PolygonPoint ToPolygonPoint(OrderNodePosition? position)
+    {
+        return position == null ? new PolygonPoint(0, 0) : position.ToPolygonPoint();
     }
 }
 

@@ -1,29 +1,35 @@
 ﻿
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
+using ActionRoutingEdge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.ActionRoutingEdge;
+using Edge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Edge;
+using GraphResource = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.GraphResource;
+using Node = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Node;
+using RoutingEdge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingEdge;
+using RoutingNode = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingNode;
+using Station = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Station;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph;
 
+using CommonGraph = Common.Domain.Models.NewGraph.Graph;
 using CommonNode = Common.Domain.Models.NewGraph.Node;
 using CommonEdge = Common.Domain.Models.NewGraph.Edge;
 using CommonStation = Common.Domain.Models.NewGraph.Station;
 using CommonRoutingEdge = Common.Domain.Models.NewGraph.RoutingEdge;
 using CommonActionRoutingEdge = Common.Domain.Models.NewGraph.ActionRoutingEdge;
-using GraphSegment = Common.Domain.Models.NewGraph.GraphSegment;
 
 internal static class GraphMapper
 {
-    public static (IReadOnlyCollection<Node> nodes, IReadOnlyCollection<Edge> edges, IReadOnlyCollection<Station> stations) Convert(GraphSegment commonGraph, IReadOnlyDictionary<Guid, AgvType> agvTypes)
+    public static (IReadOnlyCollection<Node> nodes, IReadOnlyCollection<Edge> edges, IReadOnlyCollection<Station> stations) Convert(CommonGraph graph, IReadOnlyDictionary<Guid, AgvType> agvTypes)
     {
         Dictionary<Guid, LoadState> loadStates = agvTypes.Values.SelectMany(a => a.LoadStates).ToDictionary(ls => ls.Id);
 
-        Dictionary<Guid, Node> nodes = MapNodes(commonGraph.Nodes);
-        Dictionary<Guid, Edge> edges = MapEdges(commonGraph.Edges, nodes);
-        List<Station> stations = MapStations(commonGraph.Stations, nodes);
+        Dictionary<Guid, Node> nodes = MapNodes(graph.Nodes);
+        Dictionary<Guid, Edge> edges = MapEdges(graph.Edges, nodes);
+        List<Station> stations = MapStations(graph.Stations, nodes);
         
-        Dictionary<Guid, RoutingNode> routingNodes = MapRoutingNodes(commonGraph.Nodes, agvTypes, loadStates, nodes);
-        MapRoutingEdgesFromNodes(commonGraph.Nodes, agvTypes, nodes, routingNodes);
-        MapRoutingEdgesFromEdges(commonGraph.Edges, agvTypes, edges, routingNodes);
+        Dictionary<Guid, RoutingNode> routingNodes = MapRoutingNodes(graph.Nodes, agvTypes, loadStates, nodes);
+        MapRoutingEdgesFromNodes(graph.Nodes, agvTypes, nodes, routingNodes);
+        MapRoutingEdgesFromEdges(graph.Edges, agvTypes, edges, routingNodes);
 
         return (nodes.Values, edges.Values, stations);
     }

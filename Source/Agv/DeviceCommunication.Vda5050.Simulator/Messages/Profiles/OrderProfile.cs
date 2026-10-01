@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using JetBrains.Annotations;
+using OrientationType = Gebhardt.Acc.Common.Domain.Models.NewGraph.OrientationType;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Profiles;
 
@@ -34,8 +36,7 @@ public class OrderProfile : Profile
         CreateMap<MqttOrderNode, OrderNode>();
         CreateMap<MqttOrderNodePosition, OrderNodePosition>();
         CreateMap<MqttOrderEdge, OrderEdge>()
-            .ForMember(e => e.EstimatedTravelTime, opt => opt.Ignore())
-            .ForMember(e => e.GraphEdge, opt => opt.Ignore());
+            .ForMember(e => e.EstimatedTravelTime, opt => opt.Ignore());
         CreateMap<MqttOrientationType, OrientationType>();
         CreateMap<MqttTrajectory, Trajectory>();
         CreateMap<MqttControlPoint, ControlPoint>();

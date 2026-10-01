@@ -31,7 +31,6 @@ public class MapCommandHandler :
     IConsumer<UpdateMap>,
     IConsumer<SetBackground>,
     IConsumer<DeleteBackground>,
-    IConsumer<GetDefaultMap>,
     IConsumer<GenerateDefaultMap>
 
 {
@@ -286,44 +285,6 @@ public class MapCommandHandler :
         }
 
         await context.RespondAsync(new Success());
-    }
-
-    /// <inheritdoc cref="MapCommandHandler"/>
-    public async Task Consume(ConsumeContext<GetDefaultMap> context)
-    {
-        Domain.Models.Map.Map domainMap;
-        try
-        {
-            domainMap = await _mapRepository.GetMapAsync(Domain.Models.Map.Map.DefaultMapId);
-        }
-        catch (MapNotFoundException)
-        {
-            _logger.LogWarning("Default map not found; seeding on demand");
-            var seed = Domain.Models.Map.Map.CreateDefaultMap();
-            try
-            {
-                await _mapRepository.AddPureMapAsync(seed);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Could not seed default map (may have been seeded concurrently)");
-            }
-            domainMap = await _mapRepository.GetMapAsync(Domain.Models.Map.Map.DefaultMapId);
-        }
-
-        var background = domainMap.BaseBackground
-            ?? throw new InvalidOperationException($"Default map {domainMap.CorrelationId} has no base background.");
-        string image = Convert.ToBase64String(background.Image);
-        await context.RespondAsync(new GotDefaultMap(domainMap.CorrelationId,
-            new Map(domainMap.CorrelationId,
-                domainMap.MapName,
-                domainMap.ModificationDate,
-                image,
-                background.Width,
-                background.Height,
-                (float)background.Resolution,
-                (float)background.XOffset,
-                (float)background.YOffset)));
     }
 
     /// <inheritdoc />

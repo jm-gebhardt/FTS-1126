@@ -13,7 +13,7 @@ namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 [UsedImplicitly]
 public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> contextFactory) : INewGraphRepository
 {
-    private static async Task<Dictionary<Guid, Node>> AddOrUpdateNodesAsync(TransportOrderDbContext context, IReadOnlyCollection<Node> nodes)
+    private static async Task<Dictionary<Guid, Node>> AddOrUpdateNodesAsync(TransportOrderDbContext context, IReadOnlyCollection<Node> nodes, Guid graphSegmentId)
     {
         List<Guid> nodeIds = nodes.Select(n => n.Id).ToList();
         Dictionary<Guid, Node> storedNodes = await context.Set<Node>()
@@ -25,9 +25,11 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
             if (storedNodes.TryGetValue(node.Id, out var storedNode))
             {
                 context.Entry(storedNode).CurrentValues.SetValues(node);
+                storedNode.GraphSegmentId = graphSegmentId;
                 continue;
             }
 
+            node.GraphSegmentId = graphSegmentId;
             context.Add(node);
             storedNodes.Add(node.Id, node);
         }
@@ -35,7 +37,7 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
         return storedNodes;
     }
 
-    private static async Task AddOrUpdateEdgesAsync(TransportOrderDbContext context, IReadOnlyCollection<Edge> edges)
+    private static async Task AddOrUpdateEdgesAsync(TransportOrderDbContext context, IReadOnlyCollection<Edge> edges, Guid graphSegmentId)
     {
         List<Guid> edgeIds = edges.Select(e => e.Id).ToList();
         Dictionary<Guid, Edge> storedEdges = await context.Set<Edge>()
@@ -47,14 +49,16 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
             if (storedEdges.TryGetValue(edge.Id, out var storedEdge))
             {
                 context.Entry(storedEdge).CurrentValues.SetValues(edge);
+                storedEdge.GraphSegmentId = graphSegmentId;
                 continue;
             }
 
+            edge.GraphSegmentId = graphSegmentId;
             context.Add(edge);
         }
     }
 
-    private static async Task AddOrUpdateStationsAsync(TransportOrderDbContext context, IReadOnlyCollection<Station> stations, Dictionary<Guid, Node> nodesById)
+    private static async Task AddOrUpdateStationsAsync(TransportOrderDbContext context, IReadOnlyCollection<Station> stations, Dictionary<Guid, Node> nodesById, Guid graphSegmentId)
     {
         List<Guid> stationIds = stations.Select(s => s.Id).ToList();
         Dictionary<Guid, Station> storedStations = await context.Set<Station>()
@@ -70,10 +74,12 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
             {
                 context.Entry(storedStation).CurrentValues.SetValues(station);
                 storedStation.UpdateInteractionNodes(interactionNodes);
+                storedStation.GraphSegmentId = graphSegmentId;
                 continue;
             }
 
             station.UpdateInteractionNodes(interactionNodes);
+            station.GraphSegmentId = graphSegmentId;
             context.Add(station);
         }
     }
@@ -93,15 +99,49 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
     }
 
     /// <inheritdoc/>
-    public async Task AddOrUpdateGraphAsync(GraphSegment graphSegment)
+    public async Task AddOrUpdateGraphSegmentAsync(GraphSegment graphSegment)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        Dictionary<Guid, Node> nodesById = await AddOrUpdateNodesAsync(context, graphSegment.Nodes);
-        await AddOrUpdateEdgesAsync(context, graphSegment.Edges);
-        await AddOrUpdateStationsAsync(context, graphSegment.Stations, nodesById);
+        var storedSegment = await context.Set<GraphSegment>().FindAsync(graphSegment.Id);
+
+        if (storedSegment is null)
+        {
+            // Add an empty shell: the resources are added/updated individually below. Adding graphSegment itself would
+            // attach its resources via the navigations and conflict with already stored instances.
+            context.Add(new GraphSegment(graphSegment.Id, new List<Node>(), new List<Edge>(), new List<Station>()));
+        }
+
+        Dictionary<Guid, Node> nodesById = await AddOrUpdateNodesAsync(context, graphSegment.Nodes, graphSegment.Id);
+        await AddOrUpdateEdgesAsync(context, graphSegment.Edges, graphSegment.Id);
+        await AddOrUpdateStationsAsync(context, graphSegment.Stations, nodesById, graphSegment.Id);
 
         await context.SaveChangesAsync();
+    }
+    
+    /// <inheritdoc/>
+    public async Task<bool> DeleteGraphSegmentAsync(Guid graphSegmentId)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        var storedSegment = await context.Set<GraphSegment>()
+            .Include(s => s.Nodes)
+            .Include(s => s.Edges)
+            .Include(s => s.Stations).ThenInclude(s => s.InteractionNodes)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync(s => s.Id == graphSegmentId);
+
+        if (storedSegment is null)
+        {
+            return false;
+        }
+
+        // Nodes, edges and stations are deleted by ClientCascade (see GraphSegmentEntityConfiguration).
+        context.Remove(storedSegment);
+
+        await context.SaveChangesAsync();
+
+        return true;
     }
 
     /// <inheritdoc/>

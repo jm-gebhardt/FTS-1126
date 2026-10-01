@@ -63,6 +63,107 @@ public record Trajectory
     }
 
     /// <summary>
+    /// Calculates the position on the trajectory at a given percentage of the traveled distance (arc length).
+    /// </summary>
+    /// <param name="percent">Percentage of the traveled distance along the trajectory. Range: [0 ... 100].</param>
+    /// <param name="orientation">The orientation of the trajectory at the returned position, in radians, range [-PI ... PI].</param>
+    /// <param name="sampleCount">Number of sample points used for the approximation. Minimum is 2.</param>
+    /// <returns>The interpolated position on the trajectory at the given distance percentage.</returns>
+    public PolygonPoint CalculatePositionAtDistancePercent(double percent, out double orientation, int sampleCount = DefaultSampleCount)
+    {
+        percent = Math.Clamp(percent, 0.0, 100.0);
+
+        IReadOnlyList<PolygonPoint> samples = Sample(sampleCount);
+        if (samples.Count == 0)
+        {
+            orientation = 0.0;
+
+            return new PolygonPoint(0.0, 0.0);
+        }
+
+        if (samples.Count == 1)
+        {
+            orientation = 0.0;
+
+            return samples[0];
+        }
+
+        double[] cumulativeLength = new double[samples.Count];
+        for (int i = 1; i < samples.Count; i++)
+        {
+            double dx = samples[i].X - samples[i - 1].X;
+            double dy = samples[i].Y - samples[i - 1].Y;
+            cumulativeLength[i] = cumulativeLength[i - 1] + Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        double totalLength = cumulativeLength[^1];
+        if (totalLength <= Tolerance)
+        {
+            orientation = 0.0;
+
+            return samples[0];
+        }
+
+        double targetDistance = totalLength * percent / 100.0;
+
+        for (int i = 1; i < samples.Count; i++)
+        {
+            if (targetDistance > cumulativeLength[i] && i != samples.Count - 1)
+            {
+                continue;
+            }
+
+            double segmentLength = cumulativeLength[i] - cumulativeLength[i - 1];
+            double t = segmentLength > Tolerance ? (targetDistance - cumulativeLength[i - 1]) / segmentLength : 0.0;
+
+            double x = samples[i - 1].X + (samples[i].X - samples[i - 1].X) * t;
+            double y = samples[i - 1].Y + (samples[i].Y - samples[i - 1].Y) * t;
+
+            orientation = GetTangentAngle(samples, i - 1, i);
+
+            return new PolygonPoint(x, y);
+        }
+
+        orientation = GetTangentAngle(samples, samples.Count - 2, samples.Count - 1);
+
+        return samples[^1];
+    }
+
+    /// <summary>
+    /// Calculates the tangent angle between two sample points, falling back to neighboring samples if the
+    /// segment is degenerate.
+    /// </summary>
+    private static double GetTangentAngle(IReadOnlyList<PolygonPoint> samples, int fromIndex, int toIndex)
+    {
+        var from = new ControlPoint(samples[fromIndex].X, samples[fromIndex].Y);
+        var to = new ControlPoint(samples[toIndex].X, samples[toIndex].Y);
+        if (TryGetAngle(from, to, out double angle))
+        {
+            return angle;
+        }
+
+        for (int i = toIndex + 1; i < samples.Count; i++)
+        {
+            var candidate = new ControlPoint(samples[i].X, samples[i].Y);
+            if (TryGetAngle(from, candidate, out angle))
+            {
+                return angle;
+            }
+        }
+
+        for (int i = fromIndex - 1; i >= 0; i--)
+        {
+            var candidate = new ControlPoint(samples[i].X, samples[i].Y);
+            if (TryGetAngle(candidate, to, out angle))
+            {
+                return angle;
+            }
+        }
+
+        return 0.0;
+    }
+
+    /// <summary>
     /// Calculates the orientation of the trajectory at its end point.
     /// </summary>
     /// <remarks>

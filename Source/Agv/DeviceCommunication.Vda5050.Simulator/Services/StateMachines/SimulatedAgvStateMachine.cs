@@ -2,7 +2,7 @@
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Messages.Graphs.Events;
+using Gebhardt.Acc.Common.Messages.NewGraph.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
@@ -252,7 +252,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                 _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(CreateAgv), c.Message.Configuration.SerialNumber, c.Saga.CorrelationId);
                 c.Saga.ApplyConfiguration(c.Message.Configuration);
                 c.Saga.GoOnline();
-                if (c.Message.InitialGraphNodes is { Count: > 0 } nodes)
+                if (c.Message.InitialNodes is { Count: > 0 } nodes)
                 {
                     c.Saga.InitializePosition(nodes);
                 }

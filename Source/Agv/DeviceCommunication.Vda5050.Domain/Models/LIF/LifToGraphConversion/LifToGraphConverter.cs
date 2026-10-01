@@ -34,7 +34,7 @@ public static class LifToGraphConverter
         AddRoutingNodes(container, logger);
         AddRoutingEdges(container, logger);
 
-        var graphSegment = new GraphSegment(container.GetNodes(), container.GetEdges(), container.GetStations());
+        var graphSegment = new GraphSegment(container.LifId.ToGuid(), container.GetNodes(), container.GetEdges(), container.GetStations());
 
         return graphSegment;
     }

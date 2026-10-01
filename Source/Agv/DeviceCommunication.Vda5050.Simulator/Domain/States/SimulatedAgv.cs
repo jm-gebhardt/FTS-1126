@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -12,6 +11,7 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using AgvPosition = Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.AgvPosition;
+using  Gebhardt.Acc.Common.Domain.Models.NewGraph;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 
@@ -360,7 +360,7 @@ public class SimulatedAgv : SagaStateMachineInstance
         CurrentOrder.StartTime = now;
         logger?.LogInformation("StartOrder[{OrderId} updateId {UpdateId}] previousLastNodeId={LastNodeId} baseNodes={NodeCount} baseEdges={EdgeCount}",
             order.OrderId, order.OrderUpdateId, LastNodeId ?? "(null)", order.Base.Nodes.Count, order.Base.Edges.Count);
-        CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed, logger);
+        CurrentOrder.PrepareTravel(Configuration.Speed, logger);
         var currentNode = CurrentOrder.GetLastNode(LastNodeId, now);
         LastNodeId = currentNode.NodeId;
         LastNodeSequenceId = currentNode.SequenceId;
@@ -400,7 +400,7 @@ public class SimulatedAgv : SagaStateMachineInstance
         CurrentOrder = order;
         logger?.LogInformation("UpdateOrder[{OrderId} u{UpdateId}] previousLastNodeId={LastNodeId} baseNodes={NodeCount} baseEdges={EdgeCount}",
             order.OrderId, order.OrderUpdateId, LastNodeId ?? "(null)", order.Base.Nodes.Count, order.Base.Edges.Count);
-        CurrentOrder.PrepareTravel(_edgeBuilder, Configuration.Speed);
+        CurrentOrder.PrepareTravel(Configuration.Speed);
         CurrentOrder.PendingActionStates =
         [
             ..CurrentOrder.Base.Nodes.SelectMany(n => n.Actions)
@@ -572,7 +572,7 @@ public class SimulatedAgv : SagaStateMachineInstance
     /// Initialize position from nodes.
     /// </summary>
     /// <param name="nodes">The nodes to select the position from.</param>
-    public void InitializePosition(ICollection<GraphNode> nodes)
+    public void InitializePosition(IReadOnlyCollection<Node> nodes)
     {
         if (LastNodeId != null)
         {
@@ -582,10 +582,20 @@ public class SimulatedAgv : SagaStateMachineInstance
         {
             return;
         }
-        int nodeIdx = _random.Next(nodes.Count - 1);
-        var node = nodes.Skip(nodeIdx).Take(1).First();
+
+        Node[] agvTypeNodes = [.. nodes.Where(n => n.RoutingNodes.Any(a => a.AgvTypeId == Configuration.AgvTypeId))];
+        if (agvTypeNodes.Length < 1)
+        {
+            return;
+        }
+
+        int nodeIdx = _random.Next(agvTypeNodes.Length - 1);
+        var node = agvTypeNodes[nodeIdx];
+        
         LastNodeId = node.Name;
-        CurrentPosition = new AgvPosition { X = node.X, Y = node.Y, Theta = node.Theta, Z = 0, PositionInitialized = true };
+        double theta = node.RoutingNodes.First(r => r.AgvTypeId == Configuration.AgvTypeId).Theta;
+
+        CurrentPosition = new AgvPosition { X = (float)node.X, Y = (float)node.Y, Theta = (float)theta, Z = 0, PositionInitialized = true };
         SimulatedBatteryCharge = _initialBatteryCharge;
     }
 }

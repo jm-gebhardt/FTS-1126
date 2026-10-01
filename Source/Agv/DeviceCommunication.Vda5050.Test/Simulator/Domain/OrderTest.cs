@@ -1,9 +1,7 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
-using Moq;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Domain;
@@ -48,7 +46,7 @@ public class OrderTest
             OrderId = Guid.NewGuid().ToString(),
             FullRoute = new Route(nodes, edges)
         };
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, speed);
+        order.PrepareTravel(speed);
         return order;
     }
 
@@ -212,13 +210,13 @@ public class OrderTest
     {
         var nodes = new List<OrderNode>
         {
-            new() { NodeId = "A", SequenceId = 0, Released = true },
-            new() { NodeId = "B", SequenceId = 2, Released = true }
+            new() { NodeId = "A", SequenceId = 0, Released = true, NodePosition = new OrderNodePosition {X = 0, Y = 0}},
+            new() { NodeId = "B", SequenceId = 2, Released = true,NodePosition = new OrderNodePosition {X = 10, Y = 0} }
         };
-        var edge = new OrderEdge { EdgeId = "e1", SequenceId = 1, Released = true, StartNodeId = "A", EndNodeId = "B", Length = 10.0 };
+        var edge = new OrderEdge { EdgeId = "e1", SequenceId = 1, Released = true, StartNodeId = "A", EndNodeId = "B"};
         var order = new Order { FullRoute = new Route(nodes, [edge]) };
 
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 2.0f); // 10 m / 2 m/s = 5 s
+        order.PrepareTravel(2.0f); // 10 m / 2 m/s = 5 s
 
         edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(5));
     }
@@ -228,18 +226,18 @@ public class OrderTest
     {
         var nodes = new List<OrderNode>
         {
-            new() { NodeId = "A", SequenceId = 0, Released = true },
-            new() { NodeId = "B", SequenceId = 2, Released = true },
-            new() { NodeId = "C", SequenceId = 4, Released = true }
+            new() { NodeId = "A", SequenceId = 0, Released = true, NodePosition = new OrderNodePosition {X = 0, Y = 0} },
+            new() { NodeId = "B", SequenceId = 2, Released = true, NodePosition = new OrderNodePosition {X = 10, Y = 0} },
+            new() { NodeId = "C", SequenceId = 4, Released = true, NodePosition = new OrderNodePosition {X = 30, Y = 0} }
         };
         var edges = new List<OrderEdge>
         {
-            new() { EdgeId = "e1", SequenceId = 1, Released = true, StartNodeId = "A", EndNodeId = "B", Length = 10.0 },
-            new() { EdgeId = "e2", SequenceId = 3, Released = true, StartNodeId = "B", EndNodeId = "C", Length = 20.0 }
+            new() { EdgeId = "e1", SequenceId = 1, Released = true, StartNodeId = "A", EndNodeId = "B"},
+            new() { EdgeId = "e2", SequenceId = 3, Released = true, StartNodeId = "B", EndNodeId = "C"}
         };
         var order = new Order { FullRoute = new Route(nodes, edges) };
 
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f); // 10 s + 20 s = 30 s
+        order.PrepareTravel(1.0f); // 10 s + 20 s = 30 s
 
         order.Duration.ShouldBe(TimeSpan.FromSeconds(30));
     }
@@ -256,7 +254,7 @@ public class OrderTest
         var order = new Order { FullRoute = new Route(nodes, [edge]) };
         order.CurrentRoute.Nodes.Count.ShouldBe(0);
 
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
+        order.PrepareTravel(1.0f);
 
         order.CurrentRoute.Nodes.Count.ShouldBe(2);
         order.CurrentRoute.Edges.Count.ShouldBe(1);
@@ -401,7 +399,7 @@ public class OrderTest
             FullRoute = new Route([node], []),
             PendingActionStates = [actionState]
         };
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
+        order.PrepareTravel(1.0f);
         order.StartTime = _baseTime;
 
         order.Proceed(null, _baseTime);
@@ -421,7 +419,7 @@ public class OrderTest
             FullRoute = new Route([node], []),
             PendingActionStates = [actionState]
         };
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
+        order.PrepareTravel(1.0f);
         order.StartTime = _baseTime;
 
         order.Proceed(null, _baseTime); // starts action at BaseTime
@@ -441,7 +439,7 @@ public class OrderTest
             FullRoute = new Route([node], []),
             PendingActionStates = [actionState]
         };
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
+        order.PrepareTravel(1.0f);
         order.StartTime = _baseTime;
 
         order.Proceed(null, _baseTime); // starts action
@@ -485,7 +483,7 @@ public class OrderTest
             FullRoute = new Route([node], []),
             PendingActionStates = [actionState]
         };
-        order.PrepareTravel(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
+        order.PrepareTravel(1.0f);
         order.StartTime = _baseTime;
         order.Proceed(null, _baseTime); // starts action → Running + sets CurrentAction
         actionState.ActionStatus.ShouldBe(VehicleActionStatus.Running);

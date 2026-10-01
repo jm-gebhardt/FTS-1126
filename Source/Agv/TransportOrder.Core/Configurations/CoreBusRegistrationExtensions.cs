@@ -8,8 +8,8 @@ using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Events;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Commands;
+using Gebhardt.Acc.Common.Messages.NewGraph.Requests;
 using Gebhardt.Acc.Common.Messages.Queue;
 using Gebhardt.Acc.Common.Messages.Triggers.Commands;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -57,6 +57,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using DeleteBackground = Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image.DeleteBackground;
+using GetGraph = Gebhardt.Acc.Common.Messages.Graphs.Requests.GetGraph;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using RemoveAgvFromZone = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RemoveAgvFromZone;
 using RequestAgvData = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.RequestAgvData;
@@ -101,6 +102,7 @@ public static class CoreBusRegistrationExtensions
         {
             var partitioner = c.CreatePartitioner(1);
             partitioner.PartitionMessageById<AddNewGraphSegment, NewGraphCommandHandler>(c);
+            partitioner.PartitionMessageById<DeleteGraphSegment, NewGraphCommandHandler>(c);
         });
 
         return busRegistrationConfigurator;
@@ -230,6 +232,10 @@ public static class CoreBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<AgvGraphReceivedEventHandler>();
         busRegistrationConfigurator.AddConsumer<GetGraphRequestHandler>();
         busRegistrationConfigurator.AddRequestClient<GetGraph>();
+
+        busRegistrationConfigurator.AddConsumer<GetNewGraphRequestHandler>();
+        busRegistrationConfigurator.AddRequestClient<Gebhardt.Acc.Common.Messages.NewGraph.Requests.GetGraph>();
+        
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
         busRegistrationConfigurator.AddConsumer<StationTypeRequestHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxEventHandler>();

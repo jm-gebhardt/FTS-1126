@@ -3,7 +3,11 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Graph;
 
-public static class NewGraphGenerator
+/// <summary>
+/// DomainLifGenerator generates LIF object of the namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif
+/// 
+/// </summary>
+public static class DomainLifGenerator
 {
     private const string VehicleTypeId = "vt1";
     private const string OtherVehicleTypeId = "vt2";

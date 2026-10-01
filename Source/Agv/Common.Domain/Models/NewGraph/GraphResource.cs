@@ -19,7 +19,12 @@ public abstract record GraphResource
     /// Short name of the graph resource.
     /// </summary>
     public string ShortName { get; init; }
-    
+
+    /// <summary>
+    /// Identifier of the graph segment this resource was added or last updated with.
+    /// </summary>
+    public Guid? GraphSegmentId { get; set; }
+
     /// <inheritdoc cref="GraphResource"/>
     protected GraphResource(Guid id, string name, string shortName)
     {

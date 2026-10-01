@@ -43,7 +43,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     }
 
     /// <inheritdoc cref="IAgvRepository"/>
-    public async Task<IReadOnlyCollection<Agv>> GetAllAsync()
+    private async Task<IReadOnlyCollection<Agv>> GetAllAsync()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
         DbSet<Agv> dbSet = context.Set<Agv>();

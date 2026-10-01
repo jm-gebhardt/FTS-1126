@@ -31,7 +31,7 @@ public record AgvPosition
     public float Z { get; init; }
 
     /// <summary>
-    /// Current angle (rotation) [rad].
+    /// Current angle (rotation) [rad] [-π, π] 
     /// </summary>
     public float Theta { get; init; }
 

@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Vdma.Lif;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Controllers;
 
@@ -21,7 +20,6 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Controllers;
 [Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class LifController(
-    IRequestClient<AddOrUpdateLif> addOrUpdateLifClient,
     IRequestClient<UploadLif> uploadLifClient,
     IRequestClient<GetLifFiles> getLifsClient,
     IRequestClient<GetLifFile> getLifClient,
@@ -31,29 +29,6 @@ public class LifController(
     ILogger<LifController> logger,
     IMapper mapper) : Controller
 {
-    /// <summary>
-    /// Upload a LIF layout collection.
-    /// </summary>
-    /// <param name="lifLayoutCollection">The new LIF layout collection.</param>
-    /// <response code="204">Success.</response>
-    /// <response code="400">LIF not valid.</response>
-    [Authorize(Policy = AuthorizationPolicies.LifFullAccess)]
-    [HttpPost]
-    [Route("/lif")]
-    [Obsolete("Will become obsolete with LIF upload 2.0")]
-    public async Task<IActionResult> UploadLifLayoutCollection([FromBody] LifLayoutCollection lifLayoutCollection)
-    {
-        logger.LogInformation("Received LIF layout collection upload with {LayoutCount} layouts", lifLayoutCollection.Layouts.Length);
-
-        await addOrUpdateLifClient.GetResponse<Success>(
-            new AddOrUpdateLif(lifLayoutCollection)
-        );
-
-        logger.LogInformation("LIF processing complete.");
-
-        return NoContent();
-    }
-
     /// <summary>
     /// Upload a LIF file.
     /// </summary>

@@ -1,4 +1,3 @@
-using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using JetBrains.Annotations;
@@ -212,7 +211,9 @@ public class Order
         }
         else
         {
-            position = currentEdge.GetPosition(travelledFraction);
+            var startNode = Base.Nodes.First(n => n.NodeId == currentEdge.StartNodeId);
+            var endNode = Base.Nodes.First(n => n.NodeId == currentEdge.EndNodeId);
+            position = currentEdge.GetPosition(travelledFraction, startNode, endNode);
         }
         if (CurrentAction != null)
         {
@@ -278,12 +279,14 @@ public class Order
     /// <summary>
     /// Prepare order for agv travel.
     /// </summary>
-    public void PrepareTravel(INurbsEdgeBuilder edgeBuilder, float agvSpeed, ILogger? logger = null)
+    public void PrepareTravel(float agvSpeed, ILogger? logger = null)
     {
         var durationBefore = Duration;
         foreach (var edge in Base.Edges)
         {
-            edge.Prepare(edgeBuilder, agvSpeed);
+            var startNode = Base.Nodes.First(n => n.NodeId == edge.StartNodeId);
+            var endNode = Base.Nodes.First(n => n.NodeId == edge.EndNodeId);
+            edge.Prepare(agvSpeed, startNode, endNode);
             Duration += edge.EstimatedTravelTime;
         }
         // Copy full route, as the current route shrinks

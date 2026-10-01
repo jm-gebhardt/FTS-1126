@@ -27,7 +27,6 @@ public static class MediatorRegistrationExtension
             configurator.AddRequestClient<GetLifFile>();
             configurator.AddRequestClient<DeleteLifFile>();
             configurator.AddRequestClient<DownloadLifFile>();
-            configurator.AddRequestClient<AddOrUpdateLif>();
             configurator.AddConsumer<LifRequestHandler>(c =>
             {
                 var partitioner = c.CreatePartitioner(PartitionCount);

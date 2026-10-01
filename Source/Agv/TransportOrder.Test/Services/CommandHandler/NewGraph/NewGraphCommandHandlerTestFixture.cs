@@ -15,13 +15,13 @@ internal class NewGraphCommandHandlerTestFixture : MassTransitConsumerTestFixtur
     private readonly Mock<INewGraphRepository> _repositoryMock = new();
     private readonly List<GraphSegment> _savedGraphSegments = [];
 
-    public AddNewGraphSegment AddNewGraphSegment { get; } = new(Guid.NewGuid(), NewGraphGenerator.GenerateGraph());
+    public AddNewGraphSegment AddNewGraphSegment { get; } = new(Guid.NewGuid(), NewGraphGenerator.GenerateSegmentGraph());
 
     public IReadOnlyCollection<GraphSegment> SavedGraphSegments => _savedGraphSegments;
 
     public NewGraphCommandHandlerTestFixture()
     {
-        _repositoryMock.Setup(r => r.AddOrUpdateGraphAsync(It.IsAny<GraphSegment>()))
+        _repositoryMock.Setup(r => r.AddOrUpdateGraphSegmentAsync(It.IsAny<GraphSegment>()))
             .Callback<GraphSegment>(graphSegment => _savedGraphSegments.Add(graphSegment))
             .Returns(Task.CompletedTask);
 
@@ -31,7 +31,7 @@ internal class NewGraphCommandHandlerTestFixture : MassTransitConsumerTestFixtur
 
     public NewGraphCommandHandlerTestFixture WithFailingRepository()
     {
-        _repositoryMock.Setup(r => r.AddOrUpdateGraphAsync(It.IsAny<GraphSegment>()))
+        _repositoryMock.Setup(r => r.AddOrUpdateGraphSegmentAsync(It.IsAny<GraphSegment>()))
             .ThrowsAsync(new DbUpdateException());
 
         return this;

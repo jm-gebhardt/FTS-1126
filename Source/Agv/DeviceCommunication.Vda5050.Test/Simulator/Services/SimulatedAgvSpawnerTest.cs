@@ -49,7 +49,7 @@ public class SimulatedAgvSpawnerTest
 
         await fixture.Sut.ApplyAsync(null, Generator.Generate(noOfAgvs: Fixture.SingleAgv));
 
-        fixture.GetPublishedMessages<CreateAgv>().ShouldHaveSingleItem().InitialGraphNodes.ShouldBeNull();
+        fixture.GetPublishedMessages<CreateAgv>().ShouldHaveSingleItem().InitialNodes.ShouldBeNull();
     }
 
     [TestMethod]
@@ -61,7 +61,7 @@ public class SimulatedAgvSpawnerTest
 
         fixture.GetPublishedMessages<CreateAgv>()
             .ShouldHaveSingleItem()
-            .InitialGraphNodes
+            .InitialNodes
             .ShouldNotBeNull()
             .ShouldHaveSingleItem();
     }

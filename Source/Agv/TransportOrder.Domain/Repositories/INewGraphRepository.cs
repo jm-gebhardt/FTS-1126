@@ -19,7 +19,14 @@ public interface INewGraphRepository
     /// Merges the given graph into the stored one, adding unknown resources and updating known ones.
     /// </summary>
     /// <param name="graphSegment">The graph segment to merge in.</param>
-    Task AddOrUpdateGraphAsync(GraphSegment graphSegment);
+    Task AddOrUpdateGraphSegmentAsync(GraphSegment graphSegment);
+
+    /// <summary>
+    /// Deletes all nodes, edges and stations that belong to the graph segment with the given id.
+    /// </summary>
+    /// <param name="graphSegmentId">The id of the graph segment to delete.</param>
+    /// <returns>The deleted graph segemnt</returns>
+    Task<bool> DeleteGraphSegmentAsync(Guid graphSegmentId);
 
     /// <summary>
     /// Indicates whether a routing node with the given id is persisted.

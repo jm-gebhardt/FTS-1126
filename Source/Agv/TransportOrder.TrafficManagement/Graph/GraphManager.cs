@@ -1,13 +1,14 @@
 ﻿using System.Diagnostics;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
+using Edge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Edge;
+using Node = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Node;
+using Station = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Station;
+using CommonGraph = Gebhardt.Acc.Common.Domain.Models.NewGraph.Graph;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph;
-
-using CommonGraphSegment = Common.Domain.Models.NewGraph.GraphSegment;
 
 [PublicAPI]
 internal class GraphManager(INewGraphRepository newGraphRepository, IAgvTypeRepository agvTypeRepository, ILogger<GraphManager> logger)
@@ -39,9 +40,9 @@ internal class GraphManager(INewGraphRepository newGraphRepository, IAgvTypeRepo
     {
         var initializationWatch = Stopwatch.StartNew();
 
-        var commonGraph = await newGraphRepository.GetGraphAsync();
-
-        await AddGraphSegmentAsync(commonGraph, cancellationToken);
+        var graph = await newGraphRepository.GetGraphAsync();
+        
+        await AddGraphSegmentAsync(graph, cancellationToken);
 
         initializationWatch.Stop();
         logger.LogDebug("GraphManager initialized in {ElapsedMilliseconds} ms.", initializationWatch.ElapsedMilliseconds);
@@ -50,14 +51,14 @@ internal class GraphManager(INewGraphRepository newGraphRepository, IAgvTypeRepo
     /// <summary>
     /// Adds a graph segment to the graph. This method converts the common graph segment into the internal representation of nodes, edges, and stations, and adds them to the respective dictionaries.
     /// </summary>
-    public async Task AddGraphSegmentAsync(CommonGraphSegment commonGraph, CancellationToken cancellationToken)
+    public async Task AddGraphSegmentAsync(CommonGraph graph, CancellationToken cancellationToken)
     {
         ICollection<AgvType> allAgvTypes = await agvTypeRepository.GetAllAgvTypesAsync(cancellationToken); //todo: reuse Types (from AgvProvider? or store agvTypes in GraphManager?)
         Dictionary<Guid, AgvType> agvTypes = allAgvTypes.ToDictionary(a => a.Id);
 
         var mappingWatch = Stopwatch.StartNew();
 
-        (IReadOnlyCollection<Node> nodes, IReadOnlyCollection<Edge> edges, IReadOnlyCollection<Station> stations) = GraphMapper.Convert(commonGraph, agvTypes);
+        (IReadOnlyCollection<Node> nodes, IReadOnlyCollection<Edge> edges, IReadOnlyCollection<Station> stations) = GraphMapper.Convert(graph, agvTypes);
 
         // Add nodes, edges, and stations to the dictionaries with Add() so that duplicated Ids throw an exception. At the moment, Ids are unique, because updates are not supported.
 

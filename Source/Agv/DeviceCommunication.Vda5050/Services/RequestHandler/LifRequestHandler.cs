@@ -1,25 +1,22 @@
 using FluentValidation;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Gebhardt.Acc.Common.Domain.Services;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using LifLayoutCollection = Vdma.Lif.LifLayoutCollection;
 using Severity = Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif.Severity;
-using ValidationException = FluentValidation.ValidationException;
+using Gebhardt.Acc.Common.Messages.NewGraph.Requests;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
 
@@ -29,41 +26,16 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Services.RequestHandler;
 [UsedImplicitly]
 public class LifRequestHandler(
     IValidator<LifLayoutCollection> lifValidator,
-    IRequestClient<StoreLayouts> storeGraphLayoutsClient,
     IAgvRepository agvRepository,
     ILifRepository lifRepository,
-    INurbsEdgeBuilder edgeBuilder,
     ILogger<LifRequestHandler> logger,
     IBus bus) :
-    IConsumer<AddOrUpdateLif>,
     IConsumer<UploadLif>,
     IConsumer<GetLifFiles>,
     IConsumer<GetLifFile>,
     IConsumer<DeleteLifFile>,
     IConsumer<DownloadLifFile>
 {
-    /// <inheritdoc />
-    public async Task Consume(ConsumeContext<AddOrUpdateLif> context)
-    {
-        var vdmaCollection = context.Message.LifLayoutCollection;
-
-        var validationResult = await lifValidator.ValidateAsync(vdmaCollection);
-        if (!validationResult.IsValid)
-        {
-            string errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-            logger.LogError("LIF validation failed: {Errors}", errors);
-            throw new ValidationException(validationResult.Errors);
-        }
-        var lifLayoutCollection = vdmaCollection.ToLifLayoutCollection();
-
-        logger.LogInformation("Uploaded {LayoutCount} layouts, sending StoreLayouts request", lifLayoutCollection.Layouts.Length);
-        await storeGraphLayoutsClient.GetResponse<LayoutStored>(new StoreLayouts(lifLayoutCollection.Layouts),
-            context.CancellationToken
-        );
-
-        await context.RespondAsync(new Success());
-    }
-
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UploadLif> context)
     {
@@ -152,7 +124,7 @@ public class LifRequestHandler(
         var file = await lifRepository.GetFileAsync(id);
         await ValidateLifCanBeDeleted(file);
 
-        await TriggerGraphDeletion(context, file);
+        await TriggerGraphSegmentDeletion(context, file);
         try
         {
             await lifRepository.DeleteLifAsync(id);
@@ -227,6 +199,7 @@ public class LifRequestHandler(
 
     private async Task ValidateLifCanBeDeleted(LifFile lif)
     {
+        //TODO: validation need to be updated: by using LIF.MetaInformation.Creator to identify LIF files, we could have more than one LIF for a vehicleType
         ICollection<Agv> agvs = await agvRepository.GetAllForVehicleTypesAsync(lif.SupportedVehicleTypes);
         List<string> agvsRunningOrders = agvs.Where(a => a.CurrentOrder != null).Select(a => a.SerialNumber).ToList();
         if (agvsRunningOrders.Any())
@@ -235,17 +208,10 @@ public class LifRequestHandler(
         }
     }
 
-    private async Task TriggerGraphDeletion(ConsumeContext<DeleteLifFile> context, LifFile file)
+    private async Task TriggerGraphSegmentDeletion(ConsumeContext<DeleteLifFile> context, LifFile file)
     {
-        ICollection<Layout> layouts = await lifRepository.GetLayoutsByIdsAsync(file.LayoutIds);
-        List<Graph> graphs = [];
-        foreach (string vehicleTypeId in file.SupportedVehicleTypes)
-        {
-            List<Layout> layoutsForVehicle = layouts.Where(l => l.GetSupportedVehicleTypes().Contains(vehicleTypeId)).ToList();
-            graphs.AddRange(layoutsForVehicle.ToGraph(vehicleTypeId, edgeBuilder));
-        }
-        IRequestClient<AgvTypeGraphDeleted>? requestClient = context.CreateRequestClient<AgvTypeGraphDeleted>(bus);
-        Response<Success, Failed> response = await requestClient.GetResponse<Success, Failed>(new AgvTypeGraphDeleted(graphs));
+        IRequestClient<DeleteGraphSegment>? requestClient = context.CreateRequestClient<DeleteGraphSegment>(bus);
+        Response<Success, Failed> response = await requestClient.GetResponse<Success, Failed>(new DeleteGraphSegment(context.Message.CorrelationId, file.LifCollectionMetaInformation.Creator.ToGuid()));
 
         if (response.Is(out Response<Failed>? _))
         {

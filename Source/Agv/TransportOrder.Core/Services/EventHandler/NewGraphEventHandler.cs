@@ -19,7 +19,7 @@ public class NewGraphEventHandler(ILogger<NewGraphEventHandler> logger) : IConsu
 
         logger.LogDebug("Received a new graph segment with {NodeCount} nodes, {EdgeCount} edges and {StationCount} stations to save",
             graphSegment.Nodes.Count, graphSegment.Edges.Count, graphSegment.Stations.Count);
-
+        
         await context.Publish(new AddNewGraphSegment(context.Message.CorrelationId, graphSegment));
     }
 }

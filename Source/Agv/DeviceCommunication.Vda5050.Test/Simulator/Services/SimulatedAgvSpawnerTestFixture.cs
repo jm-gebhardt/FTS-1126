@@ -1,8 +1,6 @@
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
-using Gebhardt.Acc.Common.Messages.Maps;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Messages.NewGraph.Requests;
 using Gebhardt.Acc.Common.Testing.Fixtures;
-using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator;
 using MassTransit;
@@ -18,16 +16,16 @@ public class SimulatedAgvSpawnerTestFixture : MassTransitTestFixture
     public const string SecondSerialNumber = SimulatedAgvTypeConfigurationGenerator.SecondSerialNumber;
     public const string ThirdSerialNumber = SimulatedAgvTypeConfigurationGenerator.ThirdSerialNumber;
     public const string FourthSerialNumber = SimulatedAgvTypeConfigurationGenerator.FourthSerialNumber;
-    public const string MapId = "simulationMap";
+    public const string MapId = "map";
     public const int SingleAgv = 1;
     public const int NoOfAgvs = 2;
     public const int MoreAgvs = 4;
     public const int ChangedStateUpdateIntervalMs = 4711;
 
-    private readonly Graph _graph = GraphGenerator.Generate();
+    private Graph _graph = new([], [], []);
 
     public ISimulatedAgvSpawner Sut => Provider.GetRequiredService<ISimulatedAgvSpawner>();
-
+   
     private class GetGraphResponder(Graph graph) : IConsumer<GetGraph>
     {
         public Task Consume(ConsumeContext<GetGraph> context)
@@ -36,24 +34,17 @@ public class SimulatedAgvSpawnerTestFixture : MassTransitTestFixture
         }
     }
 
-    private class GetDefaultMapResponder : IConsumer<GetDefaultMap>
-    {
-        public Task Consume(ConsumeContext<GetDefaultMap> context)
-        {
-            return context.RespondAsync(new GotDefaultMap(Guid.NewGuid(),
-                new Map(Guid.NewGuid(), MapId, DateTime.UtcNow, string.Empty, 0, 0, 0, 0, 0)));
-        }
-    }
-
     public SimulatedAgvSpawnerTestFixture WithGraphNode()
     {
-        _graph.Nodes.Add(NodeGenerator.GenerateNode());
+        List<Node> nodes = _graph.Nodes.ToList();
+        nodes.Add(new Node(Guid.NewGuid(), "Gebhardt.R1", "R1", 0,0, ""));
+        _graph = new Graph(nodes, _graph.Edges, _graph.Stations);
         return this;
     }
 
     public new SimulatedAgvSpawnerTestFixture Build()
     {
-        AddConsumers(typeof(GetGraphResponder), typeof(GetDefaultMapResponder));
+        AddConsumers(typeof(GetGraphResponder));
         AddServices(sc =>
         {
             sc.AddLogging();

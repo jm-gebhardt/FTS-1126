@@ -30,7 +30,7 @@ public class NewGraphCommandHandlerTest
     {
         var fixture = new NewGraphCommandHandlerTestFixture();
 
-        var newGraphUpdated = await fixture.PublishAndGetFirstMessageAsync<AddNewGraphSegment, NewGraphUpdated>(fixture.AddNewGraphSegment);
+        var newGraphUpdated = await fixture.PublishAndGetFirstMessageAsync<AddNewGraphSegment, GraphSegmentAdded>(fixture.AddNewGraphSegment);
 
         newGraphUpdated.ShouldNotBeNull();
     }
@@ -52,6 +52,6 @@ public class NewGraphCommandHandlerTest
 
         await fixture.PublishMessageAsync(fixture.AddNewGraphSegment);
 
-        await fixture.ShouldNotHavePublishedAsync<NewGraphUpdated>();
+        await fixture.ShouldNotHavePublishedAsync<GraphSegmentAdded>();
     }
 }

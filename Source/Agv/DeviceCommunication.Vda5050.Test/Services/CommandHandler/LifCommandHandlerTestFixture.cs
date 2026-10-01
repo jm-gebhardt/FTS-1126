@@ -19,10 +19,10 @@ public class LifCommandHandlerTestFixture : MassTransitConsumerTestFixture<LifCo
     private readonly List<LifFile> _storedFiles = [];
     private readonly List<Layout> _storedLayouts = [];
 
-    private LifLayoutCollection _layoutCollection = NewGraphGenerator.GenerateCollection(NewGraphGenerator.GenerateLayout());
+    private LifLayoutCollection _layoutCollection = DomainLifGenerator.GenerateCollection(DomainLifGenerator.GenerateLayout());
 
     public StoreLif StoreLif => field ??= new StoreLif(
-        NewGraphGenerator.GenerateLifFile(_uploadTimestamp, _layoutCollection.GetSupportedVehicleTypes(), _layoutCollection.Layouts.Select(l => l.Id).ToList()),
+        DomainLifGenerator.GenerateLifFile(_uploadTimestamp, _layoutCollection.GetSupportedVehicleTypes(), _layoutCollection.Layouts.Select(l => l.Id).ToList()),
         _layoutCollection);
 
     public LifCommandHandlerTestFixture()
@@ -31,7 +31,7 @@ public class LifCommandHandlerTestFixture : MassTransitConsumerTestFixture<LifCo
             .ReturnsAsync(() => ((ICollection<LifFile>)_storedFiles, (ICollection<Layout>)_storedLayouts));
 
         _agvTypeRepository.Setup(r => r.GetAgvTypeIdentifiersAsync())
-            .ReturnsAsync(NewGraphGenerator.AgvTypeIdentifiers);
+            .ReturnsAsync(DomainLifGenerator.AgvTypeIdentifiers);
 
         AddServices(s =>
         {
@@ -44,14 +44,14 @@ public class LifCommandHandlerTestFixture : MassTransitConsumerTestFixture<LifCo
 
     public LifCommandHandlerTestFixture WithLayouts(params Layout[] layouts)
     {
-        _layoutCollection = NewGraphGenerator.GenerateCollection(layouts);
+        _layoutCollection = DomainLifGenerator.GenerateCollection(layouts);
 
         return this;
     }
 
     public LifCommandHandlerTestFixture WithNewerStoredLif(string vehicleTypeId)
     {
-        _storedFiles.Add(NewGraphGenerator.GenerateLifFile(_uploadTimestamp.AddDays(1), [vehicleTypeId]));
+        _storedFiles.Add(DomainLifGenerator.GenerateLifFile(_uploadTimestamp.AddDays(1), [vehicleTypeId]));
 
         return this;
     }

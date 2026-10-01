@@ -1,16 +1,20 @@
 using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Services;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
-using Moq;
 using Shouldly;
+using OrientationType = Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders.OrientationType;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Domain;
 
 [TestClass]
 public class OrderEdgeTest
 {
+    private static OrderNode GetOrderNode(double x = 0, double y = 0)
+    {
+        return new OrderNode() { NodePosition = new OrderNodePosition() { X = x, Y = y } };
+    }
+
     [TestMethod]
     public void Release_WhenNotReleased_SetsReleasedToTrue()
     {
@@ -20,34 +24,13 @@ public class OrderEdgeTest
 
         edge.Released.ShouldBeTrue();
     }
-
-    [TestMethod]
-    public void Prepare_WithLengthAndSpeed_SetsEstimatedTravelTimeAsLengthOverSpeed()
-    {
-        // 10 m / 2 m/s = 5 s
-        var edge = new OrderEdge { Length = 10.0 };
-
-        edge.Prepare(new Mock<INurbsEdgeBuilder>().Object, 2.0f);
-
-        edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(5));
-    }
-
-    [TestMethod]
-    public void Prepare_WithoutLength_FallsBackToOneSecond()
-    {
-        var edge = new OrderEdge();
-
-        edge.Prepare(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
-
-        edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(1));
-    }
-
+    
     [TestMethod]
     public void Prepare_WithZeroSpeed_FallsBackToOneSecond()
     {
-        var edge = new OrderEdge { Length = 10.0 };
+        var edge = new OrderEdge();
 
-        edge.Prepare(new Mock<INurbsEdgeBuilder>().Object, 0.0f);
+        edge.Prepare(0.0f, GetOrderNode(), GetOrderNode());
 
         edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(1));
     }
@@ -58,50 +41,31 @@ public class OrderEdgeTest
         // ToNurbs() returns null when ControlPoints is empty → fallback
         var edge = new OrderEdge { Trajectory = new Trajectory() };
 
-        edge.Prepare(new Mock<INurbsEdgeBuilder>().Object, 1.0f);
+        edge.Prepare(1.0f, GetOrderNode(), GetOrderNode());
 
         edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(1));
     }
-
-    [TestMethod]
-    public void Prepare_WithNurbsTrajectoryAndZeroGraphEdgeLength_FallsBackToOneSecond()
-    {
-        var edgeBuilder = new Mock<INurbsEdgeBuilder>();
-        edgeBuilder
-            .Setup(b => b.BuildFromNurbs(It.IsAny<Nurbs>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<DateTime>()))
-            .Returns(new GraphEdge { Length = 0 });
-
-        var edge = new OrderEdge
-        {
-            StartNodeId = "A",
-            EndNodeId = "B",
-            Trajectory = new Trajectory { ControlPoints = [new ControlPoint { X = 0, Y = 0, Weight = 1 }] }
-        };
-
-        edge.Prepare(edgeBuilder.Object, 1.0f);
-
-        edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(1));
-    }
-
+    
     [TestMethod]
     public void Prepare_WithNurbsTrajectoryAndValidGraphEdgeLength_SetsEstimatedTravelTimeFromGraphEdge()
     {
-        // GraphEdge.Length = 20, speed = 2 → 10 s
-        var edgeBuilder = new Mock<INurbsEdgeBuilder>();
-        edgeBuilder
-            .Setup(b => b.BuildFromNurbs(It.IsAny<Nurbs>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<DateTime>()))
-            .Returns(new GraphEdge { Length = 20 });
-
         var edge = new OrderEdge
         {
             StartNodeId = "A",
             EndNodeId = "B",
-            Trajectory = new Trajectory { ControlPoints = [new ControlPoint { X = 0, Y = 0, Weight = 1 }] }
+            Trajectory = new Trajectory
+            {
+                ControlPoints =
+                [
+                    new ControlPoint { X = 0, Y = 0 },
+                    new ControlPoint { X = 0, Y = 10 }
+                ]
+            }
         };
 
-        edge.Prepare(edgeBuilder.Object, 2.0f);
+        edge.Prepare(2.0f, GetOrderNode(), GetOrderNode());
 
-        edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(10));
+        edge.EstimatedTravelTime.ShouldBe(TimeSpan.FromSeconds(5));
     }
 
     [TestMethod]
@@ -109,7 +73,7 @@ public class OrderEdgeTest
     {
         var edge = new OrderEdge();
 
-        var position = edge.GetPosition(0.5);
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(0f);
         position.Y.ShouldBe(0f);
@@ -118,21 +82,51 @@ public class OrderEdgeTest
     }
 
     [TestMethod]
-    public void GetPosition_WithOrientationSetAndNoTrajectory_ReturnsThetaAsOrientation()
+    public void GetPosition_WithOrientationGlobalSet_ReturnsThetaAsOrientation()
     {
-        var edge = new OrderEdge { Orientation = 1.57 };
+        var edge = new OrderEdge { Orientation = 1.57, OrientationType = OrientationType.GLOBAL};
 
-        var position = edge.GetPosition(0.5);
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode());
 
         position.Theta.ShouldBe((float)1.57);
     }
 
     [TestMethod]
+    public void GetPosition_WithOrientationTangentialSet_ReturnsThetaPlusEdgeOrientationAsOrientation()
+    {
+        var edge = new OrderEdge { Orientation = 1.57, OrientationType = OrientationType.TANGENTIAL };
+
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode(0, 1));
+
+        position.Theta.ShouldBe((float)3.14, 1e-2);
+    }
+
+    [TestMethod]
+    public void GetPosition_WithOrientationAndNoOrientationTypeSet_ReturnsThetaPlusEdgeOrientationAsOrientation()
+    {
+        var edge = new OrderEdge { Orientation = 1.57 };
+
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode(0,1));
+
+        position.Theta.ShouldBe((float)3.14, 1e-2);
+    }
+
+    [TestMethod]
+    public void GetPosition_WithOrientationSetAndNoTrajectory_ReturnsThetaAsOrientation()
+    {
+        var edge = new OrderEdge { Orientation = 1.57 };
+
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode());
+
+        position.Theta.ShouldBe((float)1.57);
+    }
+    
+    [TestMethod]
     public void GetPosition_WithLinearTrajectory_AtFractionZero_ReturnsStartPoint()
     {
         var edge = CreateHorizontalLinearEdge(fromX: 0, fromY: 0, toX: 10, toY: 0, length: 10);
 
-        var position = edge.GetPosition(0.0);
+        var position = edge.GetPosition(0.0, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(0f);
         position.Y.ShouldBe(0f);
@@ -144,7 +138,7 @@ public class OrderEdgeTest
     {
         var edge = CreateHorizontalLinearEdge(fromX: 0, fromY: 0, toX: 10, toY: 0, length: 10);
 
-        var position = edge.GetPosition(0.5);
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(5f);
         position.Y.ShouldBe(0f);
@@ -155,7 +149,7 @@ public class OrderEdgeTest
     {
         var edge = CreateHorizontalLinearEdge(fromX: 0, fromY: 0, toX: 10, toY: 0, length: 10);
 
-        var position = edge.GetPosition(1.0);
+        var position = edge.GetPosition(1.0, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(10f);
         position.Y.ShouldBe(0f);
@@ -167,7 +161,6 @@ public class OrderEdgeTest
         // deltaX == 0 → uses vertical interpolation branch
         var edge = new OrderEdge
         {
-            Length = 10,
             Trajectory = new Trajectory
             {
                 ControlPoints =
@@ -178,7 +171,7 @@ public class OrderEdgeTest
             }
         };
 
-        var position = edge.GetPosition(0.5);
+        var position = edge.GetPosition(0.5, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(0f);
         position.Y.ShouldBe(5f);
@@ -189,7 +182,7 @@ public class OrderEdgeTest
     {
         var edge = CreateHorizontalLinearEdge(fromX: 0, fromY: 0, toX: 10, toY: 0, length: 10);
 
-        var position = edge.GetPosition(-1.0);
+        var position = edge.GetPosition(-1.0, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(0f);
     }
@@ -199,7 +192,7 @@ public class OrderEdgeTest
     {
         var edge = CreateHorizontalLinearEdge(fromX: 0, fromY: 0, toX: 10, toY: 0, length: 10);
 
-        var position = edge.GetPosition(2.0);
+        var position = edge.GetPosition(2.0, GetOrderNode(), GetOrderNode());
 
         position.X.ShouldBe(10f);
     }

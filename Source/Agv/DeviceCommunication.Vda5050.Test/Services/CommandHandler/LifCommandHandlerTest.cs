@@ -19,11 +19,11 @@ public class LifCommandHandlerTest
         newGraphReceived.CorrelationId.ShouldBe(fixture.StoreLif.CorrelationId);
         newGraphReceived.GraphSegment.Nodes.Select(n => n.Id).ShouldBe(
         [
-            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.StartNodeId),
-            NewGraphGenerator.GenerateInternalNodeId(NewGraphGenerator.EndNodeId)
+            DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.StartNodeId),
+            DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.EndNodeId)
         ], true);
-        newGraphReceived.GraphSegment.Edges.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalEdgeId(NewGraphGenerator.EdgeId));
-        newGraphReceived.GraphSegment.Stations.ShouldHaveSingleItem().Id.ShouldBe(NewGraphGenerator.GenerateInternalStationId(NewGraphGenerator.StationId));
+        newGraphReceived.GraphSegment.Edges.ShouldHaveSingleItem().Id.ShouldBe(DomainLifGenerator.GenerateInternalEdgeId(DomainLifGenerator.EdgeId));
+        newGraphReceived.GraphSegment.Stations.ShouldHaveSingleItem().Id.ShouldBe(DomainLifGenerator.GenerateInternalStationId(DomainLifGenerator.StationId));
     }
 
     [TestMethod]

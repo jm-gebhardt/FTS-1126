@@ -16,7 +16,14 @@ public static class NewGraphGenerator
     public static readonly Guid RoutingAgvTypeId = Guid.NewGuid();
     public static readonly Guid RoutingLoadStateId = Guid.NewGuid();
 
-    public static GraphSegment GenerateGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
+    public static GraphSegment GenerateSegmentGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
+    {
+        var graph = GenerateGraph(stationInteractionNodeId, withRoutingResources);
+
+        return new GraphSegment(Guid.NewGuid(), graph.Nodes, graph.Edges, graph.Stations);
+    }
+    
+    public static Graph GenerateGraph(Guid? stationInteractionNodeId = null, bool withRoutingResources = false)
     {
         var startNode = new Node(Guid.NewGuid(), StartNodeName, StartNodeName, 0, 0, LevelId);
         var endNode = new Node(Guid.NewGuid(), EndNodeName, EndNodeName, 1, 1, LevelId);
@@ -32,7 +39,7 @@ public static class NewGraphGenerator
             AddRoutingResources(startNode, edge);
         }
 
-        return new GraphSegment(nodes, edges, stations);
+        return new Graph(nodes, edges, stations);
     }
 
     private static void AddRoutingResources(Node startNode, Edge edge)

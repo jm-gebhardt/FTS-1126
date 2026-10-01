@@ -26,7 +26,7 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
     IConsumer<ActionAborted>,
     IConsumer<RouteStepsProcessed>,
     IConsumer<TrafficManagementTick>,
-    IConsumer<NewGraphUpdated>
+    IConsumer<GraphSegmentAdded>
 {
     private static readonly TimeSpan _minimumTickInterval = TimeSpan.FromTicks(TrafficManagementTickPublisher.TickInterval.Ticks * 4 / 5);
 
@@ -90,7 +90,7 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
         return Task.CompletedTask;
     }
 
-    public Task Consume(ConsumeContext<NewGraphUpdated> context)
+    public Task Consume(ConsumeContext<GraphSegmentAdded> context)
     {
         return graphManager.AddGraphSegmentAsync(context.Message.GraphSegment, context.CancellationToken);
     }

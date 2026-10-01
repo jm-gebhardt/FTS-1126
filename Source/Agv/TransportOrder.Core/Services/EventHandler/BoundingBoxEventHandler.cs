@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 /// Publishes bounding box recalculation commands when the graph or its AGV type assignments change.
 /// </summary>
 [PublicAPI]
-public class BoundingBoxEventHandler : IConsumer<GraphUpdated>, IConsumer<NewGraphUpdated>
+public class BoundingBoxEventHandler : IConsumer<GraphUpdated>, IConsumer<GraphSegmentAdded>
 {
     private readonly ILogger<BoundingBoxEventHandler> _logger;
 
@@ -29,7 +29,7 @@ public class BoundingBoxEventHandler : IConsumer<GraphUpdated>, IConsumer<NewGra
     }
 
     /// <inheritdoc/>
-    public async Task Consume(ConsumeContext<NewGraphUpdated> context)
+    public async Task Consume(ConsumeContext<GraphSegmentAdded> context)
     {
         _logger.LogInformation("AGV type graphs changed. Triggering bounding box recalculation");
         await context.Publish(new RecalculateBoundingBoxes(Guid.Empty));

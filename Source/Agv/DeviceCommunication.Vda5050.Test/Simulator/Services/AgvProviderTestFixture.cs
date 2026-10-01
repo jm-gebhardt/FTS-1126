@@ -1,6 +1,5 @@
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.Graphs.Requests;
-using Gebhardt.Acc.Common.Messages.Maps;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.Common.Messages.NewGraph.Requests;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services;
@@ -20,19 +19,11 @@ public class AgvProviderTestFixture() : SimulatedAgvStateMachineTestFixture(Time
     {
         public Task Consume(ConsumeContext<GetGraph> context)
         {
-            return context.RespondAsync(new GotGraph(new Graph()));
+            List<Node> nodes = [new(Guid.NewGuid(), "", "", 0, 0, "")];
+            return context.RespondAsync(new GotGraph(new Graph(nodes, [], [])));
         }
     }
-
-    private class GetDefaultMapResponder : IConsumer<GetDefaultMap>
-    {
-        public Task Consume(ConsumeContext<GetDefaultMap> context)
-        {
-            return context.RespondAsync(new GotDefaultMap(Guid.NewGuid(),
-                new Map(Guid.NewGuid(), MapId, DateTime.UtcNow, string.Empty, 0, 0, 0, 0, 0)));
-        }
-    }
-
+    
     private class FakeSimulatedAgvTypeConfigurationRepository(IReadOnlyCollection<SimulatedAgvTypeConfiguration> configurations)
         : ISimulatedAgvTypeConfigurationRepository
     {
@@ -70,7 +61,7 @@ public class AgvProviderTestFixture() : SimulatedAgvStateMachineTestFixture(Time
 
     public new AgvProviderTestFixture Build()
     {
-        AddConsumers(typeof(GetGraphResponder), typeof(GetDefaultMapResponder));
+        AddConsumers(typeof(GetGraphResponder));
         AddServices(sc =>
         {
             sc.AddSingleton<ISimulatedAgvTypeConfigurationRepository>(_ => new FakeSimulatedAgvTypeConfigurationRepository(_configurations));

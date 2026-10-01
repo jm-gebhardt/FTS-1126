@@ -72,22 +72,7 @@ public class LifLayoutCollectionValidatorTest
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("EndNodeId") && e.ErrorMessage.Contains("missing"));
     }
-
-    [TestMethod]
-    public async Task Validate_ValidCollection_Passes()
-    {
-        var n1 = LifGenerator.GenerateNode("n1", vehicleTypeProps: [LifGenerator.GenerateVehicleTypeNodeProperty()]);
-        var n2 = LifGenerator.GenerateNode("n2", vehicleTypeProps: [LifGenerator.GenerateVehicleTypeNodeProperty()]);
-        var edge = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
-        var returnEdge = LifGenerator.GenerateEdge("e2", "n2", "n1", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
-        var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge, returnEdge]);
-        var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
-
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
-
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
+    
     [TestMethod]
     public async Task Validate_OrientationUnreachableDueToNoRotationPermission_ReportsErr()
     {
@@ -539,7 +524,7 @@ public class LifLayoutCollectionValidatorTest
     {
         var node1 = LifGenerator.GenerateNode("n1", x: 0, y: 0, vehicleTypeProps: [LifGenerator.GenerateVehicleTypeNodeProperty()]);
         var node2 = LifGenerator.GenerateNode("n2", x: 5, y: 0, vehicleTypeProps: [LifGenerator.GenerateVehicleTypeNodeProperty()]);
-        var trajectory = new Trajectory
+        var edgeTrajectory = new Trajectory
         {
             ControlPoints =
             [
@@ -553,8 +538,23 @@ public class LifLayoutCollectionValidatorTest
             KnotVector = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
             Degree = 5
         };
-        var edge = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty(trajectory: trajectory)]);
-        var returnEdge = LifGenerator.GenerateEdge("e2", "n2", "n1", [LifGenerator.GenerateVehicleTypeEdgeProperty()]);
+        var returnEdgeTrajectory = new Trajectory
+        {
+            ControlPoints =
+            [
+                new ControlPoint { X = 5, Y = 0 },
+                new ControlPoint { X = 4, Y = 1 },
+                new ControlPoint { X = 2, Y = 2 },
+                new ControlPoint { X = 1, Y = 1 },
+                new ControlPoint { X = 3, Y = 2 },
+                new ControlPoint { X = 0, Y = 0 }
+            ],
+            KnotVector = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+            Degree = 5
+        };
+
+        var edge = LifGenerator.GenerateEdge("e1", "n1", "n2", [LifGenerator.GenerateVehicleTypeEdgeProperty(trajectory: edgeTrajectory)]);
+        var returnEdge = LifGenerator.GenerateEdge("e2", "n2", "n1", [LifGenerator.GenerateVehicleTypeEdgeProperty(trajectory: returnEdgeTrajectory)]);
         var layout = LifGenerator.GenerateLayout(nodes: [node1, node2], edges: [edge, returnEdge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
