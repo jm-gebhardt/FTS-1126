@@ -56,8 +56,10 @@ public static class StationCommunicationHostBuilder
                     }));
 
         hostBuilder.ConfigureServices(s =>
-            s.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies())
-        );
+        {
+            s.AddRouting();
+            s.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+        });
         return hostBuilder;
     }
 }

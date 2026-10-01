@@ -28,6 +28,7 @@ using MassTransit;
 using Gebhardt.Acc.Common.Persistence.Ef;
 using Gebhardt.Core.EntityFrameworkCore;
 using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 
@@ -165,7 +166,11 @@ public static class TestPlanRunnerHostBuilder
                     app.UseSwagger();
                     app.UseSwaggerUI(options => { options.SwaggerEndpoint(new TestPlanRunnerApiGroup()); });
 
-                    app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapControllers();
+                        endpoints.MapHealthProbes();
+                    });
                 });
         });
 

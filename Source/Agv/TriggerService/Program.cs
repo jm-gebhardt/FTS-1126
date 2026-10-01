@@ -23,6 +23,7 @@ try
         })
         .AddMassTransit(initialLogger)
         .AddTriggerService(initialLogger)
+        .ConfigureServices((_, services) => services.AddRouting())
         .ConfigureWebHost(h =>
             h.UseKestrel()
                 .Configure(app =>

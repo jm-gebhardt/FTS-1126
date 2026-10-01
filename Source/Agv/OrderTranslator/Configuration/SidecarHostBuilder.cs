@@ -66,6 +66,7 @@ public static class OrderTranslatorHostBuilder
         hostBuilder.ConfigureServices(s =>
         {
             s.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            s.AddRouting();
             s.AddHealthChecks()
                 .AddCheck<StartupHealthCheck>("Startup",  tags: new[] { "ready" });
         });

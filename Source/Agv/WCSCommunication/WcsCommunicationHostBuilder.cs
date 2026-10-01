@@ -49,6 +49,7 @@ public static class WcsCommunicationHostBuilder
             })
             .ConfigureServices((context, services) =>
             {
+                services.AddRouting();
                 services.ConfigureTracing(context.Configuration);
                 if (isSimulation)
                 {

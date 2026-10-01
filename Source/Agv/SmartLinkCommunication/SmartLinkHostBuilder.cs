@@ -36,6 +36,7 @@ public static class SmartLinkHostBuilder
             })
             .ConfigureServices((context, services) =>
             {
+                services.AddRouting();
                 services.AddScoped<IIoActionExecutionService, IoActionExecutionService>();
                 services.AddScoped<IRestClient, RestClient>();
                 services.AddScoped<ISmartLinkService, SmartLinkService>();

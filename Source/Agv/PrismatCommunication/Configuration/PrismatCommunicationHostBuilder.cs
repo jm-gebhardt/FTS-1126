@@ -6,6 +6,7 @@ using Gebhardt.Core.Hosting.Configuration;
 using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
@@ -39,6 +40,7 @@ public static class PrismatCommunicationHostBuilder
             .AddPrismatCommunication(simulationOptions, initialLogger)
             .ConfigureServices((_, services) =>
             {
+                services.AddRouting();
                 services.AddQuartz(q =>
                 {
                     q.SchedulerId = QuartzSchedulerId;
