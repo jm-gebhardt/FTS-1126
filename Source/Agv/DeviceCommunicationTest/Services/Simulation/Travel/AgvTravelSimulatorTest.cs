@@ -426,9 +426,40 @@ public class AgvTravelSimulatorTest
         simulator.Position.ShouldBe(position);
         simulator.CurrentEdge.ShouldBeNull();
     }
+    
+    [TestMethod]
+    public void UpdatePosition_TargetWaypointReached_AgvStaysAtOrientationOfEdge()
+    {
+        var correlationId = Guid.NewGuid();
+        var agvData = new KarisType1(correlationId, "ip address");
+        var generator = new FixedGraphGenerator(new GeneratedMapGenerator());
+        var graph = generator.Generate(agvData.AgvCorrelationId);
+        (GraphNode[] nodes, Guid[] edges) route = GetArbitraryRoute("WP-0009", graph);
+        var startNode = graph.Nodes.First(n => n.Name == route.nodes.First().Name);
+        var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
+        var entryTime = DateTime.UtcNow;
+        var fakeTimeProvider = new FakeTimeProvider(entryTime);
+        var simulator = new AgvTravelSimulator(graph, position, fakeTimeProvider);
+
+        const double initialVelocity = 0;
+        simulator.EstimateTravelTimes(route.nodes.Select(n => n.Name).ToArray(), route.edges, entryTime, agvData, initialVelocity);
+
+        var targetNode = graph.Nodes.First(n => n.Name == route.nodes.Last().Name);
+        fakeTimeProvider.SetNow(entryTime.Add(0.95 * simulator.TravelDuration!.Value));
+        simulator.UpdatePosition(agvData);
+        simulator.CurrentNode.ShouldNotBe(targetNode);
+
+        float lastOrientationOnEdge = simulator.Position.Theta;
+
+        fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
+        simulator.UpdatePosition(agvData);
+        simulator.Position.Theta.ShouldBe(lastOrientationOnEdge);
+        simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
+        simulator.CurrentNode.ShouldBe(targetNode);
+    }
 
     [TestMethod]
-    public void UpdatePosition_TargetStationReached_AgvStaysAtOrientationOfEdge()
+    public void UpdatePosition_TargetStationReached_OrientationOfStation()
     {
         var correlationId = Guid.NewGuid();
         var agvData = new KarisType1(correlationId, "ip address");
@@ -449,11 +480,9 @@ public class AgvTravelSimulatorTest
         simulator.UpdatePosition(agvData);
         simulator.CurrentNode.ShouldNotBe(targetNode);
 
-        float lastOrientationOnEdge = simulator.Position.Theta;
-
         fakeTimeProvider.SetNow(entryTime.Add(simulator.TravelDuration!.Value));
         simulator.UpdatePosition(agvData);
-        simulator.Position.Theta.ShouldBe(lastOrientationOnEdge);
+        simulator.Position.Theta.ShouldBe(targetNode.Theta);
         simulator.CurrentEdge.ShouldBe(simulator.FollowingEdges.Last());
         simulator.CurrentNode.ShouldBe(targetNode);
     }

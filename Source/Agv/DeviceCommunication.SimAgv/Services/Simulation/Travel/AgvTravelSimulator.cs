@@ -255,7 +255,7 @@ public class AgvTravelSimulator : IAgvTravelSimulator
         bool isMoveToCoordinate = AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Name);
         bool isMoveBackToGraph = !AddedVirtualNodes.Contains(CurrentEdge!.TargetNode.Name) && AddedVirtualNodes.Contains(CurrentEdge.SourceNode.Name);
 
-        if (isMoveToCoordinate || isMoveBackToGraph)
+        if (isMoveToCoordinate || isMoveBackToGraph || CurrentEdge.TargetNode.IsStation())
         {
             return CurrentEdge.TargetNode.Theta;
         }
