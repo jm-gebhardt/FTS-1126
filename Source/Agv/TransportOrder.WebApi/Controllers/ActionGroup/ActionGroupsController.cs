@@ -9,6 +9,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Dtos.FilterResults;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using SortDirection = Gebhardt.Acc.Common.Filter.Enums.SortDirection;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Controllers.ActionGroup;
@@ -69,7 +70,7 @@ public class ActionGroupsController : Controller
     /// <response code="200">Ok</response>
     [HttpGet]
     [Route("/actionGroupsAggregate/byState")]
-    public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState(CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState(CancellationToken cancellationToken = default)
     {
         Response<GotActionGroupCountsByState> response = await _getAgvActionGroupCountsByStateRequest.GetResponse<GotActionGroupCountsByState>(new GetActionGroupCountsByState(), cancellationToken);
         var actionGroupCountByState = _mapper.Map<List<AgvGroupCountByStateDto>>(response.Message.AgvGroupCountByState);
@@ -86,7 +87,7 @@ public class ActionGroupsController : Controller
     /// <returns>Duration statistics of actions in groups matching query parameters. Empty list if no matching groups where found.</returns>
     [HttpGet]
     [Route("/actionGroups/durationStatistics")]
-    public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target, CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target, CancellationToken cancellationToken = default)
     {
         Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()), cancellationToken);
         return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
@@ -97,8 +98,19 @@ public class ActionGroupsController : Controller
     /// </summary>
     [HttpPost]
     [Route("/actionGroups/filtered")]
-    public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered([FromBody] FilterDto filter, int pageNumber, int pageSize, SortDirection direction, ICollection<string>? orderingProperties, CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<FilteredActionGroupDto>>> Filtered(
+        [FromBody] FilterDto filter,
+        [FromQuery, Range(0, int.MaxValue)] int pageNumber,
+        [FromQuery, Range(1, int.MaxValue)] int pageSize,
+        SortDirection direction,
+        ICollection<string>? orderingProperties,
+        CancellationToken cancellationToken = default)
     {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         Response<GotFilteredActionGroups> result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []), cancellationToken);
         var mapped = _mapper.Map<PagedResult<FilteredActionGroupDto>>(result.Message.ActionGroups);
 

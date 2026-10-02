@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
@@ -268,6 +268,11 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     {
         var cancellationToken = context.CancellationToken;
         (var filterDto, int pageNumber, int pageSize, var ordering, ICollection<string> orderProps) = context.Message;
+
+        if (pageNumber < 0 || pageSize < 0)
+        {
+            throw new ValidationException("PageNumber and PageSize must be greater than or equal to 0.");
+        }
 
         var filter = filterDto.Translate<ActionGroup, ActionGroupFilterable>();
         
