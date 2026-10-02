@@ -9,9 +9,9 @@ namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Agvs;
 internal class AgvProvider
 {
     [UsedImplicitly]
-    public IRoutingAgv GetAgv(Guid agvCorrelationId)
+    public IRoutingAgv? GetAgv(Guid agvCorrelationId)
     {
-        throw new NotImplementedException();
+        return null;
     }
 }
 

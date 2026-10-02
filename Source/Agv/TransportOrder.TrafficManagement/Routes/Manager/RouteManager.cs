@@ -71,7 +71,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
         ExecuteRoute(route);
     }
 
-    public void AbortRoute(Guid agvId, Guid actionCorrelationId)
+    public bool AbortRoute(Guid agvId, Guid actionCorrelationId)
     {
         logger.LogInformation("Aborting route for AGV {AgvCorrelationId}", agvId);
 
@@ -79,7 +79,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
         {
             logger.LogWarning("Route of AGV {AgvCorrelationId} not found", agvId);
             bus.Publish(new ActionAbortionFailedByAgv(actionCorrelationId, agvId));
-            return;
+            return false;
         }
 
         foreach (var routeStep in route.Steps.Where(s => !s.IsCompleted))
@@ -92,6 +92,13 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
 
         bus.Publish(new RouteAborted(route.Id, route.Agv.CorrelationId));
         bus.Publish(new ActionAbortedByAgv(route.ActionCorrelationId, route.Agv.CorrelationId));
+
+        return true;
+    }
+
+    public Route? GetRoute(Guid agvId)
+    {
+        return _routes.GetValueOrDefault(agvId);
     }
 
     public void ExecuteRoutes()

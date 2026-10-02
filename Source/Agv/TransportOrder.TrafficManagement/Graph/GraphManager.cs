@@ -23,7 +23,7 @@ internal class GraphManager(INewGraphRepository newGraphRepository, IAgvTypeRepo
 
     public IEnumerable<Station> Stations => _stations.Values;
 
-    public Node? GetNodeByName(string? targetNodeShortName)
+    public Node? GetNodeByShortName(string? targetNodeShortName)
     {
         return _nodes.Values.FirstOrDefault(n => n.ShortName == targetNodeShortName);
     }
