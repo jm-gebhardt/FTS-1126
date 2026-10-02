@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using Gebhardt.Acc.Common.Filter.Api.Dtos;
@@ -9,6 +9,7 @@ using Gebhardt.Acc.Common.Filter.FilterableParser.Attributes;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Gebhardt.Acc.Common.Filter.FilterableParser;
 
@@ -55,6 +56,12 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     private static readonly Dictionary<string, IParsedFilterable> _joinProperties = new();
 
     private static readonly ParsedFilterable<TDomainObject, TFilterable> _parsedFilterable = new();
+
+    // ReSharper disable once StaticMemberInGenericType // Intentional, as every Filterable<TEntity> should have a dedicated count cache.
+    private static readonly MemoryCache _totalCountCache = new(new MemoryCacheOptions());
+
+    // ReSharper disable once StaticMemberInGenericType // Intentional, as every Filterable<TEntity> should have its own cache settings.
+    private static readonly TimeSpan _totalCountCacheTtl = TimeSpan.FromSeconds(120);
 
     /// <summary>
     /// Verifies the parsed filterable against the provided values.
@@ -264,6 +271,12 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     /// <param name="ordering">The direction to sort.</param>
     /// <param name="orderByProperties">The properties to sort.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <remarks>
+    /// The <see cref="PagedResult{T}.Items"/> and <see cref="PagedResult{T}.TotalCount"/> values are resolved by separate queries and are not snapshot-consistent.
+    /// They may represent marginally different points in time.
+    /// The first page always resolves an exact count and refreshes the cache. Middle pages may use a short-lived cached count and can therefore be slightly stale.
+    /// The last page (detected by probing one extra row and finding no next page) resolves an exact count and refreshes the cache.
+    /// </remarks>
     public delegate Task<PagedResult<TFilterable>> FilterByPaginatedWithOrdering(IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties, CancellationToken cancellationToken = default);
 
     private delegate IQueryable<TFilterable> ApplyFiltering<in TDbContext>(TDbContext context, IFilter filter);
@@ -407,11 +420,12 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
         return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties, CancellationToken cancellationToken)
         {
-            await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+            await using var itemsContext = await contextFactory.CreateDbContextAsync(cancellationToken);
+            await using var countContext = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-            IQueryable<TFilterable> projectedQuery = filterer(context, filter);
             try
             {
+                IQueryable<TFilterable> projectedQuery = filterer(itemsContext, filter);
                 IOrderedQueryable<TFilterable>? orderedQuery = null;
 
                 List<string> incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
@@ -464,21 +478,60 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
                 projectedQuery = orderedQuery as IQueryable<TFilterable> ?? projectedQuery;
 
-                IQueryable<TFilterable> prePaginated = projectedQuery;
-
                 projectedQuery = projectedQuery.Skip(pageNr * pageSize);
-                if (pageNr + pageSize != 0)
+                if (pageSize != 0)
                 {
-                    projectedQuery = projectedQuery.Take(pageSize);
+                    projectedQuery = projectedQuery.Take(pageNr > 0 ? pageSize + 1 : pageSize);
                 }
 
-                return new PagedResult<TFilterable>(await projectedQuery.ToListAsync(cancellationToken), await prePaginated.CountAsync(cancellationToken), pageNr, pageSize);
+                Task<List<TFilterable>> itemsTask = projectedQuery.ToListAsync(cancellationToken);
+                IQueryable<TFilterable> countQuery = filterer(countContext, filter);
+
+                List<TFilterable> items = await itemsTask;
+                bool hasNextPage = pageNr > 0 && pageSize > 0 && items.Count > pageSize;
+                if (hasNextPage)
+                {
+                    items = items.Take(pageSize).ToList();
+                }
+                bool isLastPage = pageNr > 0 && pageSize > 0 && !hasNextPage;
+                int totalCount = isLastPage || pageNr == 0
+                    ? await GetFreshTotalCountAsync(countQuery, cancellationToken)
+                    : await GetCachedOrLoadTotalCountAsync(countQuery, cancellationToken);
+
+                return new PagedResult<TFilterable>(items, totalCount, pageNr, pageSize);
             }
             catch (TargetInvocationException ex)
             {
                 throw ex.GetBaseExceptionKeepingStacktrace();
             }
         };
+    }
+
+    private static async Task<int> GetCachedOrLoadTotalCountAsync(IQueryable<TFilterable> countQuery, CancellationToken cancellationToken)
+    {
+        string cacheKey = CreateCountCacheKey(countQuery);
+
+        if (_totalCountCache.TryGetValue(cacheKey, out int cached))
+        {
+            return cached;
+        }
+
+        int totalCount = await countQuery.CountAsync(cancellationToken);
+        _totalCountCache.Set(cacheKey, totalCount, _totalCountCacheTtl);
+        return totalCount;
+    }
+
+    private static async Task<int> GetFreshTotalCountAsync(IQueryable<TFilterable> countQuery, CancellationToken cancellationToken)
+    {
+        string cacheKey = CreateCountCacheKey(countQuery);
+        int totalCount = await countQuery.CountAsync(cancellationToken);
+        _totalCountCache.Set(cacheKey, totalCount, _totalCountCacheTtl);
+        return totalCount;
+    }
+
+    private static string CreateCountCacheKey(IQueryable<TFilterable> countQuery)
+    {
+        return $"{typeof(TDomainObject).FullName}|{typeof(TFilterable).FullName}|{countQuery.ToQueryString()}";
     }
 
     private static List<Tuple<PropertyInfo, PropertyInfo>> GetShadowingProperties()

@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Common.Filter.Api.Dtos;
 /// <typeparam name="T">The content type of the result.</typeparam>
 /// <param name="Items">The result items.</param>
 /// <param name="TotalCount">The total item count.</param>
-/// <param name="CurrentPage">The current page.</param>
+/// <param name="CurrentPage">The current page (0-based).</param>
 /// <param name="PageSize">The page size.</param>
 [PublicAPI]
 public sealed record PagedResult<T>(ICollection<T> Items, int TotalCount, int CurrentPage, int PageSize)
@@ -21,11 +21,10 @@ public sealed record PagedResult<T>(ICollection<T> Items, int TotalCount, int Cu
     /// <summary>
     /// True, if there is a next page.
     /// </summary>
-    public bool HasNextPage => CurrentPage * PageSize < TotalCount;
+    public bool HasNextPage => PageSize > 0 && (CurrentPage + 1) * PageSize < TotalCount;
 
     /// <summary>
     /// True, if there is a previous page.
     /// </summary>
-    public bool HasPreviousPage => CurrentPage > 1;
+    public bool HasPreviousPage => CurrentPage > 0;
 }
-
