@@ -18,6 +18,7 @@ using Gebhardt.Acc.WCSCommunication.WcsApi.SimulationMode;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting;
 using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Core.EntityFrameworkCore;
 using Gebhardt.Core.Hosting.Configuration;
 using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
@@ -97,7 +98,8 @@ public static class WcsCommunicationHostBuilder
         {
             services.AddDbContext<WcsCommunicationDbContext>(builder =>
             {
-                string? connectionString = context.Configuration.GetConnectionString(WcsCommunicationDbContext.ConfigSectionName);
+                string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                           ?? context.Configuration.GetConnectionString(WcsCommunicationDbContext.ConfigSectionName);
                 builder.UseSqlServer(connectionString, m =>
                 {
                     m.MigrationsHistoryTable(WcsCommunicationDbContext.MigrationTableName);
