@@ -28,7 +28,7 @@ public class AgvPositionPersistenceServiceTest
     [TestMethod]
     public async Task StopAsync_CallsPersistAllPositionsAsync()
     {
-        (var service, Mock<IAgvPositionRepository> repoMock) = CreateService();
+        var (service, repoMock) = CreateService();
 
         await service.StopAsync(CancellationToken.None);
 
@@ -38,7 +38,7 @@ public class AgvPositionPersistenceServiceTest
     [TestMethod]
     public async Task StopAsync_PassesCancellationToken()
     {
-        (var service, Mock<IAgvPositionRepository> repoMock) = CreateService();
+        var (service, repoMock) = CreateService();
         using var cts = new CancellationTokenSource();
         var token = cts.Token;
 
@@ -50,7 +50,7 @@ public class AgvPositionPersistenceServiceTest
     [TestMethod]
     public async Task StopAsync_WhenPersistThrows_DoesNotRethrow()
     {
-        (var service, Mock<IAgvPositionRepository> repoMock) = CreateService();
+        var (service, repoMock) = CreateService();
         repoMock.Setup(x => x.PersistAllPositionsAsync(It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("DB failure"));
 
         await Should.NotThrowAsync(() => service.StopAsync(CancellationToken.None));

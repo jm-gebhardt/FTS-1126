@@ -58,7 +58,7 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
 
     public async Task ShouldHaveRemovedSagaAsync(Guid agvCorrelationId)
     {
-        Guid? sagaId = await SagaHarness.NotExists(agvCorrelationId, TimeSpan.FromSeconds(SagaRemovalTimeoutSeconds));
+        var sagaId = await SagaHarness.NotExists(agvCorrelationId, TimeSpan.FromSeconds(SagaRemovalTimeoutSeconds));
         sagaId.ShouldBeNull();
     }
 

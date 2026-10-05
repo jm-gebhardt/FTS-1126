@@ -114,7 +114,7 @@ public class Polygon
     /// </summary>
     public bool IsIntersecting(Polygon other)
     {
-        IReadOnlyList<PolygonPoint> b = other.Points;
+        var b = other.Points;
 
         for (int i = 0; i < Points.Count; i++)
         {

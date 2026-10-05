@@ -6,7 +6,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Extensions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
@@ -279,7 +278,7 @@ public class ActionCommandHelper
         bool isNextActionInGroup = actionGroup.FirstNotStartedAction!.CorrelationId == action.CorrelationId;
         if (!isNextActionInGroup)
         {
-            ActionState? stateOfAction = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == action.CorrelationId)?.State;
+            var stateOfAction = actionGroup.Actions.SingleOrDefault(a => a.CorrelationId == action.CorrelationId)?.State;
             _logger.LogWarning("Preventing start of action {Action} of group {ActionGroupCorrelationId}, because the action of another group should start first. Agv: {AgvCorrelationId}. " +
                                "State of action in group is {ActionState}",
                 action.CorrelationId, actionGroup.CorrelationId, assignedAgv.CorrelationId, stateOfAction);
@@ -408,8 +407,8 @@ public class ActionCommandHelper
 
         try
         {
-            IRequestClient<TriggerDoppelspielPartnerQueueing>? requestClient = context.CreateRequestClient<TriggerDoppelspielPartnerQueueing>(_bus);
-            Response<DoppelspielPartnerQueued> response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.Node!), cancellationToken);
+            var requestClient = context.CreateRequestClient<TriggerDoppelspielPartnerQueueing>(_bus);
+            var response = await requestClient.GetResponse<DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv!.Value, action.Target.Node!), cancellationToken);
             if (response.Message.CorrelationId == null)
             {
                 return;
@@ -445,10 +444,10 @@ public class ActionCommandHelper
         }
         var agvData = await _agvDb.Data.GetAgvDataAsync(agv.CorrelationId);
         var routeToDropTarget = await _routeService.GetRouteAsync(agv, dropTarget.Id, null, agvData, cancellationToken);
-        ICollection<Queue> queuesOnRoute = await _queueManager.GetQueuesOnRoute(routeToDropTarget.Nodes.Select(n => n.Id).ToList());
+        var queuesOnRoute = await _queueManager.GetQueuesOnRoute(routeToDropTarget.Nodes.Select(n => n.Id).ToList());
         if (queuesOnRoute.All(q => q.AgvFillQuantity == 0) || queuesOnRoute.Count == 0)
         {
-            ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+            var readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
             if (!readyAgvs.Except([agv]).Any())
             {
                 await context.Publish(new TryRetractActionGroup(pickAtDropTarget.CorrelationId), cancellationToken);

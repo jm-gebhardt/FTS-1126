@@ -16,7 +16,7 @@ public class AgvPositionRepositoryTest
         var agvPositionRepository = fixture.AgvPositionRepository;
         var agvPositionStatus = AgvPositionStatusGenerator.Generate();
 
-        List<AgvPositionStatus> positions = agvPositionRepository.GetAllPositions();
+        var positions = agvPositionRepository.GetAllPositions();
 
         positions.ShouldNotBeNull();
         positions.Count.ShouldBe(0);
@@ -37,7 +37,7 @@ public class AgvPositionRepositoryTest
             .WithSignificanceCheckerReturns(true);
         var agvPositionRepository = fixture.AgvPositionRepository;
 
-        List<AgvPositionStatus> positions = agvPositionRepository.GetAllPositions();
+        var positions = agvPositionRepository.GetAllPositions();
         positions.Count.ShouldBe(1);
         positions.First().ShouldBe(agvPositionStatus);
 

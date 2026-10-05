@@ -101,7 +101,7 @@ public abstract class PlcCommunicationManagerBase<TCommunicator, TTelegramType>(
     {
         try
         {
-            IEnumerable<(Guid stationId, bool isOnline)> changed = connectionRepository.UpdateChannelState(channelKey, isConnected);
+            var changed = connectionRepository.UpdateChannelState(channelKey, isConnected);
 
             foreach ((var stationId, bool isOnline) in changed)
             {

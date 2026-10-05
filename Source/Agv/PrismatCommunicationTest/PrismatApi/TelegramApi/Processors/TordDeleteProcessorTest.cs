@@ -14,7 +14,7 @@ public class TordDeleteProcessorTest
     [TestMethod]
     public async Task ProcessReceivedTelegram_Tord_PublishesCreateHostOrder()
     {
-        TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete> fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var tordDelete = new TordDelete();
@@ -32,7 +32,7 @@ public class TordDeleteProcessorTest
     [TestMethod]
     public async Task ProcessReceivedTelegram_NotTordDeleteDeleteTelegram_DoesNotPublishCreateHostOrderDoesNotSwapToSendingMode()
     {
-        TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete> fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         fixture.Processor.ProcessReceivedTelegram(TestTelegram.Arrival);
@@ -44,7 +44,7 @@ public class TordDeleteProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoCurrentTelegram_ReturnsFalse()
     {
-        TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete> fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeFalse();
@@ -54,7 +54,7 @@ public class TordDeleteProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_CurrentTelegram_ReturnsTrueAndAcknowledgement()
     {
-        TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete> fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var tordDelete = new TordDelete();
@@ -68,7 +68,7 @@ public class TordDeleteProcessorTest
     [TestMethod]
     public void Cancel_CurrentTelegram_ResetsCurrentTelegram()
     {
-        TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete> fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<TordDeleteProcessor, TordDelete>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var tordDelete = new TordDelete();

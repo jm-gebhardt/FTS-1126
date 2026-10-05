@@ -1,5 +1,4 @@
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Requests.Lif;
 using Gebhardt.Acc.Provisioning.Configuration;
 using JetBrains.Annotations;
@@ -36,10 +35,10 @@ public class LifSeeder : JsonFolderSeeder
         string fileName = Path.GetFileName(filePath);
         var request = new UploadLif(Guid.NewGuid(), _timeProvider.GetUtcNow().UtcDateTime, content, fileName, Vda5050Specifications.LifUploadFileType, UploadedBy);
 
-        Response<LifUploaded, LifValidationFailed> response = await _client.GetResponse<LifUploaded, LifValidationFailed>(request);
+        var response = await _client.GetResponse<LifUploaded, LifValidationFailed>(request);
         if (response.Is(out Response<LifValidationFailed>? failed))
         {
-            ICollection<LifValidationResult> results = failed.Message.LifFile.MetaInformation.ValidationResults;
+            var results = failed.Message.LifFile.MetaInformation.ValidationResults;
             if (results.Any(result => result.Description == LifValidationMessages.CreatorAlreadyExists))
             {
                 Logger.LogInformation("A lif file of the same creator is already stored, skipping {FileName}", fileName);

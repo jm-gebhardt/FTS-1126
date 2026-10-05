@@ -40,11 +40,11 @@ public class MaintenanceLogRequestHandler(IBus bus, ILogger<MaintenanceLogReques
     /// </summary>
     public async Task Consume(ConsumeContext<GetMaintenanceLogsForAgv> context)
     {
-        (var agv, MaintenanceType? type) = context.Message;
+        var (agv, type) = context.Message;
 
         await agvDb.Agvs.ThrowIfAgvNotExistsAsync(agv);
 
-        IReadOnlyCollection<MaintenanceLog> logs = await maintenanceLogRepository.GetMaintenancesLogsAsync([agv], type);
+        var logs = await maintenanceLogRepository.GetMaintenancesLogsAsync([agv], type);
 
         await context.RespondAsync(new GotMaintenanceLogs(logs.ToList()));
     }
@@ -54,11 +54,11 @@ public class MaintenanceLogRequestHandler(IBus bus, ILogger<MaintenanceLogReques
     /// </summary>
     public async Task Consume(ConsumeContext<GetMaintenanceLogsForAgvs> context)
     {
-        (ICollection<Guid> agvs, MaintenanceType? type) = context.Message;
+        var (agvs, type) = context.Message;
 
         await agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvs);
 
-        IReadOnlyCollection<MaintenanceLog> logs = await maintenanceLogRepository.GetMaintenancesLogsAsync(agvs, type);
+        var logs = await maintenanceLogRepository.GetMaintenancesLogsAsync(agvs, type);
 
         await context.RespondAsync(new GotMaintenanceLogs(logs.ToList()));
     }

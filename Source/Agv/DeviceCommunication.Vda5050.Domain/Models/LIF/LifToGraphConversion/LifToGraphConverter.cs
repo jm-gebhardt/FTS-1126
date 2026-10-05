@@ -66,7 +66,7 @@ public static class LifToGraphConverter
         foreach (var station in layout.Stations)
         {
             var stationId = InternalIdGenerator.GetStationId(container.LifId, station.StationId, out string name);
-            List<Guid> interactionNodeIds = station.InteractionNodeIds.Select(id => InternalIdGenerator.GetNodeId(container.LifId, id, out _)).ToList();
+            var interactionNodeIds = station.InteractionNodeIds.Select(id => InternalIdGenerator.GetNodeId(container.LifId, id, out _)).ToList();
 
             if (station.StationPosition is not { } stationPosition)
             {
@@ -94,7 +94,7 @@ public static class LifToGraphConverter
 
                 foreach (var loadStateId in GetLoadStateIds(vehicleTypeId))
                 {
-                    List<double> thetas = nodeHelper.GetThetas(vehicleTypeId);
+                    var thetas = nodeHelper.GetThetas(vehicleTypeId);
 
                     if (thetas.Count == 0)
                     {
@@ -141,12 +141,12 @@ public static class LifToGraphConverter
         var startNodeHelper = container.GetNodeHelper(startNodeId);
         var endNodeHelper = container.GetNodeHelper(endNodeId);
 
-        List<Guid> loadStateIds = GetLoadStateIds(edgeProperty.VehicleTypeId, edgeProperty.LoadRestriction);
+        var loadStateIds = GetLoadStateIds(edgeProperty.VehicleTypeId, edgeProperty.LoadRestriction);
 
         foreach (var loadStateId in loadStateIds)
         {
-            IReadOnlyCollection<RoutingNode> startRoutingNodes = container.GetRoutingNodes(startNodeId, agvTypeId, loadStateId);
-            IReadOnlyCollection<RoutingNode> endRoutingNodes = container.GetRoutingNodes(endNodeId, agvTypeId, loadStateId);
+            var startRoutingNodes = container.GetRoutingNodes(startNodeId, agvTypeId, loadStateId);
+            var endRoutingNodes = container.GetRoutingNodes(endNodeId, agvTypeId, loadStateId);
 
             foreach (var startRoutingNode in startRoutingNodes)
             {

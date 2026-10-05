@@ -299,7 +299,7 @@ public class GraphEdge : IEquatable<GraphEdge>
         var sections = new List<GraphEdge>();
         var virtualNodes = new List<GraphNode>();
         var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
-        List<EdgeCoefficient> controlPoints = VariantParameters.ToList();
+        var controlPoints = VariantParameters.ToList();
         GraphEdge? section;
         foreach (var controlPoint in controlPoints.Select((edgeCoefficient, index) => new { edgeCoefficient, index }))
         {

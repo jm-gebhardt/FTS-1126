@@ -54,7 +54,7 @@ public class RestrictedAreaTest
     {
         var polygon = new List<PolygonPoint> { new(1, 1, 0), new(1, 3, 1), new(3, 3, 2), new(3, 1, 3) };
         var restrictedArea = new RestrictedArea(polygon);
-        List<PolygonPoint> updatedArea = polygon;
+        var updatedArea = polygon;
         updatedArea.Add(new PolygonPoint(4, 1, 4));
         
         restrictedArea.UpdateArea(updatedArea);

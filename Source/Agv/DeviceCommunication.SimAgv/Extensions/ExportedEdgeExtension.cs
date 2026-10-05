@@ -65,7 +65,7 @@ public static class ExportedEdgeExtension
 
         private ICollection<GraphEdge> ToBezier5Edges(float length)
         {
-            EdgeCoefficient[] edgeCoefficients = edge.ControlPoints.Select(c => c.ToEdgeCoefficient()).ToArray();
+            var edgeCoefficients = edge.ControlPoints.Select(c => c.ToEdgeCoefficient()).ToArray();
             var graphEdge = GraphEdge.CreateBezier5(edge.StartId.ToGuid(), edge.EndId.ToGuid(), length,
                 edgeCoefficients,
                 GraphHelper.ToGuid(EdgeType.Bezier5, edge.StartId, length, edge.EndId),

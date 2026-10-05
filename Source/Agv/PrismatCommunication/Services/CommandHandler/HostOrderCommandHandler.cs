@@ -45,7 +45,7 @@ public class HostOrderCommandHandler(
 
         var hostOrder = new HostOrder(orderDetails.CorrelationId, orderDetails.OrderId, hu, orderDetails.CreationDate);
 
-        (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message);
+        var (pickInfoToAgv, dropInfoToAgv) = GeneratePickAndDropInformation(context.Message);
         logger.LogDebug("pickInfoToAgv: {PickInfoToAgv}", pickInfoToAgv == null ? "empty" : string.Join(", ", pickInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
         logger.LogDebug("dropInfoToAgv: {DropInfoToAgv}", dropInfoToAgv == null ? "empty" : string.Join(", ", dropInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
 
@@ -65,7 +65,7 @@ public class HostOrderCommandHandler(
 
     private async Task CancelUnfinishedOrdersOfHu(IPublishEndpoint context, string hu, DateTime creationDate)
     {
-        ICollection<HostOrder> hostOrders = await hostOrderRepository.GetLatestUnfinishedOrdersByHu(hu, creationDate);
+        var hostOrders = await hostOrderRepository.GetLatestUnfinishedOrdersByHu(hu, creationDate);
         if (hostOrders.Count == 0)
         {
             logger.LogDebug("No unfinished host orders for HU {Hu}", hu);

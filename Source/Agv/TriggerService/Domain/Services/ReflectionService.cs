@@ -71,7 +71,7 @@ public class ReflectionService(IServiceProvider serviceProvider, ILogger<Reflect
         where T : class
     {
         string? propertyTypeAssemblyQualifiedName = typeToReflect.AssemblyQualifiedName;
-        ConstructorInfo[] constructors = typeToReflect.GetConstructors();
+        var constructors = typeToReflect.GetConstructors();
         
         // No public available constructors.
         if (constructors.Length == 0)
@@ -81,7 +81,7 @@ public class ReflectionService(IServiceProvider serviceProvider, ILogger<Reflect
         }
 
         // Get constructor with given argument instances,
-        ParameterInfo[]? parameters = GetConstructor(constructors, constructorArguments)?.GetParameters();
+        var parameters = GetConstructor(constructors, constructorArguments)?.GetParameters();
         if (parameters == null)
         {
             LogConstructorError(typeToReflect, constructorArguments);
@@ -142,7 +142,7 @@ public class ReflectionService(IServiceProvider serviceProvider, ILogger<Reflect
     /// <returns>ParameterInfo array of all constructor arguments.</returns>
     private ParameterInfo[] TakeArguments(MethodBase constructor, int constructorArgumentsCount)
     {
-        ParameterInfo[] parameters = constructor.GetParameters();
+        var parameters = constructor.GetParameters();
         return parameters.Length < constructorArgumentsCount ? parameters : parameters.Take(constructorArgumentsCount).ToArray();
     }
 
@@ -158,7 +158,7 @@ public class ReflectionService(IServiceProvider serviceProvider, ILogger<Reflect
         {
             return true;
         }
-        ParameterInfo[] parameters = TakeArguments(constructor, constructorArguments.Count);
+        var parameters = TakeArguments(constructor, constructorArguments.Count);
 
         for (int i = 0; i < parameters.Length; i++)
         {

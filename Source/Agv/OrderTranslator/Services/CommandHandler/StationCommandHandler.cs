@@ -45,7 +45,7 @@ public class StationCommandHandler(
         await Task.WhenAll(stationConfiguration.Stations.Select(s =>
             context.Publish(new StationConfigurationReceived(s.Name.ToGuid(), new Common.Messages.Graphs.Events.StationConfiguration(s.StationGroup)))));
 
-        List<string> stationNames = stationConfiguration.Stations.Select(s => s.Name).ToList();
+        var stationNames = stationConfiguration.Stations.Select(s => s.Name).ToList();
         logger.LogInformation("Updating stations {Stations}", string.Join(", ", stationNames));
 
         await Task.WhenAll(stationConfiguration.Stations.Select(s => context.Publish(new CreateOrUpdateStation(s))));

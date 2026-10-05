@@ -34,7 +34,7 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     /// </summary>
     public async Task Consume(ConsumeContext<CreateTrigger> context)
     {
-        ICollection<ConfigurationParameter> configurationParameters = context.Message.ConfigurationParameters;
+        var configurationParameters = context.Message.ConfigurationParameters;
         var properties = context.Message.Properties;
         Trigger? existingTrigger = null;
 
@@ -106,11 +106,11 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     /// </summary>
     public async Task Consume(ConsumeContext<AddTriggerLocation> context)
     {
-        Guid? edgeId = context.Message.EdgeId;
+        var edgeId = context.Message.EdgeId;
         var node = context.Message.Node;
         var triggerId = context.Message.TriggerId;
-        Guid? mapId = context.Message.MapId;
-        ICollection<ConfigurationParameter>? configurationParameters = context.Message.ConfigurationParameters;
+        var mapId = context.Message.MapId;
+        var configurationParameters = context.Message.ConfigurationParameters;
 
         ICollection<PolygonPoint> polygon = mapper.Map<List<PolygonPoint>>(context.Message.Polygon);
 
@@ -238,9 +238,9 @@ public class TriggerCommandHandler(ITriggerRepository triggerRepository, IMapper
     /// </summary>
     public async Task Consume(ConsumeContext<GetTriggerMapping> context)
     {
-        ICollection<Trigger> triggers = await triggerRepository.GetTriggers();
+        var triggers = await triggerRepository.GetTriggers();
 
-        List<TriggerLocalization> localizations = triggers
+        var localizations = triggers
             .SelectMany(trigger => trigger.Locations, (trigger, location) => new { trigger, location })
             .Where(tl => tl.location.NodeId != null || tl.location.Polygon.Count > 0)
             .Select(tl =>

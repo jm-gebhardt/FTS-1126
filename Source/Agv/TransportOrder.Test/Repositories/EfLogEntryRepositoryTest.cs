@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Filter.Api.Dtos;
-using Gebhardt.Acc.Common.Filter.Enums;
+﻿using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.FilterBuilder;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
@@ -18,7 +17,7 @@ public class EfLogEntryRepositoryTest
         await using var fixture = new EfLogEntryRepositoryTestFixture();
         await fixture.Repository.AddAsync(Categories.Order, 310, logLevel, agv, null, null, DateTime.UtcNow, new Dictionary<string, object?>{{"State_Operation", 132}});
 
-        PagedResult<LogEntry> logEntries = await fixture.Repository.FilterAsync(new CombinationFilter(
+        var logEntries = await fixture.Repository.FilterAsync(new CombinationFilter(
             LogicalCombinationVariant.And,
             [new ValueComparisonFilter<Guid>(nameof(LogEntry.AgvCorrelationId), ComparisonVariant.Equals, agv),
                 new ValueComparisonFilter<string>(nameof(LogEntry.LogLevel), ComparisonVariant.Equals, logLevel)

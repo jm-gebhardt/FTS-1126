@@ -31,8 +31,8 @@ public class MapsController : Controller
     [Route("/maps")]
     public async Task<ActionResult<IEnumerable<MapMetaDataDto>>> GetMaps()
     {
-        Response<GotMapList> response = await _getMapListClient.GetResponse<GotMapList>(new GetMapList());
-        IEnumerable<MapMetaDataDto> maps = response.Message.Maps.Select(m => new MapMetaDataDto(m.CorrelationId, m.MapName));
+        var response = await _getMapListClient.GetResponse<GotMapList>(new GetMapList());
+        var maps = response.Message.Maps.Select(m => new MapMetaDataDto(m.CorrelationId, m.MapName));
         return Ok(maps);
     }
 }

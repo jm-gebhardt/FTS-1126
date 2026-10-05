@@ -64,7 +64,7 @@ public class QueueController : Controller
     [Route("/queue/{id:guid}")]
     public async Task<ActionResult<QueueDto>> GetQueue([FromRoute] Guid id)
     {
-        Response<GotQueue> response = await _getQueueClient.GetResponse<GotQueue>(new GetQueue(id));
+        var response = await _getQueueClient.GetResponse<GotQueue>(new GetQueue(id));
         var queue = _mapper.Map<QueueDto>(response.Message.Queue);
         return Ok(queue);
     }
@@ -82,7 +82,7 @@ public class QueueController : Controller
     public async Task<ActionResult<QueueDto>> AddQueue([FromQuery] [Required] string name, [FromBody] [Required] List<QueueNodeDto> nodes)
     {
         var queueNodes = _mapper.Map<List<QueueNode>>(nodes);
-        Response<GotQueue> response = await _addQueueClient.GetResponse<GotQueue>(new TryAddQueue(name, queueNodes));
+        var response = await _addQueueClient.GetResponse<GotQueue>(new TryAddQueue(name, queueNodes));
         var queue = _mapper.Map<QueueDto>(response.Message.Queue);
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemQueueAdded } });
         return Ok(queue);

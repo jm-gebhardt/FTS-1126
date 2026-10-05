@@ -15,8 +15,8 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
 {
     private static async Task<Dictionary<Guid, Node>> AddOrUpdateNodesAsync(TransportOrderDbContext context, IReadOnlyCollection<Node> nodes, Guid graphSegmentId)
     {
-        List<Guid> nodeIds = nodes.Select(n => n.Id).ToList();
-        Dictionary<Guid, Node> storedNodes = await context.Set<Node>()
+        var nodeIds = nodes.Select(n => n.Id).ToList();
+        var storedNodes = await context.Set<Node>()
             .Where(n => nodeIds.Contains(n.Id))
             .ToDictionaryAsync(n => n.Id);
 
@@ -39,8 +39,8 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
 
     private static async Task AddOrUpdateEdgesAsync(TransportOrderDbContext context, IReadOnlyCollection<Edge> edges, Guid graphSegmentId)
     {
-        List<Guid> edgeIds = edges.Select(e => e.Id).ToList();
-        Dictionary<Guid, Edge> storedEdges = await context.Set<Edge>()
+        var edgeIds = edges.Select(e => e.Id).ToList();
+        var storedEdges = await context.Set<Edge>()
             .Where(e => edgeIds.Contains(e.Id))
             .ToDictionaryAsync(e => e.Id);
 
@@ -60,15 +60,15 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
 
     private static async Task AddOrUpdateStationsAsync(TransportOrderDbContext context, IReadOnlyCollection<Station> stations, Dictionary<Guid, Node> nodesById, Guid graphSegmentId)
     {
-        List<Guid> stationIds = stations.Select(s => s.Id).ToList();
-        Dictionary<Guid, Station> storedStations = await context.Set<Station>()
+        var stationIds = stations.Select(s => s.Id).ToList();
+        var storedStations = await context.Set<Station>()
             .Include(s => s.InteractionNodes)
             .Where(s => stationIds.Contains(s.Id))
             .ToDictionaryAsync(s => s.Id);
 
         foreach (var station in stations)
         {
-            List<Node> interactionNodes = station.InteractionNodeIds.Select(id => nodesById[id]).ToList();
+            var interactionNodes = station.InteractionNodeIds.Select(id => nodesById[id]).ToList();
 
             if (storedStations.TryGetValue(station.Id, out var storedStation))
             {
@@ -89,9 +89,9 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        List<Node> nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync();
-        List<Edge> edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync();
-        List<Station> stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync();
+        var nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync();
+        var edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync();
+        var stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync();
 
         var graph = new Graph(nodes, edges, stations);
 
@@ -112,7 +112,7 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
             context.Add(new GraphSegment(graphSegment.Id, new List<Node>(), new List<Edge>(), new List<Station>()));
         }
 
-        Dictionary<Guid, Node> nodesById = await AddOrUpdateNodesAsync(context, graphSegment.Nodes, graphSegment.Id);
+        var nodesById = await AddOrUpdateNodesAsync(context, graphSegment.Nodes, graphSegment.Id);
         await AddOrUpdateEdgesAsync(context, graphSegment.Edges, graphSegment.Id);
         await AddOrUpdateStationsAsync(context, graphSegment.Stations, nodesById, graphSegment.Id);
 

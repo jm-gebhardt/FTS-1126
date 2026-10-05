@@ -97,15 +97,15 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
 
     protected override ActionGroupController GetController()
     {
-        IRequestClient<GetActionGroup> getActionGroupRequestClient = GetRequestClient<GetActionGroup>();
-        IRequestClient<TriggerActionGroupAbortion> abortionRequestClient = GetRequestClient<TriggerActionGroupAbortion>();
-        IRequestClient<CancelActionGroup> cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
-        IRequestClient<TriggerActionGroupReset> triggerResetRequestClient = GetRequestClient<TriggerActionGroupReset>();
-        IRequestClient<CreatePickDropActionGroup> createActionGroupRequestClient = GetRequestClient<CreatePickDropActionGroup>();
-        IRequestClient<TryReassignActionGroup> reassignActionGroupClient = GetRequestClient<TryReassignActionGroup>();
-        IRequestClient<TriggerActionCompletion> actionCompletionClient = GetRequestClient<TriggerActionCompletion>();
-        IRequestClient<TriggerActionGroupQueueing> actionGroupQueueingClient = GetRequestClient<TriggerActionGroupQueueing>();
-        IRequestClient<TriggerSetTarget> setTargetClient = GetRequestClient<TriggerSetTarget>();
+        var getActionGroupRequestClient = GetRequestClient<GetActionGroup>();
+        var abortionRequestClient = GetRequestClient<TriggerActionGroupAbortion>();
+        var cancelActionGroupRequestClient = GetRequestClient<CancelActionGroup>();
+        var triggerResetRequestClient = GetRequestClient<TriggerActionGroupReset>();
+        var createActionGroupRequestClient = GetRequestClient<CreatePickDropActionGroup>();
+        var reassignActionGroupClient = GetRequestClient<TryReassignActionGroup>();
+        var actionCompletionClient = GetRequestClient<TriggerActionCompletion>();
+        var actionGroupQueueingClient = GetRequestClient<TriggerActionGroupQueueing>();
+        var setTargetClient = GetRequestClient<TriggerSetTarget>();
 
         var controller = new ActionGroupController(Mapper,
             getActionGroupRequestClient,
@@ -139,7 +139,7 @@ public class ActionGroupControllerTestFixture<TRequest, TRequestHandler> : Contr
     {
         var domainActionGroup = Mapper.Map<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(actionGroup);
         _actionGroups.Add(domainActionGroup);
-        GraphNode?[] graphNodes = domainActionGroup.Actions.Select(a => a.Target.Node).ToArray();
+        var graphNodes = domainActionGroup.Actions.Select(a => a.Target.Node).ToArray();
         return WithNode(graphNodes);
     }
 

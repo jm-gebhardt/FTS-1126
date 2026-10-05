@@ -38,7 +38,7 @@ public class Pick : PrismatTelegram
             return false;
         }
 
-        Dictionary<string, string> fields = TelegramParser.Parse(telegram);
+        var fields = TelegramParser.Parse(telegram);
         try
         {
             Hu = fields["HU"].TrimEnd('.');

@@ -170,7 +170,7 @@ public class GraphParser
 
     private GraphEdge GetGraphEdgeForCurveType(MqttEdge mqttEdge, float metric, float length, bool swap, string fromNodeName, string toNodeName)
     {
-        ICollection<MqttControlPoint>? controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
+        var controlPoints = swap ? mqttEdge.ControlPoints?.Reverse().ToList() : mqttEdge.ControlPoints;
         bool parsed = Enum.TryParse<EdgeType>(mqttEdge.EdgeType, true, out var edgeType);
         if (!parsed)
         {

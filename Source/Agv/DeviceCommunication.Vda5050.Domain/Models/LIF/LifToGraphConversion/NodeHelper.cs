@@ -20,7 +20,7 @@ internal class NodeHelper
 
     public List<double> GetThetas(string vehicleTypeId)
     {
-        List<double> thetas = GetNodeThetas(vehicleTypeId);
+        var thetas = GetNodeThetas(vehicleTypeId);
 
         if (GetRotationAtNodeAllowed(vehicleTypeId) == RotationAtNodeAllowed.None || thetas.Count == 0)
         {
@@ -43,24 +43,24 @@ internal class NodeHelper
 
     private List<double> GetIncomingEdgeThetas(string vehicleTypeId)
     {
-        IEnumerable<double?> thetas = IncomingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Where(ph => ph.EdgeProperty.VehicleTypeId == vehicleTypeId).Select(ph => ph.EdgeEndTheta);
+        var thetas = IncomingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Where(ph => ph.EdgeProperty.VehicleTypeId == vehicleTypeId).Select(ph => ph.EdgeEndTheta);
 
         return thetas.Where(t => t.HasValue).Select(t => t!.Value).ToList();
     }
 
     private List<double> GetOutgoingEdgeThetas(string vehicleTypeId)
     {
-        IEnumerable<double?> thetas = OutgoingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Where(ph => ph.EdgeProperty.VehicleTypeId == vehicleTypeId).Select(ph => ph.EdgeStartTheta);
+        var thetas = OutgoingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Where(ph => ph.EdgeProperty.VehicleTypeId == vehicleTypeId).Select(ph => ph.EdgeStartTheta);
 
         return thetas.Where(t => t.HasValue).Select(t => t!.Value).ToList();
     }
 
     public RotationAtNodeAllowed GetRotationAtNodeAllowed(string vehicleTypeId)
     {
-        List<VehicleTypeEdgeProperty> incomingEdgeProperties = IncomingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Select(ph => ph.EdgeProperty).Where(p => p.VehicleTypeId == vehicleTypeId).ToList();
-        List<VehicleTypeEdgeProperty> outgoingEdgeProperties = OutgoingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Select(ph => ph.EdgeProperty).Where(p => p.VehicleTypeId == vehicleTypeId).ToList();
+        var incomingEdgeProperties = IncomingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Select(ph => ph.EdgeProperty).Where(p => p.VehicleTypeId == vehicleTypeId).ToList();
+        var outgoingEdgeProperties = OutgoingEdges.SelectMany(eh => eh.EdgePropertyHelpers).Select(ph => ph.EdgeProperty).Where(p => p.VehicleTypeId == vehicleTypeId).ToList();
 
-        IEnumerable<string?> rotationAtNodeAllowedStrings = incomingEdgeProperties.Select(p => p.RotationAtEndNodeAllowed).Concat(outgoingEdgeProperties.Select(p => p.RotationAtStartNodeAllowed));
+        var rotationAtNodeAllowedStrings = incomingEdgeProperties.Select(p => p.RotationAtEndNodeAllowed).Concat(outgoingEdgeProperties.Select(p => p.RotationAtStartNodeAllowed));
 
         bool isCwAllowed = true;
         bool isCcwAllowed = true;

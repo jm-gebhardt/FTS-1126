@@ -24,7 +24,7 @@ public record CurrentAgvRouteReadModel(
             return this;
         }
 
-        HashSet<Guid> baseIds = baseNodeIds.ToHashSet();
+        var baseIds = baseNodeIds.ToHashSet();
         int baseNodeCount = RemainingNodes.TakeWhile(n => baseIds.Contains(n.Id)).Count();
         return this with { BaseNodeCount = baseNodeCount };
     }

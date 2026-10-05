@@ -187,17 +187,17 @@ public class SimulatedAgvSaga : SagaStateMachineInstance, IAgv
 
     private void SetRandomPosition()
     {
-        ICollection<GraphNode>? nodes = AgvGraph?.Nodes;
+        var nodes = AgvGraph?.Nodes;
         if (nodes == null)
         {
             return;
         }
 
-        List<GraphNode> graphNodes = nodes.ToList();
-        List<GraphNode> stations = graphNodes.Where(n => n.IsPickOrDropStation()).ToList();
+        var graphNodes = nodes.ToList();
+        var stations = graphNodes.Where(n => n.IsPickOrDropStation()).ToList();
 
-        Dictionary<string, GraphNode> graphNodesByName = graphNodes.ToDictionary(node => node.Name);
-        List<GraphNode> spawnGraphNodes = SpawnNodeIds == null
+        var graphNodesByName = graphNodes.ToDictionary(node => node.Name);
+        var spawnGraphNodes = SpawnNodeIds == null
             ? []
             : SpawnNodeIds
                 .Where(graphNodesByName.ContainsKey)

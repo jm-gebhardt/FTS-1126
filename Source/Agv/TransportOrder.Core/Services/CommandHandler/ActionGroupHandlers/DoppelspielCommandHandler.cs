@@ -23,7 +23,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 
@@ -93,7 +92,7 @@ public class DoppelspielCommandHandler(
         bool delayOrder = false;
         await doppelspielSemaphore.ExecuteLockedAsync(async () =>
         {
-            ICollection<string> stations = nextPickToStart.Target.Node == null ? nextPickToStart.Target.StationOptions : [nextPickToStart.Target.Node.Name];
+            var stations = nextPickToStart.Target.Node == null ? nextPickToStart.Target.StationOptions : [nextPickToStart.Target.Node.Name];
             var dropActionGroup = await actionGroupRepository.GetNextDropActionGroupEligibleForDoppelspiel(stations);
             if (dropActionGroup != null)
             {
@@ -167,7 +166,7 @@ public class DoppelspielCommandHandler(
         var source = pickAction.Target.Node != null ? pickAction.Target.Node!.Id : actionGroup.Actions.Single(a => a.Sequence == pickAction.Sequence - 1).Target.Node!.Id;
         var target = dropAction.Target.Node != null ? dropAction.Target.Node!.Id : actionGroup.Actions.Single(a => a.Sequence == dropAction.Sequence - 1).Target.Node!.Id;
         var route = await routeService.GetRouteAsync(agv, target, source);
-        ICollection<Queue> queues = await queueManager.GetQueuesOnRoute(route.Nodes.Select(n => n.Id).ToList());
+        var queues = await queueManager.GetQueuesOnRoute(route.Nodes.Select(n => n.Id).ToList());
 
         return queues.All(q => q.AgvFillQuantity == 0);
     }
@@ -290,7 +289,7 @@ public class DoppelspielCommandHandler(
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AgvPassedDoppelspielTriggerPoint> context)
     {
-        (_, var agvStatus, var actionGroupInMessage, ICollection<Cargo> _, ICollection<AgvError> _, string targetStationName) = context.Message;
+        (_, var agvStatus, var actionGroupInMessage, var _, var _, string targetStationName) = context.Message;
         if (actionGroupInMessage == null)
         {
             logger.LogWarning("Agv without pick drop action group passed Doppelspiel trigger point ({ActionGroup})", actionGroupInMessage?.CorrelationId);

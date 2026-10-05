@@ -10,7 +10,6 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.HeadIds;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Errors;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Sagas;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Order;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
@@ -264,7 +263,7 @@ public class OrderExecutionStateMachine : MassTransitStateMachine<OrderExecution
 
     private void TrackOrderActionStatusChange(BehaviorContext<OrderExecutionSaga> context)
     {
-        _orderActionStatusCache.ConcurrentDict.TryGetValue(context.Saga.CorrelationId, out IList<OrderActionState>? previousOrderActionStatus);
+        _orderActionStatusCache.ConcurrentDict.TryGetValue(context.Saga.CorrelationId, out var previousOrderActionStatus);
         if (context.Saga.Order.Status == null || context.Saga.Order.Status.ActionStates.Count == 0)
         {
             return;

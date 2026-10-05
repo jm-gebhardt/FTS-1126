@@ -102,7 +102,7 @@ public class SimulatedAgvSpawnerTest
         await fixture.Sut.ApplyAsync(Generator.Generate(noOfAgvs: Fixture.NoOfAgvs),
             Generator.Generate(noOfAgvs: Fixture.NoOfAgvs, stateUpdateIntervalMs: Fixture.ChangedStateUpdateIntervalMs));
 
-        ICollection<UpdateAgvConfiguration> updated = fixture.GetPublishedMessages<UpdateAgvConfiguration>();
+        var updated = fixture.GetPublishedMessages<UpdateAgvConfiguration>();
         updated.Select(u => u.Configuration.SerialNumber)
             .ShouldBe([Fixture.FirstSerialNumber, Fixture.SecondSerialNumber], true);
         updated.ShouldAllBe(u => u.Configuration.StateUpdateIntervalMs == Fixture.ChangedStateUpdateIntervalMs);

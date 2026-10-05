@@ -18,8 +18,8 @@ public class EfQueueRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        List<Guid> nodeIds = queue.Nodes.Select(n => n.NodeId).ToList();
-        Dictionary<Guid, GraphNode> efNodes = await context.Set<GraphNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
+        var nodeIds = queue.Nodes.Select(n => n.NodeId).ToList();
+        var efNodes = await context.Set<GraphNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
 
         foreach (var node in queue.Nodes)
         {
@@ -143,14 +143,14 @@ public class EfQueueRepository(
     public async Task<ICollection<Guid>> GetBlockedQueueNodes()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<Queue> queues = await context.Set<Queue>()
+        var queues = await context.Set<Queue>()
             .ToListAsync();
 
-        List<Guid> reservedOrOccupiedNodes = queues
+        var reservedOrOccupiedNodes = queues
             .Where(q => q.AgvFillQuantity > 0)
             .SelectMany(q => q.Nodes.Where(n => n.GetCurrentAgv() != null).Select(n => n.NodeId))
             .Distinct().ToList();
-        List<Guid> reservedEntryNodes = queues.Where(q => q is { AllAgvsEntered: false, AgvFillQuantity: > 0 })
+        var reservedEntryNodes = queues.Where(q => q is { AllAgvsEntered: false, AgvFillQuantity: > 0 })
             .Where(q => q.EntryNode != null && !reservedOrOccupiedNodes.Contains(q.EntryNode.Value))
             .Select(q => q.EntryNode!.Value)
             .ToList();

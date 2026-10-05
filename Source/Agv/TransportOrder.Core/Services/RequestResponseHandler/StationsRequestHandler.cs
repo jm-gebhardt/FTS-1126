@@ -62,7 +62,7 @@ public class StationsRequestHandler :
     public async Task Consume(ConsumeContext<GetMapStations> context)
     {
         var map = await _mapRepository.GetMapAsync(context.Message.CorrelationId);
-        ICollection<Station> stations = await _stationRepository.GetStations(map.CorrelationId);
+        var stations = await _stationRepository.GetStations(map.CorrelationId);
         await context.RespondAsync(new GotMapStations(stations));
     }
 
@@ -70,7 +70,7 @@ public class StationsRequestHandler :
     public async Task Consume(ConsumeContext<GetStations> context)
     {
         var cancellationToken = context.CancellationToken;
-        ICollection<Station> stations = await _stationRepository.GetStations(cancellationToken: cancellationToken);
+        var stations = await _stationRepository.GetStations(cancellationToken: cancellationToken);
         await context.RespondAsync(new GotStations(stations));
     }
 
@@ -101,14 +101,14 @@ public class StationsRequestHandler :
 
     private async Task HandleOrders(string stationName, LockedOrderHandlingType policy)
     {
-        IReadOnlyCollection<ActionGroup> actionGroups = await _actionGroupRepository.GetCurrentActionGroupsForStation(stationName);
+        var actionGroups = await _actionGroupRepository.GetCurrentActionGroupsForStation(stationName);
         await CancelParkAndChargeActionGroups(actionGroups);
         await HandleStartedOrders(actionGroups, policy);
     }
 
     private async Task CancelParkAndChargeActionGroups(IReadOnlyCollection<ActionGroup> actionGroups)
     {
-        IEnumerable<ActionGroup> pendingParkAndChargeActionGroups = actionGroups.Where(a =>
+        var pendingParkAndChargeActionGroups = actionGroups.Where(a =>
             a.State == ActionGroupState.Created &&
             (a.Actions.Any(action => action.ActionType == ActionType.Charge) ||
              (a.Actions.Count == 1 && a.Actions.First().ActionType == ActionType.Move)));
@@ -120,9 +120,9 @@ public class StationsRequestHandler :
 
     private async Task HandleStartedOrders(IReadOnlyCollection<ActionGroup> actionGroups, LockedOrderHandlingType policy)
     {
-        IEnumerable<ActionGroup> startedOrders = actionGroups.Where(a => a.State is ActionGroupState.Started or ActionGroupState.Paused);
+        var startedOrders = actionGroups.Where(a => a.State is ActionGroupState.Started or ActionGroupState.Paused);
 
-        Func<Guid, Task>? handleOrder = GetHandlingForPolicy(policy);
+        var handleOrder = GetHandlingForPolicy(policy);
         if (handleOrder == null)
         {
             return;
@@ -168,7 +168,7 @@ public class StationsRequestHandler :
 
     private async Task HandleOrdersWithPausedAction(string stationName, string userEmail)
     {
-        IReadOnlyCollection<ActionGroup> actionGroups = await _actionGroupRepository.GetPausedActionGroupsForStation(stationName);
+        var actionGroups = await _actionGroupRepository.GetPausedActionGroupsForStation(stationName);
 
         foreach (var actionGroup in actionGroups)
         {

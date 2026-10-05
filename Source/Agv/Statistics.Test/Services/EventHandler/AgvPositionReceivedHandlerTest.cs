@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Messages.Commands;
-using Gebhardt.Acc.Statistics.Services.EventHandler;
 using Gebhardt.Acc.Statistics.Test.Fixtures;
 using Gebhardt.Acc.Statistics.Test.Helper;
 using Shouldly;
@@ -18,7 +17,7 @@ public class AgvPositionReceivedHandlerTest
     {
         var grid = GridGenerator.GenerateGrid();
         var map = MapGenerator.GenerateMap();
-        MockDbConsumerTestFixture<AgvPositionReceivedHandler> fixture = new AgvPositionReceivedHandlerTestFixture()
+        var fixture = new AgvPositionReceivedHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -36,7 +35,7 @@ public class AgvPositionReceivedHandlerTest
     {
         var grids = new List<Grid> { GridGenerator.GenerateGrid(), GridGenerator.GenerateGrid() };
         var map = MapGenerator.GenerateMap();
-        MockDbConsumerTestFixture<AgvPositionReceivedHandler> fixture = new AgvPositionReceivedHandlerTestFixture()
+        var fixture = new AgvPositionReceivedHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids(grids)
             .WithMaps([map]);
@@ -52,7 +51,7 @@ public class AgvPositionReceivedHandlerTest
     {
         var grid = GridGenerator.GenerateGrid();
         var map = MapGenerator.GenerateMap();
-        MockDbConsumerTestFixture<AgvPositionReceivedHandler> fixture = new AgvPositionReceivedHandlerTestFixture()
+        var fixture = new AgvPositionReceivedHandlerTestFixture()
             .ShouldActReturns(true)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -72,7 +71,7 @@ public class AgvPositionReceivedHandlerTest
         const string agvSerialNumber = "agv";
         var agvCorrelationId = agvSerialNumber.ToGuid();
         var gridCell = GridCellGenerator.GenerateGridCell(xIndex: 5, yIndex: 6, xMin: 5, xMax: 6, yMin: 6, yMax: 7, grid: grid);
-        MockDbConsumerTestFixture<AgvPositionReceivedHandler> fixture = new AgvPositionReceivedHandlerTestFixture()
+        var fixture = new AgvPositionReceivedHandlerTestFixture()
             .ShouldActReturns(true)
             .WithLastEntryTime(agvCorrelationId, gridCell, DateTime.UtcNow)
             .WithGrids([grid])

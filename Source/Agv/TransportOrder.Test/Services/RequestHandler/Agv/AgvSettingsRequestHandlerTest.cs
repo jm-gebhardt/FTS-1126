@@ -9,7 +9,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
@@ -21,10 +20,10 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_GetAgvSettings_ValidData_ReturnsSelectedSettings()
     {
         var correlationId = Guid.NewGuid();
-        AgvRequestsHandlerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvsSettings, AgvSettingsRequestHandler>()
             .Build();
 
-        Response<GotAgvsSettings> response = await fixture.GetResponseAsync<GotAgvsSettings>(new GetAgvsSettings(new List<Guid> { correlationId }));
+        var response = await fixture.GetResponseAsync<GotAgvsSettings>(new GetAgvsSettings(new List<Guid> { correlationId }));
 
         var message = response.Message.AgvSettings.Single();
         message.CorrelationId.ShouldBe(correlationId);
@@ -38,7 +37,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_UpdateAgvSettings_ValidData_ReturnsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -50,7 +49,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_UpdateAgvSettings_UnknownAgv_ThrowsAgvNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -62,7 +61,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_UpdateAgvsSettings_ValidData_ReturnsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -74,7 +73,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_UpdateAgvsSettings_UnknownAgv_ThrowsAgvNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<UpdateAgvsSettings, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -87,7 +86,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_ResetAgvSettingToDefault_ValidData_SettingReset()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -100,7 +99,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_ResetAgvSettingToDefault_UnknownAgv_ThrowsAgvNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -112,7 +111,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_ResetAgvsSettingToDefault_ValidData_SettingReset()
     {
         List<TransportOrder.Domain.Models.Agv.Agv> agvs = [AgvGenerator.GenerateIdleAgv(), AgvGenerator.GenerateBusyAgv(index: 2)];
-        AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler>()
             .WithAgvs(agvs)
             .Build();
 
@@ -128,7 +127,7 @@ public class AgvSettingsRequestHandlerTest
     public async Task Consume_ResetAgvsSettingToDefault_UnknownAgv_ThrowsAgvNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<ResetAgvsSettingToDefault, AgvSettingsRequestHandler>()
             .WithAgv(agv)
             .Build();
 
@@ -141,12 +140,12 @@ public class AgvSettingsRequestHandlerTest
     {
         var group = new AgvSettingsGroup(GroupType.All);
         group.UpdateSettings(EfAgvSettingsProvider.DefaultSettings);
-        AgvRequestsHandlerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<UpdateDefaultAgvSettings, AgvSettingsRequestHandler>()
             .WithSettingsGroup(group)
             .Build();
 
         var settings = new AgvSettingsReadModel(batteryLevelCritical: 10);
-        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateDefaultAgvSettings(settings, "user"));
+        var response = await fixture.GetResponseAsync<Success>(new UpdateDefaultAgvSettings(settings, "user"));
         response.ShouldNotBeNull();
         fixture.VerifyAgvSettingsUpdated(group.GroupType, group.Identifier, settings);
     }

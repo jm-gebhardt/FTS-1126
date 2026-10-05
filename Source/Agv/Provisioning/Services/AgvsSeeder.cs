@@ -45,7 +45,7 @@ public class AgvsSeeder : ISeeder
     /// <inheritdoc />
     public async Task SeedAsync()
     {
-        IEnumerable<Task> tasks = _folderPaths.Select(f =>
+        var tasks = _folderPaths.Select(f =>
             Task.Run(async () => await _agvSeederFactory.Create(f).SeedAsync())
         );
         await Task.WhenAll(tasks);

@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Filter.Api;
-using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.TransportOrder.Domain.Models.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.LogEntry;
@@ -22,7 +21,7 @@ public class LogEntryRequestHandler(ILogEntryRepository logEntryRepository):
         (var filter, int pageNr, int pageSize) = context.Message;
         var cancellationToken = context.CancellationToken;
         
-        PagedResult<LogEntry> logEntries = await logEntryRepository.FilterAsync(filter.Translate<LogEntry, LogEntryFilterable>(), pageNr, pageSize, cancellationToken);
+        var logEntries = await logEntryRepository.FilterAsync(filter.Translate<LogEntry, LogEntryFilterable>(), pageNr, pageSize, cancellationToken);
 
         await context.RespondAsync(new GotLogEntries(logEntries));
     }

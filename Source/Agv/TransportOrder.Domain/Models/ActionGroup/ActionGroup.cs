@@ -905,11 +905,11 @@ public class ActionGroup
             return !agvHasCargo;
         }
 
-        List<AgvAction> picks = Actions.Where(a => a.ActionType == ActionType.Pick).ToList();
-        List<AgvAction> drops = Actions.Where(a => a.ActionType == ActionType.Drop).ToList();
+        var picks = Actions.Where(a => a.ActionType == ActionType.Pick).ToList();
+        var drops = Actions.Where(a => a.ActionType == ActionType.Drop).ToList();
 
-        ActionState? lastPickState = picks.MaxBy(a => a.StartedDate)?.State;
-        ActionState? lastDropState = drops.MaxBy(a => a.StartedDate)?.State;
+        var lastPickState = picks.MaxBy(a => a.StartedDate)?.State;
+        var lastDropState = drops.MaxBy(a => a.StartedDate)?.State;
 
         bool pickCompleted = lastPickState == ActionState.Completed;
         bool dropCompleted = lastDropState == ActionState.Completed;

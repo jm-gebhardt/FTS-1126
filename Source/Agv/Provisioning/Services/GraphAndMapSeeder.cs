@@ -31,13 +31,13 @@ public class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
             throw new InvalidOperationException("No maps defined.");
         }
 
-        List<Models.Map> notSetIds = data.Maps.Where(m => m.CorrelationId == Guid.Empty).ToList();
+        var notSetIds = data.Maps.Where(m => m.CorrelationId == Guid.Empty).ToList();
         if (notSetIds.Count != 0)
         {
             throw new InvalidOperationException($"CorrelationId of map(s): {string.Join(", ", notSetIds.Select(m => m.Name))} is not set.");
         }
 
-        List<Models.Map> notSetNames = data.Maps.Where(m => string.IsNullOrEmpty(m.Name)).ToList();
+        var notSetNames = data.Maps.Where(m => string.IsNullOrEmpty(m.Name)).ToList();
         if (notSetNames.Count != 0)
         {
             throw new InvalidOperationException($"Name of map(s): {string.Join(", ", notSetNames.Select(m => m.CorrelationId))} is not set.");
@@ -47,7 +47,7 @@ public class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
     /// <inheritdoc />
     protected override async Task<object> GetMessageAsync(GraphAndMap data)
     {
-        List<Map> maps = await ReadBackgroundImagesAsync(data);
+        var maps = await ReadBackgroundImagesAsync(data);
 
         var updateGraph = new UpdateGraphRequest(Guid.NewGuid(), data.Graph, maps);
 
@@ -57,7 +57,7 @@ public class GraphAndMapSeeder : JsonSeeder<GraphAndMap>
     private async Task<List<Map>> ReadBackgroundImagesAsync(GraphAndMap graphAndMap)
     {
         var maps = new ConcurrentBag<Map>();
-        IEnumerable<Task> tasks = graphAndMap.Maps.Select(map => Task.Run(() =>
+        var tasks = graphAndMap.Maps.Select(map => Task.Run(() =>
         {
             var generator = new MapFromFileGenerator(BasePath);
 

@@ -10,7 +10,7 @@ public class AgvTypePublisherTest
     [TestMethod]
     public async Task SendAgvTypeAcknowledged_ValidData_BroadcastsAgvTypeAcknowledged()
     {
-        PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient> fixture = new PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient>().Build();
+        var fixture = new PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient>().Build();
         var id = Guid.NewGuid();
 
         await fixture.Publisher.SendAgvTypeAcknowledged(id);
@@ -21,7 +21,7 @@ public class AgvTypePublisherTest
     [TestMethod]
     public async Task SendAgvTypeCreated_ValidData_BroadcastsAgvTypeCreated()
     {
-        PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient> fixture = new PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient>().Build();
+        var fixture = new PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient>().Build();
         var agvType = new AgvTypeDto { Id = Guid.NewGuid() };
 
         await fixture.Publisher.SendAgvTypeCreated(agvType);
@@ -32,7 +32,7 @@ public class AgvTypePublisherTest
     [TestMethod]
     public async Task SendAgvTypeUpdated_ValidData_BroadcastsAgvTypeUpdated()
     {
-        PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient> fixture = new PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient>().Build();
+        var fixture = new PublisherFixture<AgvTypePublisher, AgvTypeHub, IAgvTypeClient>().Build();
         var agvType = new AgvTypeDto { Id = Guid.NewGuid() };
 
         await fixture.Publisher.SendAgvTypeUpdated(agvType);

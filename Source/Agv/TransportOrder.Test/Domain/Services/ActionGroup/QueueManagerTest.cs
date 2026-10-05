@@ -145,7 +145,7 @@ public class QueueManagerTest
             .WithAgv(agvInQueue)
             .WithQueue(queue);
 
-        Dictionary<Guid, Guid>? agvsToMove = await fixture.QueueManager.TryDequeueAgv(agv, head.NodeId);
+        var agvsToMove = await fixture.QueueManager.TryDequeueAgv(agv, head.NodeId);
 
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(head.NodeId);
@@ -191,7 +191,7 @@ public class QueueManagerTest
             .WithAgv(agvInQueue)
             .WithQueue(queue);
 
-        (Dictionary<Guid, Guid>? agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv, nodeToEscape.NodeId);
+        (var agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv, nodeToEscape.NodeId);
 
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(nodeToEscape.NodeId);
@@ -215,7 +215,7 @@ public class QueueManagerTest
             .WithQueue(null)
             .WithQueueByEntryNode(queue);
 
-        (Dictionary<Guid, Guid>? agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv.CorrelationId, nodeToEscape.NodeId);
+        (var agvsToMove, int? queueSizeAfterEscaping) = await fixture.QueueManager.TryEscapeQueue(agv.CorrelationId, nodeToEscape.NodeId);
 
         agvsToMove.ShouldBeEmpty();
         fixture.VerifyQueueWasUpdated();
@@ -322,7 +322,7 @@ public class QueueManagerTest
             .WithQueue(queue);
         var agvInQueue = AgvGenerator.GenerateRawAgv(agv, "serial number");
         agvInQueue.IsQueueing = true;
-        (Dictionary<Guid, Guid>? agvsToMove, Guid? entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(agvInQueue, AgvGenerator.GenerateIdleAgv());
+        (var agvsToMove, var entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(agvInQueue, AgvGenerator.GenerateIdleAgv());
 
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove[agvToMove].ShouldBe(node.NodeId);
@@ -343,7 +343,7 @@ public class QueueManagerTest
             .WithQueues([queue])
             .WithQueue(null)
             .WithAgv(agv);
-        (Dictionary<Guid, Guid>? agvsToMove, Guid? entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(AgvGenerator.GenerateIdleAgv(), agv);
+        (var agvsToMove, var entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(AgvGenerator.GenerateIdleAgv(), agv);
 
         agvsToMove.ShouldBeNull();
         swapped.ShouldBeTrue();
@@ -356,7 +356,7 @@ public class QueueManagerTest
         var fixture = new QueueManagerTestFixture()
             .WithQueues([])
             .WithQueue(null);
-        (Dictionary<Guid, Guid>? agvsToMove, Guid? entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(AgvGenerator.GenerateIdleAgv(), AgvGenerator.GenerateIdleAgv());
+        (var agvsToMove, var entryNode, bool swapped) = await fixture.QueueManager.TrySwapAgv(AgvGenerator.GenerateIdleAgv(), AgvGenerator.GenerateIdleAgv());
 
         agvsToMove.ShouldBeNull();
         swapped.ShouldBeFalse();
@@ -408,7 +408,7 @@ public class QueueManagerTest
             .WithQueue(queue)
             .WithActionGroups([pickDropActionGroup, chargeActionGroup, evacuationActionGroup]);
 
-        ICollection<Guid> evaucationMoves = await fixture.QueueManager.GetQueueEvacuationMoves(agv, queue.Id);
+        var evaucationMoves = await fixture.QueueManager.GetQueueEvacuationMoves(agv, queue.Id);
         evaucationMoves.Single().ShouldBe(evacuationActionGroup.CorrelationId);
     }
 

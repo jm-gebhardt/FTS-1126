@@ -156,7 +156,7 @@ public class EfAgvPositionRepositoryTest
         await fixture.AgvPositionRepository.PersistAllPositionsAsync();
 
         await using var dbContext = await fixture.ContextFactory.CreateDbContextAsync();
-        List<Agv> agvs = await dbContext.Set<Agv>().Include(a => a.AgvStatus).OrderBy(a => a.SerialNumber).ToListAsync();
+        var agvs = await dbContext.Set<Agv>().Include(a => a.AgvStatus).OrderBy(a => a.SerialNumber).ToListAsync();
         agvs[0].AgvStatus!.LastKnownPosition.ShouldNotBeNull();
         agvs[0].AgvStatus!.LastKnownPosition!.X.ShouldBe(1);
         agvs[1].AgvStatus!.LastKnownPosition.ShouldNotBeNull();

@@ -14,7 +14,6 @@ using JetBrains.Annotations;
 using MassTransit.Initializers;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
@@ -87,7 +86,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> AddAsync(ActionGroup actionGroup)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
+        var savedNodes = StripNodes(actionGroup);
         await context.AddAsync(actionGroup);
         UpdateComputedProperties(context);
         bool changes = await context.SaveChangesAsync() > 0;
@@ -99,7 +98,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> AddOrUpdateAsync(ActionGroup actionGroup)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
+        var savedNodes = StripNodes(actionGroup);
         if (await context.Set<ActionGroup>().AnyAsync(a => a.CorrelationId == actionGroup.CorrelationId))
         {
             await UpdateActionGroupAndActions(actionGroup, context);
@@ -116,7 +115,7 @@ public class EfActionGroupRepository : IActionGroupRepository
 
     private async Task ClearStaleTargetNodeIdsAsync(ActionGroup actionGroup, TransportOrderDbContext context)
     {
-        List<Guid> referencedNodeIds = actionGroup.Actions
+        var referencedNodeIds = actionGroup.Actions
             .Where(a => a.Target.NodeId != null)
             .Select(a => a.Target.NodeId!.Value)
             .Distinct()
@@ -127,7 +126,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             return;
         }
 
-        HashSet<Guid> existingNodeIds = (await context.Set<GraphNode>()
+        var existingNodeIds = (await context.Set<GraphNode>()
             .Where(n => referencedNodeIds.Contains(n.Id))
             .Select(n => n.Id)
             .ToListAsync()).ToHashSet();
@@ -147,8 +146,8 @@ public class EfActionGroupRepository : IActionGroupRepository
     private async Task UpdateActionGroupAndActions(ActionGroup actionGroup, TransportOrderDbContext context)
     {
         var existingActionGroup = await context.Set<ActionGroup>().Where(a => a.CorrelationId == actionGroup.CorrelationId).Include(a => a.Actions).AsNoTracking().SingleAsync();
-        List<Guid> existingActions = existingActionGroup.Actions.Select(a => a.CorrelationId).ToList();
-        List<Guid> currentActions = actionGroup.Actions.Select(a => a.CorrelationId).ToList();
+        var existingActions = existingActionGroup.Actions.Select(a => a.CorrelationId).ToList();
+        var currentActions = actionGroup.Actions.Select(a => a.CorrelationId).ToList();
         foreach (var action in actionGroup.Actions)
         {
             context.Entry(action).State = EntityState.Detached;
@@ -156,8 +155,8 @@ public class EfActionGroupRepository : IActionGroupRepository
 
         context.Entry(actionGroup).State = EntityState.Modified;
         context.Set<ActionGroup>().Update(actionGroup);
-        List<AgvAction> actionsToAdd = actionGroup.Actions.Where(a => !existingActions.Contains(a.CorrelationId)).ToList();
-        List<AgvAction> actionsToRemove = existingActionGroup.Actions.Where(a => !currentActions.Contains(a.CorrelationId)).ToList();
+        var actionsToAdd = actionGroup.Actions.Where(a => !existingActions.Contains(a.CorrelationId)).ToList();
+        var actionsToRemove = existingActionGroup.Actions.Where(a => !currentActions.Contains(a.CorrelationId)).ToList();
         if (actionsToAdd.Count > 0)
         {
             context.AddRange(actionsToAdd);
@@ -166,7 +165,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         {
             context.RemoveRange(actionsToRemove);
         }
-        List<AgvAction> actionsToUpdate = actionGroup.Actions.Where(a =>
+        var actionsToUpdate = actionGroup.Actions.Where(a =>
             existingActions.Contains(a.CorrelationId) &&
             !a.Equals(existingActionGroup.Actions.SingleOrDefault(e => e.CorrelationId == a.CorrelationId))).ToList();
         if (actionsToUpdate.Count > 0)
@@ -184,7 +183,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     /// <param name="context"></param>
     private void UpdateComputedProperties(TransportOrderDbContext context)
     {
-        foreach (EntityEntry<ActionGroup> entry in context.ChangeTracker.Entries<ActionGroup>())
+        foreach (var entry in context.ChangeTracker.Entries<ActionGroup>())
         {
             if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
             {
@@ -203,7 +202,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<ActionGroup?> GetNextManualActionGroupForAgvAsync(Guid assignedAgv, List<ActionType>? allowedActionTypes = null)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+        var actionGroups = context.Set<ActionGroup>()
             .Where(a => a.AssignedAgv == assignedAgv && a.IsManual && a.IsQueued && a.State == ActionGroupState.Created)
             .AsNoTracking();
 
@@ -220,7 +219,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<Dictionary<ActionType, ICollection<double>>> GetActionDurationsByTypeAsync(ActionGroupState actionGroupState, Guid? sourceNodeId = null, Guid? targetNodeId = null, int maxItems = 1000, CancellationToken cancellationToken = default)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+        var actionGroups = context.Set<ActionGroup>()
             .Where(a => a.State == actionGroupState)
             .AsNoTracking();
 
@@ -241,7 +240,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                 a.Actions.Any(action => action.Target.NodeId!.Value == targetNodeId));
         }
 
-        List<AgvAction> actions = await actionGroups
+        var actions = await actionGroups
             .OrderByDescending(a => a.StartedDate)
             .Reverse()
             .Take(maxItems)
@@ -292,7 +291,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             actionGroups = actionGroups.Where(g => g.CreatedDate <= toDate);
         }
 
-        List<ActionGroup> actionGroupsAsync = await actionGroups
+        var actionGroupsAsync = await actionGroups
             .AsNoTracking()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
@@ -308,9 +307,9 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<int> GetActionGroupsCountAsync(IEnumerable<ActionGroupState> states, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
 
-        IQueryable<ActionGroup> actionGroups = queryable
+        var actionGroups = queryable
             .Where(g => states.Contains(g.State));
 
         if (fromDate != null)
@@ -360,7 +359,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             }).ToList();
         await Task.WhenAll(tasks);
 
-        Dictionary<Guid, ActionGroup?> actions = tasks.ToDictionary(
+        var actions = tasks.ToDictionary(
             t => t.Result.agvCorrelationId,
             t => t.Result.actionGroup);
 
@@ -371,7 +370,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<ActionGroup?> GetActionGroupAsync(Guid correlationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .AsNoTracking()
             .Include(g => g.Actions)
@@ -459,7 +458,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<AgvAction?> GetActionByIdAsync(Guid correlationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
 
         var action = await queryable
             .AsNoTracking()
@@ -490,7 +489,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         var actionGroupCorrelationId = action.ParentId;
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(a => a.Actions)
             .SingleOrDefaultAsync(a => a.CorrelationId == actionGroupCorrelationId);
@@ -524,7 +523,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> HasUnfinishedDropActionsAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         bool hasUnfinishedDropActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
                 (actionGroup.State == ActionGroupState.Started || actionGroup.State == ActionGroupState.Paused) &&
@@ -541,8 +540,8 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<List<ActionGroup>> GetNotStartedActionsAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        List<ActionGroup> getNotStartedActions = await queryable.Where(actionGroup =>
+        var queryable = context.Set<ActionGroup>();
+        var getNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
                 actionGroup.IsQueued &&
                 (actionGroup.State == ActionGroupState.Created || (actionGroup.State == ActionGroupState.Started && actionGroup.Actions.Any(aa => aa.State == ActionState.Created))) &&
@@ -559,7 +558,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> HasNotStartedActionsAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         bool hasNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
                 actionGroup.IsQueued &&
@@ -576,7 +575,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> HasUnfinishedActionGroupAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         bool hasNotStartedActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
                 actionGroup.State == ActionGroupState.Started &&
@@ -592,7 +591,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool> HasCurrentAssignedActionGroupAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         bool hasActions = await queryable.Where(actionGroup =>
                 actionGroup.AssignedAgv == agvCorrelationId &&
                 actionGroup.IsQueued &&
@@ -608,8 +607,8 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<IReadOnlyList<ActionGroup>> GetNotStartedActionGroupsAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        List<ActionGroup> notStartedActionGroups = await queryable
+        var queryable = context.Set<ActionGroup>();
+        var notStartedActionGroups = await queryable
             .Where(actionGroup =>
                 actionGroup.State == ActionGroupState.Created && actionGroup.IsQueued
                                                               && (actionGroup.AssignedAgv == null || actionGroup.AssignedAgv == agvCorrelationId)
@@ -626,8 +625,8 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<IReadOnlyList<ActionGroup>> GetInvalidActionGroupsAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
-        List<ActionGroup> notStartedActionGroups = await queryable
+        var queryable = context.Set<ActionGroup>();
+        var notStartedActionGroups = await queryable
             .Where(actionGroup => actionGroup.State == ActionGroupState.Invalid)
             .AsNoTracking()
             .Include(g => g.Actions)
@@ -642,7 +641,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<AgvAction> GetSubsequentActionAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         var startedGroup = await queryable
             .Where(actionGroup => actionGroup.AssignedAgv == agvCorrelationId &&
                                   actionGroup.State == ActionGroupState.Started &&
@@ -668,7 +667,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        var actionGroups = context.Set<ActionGroup>();
 
         return await actionGroups.AnyAsync(a =>
             (a.AssignedAgv == agvCorrelationId && a.IsQueued &&
@@ -682,7 +681,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        var actionGroups = context.Set<ActionGroup>();
         return (await actionGroups.SingleAsync(ag => ag.Actions.Any(a => a.CorrelationId == actionCorrelationId))).AssignedAgv;
     }
 
@@ -691,14 +690,14 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+        var actionGroups = context.Set<ActionGroup>();
         return await actionGroups.AnyAsync(ag => ag.State == ActionGroupState.Started && ag.AssignedAgv == agvCorrelationId && ag.Actions.Any(a => a.State == ActionState.Started));
     }
 
     /// <inheritdoc />
     public async Task UpdateAsync(ActionGroup actionGroup)
     {
-        Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);
+        var savedNodes = StripNodes(actionGroup);
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Set<ActionGroup>().Update(actionGroup);
         UpdateComputedProperties(context);
@@ -722,11 +721,11 @@ public class EfActionGroupRepository : IActionGroupRepository
             // Use average assuming extreme outliers are rare.
             // There is no median db operation and client side median calculations can be memory intense for large numbers
             // of action groups.
-            DbSet<ActionGroup> actionGroups = context.Set<ActionGroup>();
+            var actionGroups = context.Set<ActionGroup>();
             // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
             IEnumerable<Guid> nodeIds = targetNodes;
 
-            IQueryable<ActionGroup> queryable = actionGroups.Where(ag =>
+            var queryable = actionGroups.Where(ag =>
                 ag.StartedDate.HasValue && ag.CompletedDate.HasValue && ag.EstimatedDuration.HasValue &&
                 ag.AssignedAgv == agvCorrelationId &&
                 ag.Actions.All(a => a.Target.NodeId.HasValue) &&
@@ -765,7 +764,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<bool?> GetDockFrontOfLastCompletedAction(Guid agvCorrelationId, Guid actionGroupCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(a => a.Actions)
             .Where(a => a.CorrelationId != actionGroupCorrelationId && a.AssignedAgv == agvCorrelationId && (a.State == ActionGroupState.Completed || a.State == ActionGroupState.Started))
@@ -779,7 +778,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<AgvAction?> GetLastAbortedPickDropActionAsync(Guid agvCorrelationId)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<ActionGroup> queryable = context.Set<ActionGroup>();
+        var queryable = context.Set<ActionGroup>();
         var actionGroup = await queryable
             .Include(ag => ag.Actions)
             .AsNoTracking()
@@ -801,7 +800,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Actions are auto-included
-        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+        var actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
 
         // The SQL created is less than optimal. If this becomes problematic, 
@@ -864,7 +863,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<ICollection<Guid>> FilterAgvsWithPriorityActionGroups(ICollection<Guid> agvs)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>()
+        var actionGroups = context.Set<ActionGroup>()
             .AsNoTracking();
 
         return (await actionGroups.Where(a => a.Priority > Priority.Default && a.Priority != Priority.Charging && a.IsQueued &&
@@ -911,7 +910,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     {
         IEnumerable<string> targets = stations;
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        List<ActionGroup> candidates = await context.Set<ActionGroup>()
+        var candidates = await context.Set<ActionGroup>()
             .Where(o => o.CanRunDoppelspiel
                         && o.CompletedDate == null
                         && o.IsQueued
@@ -946,7 +945,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         ordersToIgnore ??= [];
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        List<ActionGroup> candidates = await context.Set<ActionGroup>()
+        var candidates = await context.Set<ActionGroup>()
             .Where(a => !a.IsQueued
                         && !ordersToIgnore.Contains(a.CorrelationId)
                         && a.CompletedDate == null
@@ -967,7 +966,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Step 1: Fetch pick candidates from database (without StationOptions check)
-        List<ActionGroup> pickCandidates = await context.Set<ActionGroup>()
+        var pickCandidates = await context.Set<ActionGroup>()
             .Where(a => !a.IsQueued &&
                         a.CorrelationId != orderToIgnore &&
                         a.CompletedDate == null &&
@@ -986,7 +985,7 @@ public class EfActionGroupRepository : IActionGroupRepository
                                 ac is { IsRegisteredForDoppelspiel: true, DoppelspielPartner: null }));
 
         // Step 3: Fetch drop candidates from database (without StationOptions check)
-        List<ActionGroup> dropCandidates = await context.Set<ActionGroup>()
+        var dropCandidates = await context.Set<ActionGroup>()
             .Where(a => a.CanRunDoppelspiel &&
                         a.CompletedDate == null &&
                         a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
@@ -996,7 +995,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .ToListAsync();
 
         // Step 4: Filter in memory with StationOptions check
-        List<ActionGroup> dropOrders = dropCandidates
+        var dropOrders = dropCandidates
             .Where(a => a.Actions.Any(ac => ac.ActionType == ActionType.Drop &&
                                             ((ac.Target.Node != null && ac.Target.Node.Id == node.Id) ||
                                              ac.Target.StationOptions.Contains(node.Name)) &&
@@ -1018,7 +1017,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         // Step 1: Fetch pick candidates from database (without StationOptions check)
-        List<ActionGroup> pickCandidates = await context.Set<ActionGroup>()
+        var pickCandidates = await context.Set<ActionGroup>()
             .Where(a => !a.IsQueued
                         && a.CompletedDate == null
                         && a.StartedDate == null
@@ -1031,7 +1030,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .ToListAsync();
 
         // Step 2: Filter in memory with StationOptions check
-        List<ActionGroup> pickOrders = pickCandidates
+        var pickOrders = pickCandidates
             .Where(a => a.Actions.Any(ac => ac.ActionType == ActionType.Pick &&
                                             ((ac.Target.Node != null && ac.Target.Node.Id == node.Id) ||
                                              ac.Target.StationOptions.Contains(node.Name)) &&
@@ -1039,7 +1038,7 @@ public class EfActionGroupRepository : IActionGroupRepository
             .ToList();
 
         // Step 3: Fetch drop candidates from database (without StationOptions check)
-        List<ActionGroup> dropCandidates = await context.Set<ActionGroup>()
+        var dropCandidates = await context.Set<ActionGroup>()
             .Where(a => a.CanRunDoppelspiel &&
                         a.CorrelationId != orderToIgnore &&
                         a.CompletedDate == null &&
@@ -1177,7 +1176,7 @@ public class EfActionGroupRepository : IActionGroupRepository
     public async Task<AgvActionGroupsByState> GetLatestActionGroupsByStateForAgvAsync(Guid agvCorrelationId)
     {
         var states = new List<ActionGroupState> { ActionGroupState.Created, ActionGroupState.Started, ActionGroupState.Completed };
-        IReadOnlyList<ActionGroup> actionGroups = await GetActionGroupsAsync(states, assignedAgvCorrelationId: agvCorrelationId, maxItems: 3);
+        var actionGroups = await GetActionGroupsAsync(states, assignedAgvCorrelationId: agvCorrelationId, maxItems: 3);
 
         var created = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Created);
         var started = actionGroups.FirstOrDefault(ag => ag.State == ActionGroupState.Started);
@@ -1195,7 +1194,7 @@ public class EfActionGroupRepository : IActionGroupRepository
         }
         
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        List<Guid> filteredAgvIds = await context.Set<ActionGroup>()
+        var filteredAgvIds = await context.Set<ActionGroup>()
             .Include(g => g.Actions)
             .ThenInclude(a => a.AgvActionNodes)
             .ThenInclude(a => a.Node)

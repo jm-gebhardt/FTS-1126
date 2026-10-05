@@ -61,7 +61,7 @@ public class PriorityAwareTargetSelector(
         }
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            Guid? action = GetNextActionToProcess();
+            var action = GetNextActionToProcess();
             if (action == null)
             {
                 logger.LogDebug("No long loop action found for target selection");
@@ -107,9 +107,9 @@ public class PriorityAwareTargetSelector(
 
     private async Task<GraphNode?> SelectTarget(ICollection<Guid> consideredStations, Guid actionId, Func<Guid, bool> shouldSkipStation, Guid agvCorrelationId)
     {
-        ICollection<Station> stations = await stationRepository.GetStationsById(consideredStations);
+        var stations = await stationRepository.GetStationsById(consideredStations);
 
-        ICollection<Station> availableStations = GetAvailableStations(stations);
+        var availableStations = GetAvailableStations(stations);
         GraphNode? selectedNode = null;
         foreach (var station in availableStations)
         {
@@ -241,7 +241,7 @@ public class PriorityAwareTargetSelector(
     /// <inheritdoc cref="ITargetSelector"/>>
     public async Task Initialize()
     {
-        ICollection<DecisionPointAction> decisionPointActions = await decisionPointActionRepository.GetAll();
+        var decisionPointActions = await decisionPointActionRepository.GetAll();
         if (decisionPointActions.Count > 0)
         {
             _consideredStations = decisionPointActions.MaxBy(a => a.EntryTime)?.ConsideredStations ?? [];
@@ -265,7 +265,7 @@ public class PriorityAwareTargetSelector(
 
     private async Task<ICollection<Station>> GetAvailableStationsForCoordination()
     {
-        ICollection<Station> stations = await stationRepository.GetStationsById(_consideredStations.ToList());
+        var stations = await stationRepository.GetStationsById(_consideredStations.ToList());
         return GetAvailableStations(stations);
     }
 
@@ -274,7 +274,7 @@ public class PriorityAwareTargetSelector(
     /// </summary>
     public async Task<bool> WouldSelectStation(Guid stationId)
     {
-        ICollection<Station> availableStations = await GetAvailableStationsForCoordination();
+        var availableStations = await GetAvailableStationsForCoordination();
 
         foreach (var station in availableStations)
         {

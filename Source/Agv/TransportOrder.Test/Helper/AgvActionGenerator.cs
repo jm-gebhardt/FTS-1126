@@ -168,7 +168,7 @@ public static class AgvActionGenerator
         };
         dropAction.UpdateActionState(dropActionState, DateTimeOffset.Now);
 
-        List<AgvAction> actions = partial switch
+        var actions = partial switch
         {
             1 => new List<AgvAction> { pickAction },
             2 => new List<AgvAction> { dropAction },

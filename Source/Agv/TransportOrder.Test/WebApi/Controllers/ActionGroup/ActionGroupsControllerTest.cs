@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
-using Gebhardt.Acc.TransportOrder.WebApi.Dtos.AgvActions;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.ActionGroup;
@@ -52,7 +51,7 @@ public class ActionGroupsControllerTest
             .WithActionGroups(actionGroups)
             .Build();
 
-        List<ActionGroupDto> actionGroupDtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroups([ActionGroupState.Created], null, null, null, 100))).ToList();
+        var actionGroupDtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroups([ActionGroupState.Created], null, null, null, 100))).ToList();
 
         actionGroupDtos.ShouldNotBeNull();
         actionGroupDtos.Count.ShouldBe(actionGroups.Count);
@@ -67,7 +66,7 @@ public class ActionGroupsControllerTest
             .WithActionGroupCount([actionGroupCounts])
             .Build();
 
-        List<AgvGroupCountByStateDto> dtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroupCountsByState(CancellationToken.None))).ToList();
+        var dtos = (await fixture.GetControllerResultValueAsync(c => c.GetActionGroupCountsByState(CancellationToken.None))).ToList();
 
         dtos.ShouldNotBeNull();
         dtos.Count.ShouldBe(1);
@@ -91,7 +90,7 @@ public class ActionGroupsControllerTest
             .WithDurationStatistics(durationStatistics)
             .Build();
 
-        List<ActionDurationStatisticsDto> durationStatisticsDtos = (await fixture.GetControllerResultValueAsync(c => c.GetDurationStatistics("source", "target", CancellationToken.None))).ToList();
+        var durationStatisticsDtos = (await fixture.GetControllerResultValueAsync(c => c.GetDurationStatistics("source", "target", CancellationToken.None))).ToList();
 
         durationStatisticsDtos.ShouldNotBeNull();
         durationStatisticsDtos.Count.ShouldBe(durationStatistics.Count);

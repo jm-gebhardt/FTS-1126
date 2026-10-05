@@ -16,7 +16,7 @@ public sealed class ConfigurationTypeManager : IConfigurationTypeManager
     {
         foreach (var assembly in assemblies)
         {
-            IEnumerable<ConfigurationType> configurationTypes = assembly.GetTypes()
+            var configurationTypes = assembly.GetTypes()
                 .Where(t => t.IsAssignableTo(typeof(ISettings)) && t is { IsInterface: false, IsGenericParameter: false, IsGenericType: false })
                 .Select(t => new ConfigurationType(t, ShouldAutoSeedToDatabase(t)));
 
@@ -42,7 +42,7 @@ public sealed class ConfigurationTypeManager : IConfigurationTypeManager
     /// </summary>
     public IList<ConfigurationType> InitializeConfigurationTypes()
     {
-        List<ConfigurationType> configurationTypes = GetConfigurationTypes(AppDomain.CurrentDomain.GetAssemblies()).ToList();
+        var configurationTypes = GetConfigurationTypes(AppDomain.CurrentDomain.GetAssemblies()).ToList();
         _configurationTypes = configurationTypes;
         return configurationTypes;
     }

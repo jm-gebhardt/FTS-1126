@@ -39,7 +39,7 @@ public class HubBroadcaster<THub, TClient> : IHubBroadcaster<THub, TClient>
 
     private async Task SendToClientAsync(string connectionId, Func<TClient, Task> invoke)
     {
-        if (!_ctsByConnectionId.TryGetValue(connectionId, out List<CancellationTokenSource>? ctsList))
+        if (!_ctsByConnectionId.TryGetValue(connectionId, out var ctsList))
         {
             ctsList = [];
             _ctsByConnectionId[connectionId] = ctsList;

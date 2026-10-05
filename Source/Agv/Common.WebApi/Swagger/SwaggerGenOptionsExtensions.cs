@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -27,7 +26,7 @@ public static class SwaggerGenOptionsExtensions
         /// </summary>
         public void IncludeXmlComments()
         {
-            IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
+            var resolvedXmlDocs = XmlDocResolver.GetResolvedXmlDocs();
 
             // Add resolved XML docs to Swagger
             foreach (var doc in resolvedXmlDocs)

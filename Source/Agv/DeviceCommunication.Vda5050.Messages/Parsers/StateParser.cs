@@ -78,7 +78,7 @@ public class StateParser(ILogger logger, IMapper mapper)
 
     private void GetCargos(MqttState state)
     {
-        IList<MqttLoad>? loads = state.Loads;
+        var loads = state.Loads;
         if (loads == null)
         {
             return;
@@ -204,7 +204,7 @@ public class StateParser(ILogger logger, IMapper mapper)
 
     private void GetErrors(MqttState state)
     {
-        IList<MqttError> errors = state.Errors;
+        var errors = state.Errors;
 
         if (errors.Any(l => string.IsNullOrEmpty(l.ErrorType)))
         {
@@ -216,7 +216,7 @@ public class StateParser(ILogger logger, IMapper mapper)
 
     private void GetInformation(MqttState state)
     {
-        IList<MqttInformation>? infos = state.Information;
+        var infos = state.Information;
         if (infos == null)
         {
             return;
@@ -226,7 +226,7 @@ public class StateParser(ILogger logger, IMapper mapper)
 
     private void AddErrors<T>(ICollection<T> errors)
     {
-        List<AgvError> errorInformation = errors.Select(i =>
+        var errorInformation = errors.Select(i =>
         {
             var agvError = mapper.Map<AgvError>(i);
             // overwrite AgvCorrelationId in a 2. step, as we are mapping from two sources to one destination, which isn't supported by AutoMapper

@@ -80,7 +80,7 @@ public class InstantActionParameterJsonConverter :JsonConverter<Dictionary<strin
     {
         writer.WriteStartObject();
 
-        foreach (KeyValuePair<string, object> kvp in value)
+        foreach (var kvp in value)
         {
             writer.WritePropertyName(kvp.Key);
             WriteValue(writer, kvp.Value, options);

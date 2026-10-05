@@ -48,7 +48,7 @@ public class MediatorTestFixture<TRequest, TConsumer, TBusConsumer> : MassTransi
             s.AddMediator(configurator =>
             {
                 AddRequestClient<TConsumer, TRequest>(configurator);
-                foreach (Action<IMediatorRegistrationConfigurator> action in _configureMediatorAction)
+                foreach (var action in _configureMediatorAction)
                 {
                     action.Invoke(configurator);
                 }
@@ -95,8 +95,8 @@ public class MediatorTestFixture<TRequest, TConsumer, TBusConsumer> : MassTransi
     /// <returns>The response object</returns>
     public async Task<Response<TResult>> GetResponseAsync<TResult>(TRequest request) where TResult : class
     {
-        IRequestClient<TRequest> client = Mediator!.CreateRequestClient<TRequest>();
-        Response<TResult> response = await client.GetResponse<TResult>(request);
+        var client = Mediator!.CreateRequestClient<TRequest>();
+        var response = await client.GetResponse<TResult>(request);
 
         return response;
     }
@@ -112,8 +112,8 @@ public class MediatorTestFixture<TRequest, TConsumer, TBusConsumer> : MassTransi
         where TMessage : class
         where TResult : class
     {
-        IRequestClient<TMessage> client = Mediator!.CreateRequestClient<TMessage>();
-        Response<TResult> response = await client.GetResponse<TResult>(request);
+        var client = Mediator!.CreateRequestClient<TMessage>();
+        var response = await client.GetResponse<TResult>(request);
 
         return response;
     }

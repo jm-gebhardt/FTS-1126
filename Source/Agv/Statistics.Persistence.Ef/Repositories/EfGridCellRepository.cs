@@ -13,7 +13,7 @@ public class EfGridCellRepository(StatisticsDbContext context) : EfRepository<Gr
     /// <inheritdoc />
     public async Task<List<GridCell>> GetOrAddGridCellsForCoordinatesAsync(decimal x, decimal y)
     {
-        Dictionary<Grid, GridCell?> allGrids = await Context.Set<Grid>()
+        var allGrids = await Context.Set<Grid>()
             .Include(g => g.Maps)
             .Select(g => new
             {

@@ -13,7 +13,7 @@ public class GraphExtensionsTest
     public void GetRouteLength_ValidData_ReturnsLength()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        List<GraphEdge> neighboringEdges = graph.Edges.Take(1).ToList();
+        var neighboringEdges = graph.Edges.Take(1).ToList();
         neighboringEdges = neighboringEdges.Append(graph.Edges.First(e => e.FromNodeId == neighboringEdges.Single().ToNodeId)).ToList();
         GraphNode[] route =
         [
@@ -29,7 +29,7 @@ public class GraphExtensionsTest
     public void GetRouteLength_FromEdgeIds_NoLastNodeId_ReturnsLength()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        List<GraphEdge> neighboringEdges = graph.GetNeighboringEdges(3).ToList();
+        var neighboringEdges = graph.GetNeighboringEdges(3).ToList();
         graph.GetRouteLength(neighboringEdges.Select(e => e.Id).ToArray(), null).ShouldBe(neighboringEdges.Sum(e => e.Length));
     }
 
@@ -37,7 +37,7 @@ public class GraphExtensionsTest
     public void GetRouteLength_FromEdgeIds_AgvAtEndOfRoute_ReturnsLength()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        List<GraphEdge> neighboringEdges = graph.GetNeighboringEdges(3).ToList();
+        var neighboringEdges = graph.GetNeighboringEdges(3).ToList();
         var lastNodeId = graph.Edges.Single(e => e.Id == neighboringEdges.Last().Id).ToNodeId;
         graph.GetRouteLength(neighboringEdges.Select(e => e.Id).ToArray(), lastNodeId).ShouldBe(neighboringEdges.Sum(e => e.Length));
     }
@@ -46,7 +46,7 @@ public class GraphExtensionsTest
     public void GetRouteLength_FromEdgeIds_AgvInMiddleOfRoute_ReturnsLength()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        List<GraphEdge> neighboringEdges = graph.GetNeighboringEdges(3).ToList();
+        var neighboringEdges = graph.GetNeighboringEdges(3).ToList();
         var lastNodeId = graph.Edges.Single(e => e.Id == neighboringEdges.First().Id).ToNodeId;
         graph.GetRouteLength(neighboringEdges.Select(e => e.Id).ToArray(), lastNodeId).ShouldBe(neighboringEdges.First().Length);
     }

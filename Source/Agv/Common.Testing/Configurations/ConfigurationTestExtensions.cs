@@ -25,11 +25,11 @@ public static class ConfigurationTestExtensions
 
         hostBuilder.Build();
 
-        List<ServiceDescriptor> singletons = serviceCollection.Where(s => s.Lifetime == ServiceLifetime.Singleton && s.ServiceType.Namespace?.StartsWith("Gebhardt") == true).ToList();
+        var singletons = serviceCollection.Where(s => s.Lifetime == ServiceLifetime.Singleton && s.ServiceType.Namespace?.StartsWith("Gebhardt") == true).ToList();
 
         foreach (var singleton in singletons)
         {
-            List<ServiceDescriptor> captives = (singleton.ImplementationType ?? singleton.ServiceType)
+            var captives = (singleton.ImplementationType ?? singleton.ServiceType)
                 .GetConstructors()
                 .SelectMany(c => c.GetParameters())
                 .Select(p => p.ParameterType)

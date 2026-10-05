@@ -21,7 +21,7 @@ public class HostOrderValidatorTest
 
         var validator = new HostOrderValidator(new HostOrderActionValidator(config));
 
-        TestValidationResult<HostOrder> result = await validator.TestValidateAsync(hostOrder);
+        var result = await validator.TestValidateAsync(hostOrder);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -36,7 +36,7 @@ public class HostOrderValidatorTest
 
         var validator = new HostOrderValidator(new HostOrderActionValidator(config));
 
-        TestValidationResult<HostOrder> result = await validator.TestValidateAsync(hostOrder);
+        var result = await validator.TestValidateAsync(hostOrder);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.First().ErrorCode.ShouldBe(nameof(ValidationError.SourceUnknown));
@@ -52,7 +52,7 @@ public class HostOrderValidatorTest
 
         var validator = new HostOrderValidator(new HostOrderActionValidator(config));
 
-        TestValidationResult<HostOrder> result = await validator.TestValidateAsync(hostOrder);
+        var result = await validator.TestValidateAsync(hostOrder);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.First().ErrorCode.ShouldBe(nameof(ValidationError.TargetUnknown));

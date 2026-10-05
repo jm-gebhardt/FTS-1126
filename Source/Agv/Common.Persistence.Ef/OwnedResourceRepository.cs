@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Gebhardt.Acc.Common.Persistence.Ef;
 
@@ -14,7 +13,7 @@ public class OwnedResourceRepository<T, TOwnedResource, TDbContext>(IDbContextFa
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        List<TOwnedResource> result = await context.Set<TOwnedResource>().Where(o => o.Owner == owner).ToListAsync();
+        var result = await context.Set<TOwnedResource>().Where(o => o.Owner == owner).ToListAsync();
 
         return result;
     }
@@ -24,7 +23,7 @@ public class OwnedResourceRepository<T, TOwnedResource, TDbContext>(IDbContextFa
     {
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        List<TOwnedResource> result = await context.Set<TOwnedResource>().ToListAsync();
+        var result = await context.Set<TOwnedResource>().ToListAsync();
 
         return result;
     }
@@ -36,7 +35,7 @@ public class OwnedResourceRepository<T, TOwnedResource, TDbContext>(IDbContextFa
 
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        EntityEntry<IOwnedResource<T>> result = context.Add(ownedResource);
+        var result = context.Add(ownedResource);
 
         await context.SaveChangesAsync();
 

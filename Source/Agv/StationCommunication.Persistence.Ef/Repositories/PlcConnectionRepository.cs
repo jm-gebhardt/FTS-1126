@@ -33,7 +33,7 @@ public class PlcConnectionRepository(
 
         foreach (var station in stations)
         {
-            List<string> stationChannelKeys = station.PlcConnections
+            var stationChannelKeys = station.PlcConnections
                 .Where(ch => _activeChannelKeys.Contains(ch))
                 .ToList();
 
@@ -47,7 +47,7 @@ public class PlcConnectionRepository(
 
             foreach (string channelKey in stationChannelKeys)
             {
-                if (!newStationsByChannel.TryGetValue(channelKey, out List<Guid>? stationIds))
+                if (!newStationsByChannel.TryGetValue(channelKey, out var stationIds))
                 {
                     newStationsByChannel[channelKey] = stationIds = [];
                 }
@@ -78,7 +78,7 @@ public class PlcConnectionRepository(
 
         channelState.ConcurrentDict[channelKey] = isConnected;
 
-        if (!_stationsByChannel.TryGetValue(channelKey, out List<Guid>? affectedStations))
+        if (!_stationsByChannel.TryGetValue(channelKey, out var affectedStations))
         {
             yield break;
         }
@@ -100,7 +100,7 @@ public class PlcConnectionRepository(
 
     private bool DeriveStationOnline(Guid stationId)
     {
-        if (!_channelsByStation.TryGetValue(stationId, out List<string>? channels))
+        if (!_channelsByStation.TryGetValue(stationId, out var channels))
         {
             return false;
         }

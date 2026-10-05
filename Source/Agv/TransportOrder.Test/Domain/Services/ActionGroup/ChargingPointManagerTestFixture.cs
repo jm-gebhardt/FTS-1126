@@ -76,8 +76,8 @@ public class ChargingPointManagerTestFixture
     {
         var correlationId = AgvSerialNumber.ToGuid();
 
-        GraphNode[] nodes = _nodes;
-        GraphEdge[] edges = _edges;
+        var nodes = _nodes;
+        var edges = _edges;
         if (withChargerNode)
         {
             AgvGraph = AgvGraphGenerator.Generate(nodes, edges, correlationId);

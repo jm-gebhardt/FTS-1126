@@ -148,7 +148,7 @@ public class ActionCommandHandler :
             var targetNode = actionGroup.Actions.Single(a => a.CorrelationId == action.CorrelationId).Target.Node;
 
             targetNode = targetNode != null ? await _agvDb.Graphs.GetNodeAsync(targetNode.Id) : null;
-            DockingDirection? nodeDockingDirection = targetNode?.DockingDirection;
+            var nodeDockingDirection = targetNode?.DockingDirection;
             bool startNodeIsStation = await GetStartNodeIsStation(action);
             // ensure nodes are set before DockFront is diagnosed, to allow identification of Doppelspiel
             actionGroup.StartAction(action.CorrelationId, action.Nodes, action.Edges, _timeProvider.GetUtcNow());
@@ -209,9 +209,9 @@ public class ActionCommandHandler :
         var action = context.Message.Action;
         var actionGroupId = context.Message.ActionGroupId;
 
-        Task<Domain.Models.ActionGroup.ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
-        Task<Agv> agvTask = _agvDb.Agvs.GetAgvAsync(agvId, context.CancellationToken);
-        Task<AgvData?> agvDataTask = _agvDb.Data.GetAgvDataAsync(agvId);
+        var actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
+        var agvTask = _agvDb.Agvs.GetAgvAsync(agvId, context.CancellationToken);
+        var agvDataTask = _agvDb.Data.GetAgvDataAsync(agvId);
         var actionGroup = await actionGroupTask;
 
         if (actionGroup.EstimatedDuration != null)
@@ -554,7 +554,7 @@ public class ActionCommandHandler :
             return;
         }
 
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        var actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
 
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         bool agvMustCharge = agv.CheckMustCharge(agvSettings);
@@ -641,7 +641,7 @@ public class ActionCommandHandler :
             }
             actionGroup.InvalidateActionGroup(validationResult.ToReasons(), _timeProvider.GetUtcNow());
             var actionGroupMessageContent = _mapper.Map<Common.Messages.ActionGroups.ActionGroup>(actionGroup);
-            List<string> validationFailureReasons = validationResult.Errors.Select(error => error.ErrorMessage).ToList();
+            var validationFailureReasons = validationResult.Errors.Select(error => error.ErrorMessage).ToList();
             await _loggingService.LogOrder(_logger, LogLevel.Warning, LogCodes.OrderInvalid, actionGroupMessageContent.AssignedAgv.GetValueOrDefault(),
                 actionGroupMessageContent.CorrelationId, "Order Invalid",
                 $"Order {actionGroupMessageContent.OrderId} is invalid due to {string.Join(",", validationFailureReasons)}",
@@ -982,7 +982,7 @@ public class ActionCommandHandler :
     {
         (var correlationId, bool keepAgv) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
-        Guid? agvCorrelationId = actionGroup.AssignedAgv;
+        var agvCorrelationId = actionGroup.AssignedAgv;
         var action = actionGroup.Actions.FirstOrDefault(a => a.State == ActionState.Started);
         if (action != null && agvCorrelationId != null)
         {
@@ -1027,7 +1027,7 @@ public class ActionCommandHandler :
         }
         var agv = await _agvDb.Agvs.GetAgvAsync(actionGroup.AssignedAgv.GetValueOrDefault(), context.CancellationToken);
         var activeAction = actionGroup.FirstNotCompletedAction;
-        ActionState? actionState = activeAction?.State;
+        var actionState = activeAction?.State;
         actionGroup.PauseActionGroup(pauseReason.ToReason(), _timeProvider.GetUtcNow());
 
         await _actionCommandHelper.TryUpdateActionGroup(actionGroup);
@@ -1095,12 +1095,12 @@ public class ActionCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetTargetForAction> context)
     {
-        (var actionId, var actionGroupId, Guid? assignedAgv, var targetNodeId) = context.Message;
+        var (actionId, actionGroupId, assignedAgv, targetNodeId) = context.Message;
         var cancellationToken = context.CancellationToken;
 
-        Task<GraphNode> targetNodeTask = _agvDb.Graphs.GetNodeAsync(targetNodeId);
-        Task<Domain.Models.ActionGroup.ActionGroup> actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
-        Task<bool> stationIsLockedTask = _actionCommandHelper.StationIsLockedIfExists(targetNodeId);
+        var targetNodeTask = _agvDb.Graphs.GetNodeAsync(targetNodeId);
+        var actionGroupTask = _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
+        var stationIsLockedTask = _actionCommandHelper.StationIsLockedIfExists(targetNodeId);
 
         await Task.WhenAll(targetNodeTask, actionGroupTask, stationIsLockedTask);
         var targetNode = targetNodeTask.Result;
@@ -1146,7 +1146,7 @@ public class ActionCommandHandler :
             {
                 previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(agv.CorrelationId, actionGroup.CorrelationId);
             }
-            DockingDirection? nodeDockingDirection = targetNode.DockingDirection;
+            var nodeDockingDirection = targetNode.DockingDirection;
             actionGroup.SetDockFrontOfAction(actionToUpdate.CorrelationId, previousActionGroupDockFront, nodeDockingDirection, startNodeIsStation);
             actionGroup.SetCargoLiftHeightForAction(actionToUpdate.CorrelationId, targetNode.PickLiftHeight, targetNode.DropLiftHeight);
         }
@@ -1203,7 +1203,7 @@ public class ActionCommandHandler :
     {
         var actionGroupId = context.Message.CorrelationId;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(actionGroupId);
-        Guid? agvCorrelationId = actionGroup.AssignedAgv;
+        var agvCorrelationId = actionGroup.AssignedAgv;
         if (agvCorrelationId == null)
         {
             await context.Publish(new CancelActionGroup(actionGroupId, CancelReason.External));
@@ -1258,14 +1258,14 @@ public class ActionCommandHandler :
         {
             // Get and select agv
             //Get a list of all action groups that are started but idling
-            List<Domain.Models.ActionGroup.ActionGroup> idleActionGroups = (await _actionGroupRepository.GetRunningIdleActionGroups()).ToList();
+            var idleActionGroups = (await _actionGroupRepository.GetRunningIdleActionGroups()).ToList();
             _logger.LogDebug("Idling action groups [{ActionGroupId}]", string.Join(',', idleActionGroups.Select(ag => ag.CorrelationId)));
             
             //Filter action groups which have assigned AGV which have other created or started pick action
-            List<Guid> idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
+            var idleAgvCorrelationIds = idleActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
             _logger.LogDebug("AGVs to check for Pick actions [{ListOfAgvs}]", string.Join(',', idleAgvCorrelationIds));
             
-            List<Guid> idleAgvsMovingCargo = (await _actionGroupRepository.GetAgvsMovingCargo(idleAgvCorrelationIds)).ToList();
+            var idleAgvsMovingCargo = (await _actionGroupRepository.GetAgvsMovingCargo(idleAgvCorrelationIds)).ToList();
             if (idleAgvsMovingCargo.Count > 0)
             {
                 _logger.LogInformation("AGVs with Pick or Drop actions [{ListOfAgvs}]", string.Join(',', idleAgvsMovingCargo));
@@ -1277,30 +1277,30 @@ public class ActionCommandHandler :
             _logger.LogInformation("There are AGVs [{ListOfAgvs}] with started idling action groups", string.Join(',', idleAgvCorrelationIds));
 
             //Get all AGVs in queue heads
-            ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
+            var agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
 
             //Get all ready AGV
-            ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
-            List<Guid> readyAgvsList = readyAgvs.Select(a => a.CorrelationId).ToList();
+            var readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+            var readyAgvsList = readyAgvs.Select(a => a.CorrelationId).ToList();
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready", string.Join(',', readyAgvsList));
 
-            List<Agv> agvs = readyAgvs.ToList();
+            var agvs = readyAgvs.ToList();
 
             //if there are already started action groups, and the last assigned AGV to this group is not empty
             if (idleActionGroups.Count != 0)
             {
-                ICollection<Agv> idleAgvs = await _agvDb.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(idleAgvCorrelationIds);
+                var idleAgvs = await _agvDb.Agvs.SelectAgvsWithAboveCriticalBatteryLevel(idleAgvCorrelationIds);
                 //add those AGV to the list of ready AGV
                 agvs.AddRange(idleAgvs);
             }
 
             //Get infinitely charging agvs that reached min charge up
-            ICollection<Domain.Models.ActionGroup.ActionGroup> chargingActionGroups = await _actionGroupRepository.GetRunningChargeActionGroups();
-            List<Guid> chargingAgvCorrelationIds = chargingActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
+            var chargingActionGroups = await _actionGroupRepository.GetRunningChargeActionGroups();
+            var chargingAgvCorrelationIds = chargingActionGroups.Select(a => a.AssignedAgv!.Value).ToList();
             List<Guid> infinitelyChargingAgvsList = [];
             if (chargingAgvCorrelationIds.Count != 0)
             {
-                ICollection<Agv> infinitelyChargingAgvs = await _agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(chargingAgvCorrelationIds);
+                var infinitelyChargingAgvs = await _agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel(chargingAgvCorrelationIds);
                 infinitelyChargingAgvsList = infinitelyChargingAgvs.Select(a => a.CorrelationId).ToList();
                 _logger.LogInformation("There are AGVs {ListOfAgvs} that are infinitely charging and have a battery level above min charge up", string.Join(',', infinitelyChargingAgvsList));
                 chargingActionGroups = chargingActionGroups.Where(a => infinitelyChargingAgvsList.Contains(a.AssignedAgv.GetValueOrDefault())).ToList();
@@ -1314,10 +1314,10 @@ public class ActionCommandHandler :
             {
                 _logger.LogInformation("There are AGVs {ListOfAgvs} at queue heads, adding them", string.Join(',', agvsAtQueueHeads));
 
-                List<Guid> missingAgvsFromQueueHead = agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList();
+                var missingAgvsFromQueueHead = agvsAtQueueHeads.Where(q => !readyAgvs.Select(a => a.CorrelationId).Contains(q)).ToList();
                 if (missingAgvsFromQueueHead.Count != 0)
                 {
-                    List<Agv> queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(missingAgvsFromQueueHead)).ToList();
+                    var queueingAgvs = (await _agvDb.Agvs.SelectExistingAgvsAsync(missingAgvsFromQueueHead)).ToList();
                     //add those AGV to the list of ready AGV
                     agvs.AddRange(queueingAgvs);
                 }
@@ -1329,12 +1329,12 @@ public class ActionCommandHandler :
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready after removing duplicates", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
 
             //Remove agvs with errors
-            IEnumerable<Guid> agvsWithErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agvs.Select(a => a.CorrelationId).ToList())).Where(e => e.ErrorLevel == ErrorLevel.Fatal).Select(e => e.AgvCorrelationId).Distinct();
+            var agvsWithErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agvs.Select(a => a.CorrelationId).ToList())).Where(e => e.ErrorLevel == ErrorLevel.Fatal).Select(e => e.AgvCorrelationId).Distinct();
             agvs = agvs.Where(a => !agvsWithErrors.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are ready after removing agvs with errors ", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
 
             //Remove AGV that have a priority action group assigned, e.g. manual moves with priority
-            ICollection<Guid> agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(agvs.Select(a => a.CorrelationId).ToList());
+            var agvsWithPriorityActionGroups = await _actionGroupRepository.FilterAgvsWithPriorityActionGroups(agvs.Select(a => a.CorrelationId).ToList());
             agvs = agvs.Where(a => !agvsWithPriorityActionGroups.Contains(a.CorrelationId)).OrderBy(a => a.CorrelationId).ToList();
             _logger.LogInformation("There are AGVs {ListOfAgvs} that are left after removing prio actions", string.Join(',', agvs.Select(a => a.CorrelationId).ToList()));
 
@@ -1345,12 +1345,12 @@ public class ActionCommandHandler :
             }
 
             //get list of all AGV data from the available AGV
-            List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.AgvCorrelationId).ToList();
+            var agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(agvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.AgvCorrelationId).ToList();
 
             //Create tuples of AGV and route costs to action group.
             //Skip agvs that are on the target or on the first edge to the next waypoint,
             //as it could already be moving away and running a detour to the target.
-            (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) agvs.Zip(agvsData).ToList(), targetNode.Id, true);
+            var closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) agvs.Zip(agvsData).ToList(), targetNode.Id, true);
             if (closestAgvRoute.agv == null)
             {
                 _logger.LogInformation("Reactivate all parking agvs and agvs at queue heads");
@@ -1382,7 +1382,7 @@ public class ActionCommandHandler :
             bool startNodeIsStation = await GetStartNodeIsStation(abortedAction);
             var actionToStart = actionGroup.FirstNotStartedAction!;
             targetNode = await _agvDb.Graphs.GetNodeAsync(targetNode.Id);
-            DockingDirection? nodeDockingDirection = targetNode.DockingDirection;
+            var nodeDockingDirection = targetNode.DockingDirection;
             actionGroup.AssignedAgv = closestAgvRoute.agv;
             bool? previousActionGroupDockFront = await _actionGroupRepository.GetDockFrontOfLastCompletedAction(closestAgvRoute.agv.Value, actionGroup.CorrelationId);
             actionGroup.StartAction(actionToStart.CorrelationId, closestAgvRoute!.route!.Nodes, closestAgvRoute.route.Edges, _timeProvider.GetUtcNow());
@@ -1474,12 +1474,12 @@ public class ActionCommandHandler :
             var agvToAssign = context.Message.AssignedAgv != null ? await _agvDb.Agvs.GetAgvAsync(context.Message.AssignedAgv.Value, context.CancellationToken) : null;
             if (agvToAssign == null)
             {
-                ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+                var readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
                 readyAgvs = readyAgvs.Where(a => a.CorrelationId != assignedAgv).ToList();
 
-                List<AgvData> agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.AgvCorrelationId).ToList();
+                var agvsData = (await _agvDb.Data.GetSelectedAgvDataAsync(readyAgvs.Select(a => a.CorrelationId).ToList())).OrderBy(a => a.AgvCorrelationId).ToList();
 
-                (Guid? agv, Route? route) closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!.Value);
+                var closestAgvRoute = await _routeService.GetAgvRouteClosestToTarget((ICollection<(Agv agv, AgvData? agvData)>) readyAgvs.Zip(agvsData).ToList(), actionGroup.FirstNotStartedAction!.Target.NodeId!.Value);
 
                 if (closestAgvRoute.agv == null)
                 {

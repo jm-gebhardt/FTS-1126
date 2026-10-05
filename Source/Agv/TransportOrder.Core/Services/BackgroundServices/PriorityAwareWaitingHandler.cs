@@ -59,7 +59,7 @@ public class PriorityAwareWaitingHandler(
         }
         await semaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            Guid? action = _actionsToSelectTarget
+            var action = _actionsToSelectTarget
                 .Where(kvp => !_lastEvaluatedActions.Contains(kvp.Key))
                 .OrderBy(kvp => kvp.Value)
                 .Select(kvp => (Guid?) kvp.Key)
@@ -110,7 +110,7 @@ public class PriorityAwareWaitingHandler(
         if (target.IsLocked)
         {
             logger.LogInformation("Station {Target} is locked, trying to use alternative target", target.Name);
-            ICollection<Station> targets = await stationRepository.GetStationsById(_secondaryStations);
+            var targets = await stationRepository.GetStationsById(_secondaryStations);
             var alternativeTarget = targets.FirstOrDefault(t => !t.IsLocked);
             if (alternativeTarget == null)
             {
@@ -216,7 +216,7 @@ public class PriorityAwareWaitingHandler(
     /// <inheritdoc cref="IWaitingHandler"/>>
     public async Task Initialize()
     {
-        ICollection<WaitingPointAction> waitingPointActions = await waitingPointActionRepository.GetAll();
+        var waitingPointActions = await waitingPointActionRepository.GetAll();
 
         foreach (var action in waitingPointActions)
         {

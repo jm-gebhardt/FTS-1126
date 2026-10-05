@@ -49,10 +49,10 @@ public class RouteStepTranslator(
         // Currently, as mapping from lif to fleetmanager ids is based on nodeId/edgeId.ToGuid
         // all nodes and edges of the layouts are selected, and edges/nodes needed resolved using this 
         // relation. Once available, update this part.
-        ICollection<Layout> layouts = await lifRepository.GetLayoutsByVehicleTypeIdAsync(agv.VehicleTypeId);
-        List<Node> agvNodes = layouts.SelectMany(l => l.Nodes).ToList();
-        List<Edge> agvEdges = layouts.SelectMany(l => l.Edges).ToList();
-        ICollection<Models.AgvActions.AgvAction> agvNodeActions = await agvActionRepository.GetActionsForScopeAsync(agv.SerialNumber, Models.AgvActions.ActionScope.Node);
+        var layouts = await lifRepository.GetLayoutsByVehicleTypeIdAsync(agv.VehicleTypeId);
+        var agvNodes = layouts.SelectMany(l => l.Nodes).ToList();
+        var agvEdges = layouts.SelectMany(l => l.Edges).ToList();
+        var agvNodeActions = await agvActionRepository.GetActionsForScopeAsync(agv.SerialNumber, Models.AgvActions.ActionScope.Node);
 
         List<OrderNode> orderNodes = [];
         List<OrderEdge> orderEdges = [];

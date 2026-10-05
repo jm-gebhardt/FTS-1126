@@ -40,7 +40,7 @@ public class SystemController(
     [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult<DateTime>> GetSystemTime()
     {
-        Response<GotSystemTime> response = await getSystemTimeClient.GetResponse<GotSystemTime>(new GetSystemTime(Guid.NewGuid()));
+        var response = await getSystemTimeClient.GetResponse<GotSystemTime>(new GetSystemTime(Guid.NewGuid()));
         string dto = mapper.Map<string>(response.Message);
         return Ok(dto);
     }
@@ -54,7 +54,7 @@ public class SystemController(
     [Produces(MediaTypeNames.Application.Json)]
     public Task<ActionResult<ReadOnlyCollection<TimeZoneInfo>>> GetSystemTimeZones()
     {
-        ReadOnlyCollection<TimeZoneInfo> timeZones = TimeZoneInfo.GetSystemTimeZones();
+        var timeZones = TimeZoneInfo.GetSystemTimeZones();
         return Task.FromResult<ActionResult<ReadOnlyCollection<TimeZoneInfo>>>(Ok(timeZones));
     }
 
@@ -73,7 +73,7 @@ public class SystemController(
             return BadRequest($"No TimeZone '{timeZone}' found");
         }
 
-        Response<UpdatedFactoryTimeZone> response = await updateFactoryTimeClient.GetResponse<UpdatedFactoryTimeZone>(new UpdateFactoryTimeZone(timeZoneInfo));
+        var response = await updateFactoryTimeClient.GetResponse<UpdatedFactoryTimeZone>(new UpdateFactoryTimeZone(timeZoneInfo));
 
         return Ok(response.Message.Result);
     }
@@ -87,7 +87,7 @@ public class SystemController(
     [Route("/system/timezone/factory")]
     public async Task<ActionResult<TimeZoneInfo>> GetFactoryTimeZone()
     {
-        Response<GotFactoryTimeZone> response = await getFactoryTimeClient.GetResponse<GotFactoryTimeZone>(new GetFactoryTimeZone());
+        var response = await getFactoryTimeClient.GetResponse<GotFactoryTimeZone>(new GetFactoryTimeZone());
         return response.Message.Dirty ? StatusCode(203, response.Message.FactoryTime) : Ok(response.Message.FactoryTime);
     }
 
@@ -117,7 +117,7 @@ public class SystemController(
     public async Task<ActionResult<List<string>>> CreateHostOrders([FromQuery] string source, [FromQuery] string destination, [FromQuery] int count)
     {
         var command = new RequestHostOrderGeneration(Guid.NewGuid(), source, destination, count);
-        Response<HostOrderGenerationResponse> response = await requestHostOrderGenerationClient.GetResponse<HostOrderGenerationResponse>(command);
+        var response = await requestHostOrderGenerationClient.GetResponse<HostOrderGenerationResponse>(command);
         return Ok(response.Message.OrderIds);
     }
 
@@ -129,7 +129,7 @@ public class SystemController(
     [Route("/system/monitoring/certificates")]
     public async Task<ActionResult<IEnumerable<CertificateExpirationDto>>> GetCertificateExpirations()
     {
-        Response<GotCertificateExpirations> response = await getCertificateExpirationClient.GetResponse<GotCertificateExpirations>(new GetCertificateExpirations());
+        var response = await getCertificateExpirationClient.GetResponse<GotCertificateExpirations>(new GetCertificateExpirations());
 
         var dto = mapper.Map<IEnumerable<CertificateExpirationDto>>(response.Message.Certificates);
         return Ok(dto);

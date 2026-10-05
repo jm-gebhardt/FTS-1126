@@ -57,7 +57,7 @@ public class BackgroundController(
         {
             new KeyValuePair<string, object?>(TracingConstants.TagBackgroundId, id)
         });
-        Response<GotBackground> response = await getBackgroundClient.GetResponse<GotBackground>(new GetBackground(id));
+        var response = await getBackgroundClient.GetResponse<GotBackground>(new GetBackground(id));
         var background = mapper.Map<BackgroundDto>(response.Message.Background);
 
         return Ok(background);
@@ -93,7 +93,7 @@ public class BackgroundController(
     public async Task<ActionResult<ICollection<BackgroundDto>>> GetBackgrounds([FromQuery] ICollection<Guid>? mapIds, [FromQuery] int maxCount=50)
     {
         tracing.StartSpan(nameof(GetBackgrounds));
-        Response<GotBackgrounds> response = await getBackgroundsClient.GetResponse<GotBackgrounds>(new GetBackgrounds(mapIds ?? [], maxCount));
+        var response = await getBackgroundsClient.GetResponse<GotBackgrounds>(new GetBackgrounds(mapIds ?? [], maxCount));
         var backgrounds = mapper.Map<ICollection<BackgroundDto>>(response.Message.Backgrounds);
 
         return Ok(backgrounds);

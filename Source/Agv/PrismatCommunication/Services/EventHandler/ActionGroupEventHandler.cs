@@ -69,7 +69,7 @@ public class ActionGroupEventHandler(IHostOrderRepository hostOrderRepository, I
     /// </summary>
     public async Task Consume(ConsumeContext<ActionGroupInvalid> context)
     {
-        (var correlationId, _, ICollection<string> validationErrors) = context.Message;
+        var (correlationId, _, validationErrors) = context.Message;
 
         if (validationErrors.Contains(HostOrderFailureReasons.ThereMustBeAtLeastOneAgvThatKnowsTheCompleteRouteOfAllActionsWithinTheGivenActionGroup))
         {

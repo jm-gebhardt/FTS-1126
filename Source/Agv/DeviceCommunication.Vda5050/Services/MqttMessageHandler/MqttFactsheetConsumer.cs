@@ -130,8 +130,8 @@ public class MqttFactsheetConsumer :
 
     private async Task PublishInstantActions(ConsumeContext<MqttFactsheet> context)
     {
-        List<AgvAction> instantActions = _parser.Actions.Where(a => a.ActionScopes.Contains(ActionScope.Instant)).ToList();
-        IEnumerable<Task> publishTasks = instantActions.Select(i => context.Publish(new AgvInstantActionDefinitionReceived(_parser.CorrelationId, _mapper.Map<AgvInstantAction>(i))));
+        var instantActions = _parser.Actions.Where(a => a.ActionScopes.Contains(ActionScope.Instant)).ToList();
+        var publishTasks = instantActions.Select(i => context.Publish(new AgvInstantActionDefinitionReceived(_parser.CorrelationId, _mapper.Map<AgvInstantAction>(i))));
         await Task.WhenAll(publishTasks);
     }
 }

@@ -52,7 +52,7 @@ public class ActionGroupRepositoryTest
 
     private static IEnumerable<ActionGroup> CreateInitialActionGroups(int totalItems, ActionGroupState actionGroupState = ActionGroupState.Created, Guid? assignedAgv = null)
     {
-        ActionGroupState[] actionGroupStates = Enum.GetValues<ActionGroupState>();
+        var actionGroupStates = Enum.GetValues<ActionGroupState>();
         var actionGroups = new List<ActionGroup>();
 
         for (int i = 0; i < totalItems; i++)
@@ -60,7 +60,7 @@ public class ActionGroupRepositoryTest
             actionGroups.Add(AgvActionGenerator.SetActionGroupToState(AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: assignedAgv), actionGroupState));
         }
 
-        IEnumerable<ActionGroupState> otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> { actionGroupState });
+        var otherStatesForTestingExclusion = actionGroupStates.Except(new List<ActionGroupState> { actionGroupState });
         actionGroups.AddRange(CreateInitialActionGroups(otherStatesForTestingExclusion));
         return actionGroups;
     }
@@ -190,7 +190,7 @@ public class ActionGroupRepositoryTest
         pickActionAfterUpdate.AgvActionNodes.Count.ShouldBe(5);
         pickActionAfterUpdate.Nodes.Length.ShouldBe(2);
 
-        List<Guid> nodeIds = pickActionAfterUpdate.Nodes.Select(n => n.Id).ToList();
+        var nodeIds = pickActionAfterUpdate.Nodes.Select(n => n.Id).ToList();
         nodeIds.ShouldContain(newNode1.Id);
         nodeIds.ShouldContain(newNode2.Id);
         nodeIds.ShouldNotContain(initialNode1.Id);
@@ -216,12 +216,12 @@ public class ActionGroupRepositoryTest
     [DataRow(ActionGroupState.Completed, 10, 2)]
     public async Task GetActionGroupsAsync_WhenFromAndToDateIsNull_ReturnActionGroupsWithStateSpecifiedAndTotalCountLessOrEqualToSetMaxItems(ActionGroupState actionGroupState, int maxItem, int totalItemsInRepository)
     {
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRepository, actionGroupState);
+        var actionGroups = CreateInitialActionGroups(totalItemsInRepository, actionGroupState);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, null, null, maxItem);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { actionGroupState }, null, null, maxItem);
 
         foreach (var actionGroupInRepository in actionGroupsResult)
         {
@@ -239,7 +239,7 @@ public class ActionGroupRepositoryTest
     [DataRow(10, 2)]
     public async Task GetActionGroupsAsync_WhenThereAreActionGroupWithinDateRangeSpecified_ReturnActionGroupsAndTotalCountLessOrEqualToSetMaxItems(int maxItem, int totalItemsInRepository)
     {
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRepository);
+        var actionGroups = CreateInitialActionGroups(totalItemsInRepository);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
@@ -247,7 +247,7 @@ public class ActionGroupRepositoryTest
         var fromDate = DateTime.Today.AddDays(-1);
         var toDate = DateTime.Today.AddDays(1);
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate, toDate, maxItem);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate, toDate, maxItem);
 
         foreach (var actionGroupInRepository in actionGroupsResult)
         {
@@ -265,7 +265,7 @@ public class ActionGroupRepositoryTest
     [DataRow(10, 2)]
     public async Task GetActionGroupsAsync_WhenThereAreNoActionGroupWithinDateRangeSpecified_ReturnActionGroupsAndTotalCountLessOrEqualToSetMaxItems(int maxItem, int totalItemsInRepository)
     {
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRepository);
+        var actionGroups = CreateInitialActionGroups(totalItemsInRepository);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
@@ -273,20 +273,20 @@ public class ActionGroupRepositoryTest
         var fromDate = DateTime.Today.AddDays(-2);
         var toDate = DateTime.Today.AddDays(-1);
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate, toDate, maxItem);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(new List<ActionGroupState> { ActionGroupState.Created }, fromDate, toDate, maxItem);
         actionGroupsResult.ShouldBeEmpty();
     }
 
     [TestMethod]
     public async Task GetActionGroupsAsync_WhenThereAreNoStateProvided_ReturnActionGroupsAllStates()
     {
-        ActionGroupState[] actionGroupStates = Enum.GetValues<ActionGroupState>();
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(actionGroupStates);
+        var actionGroupStates = Enum.GetValues<ActionGroupState>();
+        var actionGroups = CreateInitialActionGroups(actionGroupStates);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(maxItems: 10);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(maxItems: 10);
         actionGroupsResult.ShouldNotBeEmpty();
         foreach (var actionGroupState in actionGroupStates)
         {
@@ -297,7 +297,7 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionGroupsAsync_WhenGettingManualTriggeredActionGroupOnly_ReturnActionGroupsTriggeredManually()
     {
-        List<ActionGroup> actionGroups = CreateInitialActionGroups(10).ToList();
+        var actionGroups = CreateInitialActionGroups(10).ToList();
         var moveActionGroupManual = AgvActionGenerator.GenerateMoveActionGroup("Target Node Id", true);
         actionGroups.Add(moveActionGroupManual);
 
@@ -308,7 +308,7 @@ public class ActionGroupRepositoryTest
         var fromDate = DateTime.Today.AddDays(-1);
         var toDate = DateTime.Today.AddDays(1);
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(ActionGroupState.Created, fromDate, toDate, 5, isManual: true);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(ActionGroupState.Created, fromDate, toDate, 5, isManual: true);
         foreach (var actionGroupInRepository in actionGroupsResult)
         {
             actionGroupInRepository.CreatedDate.ShouldBeInRange(fromDate, toDate);
@@ -328,7 +328,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { earlierCreatedGroup, laterCreatedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: false);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: false);
         actionGroupsResult.First().CorrelationId.ShouldBe(earlierCreatedGroup.CorrelationId);
         actionGroupsResult.Last().CorrelationId.ShouldBe(laterCreatedGroup.CorrelationId);
     }
@@ -343,7 +343,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { earlierCreatedGroup, laterCreatedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: true);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CreatedDate, sortDescending: true);
         actionGroupsResult.First().CorrelationId.ShouldBe(laterCreatedGroup.CorrelationId);
         actionGroupsResult.Last().CorrelationId.ShouldBe(earlierCreatedGroup.CorrelationId);
     }
@@ -358,7 +358,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { earlierCompletedGroup, laterCompletedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: false);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: false);
         actionGroupsResult.First().CorrelationId.ShouldBe(earlierCompletedGroup.CorrelationId);
         actionGroupsResult.Last().CorrelationId.ShouldBe(laterCompletedGroup.CorrelationId);
     }
@@ -373,7 +373,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { earlierCompletedGroup, laterCompletedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: true);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.CompletedDate, sortDescending: true);
         actionGroupsResult.First().CorrelationId.ShouldBe(laterCompletedGroup.CorrelationId);
         actionGroupsResult.Last().CorrelationId.ShouldBe(earlierCompletedGroup.CorrelationId);
     }
@@ -388,7 +388,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { earlierStartedGroup, laterStartedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: false);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: false);
         actionGroupsResult.First().CorrelationId.ShouldBe(earlierStartedGroup.CorrelationId);
         actionGroupsResult.Last().CorrelationId.ShouldBe(laterStartedGroup.CorrelationId);
     }
@@ -404,7 +404,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { actionGroupInCreatedState, actionGroupInPausedState })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 2);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 2);
 
         actionGroupsResult.Single().CorrelationId.ShouldBe(actionGroupInPausedState.CorrelationId);
     }
@@ -419,7 +419,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(new List<ActionGroup> { earlierStartedGroup, laterStartedGroup })
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: true);
+        var actionGroupsResult = await fixture.ActionGroupRepository.GetActionGroupsAsync(sortBy: SortBy.StartedDate, sortDescending: true);
         actionGroupsResult.First().CorrelationId.ShouldBe(laterStartedGroup.CorrelationId);
         actionGroupsResult.Last().CorrelationId.ShouldBe(earlierStartedGroup.CorrelationId);
     }
@@ -431,7 +431,7 @@ public class ActionGroupRepositoryTest
     [DataRow(ActionGroupState.Completed, 0)]
     public async Task GetActionGroupsCountAsync_WhenThereIsActionGroupForGivenState_ReturnCountOfActionGroups(ActionGroupState state, int expectedActionGroupCount)
     {
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(expectedActionGroupCount, state);
+        var actionGroups = CreateInitialActionGroups(expectedActionGroupCount, state);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
@@ -540,12 +540,12 @@ public class ActionGroupRepositoryTest
         const int totalItemsInRepositoryWithStateCreated = 10;
         var agvCorrelationId = Guid.NewGuid();
 
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRepositoryWithStateCreated, assignedAgv: agvCorrelationId);
+        var actionGroups = CreateInitialActionGroups(totalItemsInRepositoryWithStateCreated, assignedAgv: agvCorrelationId);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> notStartedActionGroups = await fixture.ActionGroupRepository.GetNotStartedActionGroupsAsync(agvCorrelationId);
+        var notStartedActionGroups = await fixture.ActionGroupRepository.GetNotStartedActionGroupsAsync(agvCorrelationId);
 
         foreach (var notStartedActionGroup in notStartedActionGroups)
         {
@@ -561,12 +561,12 @@ public class ActionGroupRepositoryTest
     {
         const int totalItemsInRepositoryWithStateInvalid = 5;
 
-        IEnumerable<ActionGroup> actionGroups = CreateInitialActionGroups(totalItemsInRepositoryWithStateInvalid, ActionGroupState.Invalid);
+        var actionGroups = CreateInitialActionGroups(totalItemsInRepositoryWithStateInvalid, ActionGroupState.Invalid);
         var fixture = await new ActionGroupRepositoryTestFixture()
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        IReadOnlyList<ActionGroup> notStartedActionGroups = await fixture.ActionGroupRepository.GetInvalidActionGroupsAsync();
+        var notStartedActionGroups = await fixture.ActionGroupRepository.GetInvalidActionGroupsAsync();
 
         foreach (var notStartedActionGroup in notStartedActionGroups)
         {
@@ -625,9 +625,9 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroupsAsync = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        var currentAssignedActionGroupsAsync = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
         currentAssignedActionGroupsAsync.Count.ShouldBe(1);
-        KeyValuePair<Guid, ActionGroup?> currentActionGroup = currentAssignedActionGroupsAsync.First();
+        var currentActionGroup = currentAssignedActionGroupsAsync.First();
         currentActionGroup.Key.ShouldBe(agv.CorrelationId);
         currentActionGroup.Value.ShouldNotBeNull();
         VerifyActionGroup(currentActionGroup.Value, actionGroup);
@@ -644,7 +644,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroup = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        var currentAssignedActionGroup = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
         currentAssignedActionGroup.Count.ShouldBe(1);
         currentAssignedActionGroup.First().Key.ShouldBe(agv.CorrelationId);
         currentAssignedActionGroup.First().Value.ShouldBeNull();
@@ -673,7 +673,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroup(actionGroup)
             .BuildAsync();
 
-        IReadOnlyDictionary<Guid, ActionGroup?> currentAssignedActionGroup = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
+        var currentAssignedActionGroup = await fixture.ActionGroupRepository.GetCurrentAssignedActionGroupsAsync(new[] { agv.CorrelationId });
         currentAssignedActionGroup.Count.ShouldBe(1);
         currentAssignedActionGroup.First().Key.ShouldBe(agv.CorrelationId);
         var fetchedActionGroup = currentAssignedActionGroup.First().Value;
@@ -915,8 +915,8 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_SourceNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndTarget()
     {
-        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
-        List<ActionGroup> actionGroups = durations[..^1]
+        var durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
+        var actionGroups = durations[..^1]
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
                 duration))
@@ -933,7 +933,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target".ToGuid());
+        var durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: null, targetNodeId: "target".ToGuid());
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
@@ -941,8 +941,8 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_TargetNotGiven_ReturnsActionDurationsOfGroupsMatchingStateAndSource()
     {
-        List<double> durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
-        List<ActionGroup> actionGroups = durations[..^1]
+        var durations = Enumerable.Range(1, 3).ToList().Select(d => (double) d).ToList();
+        var actionGroups = durations[..^1]
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
                 duration))
@@ -959,7 +959,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source".ToGuid(), targetNodeId: null);
+        var durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source".ToGuid(), targetNodeId: null);
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
@@ -967,8 +967,8 @@ public class ActionGroupRepositoryTest
     [TestMethod]
     public async Task GetActionDurationsByTypeAsync_SourceAndTargetGiven_ReturnsActionDurationsOfGroupsMatchingStateSourceAndTarget()
     {
-        List<double> durations = Enumerable.Range(1, 2).ToList().Select(d => (double) d).ToList();
-        List<ActionGroup> actionGroups = durations
+        var durations = Enumerable.Range(1, 2).ToList().Select(d => (double) d).ToList();
+        var actionGroups = durations
             .Select(duration => AgvActionGenerator.GeneratePickDropActionGroupWithActionDuration(source: "source",
                 destination: "target",
                 duration))
@@ -985,7 +985,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups(actionGroups)
             .BuildAsync();
 
-        Dictionary<ActionType, ICollection<double>> durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source".ToGuid(), targetNodeId: "target".ToGuid());
+        var durationsByActionType = await fixture.ActionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, sourceNodeId: "source".ToGuid(), targetNodeId: "target".ToGuid());
         durationsByActionType[ActionType.Pick].ShouldBeEquivalentTo(durations);
         durationsByActionType[ActionType.Drop].ShouldBeEquivalentTo(durations);
     }
@@ -1124,7 +1124,7 @@ public class ActionGroupRepositoryTest
             ])
             .BuildAsync();
 
-        IReadOnlyCollection<ActionGroup> groupsForStation = await fixture.ActionGroupRepository.GetCurrentActionGroupsForStation(station);
+        var groupsForStation = await fixture.ActionGroupRepository.GetCurrentActionGroupsForStation(station);
 
         groupsForStation.Select(g => g.CorrelationId).ToList().ShouldBe(
         [
@@ -1147,7 +1147,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([startedGroupPickTarget, pausedGroupDropTarget, createdGroup, pausedGroupOther])
             .BuildAsync();
 
-        IReadOnlyCollection<ActionGroup> groupsForStation = await fixture.ActionGroupRepository.GetPausedActionGroupsForStation(station);
+        var groupsForStation = await fixture.ActionGroupRepository.GetPausedActionGroupsForStation(station);
         groupsForStation.Select(g => g.CorrelationId).ToList().ShouldBe(
         [
             pausedGroupDropTarget.CorrelationId
@@ -1249,7 +1249,7 @@ public class ActionGroupRepositoryTest
                 runningManualChargeActionGroup, pickDropActionGroup
             ]).BuildAsync();
 
-        List<ActionGroup> runningActions = (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ToList();
+        var runningActions = (await fixture.ActionGroupRepository.GetRunningIdleActionGroups()).ToList();
         runningActions.Count.ShouldBe(2);
         runningActions.Select(a => a.CorrelationId).ToList().ShouldBe([runningParkingActionGroup.CorrelationId, runningChargeActionGroup.CorrelationId], ignoreOrder:true);
     }
@@ -1412,7 +1412,7 @@ public class ActionGroupRepositoryTest
                 queuedPickAtNode, startedPickAtNode, dropAtNode, nextPickAtNode, nextPickAtNodeForDifferentAgv
             ]).BuildAsync();
 
-        ICollection<ActionGroup> nextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(node.ToGuid(), [agv]);
+        var nextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(node.ToGuid(), [agv]);
         nextPicks.Count.ShouldBe(1);
         nextPicks.First().CorrelationId.ShouldBe(nextPickAtNode.CorrelationId);
     }
@@ -1455,7 +1455,7 @@ public class ActionGroupRepositoryTest
             .WithActionGroups([canceledActionGroup, queuedActionGroup, differentSource, differentAgv, nextPick])
             .BuildAsync();
 
-        ICollection<ActionGroup> gotNextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(pickStationName.ToGuid(), agvs);
+        var gotNextPicks = await fixture.ActionGroupRepository.GetNextPicksAtTarget(pickStationName.ToGuid(), agvs);
 
         gotNextPicks.Count.ShouldBe(1);
         gotNextPicks.First().CorrelationId.ShouldBe(nextPick.CorrelationId);
@@ -1916,7 +1916,7 @@ public class ActionGroupRepositoryTest
                 createdPickActionGroup1, createdPickActionGroup2, runningParkingActionGroup1, runningParkingActionGroup2, completedParkingActionGroup1
             ]).BuildAsync();
 
-        List<Guid> pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
+        var pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
         pickDropActionAgvIds.Count.ShouldBe(1);
         pickDropActionAgvIds.First().ShouldBe(agvId1);
     }
@@ -1941,7 +1941,7 @@ public class ActionGroupRepositoryTest
                 runningParkingActionGroup1, runningParkingActionGroup2, completedParkingActionGroup1
             ]).BuildAsync();
 
-        List<Guid> pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
+        var pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
         pickDropActionAgvIds.Count.ShouldBe(2);
         pickDropActionAgvIds.ShouldContain(agvId1);
         pickDropActionAgvIds.ShouldContain(agvId2);
@@ -1963,7 +1963,7 @@ public class ActionGroupRepositoryTest
                 runningParkingActionGroup1, runningParkingActionGroup2, completedParkingActionGroup1
             ]).BuildAsync();
 
-        List<Guid> pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
+        var pickDropActionAgvIds = (await fixture.ActionGroupRepository.GetAgvsMovingCargo([agvId1, agvId2, agvId3])).ToList();
         pickDropActionAgvIds.Count.ShouldBe(0);
     }
 }

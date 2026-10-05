@@ -1,6 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
-using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -46,8 +44,8 @@ public class AgvErrorRequestHandler :
     {
         (var agvCorrelationId, string user, bool ignoreErrorState) = context.Message;
         _logger.LogInformation("Received SolveResourceBlockingErrors request for agv {AgvCorrelationId} with ignoreErrorState={IgnoreErrorState}", agvCorrelationId, ignoreErrorState);
-        ICollection<GraphNode> nodeLocks = await _nodeRepository.GetNodesForAgv(agvCorrelationId);
-        IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        var nodeLocks = await _nodeRepository.GetNodesForAgv(agvCorrelationId);
+        var agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         var resourceError = agvErrors.SingleOrDefault(e => e.IsResourceError());
         bool hasResourceErrors = resourceError != null;
         var queueBlockingError = agvErrors.SingleOrDefault(e => e.IsQueueBlockingError());

@@ -59,12 +59,12 @@ public class SimulatedAgvProvider : BackgroundService, IConsumer<GraphMissing>
     /// </summary>
     private async Task<bool> CreateAgvAsync()
     {
-        IRequestClient<SimulatedAgvStateMachine.CreateAgv> client = _clientFactory.CreateRequestClient<SimulatedAgvStateMachine.CreateAgv>(_requestTimeOut);
+        var client = _clientFactory.CreateRequestClient<SimulatedAgvStateMachine.CreateAgv>(_requestTimeOut);
         for (int agvIndex = 0; agvIndex < _options.Agvs; agvIndex++)
         {
             var agv = GenerateAgv(agvIndex);
 
-            Response<SimulatedAgvStateMachine.CreateAgvResponse> response = await client.GetResponse<SimulatedAgvStateMachine.CreateAgvResponse>(new SimulatedAgvStateMachine.CreateAgv(
+            var response = await client.GetResponse<SimulatedAgvStateMachine.CreateAgvResponse>(new SimulatedAgvStateMachine.CreateAgv(
                 agv.CorrelationId,
                 agv,
                 _options.SimulationSpeed

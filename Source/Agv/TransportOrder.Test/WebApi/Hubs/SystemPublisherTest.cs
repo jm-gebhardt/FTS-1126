@@ -14,7 +14,7 @@ public class SystemPublisherTest
     [TestMethod]
     public async Task SendLogEntryCreated_SendsLogEntryDto_BroadCastSystemLogCreated()
     {
-        PublisherFixture<SystemPublisher, SystemHub, ISystemClient> fixture = new PublisherFixture<SystemPublisher, SystemHub, ISystemClient>().Build();
+        var fixture = new PublisherFixture<SystemPublisher, SystemHub, ISystemClient>().Build();
         var data = new LogEntry(LogCodes.SystemOperatorInteraction, Categories.System, nameof(LogLevel.Information), DateTime.UtcNow, null, null, null);
 
         var expectedDto = Mock.Of<LogEntryCreatedDto>();

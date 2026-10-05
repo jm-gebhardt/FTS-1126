@@ -29,13 +29,13 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     /// <inheritdoc />
     public async Task AddAndUpdateAgvErrorAsync(List<AgvError> newErrors, List<AgvError> resolvedErrors, Guid agvCorrelationId)
     {
-        List<DateTime?> resolvedTimesBeforeWrite = resolvedErrors.Select(e => e.ErrorResolved).ToList();
+        var resolvedTimesBeforeWrite = resolvedErrors.Select(e => e.ErrorResolved).ToList();
         ResolveErrors(resolvedErrors);
 
         try
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync();
-            DbSet<AgvError> dbSet = context.Set<AgvError>();
+            var dbSet = context.Set<AgvError>();
             await dbSet.AddRangeAsync(newErrors);
             dbSet.UpdateRange(resolvedErrors);
             await context.SaveChangesAsync();
@@ -46,9 +46,9 @@ public class EfAgvErrorRepository : IAgvErrorRepository
             throw;
         }
 
-        _errorCache.TryGet(agvCorrelationId, out List<AgvError>? previousErrors);
+        _errorCache.TryGet(agvCorrelationId, out var previousErrors);
         previousErrors ??= [];
-        List<AgvError> newMemory = previousErrors
+        var newMemory = previousErrors
             .Where(e => resolvedErrors.All(r => r.CorrelationId != e.CorrelationId))
             .Concat(newErrors.Where(n => previousErrors.All(e => e.CorrelationId != n.CorrelationId)))
             .ToList();
@@ -94,7 +94,7 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     public async Task<IReadOnlyList<AgvError>> GetErrorsAsync(IList<Guid> agvCorrelationIds, DateTime dateFrom, DateTime dateTo, CancellationToken cancellationToken = default)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        List<AgvError> agvErrorsInRepository = await context.Set<AgvError>()
+        var agvErrorsInRepository = await context.Set<AgvError>()
             .Where(e => agvCorrelationIds.Contains(e.AgvCorrelationId) && e.ErrorReceived >= dateFrom && e.ErrorReceived <= dateTo)
             .ToListAsync(cancellationToken);
         return agvErrorsInRepository;
@@ -104,15 +104,15 @@ public class EfAgvErrorRepository : IAgvErrorRepository
     public async Task LoadInMemoryCache()
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        List<AgvError> unresolvedErrors = await dbContext.Set<AgvError>()
+        var unresolvedErrors = await dbContext.Set<AgvError>()
             .Where(e => e.ErrorResolved == null)
             .ToListAsync();
 
-        Dictionary<Guid, List<AgvError>> errorsByAgv = unresolvedErrors
+        var errorsByAgv = unresolvedErrors
             .GroupBy(c => c.AgvCorrelationId)
             .ToDictionary(q => q.Key, q => q.ToList());
 
-        foreach ((var agvCorrelationId, List<AgvError> errors) in errorsByAgv)
+        foreach (var (agvCorrelationId, errors) in errorsByAgv)
         {
             _errorCache.AddOrUpdate(agvCorrelationId, errors);
         }

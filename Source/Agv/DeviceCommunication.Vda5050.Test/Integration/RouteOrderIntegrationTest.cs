@@ -67,7 +67,7 @@ public class RouteOrderIntegrationTest
     public async Task RoutePlanned_ThenReleased_PublishesMqttOrderWithFullRoute()
     {
         var routeId = Guid.NewGuid();
-        RouteStep[] steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
+        var steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
 
         await _fixture.PublishAndConsumeAsync(new RoutePlanned(routeId, _agv.CorrelationId, steps));
         // RoutePlanned is already confirmed fully consumed above, so a snapshot check suffices here —
@@ -94,7 +94,7 @@ public class RouteOrderIntegrationTest
     public async Task MqttState_ReportsOrderComplete_PublishesRouteStepsProcessed()
     {
         var routeId = Guid.NewGuid();
-        RouteStep[] steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
+        var steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
         var mqttOrder = await PlanAndReleaseRouteAsync(routeId, steps);
         var endNode = mqttOrder.Nodes.Single(n => n.NodeId == EndNodeId);
         string pickActionId = endNode.Actions.Single().ActionId;
@@ -118,10 +118,10 @@ public class RouteOrderIntegrationTest
     public async Task RouteUpdated_ExtendsRoute_PublishesUpdatedMqttOrder()
     {
         var routeId = Guid.NewGuid();
-        RouteStep[] steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
+        var steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
         var firstOrder = await PlanAndReleaseRouteAsync(routeId, steps);
 
-        RouteStep[] extendedSteps = RouteStepGenerator.AppendStep(steps, FarNodeId);
+        var extendedSteps = RouteStepGenerator.AppendStep(steps, FarNodeId);
         await _fixture.PublishAndConsumeAsync(new RouteUpdated(routeId, _agv.CorrelationId, extendedSteps));
 
         var secondOrder = await _fixture.GetFirstPublishedMessageAsync<MqttOrder>(occurrenceNumber: 2);
@@ -140,7 +140,7 @@ public class RouteOrderIntegrationTest
     public async Task RouteAborted_ActiveOrder_PublishesCancelOrderInstantAction()
     {
         var routeId = Guid.NewGuid();
-        RouteStep[] steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
+        var steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId], new PickAction(null));
         await PlanAndReleaseRouteAsync(routeId, steps);
 
         await _fixture.PublishAndConsumeAsync(new RouteAborted(routeId, _agv.CorrelationId));
@@ -160,7 +160,7 @@ public class RouteOrderIntegrationTest
     public async Task RouteStepsReleased_MixedWithPreviouslyReleasedSteps_OrderUpdateOnlyContainsStitchingNodeOnward()
     {
         var routeId = Guid.NewGuid();
-        RouteStep[] steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId, FarNodeId]);
+        var steps = RouteStepGenerator.GenerateFromNodeIds([StartNodeId, MidNodeId, EndNodeId, FarNodeId]);
 
         await _fixture.PublishAndConsumeAsync(new RoutePlanned(routeId, _agv.CorrelationId, steps));
         await _fixture.PublishAndConsumeAsync(new RouteStepsReleased(routeId, _agv.CorrelationId, [steps[0].RouteStepId]));

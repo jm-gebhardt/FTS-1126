@@ -34,7 +34,7 @@ public class StationOnlineStateCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<StationOnlineStatesRequested>();
 
         await fixture.ShouldHavePublishedAsync<StationIsOnlineChanged>();
-        ICollection<StationIsOnlineChanged> published = fixture.GetPublishedMessages<StationIsOnlineChanged>();
+        var published = fixture.GetPublishedMessages<StationIsOnlineChanged>();
         published.Count.ShouldBe(2);
         published.ShouldContain(e => e.StationId == station1 && e.IsOnline);
         published.ShouldContain(e => e.StationId == station2 && !e.IsOnline);

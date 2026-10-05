@@ -28,7 +28,7 @@ public class AgvZoneConverter : ITypeConverter<AgvZone, Zone>
     public Zone Convert(AgvZone source, Zone destination, ResolutionContext context)
     {
         var correlationId = source.ZoneId.ToGuid();
-        List<ZonePolygonPoint> polygon = source.Polygon.Select((p, index) => new ZonePolygonPoint(p.X, p.Y, index, correlationId)).ToList();
+        var polygon = source.Polygon.Select((p, index) => new ZonePolygonPoint(p.X, p.Y, index, correlationId)).ToList();
         return new Zone(polygon, source.ZoneId, correlationId, source.Capacity);
     }
 }

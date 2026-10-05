@@ -4,11 +4,9 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
-using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
@@ -21,12 +19,12 @@ public class GetAgvsRequestHandlerTest
     [TestMethod]
     public async Task GetAgvsRequestHandler_RepositoryEmpty_ReturnsEmptyList()
     {
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithEmptyAgvRepository()
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid>()));
         response.Message.Agvs.ShouldBeEmpty();
     }
 
@@ -34,11 +32,11 @@ public class GetAgvsRequestHandlerTest
     public async Task GetAgvsRequestHandler_RepositoryContainsAgv_NoActionGroup_AgvReturned()
     {
         var agvs = new List<TransportOrder.Domain.Models.Agv.Agv> { AgvGenerator.GenerateIdleAgv(lastNodeName: null) };
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(agvs)
             .Build();
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agvs.First().CorrelationId }));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agvs.First().CorrelationId }));
         response.Message.Agvs.ShouldNotBeEmpty();
         response.Message.Agvs.Count.ShouldBe(1);
         var agvDto = response.Message.Agvs.First();
@@ -54,12 +52,12 @@ public class GetAgvsRequestHandlerTest
         const string myLastNodeId = "myLastNodeId";
         var agv = AgvGenerator.GenerateIdleAgv(lastNodeName: myLastNodeId);
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv }, actionGroup)
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
         response.Message.Agvs.ShouldNotBeEmpty();
         response.Message.Agvs.Count.ShouldBe(1);
         var respondAgv = response.Message.Agvs.First();
@@ -85,16 +83,16 @@ public class GetAgvsRequestHandlerTest
         var agv1 = AgvGenerator.GenerateIdleAgv(1, lastNodeName: myLastNodeName2);
         var agv2 = AgvGenerator.GenerateIdleAgv(2, lastNodeName: null);
         var agv3 = AgvGenerator.GenerateIdleAgv(3, lastNodeName: mzLastNodeName3);
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv2, agv3 })
             .Build();
 
         var correlationIds = new List<Guid>() { agv1.CorrelationId, agv2.CorrelationId, agv3.CorrelationId };
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
         response.Message.Agvs.Count.ShouldBe(3);
         response.Message.Agvs.First().CorrelationId.ShouldBe(agv1.CorrelationId);
-        GraphNode?[] lastNodes = response.Message.Agvs.OrderBy(a => a.SerialNumber).Select(a => a.LastNode).ToArray();
+        var lastNodes = response.Message.Agvs.OrderBy(a => a.SerialNumber).Select(a => a.LastNode).ToArray();
         lastNodes.ShouldNotBeNull();
         lastNodes[0].ShouldNotBeNull();
         lastNodes[0]!.Id.ShouldBe(myLastNodeName2.ToGuid());
@@ -112,13 +110,13 @@ public class GetAgvsRequestHandlerTest
         var agv1 = AgvGenerator.GenerateIdleAgv(1, lastNodeName: myLastNodeName2);
         var agv2 = AgvGenerator.GenerateIdleAgv(2, lastNodeName: myLastNodeName3);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv2, agv3 })
             .Build();
 
         var correlationIds = new List<Guid> { agv2.CorrelationId };
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(correlationIds));
         response.Message.Agvs.Count.ShouldBe(1);
         response.Message.Agvs.First().CorrelationId.ShouldBe(agv2.CorrelationId);
         response.Message.Agvs.First().LastNode!.Id.ShouldBe(myLastNodeName3.ToGuid());
@@ -130,7 +128,7 @@ public class GetAgvsRequestHandlerTest
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv3 }) // agv2 is not added
             .Build();
@@ -145,7 +143,7 @@ public class GetAgvsRequestHandlerTest
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
         var agv2 = AgvGenerator.GenerateIdleAgv(2);
         var agv3 = AgvGenerator.GenerateIdleAgv(3);
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithLastMaintenances([])
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv1, agv2, agv3 })
             .Build();
@@ -164,13 +162,13 @@ public class GetAgvsRequestHandlerTest
             AgvErrorGenerator.GenerateAgvError(agv.CorrelationId)
         };
 
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithLastMaintenances([])
             .WithActiveAgvErrors(agv.CorrelationId, expectedAgvErrors)
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
         response.Message.Agvs.Count.ShouldBe(1);
         foreach (var agvError in response.Message.Agvs.First().Errors)
         {
@@ -194,12 +192,12 @@ public class GetAgvsRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var maintenanceLog = new TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog(Guid.NewGuid(), "user", agv.CorrelationId, DateTime.UtcNow, DateTime.UtcNow, MaintenanceType.BatteryReplaced, null);
 
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithLastMaintenances([maintenanceLog])
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
         response.Message.Agvs.Count.ShouldBe(1);
         response.Message.Agvs.First().LastMaintenance.ShouldNotBeNull();
         response.Message.Agvs.First().LastMaintenance!.ExecutionDate.ShouldBe(maintenanceLog.ExecutionDate);
@@ -210,12 +208,12 @@ public class GetAgvsRequestHandlerTest
     public async Task GetAgvsRequestHandler_AgvDoesNotHaveError_ReturnsAgvWithEmptyAgvErrorList()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgvs, GetAgvsRequestHandler>()
             .WithAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv })
             .WithLastMaintenances([])
             .Build();
 
-        Response<GotAgvs> response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
+        var response = await fixture.GetResponseAsync<GotAgvs>(new GetAgvs(new List<Guid> { agv.CorrelationId }));
         response.Message.Agvs.Count.ShouldBe(1);
         response.Message.Agvs.First().Errors.ShouldBeEmpty();
     }
@@ -227,12 +225,12 @@ public class GetAgvsRequestHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
         var maintenanceLog = new TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog(Guid.NewGuid(), "user", idleAgv.CorrelationId, DateTime.UtcNow, DateTime.UtcNow, MaintenanceType.BatteryReplaced, null);
 
-        AgvRequestsHandlerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgv, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgv, GetAgvsRequestHandler>()
             .WithAgv(idleAgv, actionGroup)
             .WithLastMaintenance(maintenanceLog)
             .Build();
 
-        Response<GotAgv> response = await fixture.GetResponseAsync<GotAgv>(new GetAgv(idleAgv.CorrelationId));
+        var response = await fixture.GetResponseAsync<GotAgv>(new GetAgv(idleAgv.CorrelationId));
         var agv = response.Message.Agv;
         agv.ShouldNotBeNull();
         agv.CorrelationId.ShouldBe(idleAgv.CorrelationId);
@@ -245,7 +243,7 @@ public class GetAgvsRequestHandlerTest
     public async Task GetAgvRequestHandler_UnknownAgvRequested_ThrowsAgvNotFoundException()
     {
         var agv1 = AgvGenerator.GenerateIdleAgv(1);
-        AgvRequestsHandlerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvRequestsHandlerTestFixture<GetAgv, GetAgvsRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<GetAgv, GetAgvsRequestHandler>()
             .WithAgv(agv1)
             .Build();
 

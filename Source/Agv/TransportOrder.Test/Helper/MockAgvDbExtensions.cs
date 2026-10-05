@@ -83,7 +83,7 @@ public static class MockAgvDbExtensions
 
             foreach (var agv in agvs)
             {
-                Guid? lastNode = agv.AgvStatus?.LastNodeId;
+                var lastNode = agv.AgvStatus?.LastNodeId;
                 if (lastNode != null)
                 {
                     repoMock.AddNode(lastNode.Value.ToGraphNode());
@@ -102,7 +102,7 @@ public static class MockAgvDbExtensions
             });
             repoMock.Setup(r => r.Agvs.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback((ICollection<Guid> correlationIds) =>
             {
-                List<Guid> notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
+                var notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
                 if (notExistingAgvs.Count != 0)
                 {
                     throw new AgvsNotFoundException(notExistingAgvs);

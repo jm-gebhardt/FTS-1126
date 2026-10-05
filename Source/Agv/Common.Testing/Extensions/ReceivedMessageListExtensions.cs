@@ -9,7 +9,7 @@ public static class ReceivedMessageListExtensions
     {
         public async Task<T> GetFirstConsumedMessageAsync<T>() where T : class
         {
-            IReceivedMessage<T> first = await received.SelectAsync<T>().First();
+            var first = await received.SelectAsync<T>().First();
             return first.Context.Message;
         }
 

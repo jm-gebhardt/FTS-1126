@@ -65,7 +65,7 @@ public class AgvPositionRepository : BaseAgvPositionRepository
     public override async Task RestorePersistedPositionsAsync(CancellationToken cancellationToken = default)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        List<Agv> agvs = await dbContext.Set<Agv>()
+        var agvs = await dbContext.Set<Agv>()
             .Include(a => a.AgvStatus)
             .Where(a => a.AgvStatus != null && a.AgvStatus.LastKnownPosition != null)
             .ToListAsync(cancellationToken);
@@ -122,15 +122,15 @@ public class AgvPositionRepository : BaseAgvPositionRepository
     /// <inheritdoc />
     public override async Task PersistAllPositionsAsync(CancellationToken cancellationToken = default)
     {
-        Dictionary<Guid, AgvPositionStatus> positionsByCorrelationId = _positionDictionaryProvider.ConcurrentDict.Values.ToDictionary(p => p.CorrelationId);
+        var positionsByCorrelationId = _positionDictionaryProvider.ConcurrentDict.Values.ToDictionary(p => p.CorrelationId);
         if (positionsByCorrelationId.Count == 0)
         {
             return;
         }
 
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        List<Guid> correlationIds = positionsByCorrelationId.Keys.ToList();
-        List<Agv> agvs = await dbContext.Set<Agv>()
+        var correlationIds = positionsByCorrelationId.Keys.ToList();
+        var agvs = await dbContext.Set<Agv>()
             .Include(a => a.AgvStatus)
             .Where(a => correlationIds.Contains(a.CorrelationId) && a.AgvStatus != null)
             .ToListAsync(cancellationToken);

@@ -29,7 +29,7 @@ public class SimulatedAgvStateMachineTest
 
     private static Order CreateOrder(string[] nodeIds)
     {
-        List<OrderNode> nodes = nodeIds.Select((id, i) => new OrderNode
+        var nodes = nodeIds.Select((id, i) => new OrderNode
         {
             NodeId = id,
             SequenceId = i * 2,
@@ -164,7 +164,7 @@ public class SimulatedAgvStateMachineTest
         var order = CreateOrder(["A", "B"]);
         await fixture.PublishMessageAsync(new StartOrder(config.CorrelationId, order));
 
-        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        var states = fixture.GetPublishedMessages<MqttState>();
         states.Count.ShouldBeGreaterThanOrEqualTo(2);
         var startOrderState = states.Last();
         startOrderState.OrderId.ShouldBe(order.OrderId);
@@ -180,7 +180,7 @@ public class SimulatedAgvStateMachineTest
         var order = CreateOrder(["A", "B"]);
         await fixture.PublishMessageAsync(new StartOrder(config.CorrelationId, order));
 
-        ICollection<MqttVisualization> visualizations = fixture.GetPublishedMessages<MqttVisualization>();
+        var visualizations = fixture.GetPublishedMessages<MqttVisualization>();
         visualizations.Count.ShouldBeGreaterThanOrEqualTo(2);
     }
 
@@ -206,7 +206,7 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new CreateAgv(config));
         await fixture.PublishMessageAsync(new StartCharging(config.CorrelationId));
 
-        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        var states = fixture.GetPublishedMessages<MqttState>();
         states.Last().BatteryState.Charging.ShouldBeTrue();
     }
 
@@ -234,7 +234,7 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new StartCharging(config.CorrelationId));
         await fixture.PublishMessageAsync(new StopCharging(config.CorrelationId));
 
-        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        var states = fixture.GetPublishedMessages<MqttState>();
         states.Last().BatteryState.Charging.ShouldBeFalse();
     }
 
@@ -300,7 +300,7 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new CreateAgv(config));
         await fixture.PublishMessageAsync(new StartOrder(config.CorrelationId, CreateOrder(["A", "B"])));
 
-        List<MqttState> states = fixture.GetPublishedMessages<MqttState>().OrderBy(s => s.HeaderId).ToList();
+        var states = fixture.GetPublishedMessages<MqttState>().OrderBy(s => s.HeaderId).ToList();
         states.Count.ShouldBeGreaterThanOrEqualTo(2);
         states[0].HeaderId.ShouldBe(1u);
         states[1].HeaderId.ShouldBe(2u);
@@ -385,7 +385,7 @@ public class SimulatedAgvStateMachineTest
         var newPosition = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true };
         await fixture.PublishMessageAsync(new SetToPosition(config.CorrelationId, newPosition));
 
-        ICollection<MqttVisualization> visualizations = fixture.GetPublishedMessages<MqttVisualization>();
+        var visualizations = fixture.GetPublishedMessages<MqttVisualization>();
         visualizations.Count.ShouldBeGreaterThanOrEqualTo(2);
         visualizations.Last().AgvPosition.ShouldNotBeNull().X.ShouldBe(5.0f);
         visualizations.Last().AgvPosition.ShouldNotBeNull().Y.ShouldBe(10.0f);
@@ -403,7 +403,7 @@ public class SimulatedAgvStateMachineTest
 
         await fixture.PublishMessageAsync(new SetToPosition(config.CorrelationId, newPosition));
 
-        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        var states = fixture.GetPublishedMessages<MqttState>();
         states.Count.ShouldBeGreaterThanOrEqualTo(2);
     }
 
@@ -528,7 +528,7 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new CreateAgv(config));
         await fixture.PublishMessageAsync(new AddLoad(config.CorrelationId, SimulatedAgvStateMachineTestFixture.LoadId, SimulatedAgvStateMachineTestFixture.LoadType, SimulatedAgvStateMachineTestFixture.LoadPosition));
 
-        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        var states = fixture.GetPublishedMessages<MqttState>();
         var load = states.Last().Loads.ShouldNotBeNull().ShouldHaveSingleItem();
         load.LoadId.ShouldBe(SimulatedAgvStateMachineTestFixture.LoadId);
         load.LoadType.ShouldBe(SimulatedAgvStateMachineTestFixture.LoadType);
@@ -559,7 +559,7 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new AddLoad(config.CorrelationId, SimulatedAgvStateMachineTestFixture.LoadId, SimulatedAgvStateMachineTestFixture.LoadType, SimulatedAgvStateMachineTestFixture.LoadPosition));
         await fixture.PublishMessageAsync(new RemoveLoad(config.CorrelationId, SimulatedAgvStateMachineTestFixture.LoadId));
 
-        ICollection<MqttState> states = fixture.GetPublishedMessages<MqttState>();
+        var states = fixture.GetPublishedMessages<MqttState>();
         states.Last().Loads.ShouldNotBeNull().ShouldBeEmpty();
     }
 

@@ -31,7 +31,7 @@ public class BaseMqttConsumerDefinition<T> : ConsumerDefinition<T> where T : cla
         endpointConfigurator.UseRawJsonDeserializer(isInMemoryEndpoint ? RawSerializerOptions.Default : RawSerializerOptions.AnyMessageType);
         endpointConfigurator.DefaultContentType = SystemTextJsonRawMessageSerializer.JsonContentType;
 
-        IEnumerable<Type> messages = typeof(T).GetInterfaces().Where(i => i.IsGenericType && i.Name.Contains(nameof(IConsumer))).Select(t => t.GenericTypeArguments.First());
+        var messages = typeof(T).GetInterfaces().Where(i => i.IsGenericType && i.Name.Contains(nameof(IConsumer))).Select(t => t.GenericTypeArguments.First());
 
         foreach (var message in messages)
         {

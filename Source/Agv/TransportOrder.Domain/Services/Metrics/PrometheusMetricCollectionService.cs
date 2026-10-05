@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using JetBrains.Annotations;
-using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Services.Metrics;
@@ -31,7 +30,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             return;
         }
-        IEnumerable<AgvAction> actions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Drop);
+        var actions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Drop);
         double durationSeconds = actions
             .Where(action => action.Duration != null)
             .Sum(action => action.Duration!.Value.TotalSeconds);
@@ -45,7 +44,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     /// <param name="agvCorrelationId">The agv correlation id.</param>
     private void CollectBusyDuration(Models.ActionGroup.ActionGroup actionGroup, Guid agvCorrelationId)
     {
-        IEnumerable<AgvAction> moveActions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Move || a.ActionType == ActionType.Pick);
+        var moveActions = actionGroup.Actions.Where(a => a.ActionType == ActionType.Move || a.ActionType == ActionType.Pick);
         double durationSeconds = moveActions
             .Where(moveAction => moveAction.Duration != null)
             .Sum(moveAction => moveAction.Duration!.Value.TotalSeconds);
@@ -62,7 +61,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         // Accept delay in idle duration collection.
         // Collection during completion ensures the agv accepted and actually
         // executed the action group and dates are written to the db.
-        IReadOnlyList<Models.ActionGroup.ActionGroup> latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(
+        var latestActionGroups = await actionGroupRepository.GetActionGroupsAsync(
             states: [ActionGroupState.Completed, ActionGroupState.Aborted],
             assignedAgvCorrelationId: agvCorrelationId,
             maxItems: 5,
@@ -76,7 +75,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
         {
             return;
         }
-        TimeSpan? duration = currentActionGroup.StartedDate - priorActionGroup.CompletedDate;
+        var duration = currentActionGroup.StartedDate - priorActionGroup.CompletedDate;
         if (duration is not { TotalSeconds: > 0 })
         {
             return;
@@ -94,7 +93,7 @@ public class PrometheusMetricCollectionService(IAgvDb agvDb, IActionGroupReposit
     private double GetIdleDurationInBetweenActions(Models.ActionGroup.ActionGroup actionGroup)
     {
         var duration = TimeSpan.Zero;
-        List<AgvAction> actions = actionGroup.Actions.OrderBy(a => a.Sequence).ToList();
+        var actions = actionGroup.Actions.OrderBy(a => a.Sequence).ToList();
         for (int i = 0; i < actions.Count - 1; i++)
         {
             var currentAction = actions[i];

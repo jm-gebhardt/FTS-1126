@@ -1,4 +1,3 @@
-using System.Numerics;
 using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
@@ -38,14 +37,14 @@ public class TinySplineEdgeBuilder(ILogger<TinySplineEdgeBuilder> logger, TimePr
         // the resulting degree equals the original NURBS degree.
         var beziers = spline.ToBeziers();
 
-        ICollection<EdgeCoefficient> controlPoints = GetControlPoints(beziers);
+        var controlPoints = GetControlPoints(beziers);
         return CreateEdge(beziers.Degree, controlPoints, fromNodeId, toNodeId, id, timeStamp);
     }
 
     private GraphEdge CreateLinearEdge(Nurbs nurbs, Guid fromNodeId, Guid toNodeId, Guid? id, DateTime timeStamp)
     {
         double length = ComputePolylineLength(nurbs.ControlPoints);
-        List<EdgeCoefficient> points = nurbs.ControlPoints.Select(cp => new EdgeCoefficient(cp.X, cp.Y)).ToList();
+        var points = nurbs.ControlPoints.Select(cp => new EdgeCoefficient(cp.X, cp.Y)).ToList();
 
         if (points.Count == 2)
         {
@@ -53,7 +52,7 @@ public class TinySplineEdgeBuilder(ILogger<TinySplineEdgeBuilder> logger, TimePr
             return GraphEdge.CreateDirect(fromNodeId, toNodeId, (float)length, id, timeStamp);
         }
 
-        List<EdgeCoefficient> innerPoints = points.GetInner().ToList();
+        var innerPoints = points.GetInner().ToList();
         logger.LogDebug("Creating edge of type {EdgeType} from node {FromNodeId} to node {ToNodeId}", nameof(EdgeType.Polypath), fromNodeId, toNodeId);
         return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)length, innerPoints, id, timeStamp);
     }
@@ -74,7 +73,7 @@ public class TinySplineEdgeBuilder(ILogger<TinySplineEdgeBuilder> logger, TimePr
         Guid fromNodeId, Guid toNodeId, Guid? id, DateTime timeStamp)
     {
         var bezier = new Bezier(controlPoints.Select(cp => cp.ToVector2()).ToList());
-        List<EdgeCoefficient> innerPoints = controlPoints.GetInner().ToList();
+        var innerPoints = controlPoints.GetInner().ToList();
 
         int expectedCount = (int)degree - 1;
         switch (degree)
@@ -105,7 +104,7 @@ public class TinySplineEdgeBuilder(ILogger<TinySplineEdgeBuilder> logger, TimePr
 
             default:
             {
-                ICollection<Vector2> polypath = bezier.InterpolateCurve(PolyPathResolution);
+                var polypath = bezier.InterpolateCurve(PolyPathResolution);
                 logger.LogDebug("Creating edge of type {EdgeType} from node {FromNodeId} to node {ToNodeId}", nameof(EdgeType.Polypath), fromNodeId, toNodeId);
                 return GraphEdge.CreatePolypath(fromNodeId, toNodeId, (float)bezier.GetLength(BezierLengthResolution), polypath.Skip(1).Take(polypath.Count - 2).Select(p => new EdgeCoefficient(p.X, p.Y)).ToList(), id, timeStamp);
             }
@@ -116,7 +115,7 @@ public class TinySplineEdgeBuilder(ILogger<TinySplineEdgeBuilder> logger, TimePr
     {
         // Rational NURBS (any weighted control point) require dimension 3 in homogeneous coordinates.
         uint dimension = nurbs.IsWeighted ? 3u : 2u;
-        List<double> controlPointList = nurbs.IsWeighted
+        var controlPointList = nurbs.IsWeighted
             ? nurbs.ControlPointsAsHomogeneousList()
             : nurbs.ControlPointsAsList();
 

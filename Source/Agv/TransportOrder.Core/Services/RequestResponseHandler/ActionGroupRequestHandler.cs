@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Filter.Api;
-using Gebhardt.Acc.Common.Filter.Api.Dtos;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
@@ -84,7 +83,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         var request = context.Message;
         var cancellationToken = context.CancellationToken;
 
-        IReadOnlyCollection<ActionGroupReadModel> actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit, request.AssignedAgvIds, request.SortBy, request.SortDescending, cancellationToken);
+        var actionGroups = await _retrievalService.GetActionGroupsWithNodesAsync(request.States, request.FromDate, request.ToDate, request.Limit, request.AssignedAgvIds, request.SortBy, request.SortDescending, cancellationToken);
 
         await context.RespondAsync(new GotActionGroups(actionGroups));
     }
@@ -95,7 +94,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetActionGroupCountsByState> context)
     {
         var cancellationToken = context.CancellationToken;
-        AgvGroupCountByState[] actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state => _actionGroupRepository.GetActionGroupsCountAsync(new[] { state }, cancellationToken: cancellationToken)
+        var actionGroupStateCounts = await Task.WhenAll(Enum.GetValues<ActionGroupState>().Select(state => _actionGroupRepository.GetActionGroupsCountAsync(new[] { state }, cancellationToken: cancellationToken)
             .ContinueWith(actionGroupCount => new AgvGroupCountByState(state, actionGroupCount.Result), cancellationToken)));
 
         await context.RespondAsync(new GotActionGroupCountsByState(actionGroupStateCounts));
@@ -114,7 +113,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         int maxItems = Math.Clamp(context.Message.Limit, 1, 100);
 
-        List<string> hus = await _actionGroupRepository.GetHandlingUnitsAsync(query, maxItems);
+        var hus = await _actionGroupRepository.GetHandlingUnitsAsync(query, maxItems);
         await context.RespondAsync(new GotHandlingUnits(hus));
     }
 
@@ -130,8 +129,8 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         {
             throw new ActionGroupStateInvalidException(actionGroup, $"Cannot abort action groups that are in state '{actionGroup.State}'.");
         }
-        IRequestClient<AbortActionGroup>? requestClient = context.CreateRequestClient<AbortActionGroup>(_bus);
-        Response<Success, AbortActionGroupFailed> response = await requestClient.GetResponse<Success, AbortActionGroupFailed>(new AbortActionGroup(correlationId, context.Message.AbortReason));
+        var requestClient = context.CreateRequestClient<AbortActionGroup>(_bus);
+        var response = await requestClient.GetResponse<Success, AbortActionGroupFailed>(new AbortActionGroup(correlationId, context.Message.AbortReason));
         if (response.Message is AbortActionGroupFailed failed)
         {
             throw new ActionGroupStateInvalidException(actionGroup, failed.Reason);
@@ -148,7 +147,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
         (var correlationId, bool keepAgv, string user) = context.Message;
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByIdAsync(correlationId);
 
-        IRequestClient<ResetActionGroup>? requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
+        var requestClient = context.CreateRequestClient<ResetActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new ResetActionGroup(actionGroup.CorrelationId, keepAgv));
         await _loggingService.LogOrder(_logger, LogLevel.Information, LogCodes.OrderOperatorInteraction, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.CorrelationId, "Operator Interaction", "Operator interacted with order", new Dictionary<string, object?> { { LogLabels.User, user }, { LogLabels.Operation, LogCodes.OrderReset } });
         await context.RespondAsync(new ActionGroupResetTriggered(actionGroup.CorrelationId));
@@ -267,7 +266,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
     public async Task Consume(ConsumeContext<GetFilteredActionGroups> context)
     {
         var cancellationToken = context.CancellationToken;
-        (var filterDto, int pageNumber, int pageSize, var ordering, ICollection<string> orderProps) = context.Message;
+        (var filterDto, int pageNumber, int pageSize, var ordering, var orderProps) = context.Message;
 
         if (pageNumber < 0 || pageSize < 0)
         {
@@ -276,7 +275,7 @@ public class ActionGroupRequestHandler : IConsumer<GetActionGroup>,
 
         var filter = filterDto.Translate<ActionGroup, ActionGroupFilterable>();
         
-        PagedResult<FilteredActionGroup> result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps, cancellationToken);
+        var result = await _retrievalService.Filter(filter, pageNumber, pageSize, ordering, orderProps, cancellationToken);
 
         await context.RespondAsync(new GotFilteredActionGroups(result));
     }

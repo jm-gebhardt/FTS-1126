@@ -12,10 +12,10 @@ public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050D
     public async Task AddOrUpdateActionsAsync(ICollection<AgvAction> actions, string agvSerialNumber)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        DbSet<AgvAction> dbSet = context.Set<AgvAction>();
-        List<AgvAction> existingActionsForAgv = await dbSet.Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
+        var dbSet = context.Set<AgvAction>();
+        var existingActionsForAgv = await dbSet.Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
 
-        Dictionary<string, AgvAction> pendingActionsByType = actions
+        var pendingActionsByType = actions
             .GroupBy(action => action.ActionType)
             .ToDictionary(group => group.Key, group => group.Last());
 
@@ -39,7 +39,7 @@ public class EfAgvActionRepository(IDbContextFactory<DeviceCommunicationVda5050D
     public async Task<ICollection<AgvAction>> GetActionsForScopeAsync(string agvSerialNumber, ActionScope scope)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<AgvAction> actions = await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
+        var actions = await context.Set<AgvAction>().AsNoTracking().Where(a => a.AgvSerialNumber == agvSerialNumber).ToListAsync();
         return actions.Where(a => a.ActionScopes.Contains(scope)).ToList();
     }
 }

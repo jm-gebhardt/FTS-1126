@@ -45,7 +45,7 @@ public class QueueEventHandler(IActionGroupRepository actionGroupRepository, IQu
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        (var agvCorrelationId, _, Guid? newNodeId ) = context.Message;
+        var (agvCorrelationId, _, newNodeId) = context.Message;
         if (newNodeId == null)
         {
             return;

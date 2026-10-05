@@ -44,8 +44,8 @@ public class EfAgvInstantActionDefinitionRepository(IDbContextFactory<TransportO
     public async Task<Dictionary<Guid, List<InstantActionDefinition>>> GetInstantActionDefinitionsByAgv(ICollection<Guid> agvCorrelationIds)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<InstantActionDefinition> instantActionDefinitions = await context.Set<InstantActionDefinition>().ToListAsync();
-        Dictionary<Guid, List<InstantActionDefinition>> instantActions = agvCorrelationIds.ToDictionary(s => s, k => instantActionDefinitions.Where(i => i.AgvCorrelationIds.Contains(k)).ToList());
+        var instantActionDefinitions = await context.Set<InstantActionDefinition>().ToListAsync();
+        var instantActions = agvCorrelationIds.ToDictionary(s => s, k => instantActionDefinitions.Where(i => i.AgvCorrelationIds.Contains(k)).ToList());
         return instantActions;
     }
 }

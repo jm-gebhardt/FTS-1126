@@ -17,7 +17,7 @@ public class EfRoutingResourceConflictRepository(IDbContextFactory<TransportOrde
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
 
-        List<RoutingResourceConflict> conflicts = await context.Set<RoutingResourceConflict>().AsNoTracking().ToListAsync();
+        var conflicts = await context.Set<RoutingResourceConflict>().AsNoTracking().ToListAsync();
 
         return conflicts.Select(c => new ResourceConflict(c.ResourceId, c.ConflictingResourceId)).ToList();
     }
@@ -27,7 +27,7 @@ public class EfRoutingResourceConflictRepository(IDbContextFactory<TransportOrde
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
 
-        List<RoutingResourceConflict> conflicts = await context.Set<RoutingResourceConflict>()
+        var conflicts = await context.Set<RoutingResourceConflict>()
             .AsNoTracking()
             .Where(c => c.ResourceId == resourceId || c.ConflictingResourceId == resourceId)
             .ToListAsync();
@@ -38,7 +38,7 @@ public class EfRoutingResourceConflictRepository(IDbContextFactory<TransportOrde
     /// <inheritdoc/>
     public async Task SetConflictsAsync(IReadOnlyCollection<ResourceConflict> conflicts)
     {
-        List<RoutingResourceConflict> rows = conflicts
+        var rows = conflicts
             .Distinct()
             .Select(c => new RoutingResourceConflict { ResourceId = c.ResourceId, ConflictingResourceId = c.ConflictingResourceId })
             .ToList();

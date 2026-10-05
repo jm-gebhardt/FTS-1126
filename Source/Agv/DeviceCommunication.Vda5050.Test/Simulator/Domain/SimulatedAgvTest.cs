@@ -66,7 +66,7 @@ public class SimulatedAgvTest
     /// </summary>
     private static Order CreateOrder(string[] nodeIds, double edgeLength = 10.0, ICollection<OrderAction>? actionsOnLastNode = null)
     {
-        List<OrderNode> nodes = nodeIds.Select((id, i) => new OrderNode
+        var nodes = nodeIds.Select((id, i) => new OrderNode
         {
             NodeId = id,
             SequenceId = i * 2,

@@ -30,7 +30,7 @@ internal class VehicleTypeEdgePropertyHelper
             return null;
         }
 
-        List<ControlPoint> controlPoints = trajectory.ControlPoints.Select(p => new ControlPoint(p.X, p.Y, p.Weight)).ToList();
+        var controlPoints = trajectory.ControlPoints.Select(p => new ControlPoint(p.X, p.Y, p.Weight)).ToList();
 
         return new Trajectory(controlPoints, trajectory.KnotVector.ToArray(), trajectory.Degree);
     }

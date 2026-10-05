@@ -28,7 +28,7 @@ public class NodePropertiesSeeder : JsonSeeder<List<NodeProperties>>
     /// <inheritdoc />
     protected override Task<object> GetMessageAsync(List<NodeProperties> data)
     {
-        List<InitializeNodeApproachingProperties> seedingTasks = data.Select(d => new InitializeNodeApproachingProperties(d.NodeId.ToGuid(), d.PickLiftHeight, d.DropLiftHeight, d.DockingDirection)).ToList();
+        var seedingTasks = data.Select(d => new InitializeNodeApproachingProperties(d.NodeId.ToGuid(), d.PickLiftHeight, d.DropLiftHeight, d.DockingDirection)).ToList();
         return Task.FromResult<object>(seedingTasks);
     }
 }

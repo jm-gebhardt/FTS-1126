@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
+﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
@@ -18,7 +17,7 @@ public class EfStationRepositoryTest
     public async Task AddStations_GetStation_AgvDataAndMapsExist_AddsAndGetsStationsWithSizeAndMap()
     {
         var fixture = new EfStationRepositoryTestFixture();
-        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        var specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         double expectedMaxWidth = specifications.Max(s => s.Width) + Padding;
         double expectedMaxLength = specifications.Max(s => s.Length) + Padding;
         await fixture.AddRangeAsync(specifications);
@@ -26,7 +25,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
+        var nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
@@ -52,14 +51,14 @@ public class EfStationRepositoryTest
     public async Task AddStations_GetStation_StationWithAdditionalType_AddsAndGetsStations()
     {
         var fixture = new EfStationRepositoryTestFixture();
-        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        var specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         double expectedMaxWidth = specifications.Max(s => s.Width) + Padding;
         double expectedMaxLength = specifications.Max(s => s.Length) + Padding;
         await fixture.AddRangeAsync(specifications);
         var agvId = Guid.NewGuid();
         var graph = AgvGraphGenerator.CreateGraphWithAdditionalStationType(agvId);
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
+        var nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
@@ -85,7 +84,7 @@ public class EfStationRepositoryTest
     public async Task AddStations_GetStation_NotAllStationsOnMap_AddsAndGetsStationsWithoutMap()
     {
         var fixture = new EfStationRepositoryTestFixture();
-        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        var specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         double expectedMaxWidth = specifications.Max(s => s.Width) + Padding;
         double expectedMaxLength = specifications.Max(s => s.Length) + Padding;
         await fixture.AddRangeAsync(specifications);
@@ -93,7 +92,7 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).OrderBy(n => n.Name).Skip(1).ToList();
+        var nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).OrderBy(n => n.Name).Skip(1).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
@@ -119,7 +118,7 @@ public class EfStationRepositoryTest
     public async Task AddStations_GetStations_AgvDataAndMapsExist_AddsAndGetsStationsWithSizeAndMap()
     {
         var fixture = new EfStationRepositoryTestFixture();
-        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        var specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         double expectedMaxWidth = specifications.Max(s => s.Width) + Padding;
         double expectedMaxLength = specifications.Max(s => s.Length) + Padding;
         await fixture.AddRangeAsync(specifications);
@@ -128,14 +127,14 @@ public class EfStationRepositoryTest
         var graph = AgvGraphGenerator.CreateDefaultGraph(agvId);
 
         var mapper = MappingHelper.GetMapper(new GraphProfile());
-        List<GraphNode> nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
+        var nodes = graph.Nodes.Where(n => n.IsStation()).Select(mapper.Map<GraphNode>).ToList();
         const string mapName = "map";
         var mapId = mapName.ToGuid();
         await fixture.AddMap(mapId, mapName, [agvId], nodes);
 
         await fixture.Repository.AddStations(graph);
 
-        ICollection<Station> stations = await fixture.Repository.GetStations();
+        var stations = await fixture.Repository.GetStations();
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = stations.Single(s => s.Name == stationNode.Name);
@@ -230,7 +229,7 @@ public class EfStationRepositoryTest
 
         await fixture.Repository.AddStations(graph);
 
-        ICollection<Station> stations = await fixture.Repository.GetStations();
+        var stations = await fixture.Repository.GetStations();
         foreach (var stationNode in graph.Nodes.Where(n => n.IsStation()))
         {
             var station = stations.Single(s => s.Name == stationNode.Name);
@@ -269,7 +268,7 @@ public class EfStationRepositoryTest
             .WithNodeLockAsync(nodeLock, node.Name)
             .BuildAsync();
         await fixture.Repository.AddStations(graph);
-        ICollection<Station> stations = await fixture.Repository.GetStations();
+        var stations = await fixture.Repository.GetStations();
         var occupiedStation = stations.Single(s => s.Id == node.Id);
         occupiedStation.Agvs.ShouldBeEmpty();
         occupiedStation.NodeLock.ShouldNotBeNull();

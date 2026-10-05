@@ -38,7 +38,7 @@ public class AgvScopedPositionCache<TItem> : IAgvScopedPositionCache<TItem>
     public void AddItem(string agvSerialNumber, AgvPosition agvPosition, DateTime timeStamp, List<TItem> items)
     {
         string key = GetKey(agvSerialNumber, agvPosition, timeStamp);
-        if (!_inner.TryGet(key, out List<TItem>? list))
+        if (!_inner.TryGet(key, out var list))
         {
             list = items;
         }

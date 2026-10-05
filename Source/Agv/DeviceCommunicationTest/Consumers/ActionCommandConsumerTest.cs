@@ -9,7 +9,6 @@ using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Enums;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunicationTest.Helper;
 using MassTransit;
-using MassTransit.Testing;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunicationTest.Consumers;
@@ -61,7 +60,7 @@ public class ActionCommandConsumerTest
         await fixture.ShouldHaveConsumedAsync<DispatchRouteCommand>();
         (await fixture.TestHarness.Published.Any<Fault<DispatchRouteCommand>>()).ShouldBeTrue();
 
-        IPublishedMessage<Fault<DispatchRouteCommand>>? fault = fixture.TestHarness.Published.Select<Fault<DispatchRouteCommand>>().First();
+        var fault = fixture.TestHarness.Published.Select<Fault<DispatchRouteCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e => e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
     }
 
@@ -381,7 +380,7 @@ public class ActionCommandConsumerTest
         await fixture.ShouldHaveConsumedAsync<UpdateDispatchedRouteCommand>();
         (await fixture.TestHarness.Published.Any<Fault<UpdateDispatchedRouteCommand>>()).ShouldBeTrue();
 
-        IPublishedMessage<Fault<UpdateDispatchedRouteCommand>>? fault = fixture.TestHarness.Published.Select<Fault<UpdateDispatchedRouteCommand>>().First();
+        var fault = fixture.TestHarness.Published.Select<Fault<UpdateDispatchedRouteCommand>>().First();
         fault.Context.Message.Exceptions.ShouldContain(e =>
             e.ExceptionType == typeof(AssignedAgvNotFoundException).FullName);
     }

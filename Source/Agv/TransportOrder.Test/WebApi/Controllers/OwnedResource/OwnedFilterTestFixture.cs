@@ -39,7 +39,7 @@ public class OwnedFilterTestFixture<TRequest> : ControllerTestFixture<TRequest, 
 
     public OwnedFilterTestFixture<TRequest> WithFilters(List<OwnedFilter> filters)
     {
-        foreach (IGrouping<string, OwnedFilter> grouping in filters.GroupBy(of => of.Owner))
+        foreach (var grouping in filters.GroupBy(of => of.Owner))
         {
             _filterRepo.Setup(r => r.GetResourcesForOwner(grouping.Key)).ReturnsAsync(grouping.ToList());
             foreach (var ownedFilter in grouping)

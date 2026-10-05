@@ -38,7 +38,7 @@ public class FilterController(
             return Unauthorized();
         }
 
-        Response<GotOwnedFilters> result = await getOwnedFiltersRequestClient.GetResponse<GotOwnedFilters>(new GetOwnedFilters(user));
+        var result = await getOwnedFiltersRequestClient.GetResponse<GotOwnedFilters>(new GetOwnedFilters(user));
 
         var ownedFilterDtos = mapper.Map<ICollection<OwnedFilterDto>>(result.Message.Filters);
 
@@ -63,7 +63,7 @@ public class FilterController(
             return Unauthorized();
         }
 
-        Response<AddedOwnedFilter> result = await addOwnedFilterRequestClient.GetResponse<AddedOwnedFilter>(new AddOwnedFilter(user, filter, name));
+        var result = await addOwnedFilterRequestClient.GetResponse<AddedOwnedFilter>(new AddOwnedFilter(user, filter, name));
 
         return Ok(result.Message.OwnedFilterCorrelationId);
     }
@@ -87,7 +87,7 @@ public class FilterController(
             return Unauthorized();
         }
 
-        Response<OwnedFilterModificationResult> result = await updateOwnedFilterRequestClient.GetResponse<OwnedFilterModificationResult>(new UpdateOwnedFilter(user, filter, correlationId, name));
+        var result = await updateOwnedFilterRequestClient.GetResponse<OwnedFilterModificationResult>(new UpdateOwnedFilter(user, filter, correlationId, name));
 
         return Ok(result.Message.Result);
     }
@@ -108,7 +108,7 @@ public class FilterController(
             return Unauthorized();
         }
 
-        Response<OwnedFilterModificationResult> result = await deleteOwnedFilterRequestClient.GetResponse<OwnedFilterModificationResult>(new DeleteOwnedFilter(user, correlationId));
+        var result = await deleteOwnedFilterRequestClient.GetResponse<OwnedFilterModificationResult>(new DeleteOwnedFilter(user, correlationId));
 
         return Ok(result.Message.Result);
     }

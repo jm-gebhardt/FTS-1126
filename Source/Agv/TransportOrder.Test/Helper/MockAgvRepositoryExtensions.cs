@@ -54,7 +54,7 @@ public static class MockAgvRepositoryExtensions
             });
             repoMock.Setup(r => r.ThrowIfAgvsNotExistAsync(It.IsAny<ICollection<Guid>>())).Callback((ICollection<Guid> correlationIds) =>
             {
-                List<Guid> notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
+                var notExistingAgvs = correlationIds.Except(agvCorrelationIds).ToList();
                 if (notExistingAgvs.Count != 0)
                 {
                     throw new AgvsNotFoundException(notExistingAgvs);

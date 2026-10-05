@@ -62,7 +62,7 @@ public class EfGraphRepository(
         await using var context = await dbContextFactory.CreateDbContextAsync();
         // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
         IEnumerable<Guid> edgeIds = graphEdgeIds;
-        List<MqttEdgeMapping> edges = await context.Set<MqttEdgeMapping>()
+        var edges = await context.Set<MqttEdgeMapping>()
             .Where(e => edgeIds.Contains(e.InternalEdge))
             .AsNoTracking()
             .ToListAsync();
@@ -83,7 +83,7 @@ public class EfGraphRepository(
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
 
-            List<MqttNode> nodesToAdd = nodes.Where(n => !nodeCache.ConcurrentDict.ContainsKey(n.graphNodeId))
+            var nodesToAdd = nodes.Where(n => !nodeCache.ConcurrentDict.ContainsKey(n.graphNodeId))
                 .Select(n => n.mqttNode).ToList();
 
             if (nodesToAdd.Count == 0)
@@ -116,7 +116,7 @@ public class EfGraphRepository(
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
 
-            List<(Guid GraphEdgeId, MqttEdge MqttEdge, MqttEdgeMapping Mapping)> edgesToAdd = edges.Where(e => !edgeCache.ConcurrentDict.ContainsKey(e.GraphEdgeId))
+            var edgesToAdd = edges.Where(e => !edgeCache.ConcurrentDict.ContainsKey(e.GraphEdgeId))
                 .Select(e => (e.GraphEdgeId, e.MqttEdge, Mapping: new MqttEdgeMapping(e.GraphEdgeId)
                 {
                     Attributes = e.MqttEdge.Attributes,

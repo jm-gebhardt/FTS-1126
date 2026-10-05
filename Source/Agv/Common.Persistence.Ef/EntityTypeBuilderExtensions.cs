@@ -25,7 +25,7 @@ public static class EntityTypeBuilderExtensions
     public static List<PropertyBuilder> ConfigureAllProperties<T>(this EntityTypeBuilder<T> builder,
         Func<PropertyInfo, bool>? onlyInclude = null, IEnumerable<string>? except = null) where T : class
     {
-        IEnumerable<PropertyInfo> properties = typeof(T)
+        var properties = typeof(T)
             .GetProperties()
             .AsEnumerable();
 

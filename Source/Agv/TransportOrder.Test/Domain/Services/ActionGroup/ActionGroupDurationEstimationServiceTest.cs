@@ -19,7 +19,7 @@ public class ActionGroupDurationEstimationServiceTest
     {
         (double value, DateTime lastUpdated) deviation = (12, DateTime.UtcNow);
         var agvId = Guid.NewGuid();
-        Guid[] targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
+        var targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
 
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithDeviation(deviation, agvId, targets, existsInMemory: false);
@@ -36,7 +36,7 @@ public class ActionGroupDurationEstimationServiceTest
     {
         (double value, DateTime lastUpdated) deviation = (12, DateTime.UtcNow);
         var agvId = Guid.NewGuid();
-        Guid[] targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
+        var targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
 
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithDeviation(deviation, agvId, targets, existsInMemory: true);
@@ -52,7 +52,7 @@ public class ActionGroupDurationEstimationServiceTest
     {
         (double value, DateTime lastUpdated) deviation = (12, DateTime.UtcNow.AddHours(-1));
         var agvId = Guid.NewGuid();
-        Guid[] targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
+        var targets = new[] { "a target", "another target" }.Select(n => n.ToGuid()).ToArray();
 
         var fixture = new ActionGroupDurationEstimationServiceTestFixture()
             .WithDeviation(deviation, agvId, targets, existsInMemory: true);

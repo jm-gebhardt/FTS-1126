@@ -83,7 +83,7 @@ public class RouteExecutionCoordinator(
     public async Task<RouteCoordinationResult> AbortRouteAsync(Guid routeId)
     {
         var routeExecution = await routeExecutionRepository.GetRequiredAsync(routeId);
-        Guid? currentOrderId = routeExecution.CurrentOrderId;
+        var currentOrderId = routeExecution.CurrentOrderId;
         routeExecution.Abort();
         await routeExecutionRepository.UpdateAsync(routeExecution);
 

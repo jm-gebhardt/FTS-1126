@@ -1,10 +1,8 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.InstantActions;
@@ -30,7 +28,7 @@ public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> 
     public async Task Consume(ConsumeContext<GetAgvInstantActionDefinitions> context)
     {
         var agvCorrelationId = context.Message.AgvCorrelationId;
-        ICollection<InstantActionDefinition> instantActionDefinitions = await repository.GetInstantActionDefinitionsForAgv(agvCorrelationId);
+        var instantActionDefinitions = await repository.GetInstantActionDefinitionsForAgv(agvCorrelationId);
         await context.RespondAsync(new GotAgvInstantActionDefinitions(instantActionDefinitions));
     }
 
@@ -39,8 +37,8 @@ public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> 
     /// </summary>
     public async Task Consume(ConsumeContext<GetAgvsInstantActionsDefinitions> context)
     {
-        ICollection<Guid> agvCorrelationIds = context.Message.AgvCorrelationIds;
-        Dictionary<Guid, List<InstantActionDefinition>> instantActionDefinitions = await repository.GetInstantActionDefinitionsByAgv(agvCorrelationIds);
+        var agvCorrelationIds = context.Message.AgvCorrelationIds;
+        var instantActionDefinitions = await repository.GetInstantActionDefinitionsByAgv(agvCorrelationIds);
         await context.RespondAsync(new GotAgvsInstantActionDefinitions(instantActionDefinitions));
     }
 
@@ -49,7 +47,7 @@ public class InstantActionsRequestHandler(ILogger<InstantActionsRequestHandler> 
     /// </summary>
     public async Task Consume(ConsumeContext<StartInstantAction> context)
     {
-        (var agvCorrelationId, string actionType, Dictionary<string, object>? parameters, BlockingType? blockingType, string user) = context.Message;
+        (var agvCorrelationId, string actionType, var parameters, var blockingType, string user) = context.Message;
 
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 

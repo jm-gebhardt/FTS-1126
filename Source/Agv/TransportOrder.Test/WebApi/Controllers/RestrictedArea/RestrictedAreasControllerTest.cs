@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
-using Gebhardt.Acc.TransportOrder.WebApi.Dtos.RestrictedArea;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.RestrictedArea;
@@ -15,7 +14,7 @@ public class RestrictedAreasControllerTest
             .WithRestrictedArea(restrictedArea)
             .Build();
 
-        ICollection<RestrictedAreaDto> restrictedAreaDto = await fixture.GetControllerResultValueAsync(c => c.GetRestrictedAreas([restrictedArea.Id]));
+        var restrictedAreaDto = await fixture.GetControllerResultValueAsync(c => c.GetRestrictedAreas([restrictedArea.Id]));
 
         restrictedAreaDto.Count.ShouldBe(1);
         restrictedAreaDto.First().Id.ShouldBe(restrictedArea.Id);

@@ -39,7 +39,7 @@ internal static class TypeInitializerExpressionBuilder
         // Valid use of null suppression, due to the new() constraint on TOut.
         var ctorExpression = Expression.New(constructorInfo!);
 
-        MemberInfo[] members = typeof(TOut).GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        var members = typeof(TOut).GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
         List<MemberAssignment> memberBindings = [];
 
@@ -180,7 +180,7 @@ internal static class TypeInitializerExpressionBuilder
         // Valid use of null suppression, due to the new() constraint on T.
         var ctorExpression = Expression.New(constructorInfo!);
 
-        MemberInfo[] members = typeof(T).GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        var members = typeof(T).GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
         List<MemberAssignment> memberBindings = [];
 

@@ -74,7 +74,7 @@ public class ZoneRefreshStateService(ILogger<ZoneRefreshStateService> logger) : 
     {
         var removedZonesByAgv = new Dictionary<Guid, ICollection<string>>();
 
-        Dictionary<string, HashSet<string>> currentOccupancyByAgvSerialNumber = zones
+        var currentOccupancyByAgvSerialNumber = zones
             .SelectMany(zone => zone.Occupancy.Select(serial => new { SerialNumber = serial, zone.ZoneId }))
             .GroupBy(x => x.SerialNumber)
             .ToDictionary(g => g.Key, g => g.Select(x => x.ZoneId).ToHashSet());
@@ -82,10 +82,10 @@ public class ZoneRefreshStateService(ILogger<ZoneRefreshStateService> logger) : 
         foreach (var (agvId, offlineAgv) in _offlineAgvsInZones.ToList())
         {
             // Current zones for this agv
-            HashSet<string> currentZonesForAgv = currentOccupancyByAgvSerialNumber.GetValueOrDefault(offlineAgv.SerialNumber, new HashSet<string>());
+            var currentZonesForAgv = currentOccupancyByAgvSerialNumber.GetValueOrDefault(offlineAgv.SerialNumber, new HashSet<string>());
 
             // Removed zones
-            ICollection<string> removedFromZones = offlineAgv.UpdateZones(currentZonesForAgv, out ICollection<string> _);
+            var removedFromZones = offlineAgv.UpdateZones(currentZonesForAgv, out var _);
 
             if (removedFromZones.Count > 0)
             {

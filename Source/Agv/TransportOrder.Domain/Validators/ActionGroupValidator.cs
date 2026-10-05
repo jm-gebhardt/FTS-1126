@@ -134,7 +134,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
 
     private static bool ActionSequenceIdsMustBeUnique(ActionGroup actionGroup)
     {
-        IEnumerable<int> duplicates = actionGroup.Actions.GroupBy(a => a.Sequence).Where(g => g.Count() > 1).Select(g => g.Key);
+        var duplicates = actionGroup.Actions.GroupBy(a => a.Sequence).Where(g => g.Count() > 1).Select(g => g.Key);
         bool isSequenceUnique = !duplicates.Any();
         return isSequenceUnique;
     }
@@ -145,7 +145,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         {
             return true;
         }
-        List<int> sequenceIds = actionGroup.Actions.Select(a => a.Sequence).OrderBy(s => s).ToList();
+        var sequenceIds = actionGroup.Actions.Select(a => a.Sequence).OrderBy(s => s).ToList();
         bool isSequenceOrdered = sequenceIds.SequenceEqual(Enumerable.Range(0, sequenceIds.Count));
         return isSequenceOrdered;
     }
@@ -161,7 +161,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         {
             return true;
         }
-        IOrderedEnumerable<AgvAction> orderedActions = actionGroup.Actions.OrderBy(a => a.Sequence);
+        var orderedActions = actionGroup.Actions.OrderBy(a => a.Sequence);
         return orderedActions.SequenceEqual(actionGroup.Actions);
     }
 
@@ -193,7 +193,7 @@ public class ActionGroupValidator : AbstractValidator<ActionGroup>
         }
         else
         {
-            ICollection<Models.Agv.Agv> agvs = await _agvRepository.GetAllAgvsWithGraphAsync();
+            var agvs = await _agvRepository.GetAllAgvsWithGraphAsync();
             _hasRoute = await _routeService.HasAnyAgvRouteAsync(actionGroup, agvs, cancellationToken);
         }
 

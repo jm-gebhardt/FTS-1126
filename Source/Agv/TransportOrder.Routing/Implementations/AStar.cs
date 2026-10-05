@@ -165,7 +165,7 @@ public class AStar : BaseRouteAlgorithm
     private ANode? GetAndRemoveMin()
     {
         ANode? min = null;
-        foreach (KeyValuePair<Guid, ANode> kvp in _openList)
+        foreach (var kvp in _openList)
         {
             if (min == null || kvp.Value.F < min.F)
             {
@@ -199,7 +199,7 @@ public class AStar : BaseRouteAlgorithm
                 continue;
             }
 
-            (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(current.Node, _nodes[edge.ToNodeId].Node);
+            var (sections, virtualNodes) = edge.GetSections(current.Node, _nodes[edge.ToNodeId].Node);
             if (sections.Count == 0)
             {
                 CalculateCostsForSimpleEdge(current, destination, edge);

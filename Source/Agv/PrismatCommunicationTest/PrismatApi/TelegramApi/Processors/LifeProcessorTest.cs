@@ -13,7 +13,7 @@ public class LifeProcessorTest
     [TestMethod]
     public void ProcessReceivedTelegram_LifeTelegram_CurrentTelegramSet()
     {
-        TelegramProcessorTestFixture<LifeProcessor, Life> fixture = new TelegramProcessorTestFixture<LifeProcessor, Life>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<LifeProcessor, Life>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var life = new Life(DateTime.UtcNow);
@@ -28,7 +28,7 @@ public class LifeProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_CurrentTelegram_ReturnsAcknowledgement()
     {
-        TelegramProcessorTestFixture<LifeProcessor, Life> fixture = new TelegramProcessorTestFixture<LifeProcessor, Life>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<LifeProcessor, Life>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         var life = new Life(DateTime.UtcNow);
@@ -44,7 +44,7 @@ public class LifeProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoCurrentTelegram_ReturnsFalse()
     {
-        TelegramProcessorTestFixture<LifeProcessor, Life> fixture = new TelegramProcessorTestFixture<LifeProcessor, Life>(ServiceKeyProvider.FromPrismat)
+        var fixture = new TelegramProcessorTestFixture<LifeProcessor, Life>(ServiceKeyProvider.FromPrismat)
             .Build();
 
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeFalse();

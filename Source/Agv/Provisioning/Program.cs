@@ -65,7 +65,7 @@ catch (Exception ex)
 
 static async Task SeedAsync(IHost host)
 {
-    List<ISeeder> seeders = host.Services.GetRequiredService<IEnumerable<ISeeder>>().ToList();
+    var seeders = host.Services.GetRequiredService<IEnumerable<ISeeder>>().ToList();
     var logger = host.Services.GetRequiredService<ILogger<Program>>();
     logger.LogInformation("Starting {SeederCount} seeders", seeders.Count);
 

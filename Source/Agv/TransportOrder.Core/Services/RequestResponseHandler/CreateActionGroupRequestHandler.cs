@@ -63,7 +63,7 @@ public class CreateActionGroupRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<CreatePickDropActionGroup> context)
     {
-        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, Guid? agvCorrelationId, string? infoPick, string? infoDrop, var creator, string user) = await ValidateMessageContent(context.Message);
+        (var sourceNode, var targetNode, bool dockFrontPick, bool dockFrontDrop, string? handlingUnit, var agvCorrelationId, string? infoPick, string? infoDrop, var creator, string user) = await ValidateMessageContent(context.Message);
 
         var actionGroup = await CreatePickDropActionGroup(sourceNode, targetNode, dockFrontPick, dockFrontDrop, handlingUnit, agvCorrelationId, infoPick, infoDrop, creator);
         actionGroup.Queue();
@@ -86,7 +86,7 @@ public class CreateActionGroupRequestHandler :
             string? infoPick, string? infoDrop, ActionGroupCreator creator, string user)>
         ValidateMessageContent(CreatePickDropActionGroup createPickDropActionGroup)
     {
-        (Guid? sourceNodeId, Guid? targetNodeId, _, _, _, Guid? agvCorrelationId, _, _, _, _) = createPickDropActionGroup;
+        var (sourceNodeId, targetNodeId, _, _, _, agvCorrelationId, _, _, _, _) = createPickDropActionGroup;
 
         // validate agv existence 
         if (agvCorrelationId != null)

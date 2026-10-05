@@ -11,7 +11,7 @@ public class EfAgvWifiMetricsRepository(StatisticsDbContext context) : HeatmapRe
     /// <inheritdoc cref="IAgvWifiMetricsRepository"/>
     public async Task<ScalarHeatmap> GetWifiSignalStrengthHeatmapAsync(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[] agvSerialNumbers)
     {
-        IQueryable<AgvWifiMetrics> query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers)
+        var query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers)
             .Where(e => e.BeaconSignalAverage.HasValue);
 
         var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId,

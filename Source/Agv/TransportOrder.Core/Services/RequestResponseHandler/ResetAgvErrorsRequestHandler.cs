@@ -45,7 +45,7 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
 
     private bool AreAllErrorsResolved(ICollection<Guid> errorIdsToReset, AgvErrorChanged errorChange)
     {
-        List<AgvError> unresolvedErrors =
+        var unresolvedErrors =
             // all errors must be resolved
             errorIdsToReset.Count == 0 ?
                 errorChange.Errors :
@@ -65,9 +65,9 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
     {
         var correlationId = context.Message.CorrelationId;
         string user = context.Message.User;
-        List<Guid> errorIdsToReset = context.Message.ErrorIds.ToList();
+        var errorIdsToReset = context.Message.ErrorIds.ToList();
         var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, new CancellationTokenSource(_resetTimeout).Token).Token;
-        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+        var activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
 
         // agv does not have any errors
         if (!activeErrors.Any())
@@ -102,13 +102,13 @@ public class ResetAgvErrorsRequestHandler : IConsumer<ResetAgvErrors>
 
         try
         {
-            List<IGrouping<AgvErrorSource, AgvError>> errorsBySource = errorsToReset.GroupBy(e => e.Source).ToList();
+            var errorsBySource = errorsToReset.GroupBy(e => e.Source).ToList();
             await _agvErrorChangedAwaiter.WaitAsync(correlationId,
                 errorChange => AreAllErrorsResolved(errorIdsToReset, errorChange),
                 cancellationToken,
                 executeAfterListeningTask: async () =>
                 {
-                    foreach (IGrouping<AgvErrorSource, AgvError> errorGroup in errorsBySource)
+                    foreach (var errorGroup in errorsBySource)
                     {
                         // Resolve every error server-side so the operator gets immediate
                         // feedback in the UI, regardless of whether the device communication

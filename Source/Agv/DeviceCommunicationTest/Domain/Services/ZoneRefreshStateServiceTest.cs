@@ -71,9 +71,9 @@ public class ZoneRefreshStateServiceTest
         await fixture.Service.AddOfflineAgvInZones(offlineAgv, serialNumber, zones, [onlineAgv]);
         fixture.Service.OfflineAgvsInZones.Count.ShouldBe(1);
 
-        List<MqttZone> mqttZones = zones.Select(z => new MqttZone(z, 0, [], [])).ToList();
+        var mqttZones = zones.Select(z => new MqttZone(z, 0, [], [])).ToList();
 
-        Dictionary<Guid, ICollection<string>> removedZonesByAgv = await fixture.Service.UpdateAgvsFromRefreshedZones(mqttZones);
+        var removedZonesByAgv = await fixture.Service.UpdateAgvsFromRefreshedZones(mqttZones);
 
         removedZonesByAgv.Count.ShouldBe(1);
         removedZonesByAgv[offlineAgv].Count.ShouldBe(zones.Count);

@@ -92,7 +92,7 @@ public abstract class MockRequestClientControllerTestFixture<TController> : Fixt
     [PublicAPI]
     public async Task<TResponse> GetControllerResultAsync<TResult, TResponse>(Func<TController, Task<ActionResult<TResult>>> controllerAction) where TResponse : class
     {
-        ActionResult<TResult> controllerResult = await controllerAction(_controller);
+        var controllerResult = await controllerAction(_controller);
         var result = controllerResult.Result as TResponse;
         result.ShouldNotBeNull();
 

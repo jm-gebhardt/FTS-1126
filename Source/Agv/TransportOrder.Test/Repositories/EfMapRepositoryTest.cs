@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Map;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
-using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 
@@ -16,7 +15,7 @@ public class EfMapRepositoryTest
     {
         var fixture = new EfMapRepositoryTestFixture();
 
-        ICollection<Map> maps = await fixture.Repository.GetAllMapsAsync();
+        var maps = await fixture.Repository.GetAllMapsAsync();
         maps.ShouldBeEmpty();
     }
 
@@ -31,7 +30,7 @@ public class EfMapRepositoryTest
         fixture.Add(map1);
         fixture.Add(map2);
 
-        ICollection<Map> maps = await fixture.Repository.GetAllMapsAsync();
+        var maps = await fixture.Repository.GetAllMapsAsync();
         maps.ShouldNotBeEmpty();
         maps.Count.ShouldBe(2);
     }
@@ -200,8 +199,8 @@ public class EfMapRepositoryTest
         fixture.Add(agv);
         fixture.Add(otherAgv);
 
-        List<GraphEdge> edges = graph.Edges.Take(2).ToList();
-        List<GraphNode> nodes = graph.Nodes.Take(2).ToList();
+        var edges = graph.Edges.Take(2).ToList();
+        var nodes = graph.Nodes.Take(2).ToList();
 
         var map = MapGenerator.Generate(nodes: nodes, edges: edges);
 
@@ -211,7 +210,7 @@ public class EfMapRepositoryTest
 
         await fixture.Repository.AssignAgvGraphToMapsAsync(agv.CorrelationId);
 
-        List<GraphNode> newNodes = nodes.Select(n => fixture.Mapper.Map<GraphNode>(new GraphNode(n.Id, n.Name, n.X, n.Y, n.Z, AgvGraph.NodeType.Maintenance, 1337, 1337, DockingDirection.Both))).ToList();
+        var newNodes = nodes.Select(n => fixture.Mapper.Map<GraphNode>(new GraphNode(n.Id, n.Name, n.X, n.Y, n.Z, AgvGraph.NodeType.Maintenance, 1337, 1337, DockingDirection.Both))).ToList();
         newNodes = newNodes.Take(1).ToList();
         var newNode = fixture.Mapper.Map<GraphNode>(new GraphNode("testNode".ToGuid(), "testNode", 42, 42, 42, AgvGraph.NodeType.Maintenance, null, null, DockingDirection.Both));
 

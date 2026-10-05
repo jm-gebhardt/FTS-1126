@@ -16,11 +16,11 @@ public class BackgroundToBackgroundDtoConverter : ITypeConverter<Background, Bac
     /// <inheritdoc />
     public BackgroundDto Convert(Background source, BackgroundDto destination, ResolutionContext context)
     {
-        List<BackgroundObjectDto> objects = source.Objects
+        var objects = source.Objects
             .Select(o => context.Mapper.Map<BackgroundObjectDto>(o))
             .ToList();
 
-        List<LayerDto> layers = source.Layers
+        var layers = source.Layers
             .Select(l => new LayerDto(
                 l.ExternalId,
                 l.Name,

@@ -55,10 +55,10 @@ public class GetAgvBatteryRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetAgvsBattery> context)
     {
-        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
+        var selectedAgvs = context.Message.CorrelationIds;
+        var agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
 
-        List<Guid> agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
+        var agvCorrelationIds = agvs.Select(a => a.CorrelationId).ToList();
         if (agvCorrelationIds.Count != selectedAgvs.Count && selectedAgvs.Count != 0)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvCorrelationIds).ToList());

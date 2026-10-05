@@ -18,7 +18,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
             return agv;
         }
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        DbSet<Agv> dbSet = context.Set<Agv>();
+        var dbSet = context.Set<Agv>();
         return await dbSet.SingleOrDefaultAsync(a => a.CorrelationId == correlationId);
     }
 
@@ -37,7 +37,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
             return agv;
         }
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        DbSet<Agv> dbSet = context.Set<Agv>();
+        var dbSet = context.Set<Agv>();
         agv = await dbSet.SingleOrDefaultAsync(a => a.CurrentOrder == orderId);
         return agv ?? throw new AgvNotFoundException(orderId);
     }
@@ -46,7 +46,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     private async Task<IReadOnlyCollection<Agv>> GetAllAsync()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        DbSet<Agv> dbSet = context.Set<Agv>();
+        var dbSet = context.Set<Agv>();
         return await dbSet.ToListAsync();
     }
 
@@ -54,7 +54,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     public async Task AddOrUpdateAsync(Agv agv, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        DbSet<Agv> dbSet = context.Set<Agv>();
+        var dbSet = context.Set<Agv>();
         if (agvCache.ConcurrentDict.ContainsKey(agv.CorrelationId))
         {
             agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
@@ -73,7 +73,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     public async Task InitializeCacheAsync()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<Agv> agvs = await context.Set<Agv>().ToListAsync();
+        var agvs = await context.Set<Agv>().ToListAsync();
         foreach (var agv in agvs)
         {
             agvCache.ConcurrentDict.AddOrUpdate(agv.CorrelationId, agv, (_, _) => agv);
@@ -83,7 +83,7 @@ public class EfAgvRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     /// <inheritdoc cref="IAgvRepository"/>
     public async Task<ICollection<Agv>> GetAllForVehicleTypesAsync(ICollection<string> vehicleTypeIds)
     {
-        HashSet<string> vehicles = vehicleTypeIds.ToHashSet();
+        var vehicles = vehicleTypeIds.ToHashSet();
         return (await GetAllAsync()).Where(a => vehicles.Contains(a.VehicleTypeId)).ToList();
     }
 }

@@ -52,7 +52,7 @@ public class GridController : Controller
     [Route("/grids/")]
     public async Task<ActionResult<IEnumerable<GridDto>>> GetGrids()
     {
-        Response<GotGrids> response = await _getGridsClient.GetResponse<GotGrids>(new GetGrids(Guid.NewGuid()));
+        var response = await _getGridsClient.GetResponse<GotGrids>(new GetGrids(Guid.NewGuid()));
         var grids = _mapper.Map<List<GridDto>>(response.Message.Grids);
         return Ok(grids);
     }
@@ -83,7 +83,7 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/positionFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetPositionFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds)
     {
-        Response<GotStayDurations> response = await _getStayDurationsClient.GetResponse<GotStayDurations>(
+        var response = await _getStayDurationsClient.GetResponse<GotStayDurations>(
             new GetStayDurations
             {
                 GridId = gridId,
@@ -111,7 +111,7 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/errorFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetErrorFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds, string? errorCode)
     {
-        Response<GotStayDurations> response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
+        var response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
             new GetErrorFrequencies
             {
                 GridId = gridId,
@@ -142,7 +142,7 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/warningFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetWarningFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds, string? errorCode)
     {
-        Response<GotStayDurations> response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
+        var response = await _getErrorFrequencyClient.GetResponse<GotStayDurations>(
             new GetErrorFrequencies
             {
                 GridId = gridId,
@@ -171,7 +171,7 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/safetyFieldViolationFrequency")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetFieldViolationFrequency([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds)
     {
-        Response<GotStayDurations> response = await _getFieldViolationFrequencyClient.GetResponse<GotStayDurations>(
+        var response = await _getFieldViolationFrequencyClient.GetResponse<GotStayDurations>(
             new GetFieldViolationFrequencies
             {
                 GridId = gridId,
@@ -198,7 +198,7 @@ public class GridController : Controller
     [Route("/grid/{gridId:guid}/wifiSignalStrength")]
     public async Task<ActionResult<ScalarHeatmapDto>> GetWifiSignalStrength([Required] Guid gridId, [Required] Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds)
     {
-        Response<GotWifiSignalStrength> response = await _getWifiSignalStrengthClient.GetResponse<GotWifiSignalStrength>(
+        var response = await _getWifiSignalStrengthClient.GetResponse<GotWifiSignalStrength>(
             new GetWifiSignalStrength
             {
                 GridId = gridId,

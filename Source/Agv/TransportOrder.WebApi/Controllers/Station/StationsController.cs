@@ -34,7 +34,7 @@ public class StationsController : Controller
     [Route("/stations")]
     public async Task<ActionResult<ICollection<StationDto>>> GetStations(CancellationToken cancellationToken)
     {
-        Response<GotStations> response = await _getStationsClient.GetResponse<GotStations>(new GetStations(Guid.NewGuid()), cancellationToken);
+        var response = await _getStationsClient.GetResponse<GotStations>(new GetStations(Guid.NewGuid()), cancellationToken);
         var stationsDto = _mapper.Map<List<StationDto>>(response.Message.Stations);
         return Ok(stationsDto);
     }

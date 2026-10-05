@@ -37,7 +37,7 @@ public class TelegramQueuePersistenceService : IAsyncDisposable
 
         var telegramRepository = scope.ServiceProvider.GetRequiredService<ITelegramRepository>();
 
-        ICollection<Telegram> telegrams = await telegramRepository.GetAll();
+        var telegrams = await telegramRepository.GetAll();
         _isReloading = true;
         foreach (var telegram in telegrams.OrderBy(t => t.QueuedDate))
         {

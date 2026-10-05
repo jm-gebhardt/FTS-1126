@@ -20,7 +20,7 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_ValidData_CreatesOrder()
     {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(null)
             .WithHostCommunicator();
@@ -45,7 +45,7 @@ public class HostOrderCommandHandlerTest
         var unfinishedOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateUnknownDropTargetOrder(hu), createdDate.AddMinutes(-2));
         var orderDetails = OrderGenerator.GenerateUnknownDropTargetOrder(hu);
 
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostOrderWithSameHu(unfinishedOrder)
             .WithHostCommunicator();
@@ -61,7 +61,7 @@ public class HostOrderCommandHandlerTest
         var hostOrder = new HostOrder("OrderId", "Hu", DateTime.UtcNow);
         hostOrder.AddAction("node", ActionType.Pick);
         hostOrder.AddAction("node", ActionType.Drop);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -77,7 +77,7 @@ public class HostOrderCommandHandlerTest
         var hostOrder = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: false));
         hostOrder.Finish(now.AddDays(1));
 
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -92,7 +92,7 @@ public class HostOrderCommandHandlerTest
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var pickAction = order.Actions.Single(a => a.ActionType == ActionType.Pick);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
@@ -110,7 +110,7 @@ public class HostOrderCommandHandlerTest
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var pickAction = order.Actions.Single(a => a.ActionType == ActionType.Pick);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
@@ -126,7 +126,7 @@ public class HostOrderCommandHandlerTest
     {
         var orderDetails = OrderGenerator.GenerateUnknownPickTargetOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
@@ -143,7 +143,7 @@ public class HostOrderCommandHandlerTest
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var pickAction = order.Actions.Single(a => a.ActionType == ActionType.Pick);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostCommunicator();
 
         var command = new FinishPick("Unknown".ToGuid(), pickAction.CorrelationId, DateTime.UtcNow);
@@ -159,7 +159,7 @@ public class HostOrderCommandHandlerTest
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
         var dropAction = order.Actions.Single(a => a.ActionType == ActionType.Drop);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 
@@ -175,7 +175,7 @@ public class HostOrderCommandHandlerTest
     {
         var orderDetails = OrderGenerator.GenerateShortCircuitOrder();
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(orderDetails);
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(order)
             .WithHostCommunicator();
 

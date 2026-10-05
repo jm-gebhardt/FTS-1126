@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Moq;
 using Shouldly;
 
@@ -22,7 +21,7 @@ public class MapRequestHandlerTest
     {
         var fixture = new MapRequestTestFixture<GetMap, MapRequestHandler>();
 
-        Response<GotMap> response = await fixture.GetResponseAsync<GotMap>(new GetMap(fixture.Maps[0].CorrelationId));
+        var response = await fixture.GetResponseAsync<GotMap>(new GetMap(fixture.Maps[0].CorrelationId));
 
         fixture.MapRepositoryMock.Verify(m => m.GetMapAsync(fixture.Maps[0].CorrelationId), Times.Once);
         response.Message.Map.CorrelationId.ShouldBe(fixture.Maps[0].CorrelationId);
@@ -33,8 +32,8 @@ public class MapRequestHandlerTest
     {
         var fixture = new MapRequestTestFixture<GetMapList, MapRequestHandler>();
 
-        Response<GotMapList> response = await fixture.GetResponseAsync<GotMapList>(new GetMapList());
-        List<TransportOrder.Messages.Requests.Map.Map> maps = response.Message.Maps;
+        var response = await fixture.GetResponseAsync<GotMapList>(new GetMapList());
+        var maps = response.Message.Maps;
 
         maps.ShouldNotBeEmpty();
 
@@ -61,10 +60,10 @@ public class MapRequestHandlerTest
     public async Task GetBackgroundImage_ShouldReturn_ImageByteArray_WhenBackgroundExists()
     {
         var mapBackground = MapBackgroundGenerator.Generate();
-        MapRequestTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapRequestTestFixture<GetBackgroundImage, MapRequestHandler>()
+        var fixture = new MapRequestTestFixture<GetBackgroundImage, MapRequestHandler>()
             .WithMapBackground(mapBackground);
 
-        Response<GotBackgroundImage> response = await fixture.GetResponseAsync<GotBackgroundImage>(new GetBackgroundImage(mapBackground.CorrelationId));
+        var response = await fixture.GetResponseAsync<GotBackgroundImage>(new GetBackgroundImage(mapBackground.CorrelationId));
 
         response.Message.Image.ShouldNotBeEmpty();
         response.Message.Image.Length.ShouldBe(mapBackground.Image.Length);
@@ -80,7 +79,7 @@ public class MapRequestHandlerTest
     public async Task GetBackgroundImage_ShouldThrow_MapNotFoundException_WhenImageMissing()
     {
         var mapBackground = MapBackgroundGenerator.Generate(image: []);
-        MapRequestTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapRequestTestFixture<GetBackgroundImage, MapRequestHandler>()
+        var fixture = new MapRequestTestFixture<GetBackgroundImage, MapRequestHandler>()
             .WithMapBackground(mapBackground);
 
         await MediatorShould.ThrowRequestExceptionAsync<MapNotFoundException>(async () => await fixture.GetResponseAsync<GotBackgroundImage>(new GetBackgroundImage(mapBackground.CorrelationId)));

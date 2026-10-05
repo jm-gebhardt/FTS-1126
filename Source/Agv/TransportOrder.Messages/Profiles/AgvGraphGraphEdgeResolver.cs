@@ -22,7 +22,7 @@ public class AgvGraphGraphEdgeResolver : IValueResolver<AgvGraph, Graph, object>
     {
         var graphEdges = new List<GraphEdge>();
 
-        Dictionary<Guid, GraphNode> nodeDict = source.Nodes.ToDictionary(node => node.Id);
+        var nodeDict = source.Nodes.ToDictionary(node => node.Id);
 
         foreach (var edge in source.Edges)
         {

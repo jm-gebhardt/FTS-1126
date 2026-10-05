@@ -1,6 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Messages.Maps;
-using Gebhardt.Acc.Statistics.Domain.Models;
+﻿using Gebhardt.Acc.Common.Messages.Maps;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
@@ -31,13 +29,13 @@ public class GridEventHandler : IConsumer<MapSaved>
     {
         var newMap = context.Message.Map;
         _logger.LogDebug("Consume MapSaved: Map is {MapId} with {NodeCount}", newMap.MapId, newMap.Nodes.Count);
-        ICollection<Grid> grids = await _db.Grids.GetAll();
+        var grids = await _db.Grids.GetAll();
 
         foreach (var grid in grids)
         {
             var map = await _db.Maps.GetMapAsync(newMap.CorrelationId);
 
-            ICollection<GraphNode> nodes = newMap.Nodes;
+            var nodes = newMap.Nodes;
             int xMin = (int) Math.Floor(nodes.MinBy(n => n.X)!.X);
             int yMin = (int) Math.Floor(nodes.MinBy(n => n.Y)!.Y);
             int xMax = (int) Math.Ceiling(nodes.MaxBy(n => n.X)!.X);

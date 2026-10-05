@@ -13,7 +13,7 @@ public class IoActionExecutionServiceTest
     {
         var config = await ConfigGenerator.GenerateConfigAsync();
         var ioActionConfig = config.Modules.First().IoActionConfigs.First();
-        List<ActionDefinition> actionDefinitions = ioActionConfig.Parameters.Cast<ActionDefinition>().ToList();
+        var actionDefinitions = ioActionConfig.Parameters.Cast<ActionDefinition>().ToList();
         var fixture = new IoActionExecutionServiceTestFixture();
 
         await fixture.IoActionExecutionService.ExecuteActionAsync(ioActionConfig);

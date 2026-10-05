@@ -43,7 +43,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ReleaseSteps_ContiguousPrefixFromStart_ReturnsSuccess()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
 
         var result = routeExecution.ReleaseSteps([steps[0].RouteStepId, steps[1].RouteStepId]);
 
@@ -53,7 +53,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ReleaseSteps_ContiguousPrefixFromStart_ReleasesOnlyNamedSteps()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
 
         routeExecution.ReleaseSteps([steps[0].RouteStepId, steps[1].RouteStepId]);
 
@@ -65,7 +65,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ReleaseSteps_ExtendingAnAlreadyReleasedPrefix_ReturnsSuccess()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
         routeExecution.ReleaseSteps([steps[0].RouteStepId]);
 
         var result = routeExecution.ReleaseSteps([steps[1].RouteStepId]);
@@ -77,7 +77,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ReleaseSteps_SkippingAnUnreleasedStep_ReturnsReleaseNotContiguousError()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
 
         // Step 0 is never released, but step 1 is named — a gap in the base/horizon sequence.
         var result = routeExecution.ReleaseSteps([steps[1].RouteStepId]);
@@ -89,7 +89,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ReleaseSteps_SkippingAnUnreleasedStep_DoesNotReleaseAnything()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
 
         routeExecution.ReleaseSteps([steps[1].RouteStepId]);
 
@@ -177,7 +177,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ApplyUpdate_AfterRelease_PreservesReleasedStateForStepsThatStillExist()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
         routeExecution.ReleaseSteps([steps[0].RouteStepId]);
         routeExecution.MintNextOrderId();
         RouteStepExecution[] updatedSteps = [new(steps[0].RouteStepId, steps[0].StartNodeId, steps[0].EdgeId, steps[0].EndNodeId, null), CreateStep()];
@@ -190,7 +190,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void ApplyUpdate_AfterRelease_NewlyAddedStepsAreUnreleased()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
         routeExecution.ReleaseSteps([steps[0].RouteStepId]);
         routeExecution.MintNextOrderId();
         var newStep = CreateStep();
@@ -224,7 +224,7 @@ public class RouteExecutionTest
     [TestMethod]
     public void RecordStepStatus_KnownStep_UpdatesStatusAndFailureReason()
     {
-        var routeExecution = CreatePlannedRouteExecution(out RouteStepExecution[] steps);
+        var routeExecution = CreatePlannedRouteExecution(out var steps);
 
         routeExecution.RecordStepStatus(steps[0].RouteStepId, RouteStepStatus.Failed, "boom");
 

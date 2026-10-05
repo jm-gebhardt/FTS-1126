@@ -18,12 +18,12 @@ public class ActionGroupStatisticsRequestHandler(IActionGroupRepository actionGr
     /// </summary>
     public async Task Consume(ConsumeContext<GetActionGroupStatistics> context)
     {
-        (Guid? source, Guid? target) = context.Message;
+        var (source, target) = context.Message;
         var cancellationToken = context.CancellationToken;
         
-        Dictionary<ActionType, ICollection<double>> actionDurations = await actionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, source, target, cancellationToken: cancellationToken);
+        var actionDurations = await actionGroupRepository.GetActionDurationsByTypeAsync(ActionGroupState.Completed, source, target, cancellationToken: cancellationToken);
         List<DurationStatistics> statistics = [];
-        foreach ((var actionType, ICollection<double> durations) in actionDurations)
+        foreach (var (actionType, durations) in actionDurations)
         {
             statistics.Add(new DurationStatistics(actionType, durations.Median(), durations.Min(), durations.Max()));
         }

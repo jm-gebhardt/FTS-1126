@@ -64,7 +64,7 @@ public class FilterTemplateRequestHandler(IOwnedFilterTemplateRepository filterT
     {
         // Do not only get filter templates for this user, but all of them
         // Storing them as an owned property is only done to ease later migrations for systems with multiple users
-        ICollection<OwnedFilterTemplate> filters = await filterTemplateRepository.GetAllResources();
+        var filters = await filterTemplateRepository.GetAllResources();
 
         await context.RespondAsync(new GotFilterTemplates(filters));
     }

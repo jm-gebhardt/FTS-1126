@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.TransportOrder.Domain.Models.BackgroundEditor;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.BackgroundEditor;
@@ -57,9 +56,9 @@ public class BackgroundEditorRequestHandler(IBackgroundEditorRepository backgrou
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetBackgrounds> context)
     {
-        (ICollection<Guid> mapIds, int maxCount) = context.Message;
+        (var mapIds, int maxCount) = context.Message;
 
-        ICollection<Background> backgrounds = await backgroundEditorRepository.GetBackgroundsAsync(mapIds, maxCount);
+        var backgrounds = await backgroundEditorRepository.GetBackgroundsAsync(mapIds, maxCount);
         await context.RespondAsync(new GotBackgrounds(backgrounds));
     }
 }

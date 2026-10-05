@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Gebhardt.Acc.TransportOrder.Test.Helper;
+﻿using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
@@ -16,10 +15,10 @@ public class CargoRepositoryTest
 
         var agv = AgvGenerator.GenerateBusyAgv();
         await agvRepository.AddAgvAsync(agv);
-        ReadOnlyCollection<Cargo> cargos = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
+        var cargos = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
         await fixture.Repository.SetCargoAsync(agv.CorrelationId, cargos);
 
-        IReadOnlyCollection<Cargo> selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
+        var selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
         selectedAgvCargoes.ShouldNotBeNull();
         selectedAgvCargoes.Count.ShouldBe(cargos.Count);
         selectedAgvCargoes.First().LoadId.ShouldBe(cargos.First().LoadId);
@@ -29,11 +28,11 @@ public class CargoRepositoryTest
     public async Task GetCargosForAgv_CachedCargo__ReturnsSelectedAgvCargos()
     {
         var agv = Guid.NewGuid();
-        ReadOnlyCollection<Cargo> cargos = AgvCargoGenerator.GenerateCargos(1, agv).ToList().AsReadOnly();
+        var cargos = AgvCargoGenerator.GenerateCargos(1, agv).ToList().AsReadOnly();
         var fixture = new CargoRepositoryTestFixture()
             .WithCachedCargo(agv, cargos.ToList());
 
-        IReadOnlyCollection<Cargo> selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv);
+        var selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv);
         selectedAgvCargoes.ShouldNotBeNull();
         selectedAgvCargoes.Count.ShouldBe(cargos.Count);
         selectedAgvCargoes.First().LoadId.ShouldBe(cargos.First().LoadId);
@@ -43,7 +42,7 @@ public class CargoRepositoryTest
     public async Task SetCargoForAgv_UpdateCargo_ReturnsSuccessful()
     {
         var agv = AgvGenerator.GenerateBusyAgv();
-        ReadOnlyCollection<Cargo> cargos = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
+        var cargos = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
 
         var fixture = new CargoRepositoryTestFixture();
         var agvRepository = fixture.AgvRepository;
@@ -51,18 +50,18 @@ public class CargoRepositoryTest
         await agvRepository.AddAgvAsync(agv);
         await fixture.Repository.SetCargoAsync(agv.CorrelationId, cargos);
 
-        ReadOnlyCollection<Cargo> updatedCargo = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId, "NewPos-").ToList().AsReadOnly();
+        var updatedCargo = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId, "NewPos-").ToList().AsReadOnly();
 
         bool success = await fixture.Repository.SetCargoAsync(agv.CorrelationId, updatedCargo);
         success.ShouldBeTrue();
 
-        IReadOnlyCollection<Cargo> selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
+        var selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
         selectedAgvCargoes.ShouldNotBeNull();
         selectedAgvCargoes.Count.ShouldBe(updatedCargo.Count);
         selectedAgvCargoes.First().LoadId.ShouldBe(updatedCargo.First().LoadId);
         selectedAgvCargoes.First().LoadPosition.ShouldBe(updatedCargo.First().LoadPosition);
 
-        List<Cargo> cachedCargo = fixture.GetCachedCargo(agv.CorrelationId);
+        var cachedCargo = fixture.GetCachedCargo(agv.CorrelationId);
         cachedCargo.Count.ShouldBe(updatedCargo.Count);
         cachedCargo.First().LoadId.ShouldBe(updatedCargo.First().LoadId);
         cachedCargo.First().LoadPosition.ShouldBe(updatedCargo.First().LoadPosition);
@@ -77,21 +76,21 @@ public class CargoRepositoryTest
         var agv = AgvGenerator.GenerateBusyAgv();
         await agvRepository.AddAgvAsync(agv);
 
-        ReadOnlyCollection<Cargo> cargos = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
+        var cargos = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
 
         await fixture.Repository.SetCargoAsync(agv.CorrelationId, cargos);
 
-        ReadOnlyCollection<Cargo> updatedCargo = AgvCargoGenerator.GenerateCargos(2, agv.CorrelationId, "NewPos-").ToList().AsReadOnly();
+        var updatedCargo = AgvCargoGenerator.GenerateCargos(2, agv.CorrelationId, "NewPos-").ToList().AsReadOnly();
         bool success = await fixture.Repository.SetCargoAsync(agv.CorrelationId, updatedCargo);
         success.ShouldBeTrue();
 
-        IReadOnlyCollection<Cargo> selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
+        var selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
         selectedAgvCargoes.ShouldNotBeNull();
         selectedAgvCargoes.Count.ShouldBe(updatedCargo.Count);
         selectedAgvCargoes.Any(c => c.LoadPosition == updatedCargo[0].LoadPosition).ShouldBeTrue();
         selectedAgvCargoes.Any(c => c.LoadPosition == updatedCargo[1].LoadPosition).ShouldBeTrue();
 
-        List<Cargo> cachedCargo = fixture.GetCachedCargo(agv.CorrelationId);
+        var cachedCargo = fixture.GetCachedCargo(agv.CorrelationId);
         cachedCargo.Count.ShouldBe(updatedCargo.Count);
         cachedCargo.Any(c => c.LoadPosition == updatedCargo[0].LoadPosition).ShouldBeTrue();
         cachedCargo.Any(c => c.LoadPosition == updatedCargo[1].LoadPosition).ShouldBeTrue();
@@ -105,20 +104,20 @@ public class CargoRepositoryTest
 
         var agv = AgvGenerator.GenerateBusyAgv();
         await agvRepository.AddAgvAsync(agv);
-        ReadOnlyCollection<Cargo> cargos = AgvCargoGenerator.GenerateCargos(2, agv.CorrelationId).ToList().AsReadOnly();
+        var cargos = AgvCargoGenerator.GenerateCargos(2, agv.CorrelationId).ToList().AsReadOnly();
         await fixture.Repository.SetCargoAsync(agv.CorrelationId, cargos);
 
-        ReadOnlyCollection<Cargo> onlyOneCargo = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
+        var onlyOneCargo = AgvCargoGenerator.GenerateCargos(1, agv.CorrelationId).ToList().AsReadOnly();
 
         bool success = await fixture.Repository.SetCargoAsync(agv.CorrelationId, onlyOneCargo);
         success.ShouldBeTrue();
 
-        IReadOnlyCollection<Cargo> selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
+        var selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
         selectedAgvCargoes.ShouldNotBeNull();
         selectedAgvCargoes.Count.ShouldBe(onlyOneCargo.Count);
         selectedAgvCargoes.Any(c => c.LoadId == onlyOneCargo.First().LoadId).ShouldBeTrue();
 
-        List<Cargo> cachedCargo = fixture.GetCachedCargo(agv.CorrelationId);
+        var cachedCargo = fixture.GetCachedCargo(agv.CorrelationId);
         cachedCargo.Count.ShouldBe(onlyOneCargo.Count);
         cachedCargo.Any(c => c.LoadId == onlyOneCargo.First().LoadId).ShouldBeTrue();
     }
@@ -131,7 +130,7 @@ public class CargoRepositoryTest
 
         var agv = AgvGenerator.GenerateBusyAgv();
         await agvRepository.AddAgvAsync(agv);
-        ReadOnlyCollection<Cargo> cargos = AgvCargoGenerator.GenerateCargos(2, agv.CorrelationId).ToList().AsReadOnly();
+        var cargos = AgvCargoGenerator.GenerateCargos(2, agv.CorrelationId).ToList().AsReadOnly();
 
         await fixture.Repository.SetCargoAsync(agv.CorrelationId, cargos);
 
@@ -139,7 +138,7 @@ public class CargoRepositoryTest
         bool success = await fixture.Repository.SetCargoAsync(agv.CorrelationId, cargos);
         success.ShouldBeTrue();
 
-        IReadOnlyCollection<Cargo> selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
+        var selectedAgvCargoes = await fixture.Repository.GetCargosAsync(agv.CorrelationId);
         selectedAgvCargoes.ShouldNotBeNull();
         selectedAgvCargoes.Count.ShouldBe(0);
 

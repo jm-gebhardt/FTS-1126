@@ -44,7 +44,7 @@ public class EfAgvWifiMetricsRepositoryTest
         );
 
         result.Values.ShouldHaveSingleItem();
-        List<float> row = result.Values.Single().ToList();
+        var row = result.Values.Single().ToList();
         row[0].ShouldBe(1);
         row[1].ShouldBe(1);
         row[2].ShouldBe(-42f, 0.001f);
@@ -83,7 +83,7 @@ public class EfAgvWifiMetricsRepositoryTest
         // avg_dBm = 10 * log10(3.7*10-7) ≈ -64.3
 
         result.Values.ShouldHaveSingleItem();
-        List<float> row = result.Values.Single().ToList();
+        var row = result.Values.Single().ToList();
         row[0].ShouldBe(1);
         row[1].ShouldBe(1);
         row[2].ShouldBe(-64.3f, 0.1f);

@@ -17,7 +17,7 @@ public class OldestActionGroupChooserTest
         var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, createdDate: now);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        ChooseAgvActionGroupTestFixture<OldestActionGroupChooser> fixture = new ChooseAgvActionGroupTestFixture<OldestActionGroupChooser>()
+        var fixture = new ChooseAgvActionGroupTestFixture<OldestActionGroupChooser>()
             .WithNotStartedActionGroup(oldSlowActionGroup)
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.Node!.Name, oldSlowActionGroup.Actions.Last().Target.Node!.Name, oldSlowActionGroup, 10f)

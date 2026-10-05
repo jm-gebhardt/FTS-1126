@@ -34,7 +34,7 @@ public class AgvProvider(
     {
         try
         {
-            IReadOnlyCollection<SimulatedAgvTypeConfiguration> configurations = await configurationRepository.GetAllAsync();
+            var configurations = await configurationRepository.GetAllAsync();
 
             logger.LogInformation("Creating simulated AGVs for {AgvTypes} configured AGV types", configurations.Count);
             foreach (var configuration in configurations)

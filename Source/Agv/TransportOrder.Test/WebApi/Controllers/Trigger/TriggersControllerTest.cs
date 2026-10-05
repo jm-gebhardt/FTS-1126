@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Trigger;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Trigger;
@@ -10,12 +9,12 @@ public class TriggersControllerTest
     [TestMethod]
     public async Task GetTriggers_ValidData_ReturnsTriggerDtos()
     {
-        List<TransportOrder.Domain.Models.Trigger.Trigger> triggers = TriggerGenerator.CreateTriggers(3);
+        var triggers = TriggerGenerator.CreateTriggers(3);
         var fixture = new TriggersControllerTestFixture()
             .WithTriggers(triggers)
             .Build();
 
-        ICollection<TriggerDto> triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetTriggers());
+        var triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetTriggers());
 
         triggerDtos.Count.ShouldBe(3);
     }
@@ -27,7 +26,7 @@ public class TriggersControllerTest
             .WithTriggers([])
             .Build();
 
-        ICollection<TriggerDto> triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetTriggers());
+        var triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetTriggers());
 
         triggerDtos.ShouldBeEmpty();
     }
@@ -44,7 +43,7 @@ public class TriggersControllerTest
             .WithDeletedTriggers(deletedTriggers)
             .Build();
 
-        ICollection<TriggerDto> triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetDeletedTriggers());
+        var triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetDeletedTriggers());
 
         triggerDtos.Count.ShouldBe(2);
     }
@@ -56,7 +55,7 @@ public class TriggersControllerTest
             .WithDeletedTriggers([])
             .Build();
 
-        ICollection<TriggerDto> triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetDeletedTriggers());
+        var triggerDtos = await fixture.GetControllerResultValueAsync(c => c.GetDeletedTriggers());
 
         triggerDtos.ShouldBeEmpty();
     }

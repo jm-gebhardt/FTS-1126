@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Statistics.Domain.Models;
-using Gebhardt.Acc.Statistics.Domain.ReadModels;
+﻿using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Messages.Requests;
 using JetBrains.Annotations;
@@ -41,7 +40,7 @@ public class GridRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetGrids> context)
     {
-        ICollection<Grid> grids = await _db.Grids.GetGridsAsync();
+        var grids = await _db.Grids.GetGridsAsync();
         await context.RespondAsync(new GotGrids(grids.ToList()));
     }
 
@@ -52,9 +51,9 @@ public class GridRequestHandler :
     {
         var gridId = context.Message.GridId;
         var mapId = context.Message.MapId;
-        DateTime? fromDate = context.Message.FromDate;
-        DateTime? toDate = context.Message.ToDate;
-        Guid[] agvCorrelationIds = context.Message.AgvCorrelationIds;
+        var fromDate = context.Message.FromDate;
+        var toDate = context.Message.ToDate;
+        var agvCorrelationIds = context.Message.AgvCorrelationIds;
 
         var heatmap = await _db.GridCellStay.GetStayDurations(gridId, mapId, fromDate, toDate, agvCorrelationIds);
         await ValidateHeatmapAsync(heatmap, gridId, mapId);

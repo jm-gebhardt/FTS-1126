@@ -84,7 +84,7 @@ public class MqttMessagesExtensionsTest
         };
 
         var bezier = edge.ToBezier(start, end);
-        Vector2[] interpolation = bezier.InterpolateCurve(5).ToArray();
+        var interpolation = bezier.InterpolateCurve(5).ToArray();
 
         interpolation.First().ShouldBe(new Vector2(0f, 0f));
         interpolation.Last().ShouldBe(new Vector2(3f, 0f));

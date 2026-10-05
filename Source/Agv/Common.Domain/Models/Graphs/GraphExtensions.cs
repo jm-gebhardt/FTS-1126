@@ -16,13 +16,13 @@ public static class GraphExtensions
         /// <exception cref="ArgumentException"></exception>
         public void Validate()
         {
-            List<IGrouping<Guid, GraphEdge>> duplicateEdges = graph.Edges.GroupBy(e => e.Id).Where(g => g.Count() > 1).ToList();
+            var duplicateEdges = graph.Edges.GroupBy(e => e.Id).Where(g => g.Count() > 1).ToList();
             if (duplicateEdges.Count != 0)
             {
                 throw new ArgumentException("Duplicate Edges. Edge Ids must be unique.");
             }
 
-            List<IGrouping<Guid, GraphNode>> duplicateNodes = graph.Nodes.GroupBy(n => n.Id).Where(g => g.Count() > 1).ToList();
+            var duplicateNodes = graph.Nodes.GroupBy(n => n.Id).Where(g => g.Count() > 1).ToList();
             if (duplicateNodes.Count != 0)
             {
                 throw new ArgumentException("Duplicate Nodes. Node Ids must be unique.");
@@ -57,7 +57,7 @@ public static class GraphExtensions
         public double GetRouteLength(Guid[] routeEdges, Guid? lastNodeId)
         {
             double totalLength = 0.0;
-            List<Guid> lastEdge = graph.Edges.Where(e => e.ToNodeId == lastNodeId).Select(e => e.Id).ToList(); 
+            var lastEdge = graph.Edges.Where(e => e.ToNodeId == lastNodeId).Select(e => e.Id).ToList(); 
             foreach(var edgeId in routeEdges)
             {
                 totalLength += graph.Edges.SingleOrDefault(edge => edge.Id == edgeId)?.Length ?? 0;

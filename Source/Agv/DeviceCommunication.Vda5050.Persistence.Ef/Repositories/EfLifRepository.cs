@@ -17,8 +17,8 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
 
         if (deletedLayouts.Count > 0)
         {
-            HashSet<Guid> replacedIds = deletedLayouts.Select(l => l.Id).ToHashSet();
-            List<Layout> trackedReplaced = await context.Set<Layout>()
+            var replacedIds = deletedLayouts.Select(l => l.Id).ToHashSet();
+            var trackedReplaced = await context.Set<Layout>()
                 .Where(l => replacedIds.Contains(l.Id))
                 .ToListAsync();
             context.Set<Layout>().RemoveRange(trackedReplaced);
@@ -49,8 +49,8 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var file = context.Set<LifFile>().Single(l => l.Id == id);
-        HashSet<Guid> layoutIds = file.LayoutIds.ToHashSet();
-        IQueryable<Layout> layouts = context.Set<Layout>().Where(l => layoutIds.Contains(l.Id));
+        var layoutIds = file.LayoutIds.ToHashSet();
+        var layouts = context.Set<Layout>().Where(l => layoutIds.Contains(l.Id));
 
         context.Set<Layout>().RemoveRange(layouts);
         context.Set<LifFile>().Remove(file);
@@ -72,8 +72,8 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
         await using var context = await dbContextFactory.CreateDbContextAsync();
         if (deletedLayouts.Count > 0)
         {
-            HashSet<Guid> replacedIds = deletedLayouts.Select(l => l.Id).ToHashSet();
-            List<Layout> trackedReplaced = await context.Set<Layout>()
+            var replacedIds = deletedLayouts.Select(l => l.Id).ToHashSet();
+            var trackedReplaced = await context.Set<Layout>()
                 .Where(l => replacedIds.Contains(l.Id))
                 .ToListAsync();
             context.Set<Layout>().RemoveRange(trackedReplaced);
@@ -86,8 +86,8 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     public async Task<ICollection<Layout>> GetLayoutsByIdsAsync(ICollection<Guid> layoutIds)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        HashSet<Guid> idSet = layoutIds.ToHashSet();
-        List<Layout> layouts = await context.Set<Layout>().Where(l => idSet.Contains(l.Id)).ToListAsync();
+        var idSet = layoutIds.ToHashSet();
+        var layouts = await context.Set<Layout>().Where(l => idSet.Contains(l.Id)).ToListAsync();
         return layouts;
     }
 
@@ -110,15 +110,15 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     public async Task<(ICollection<LifFile> lifs, ICollection<Layout> layouts)> GetLifsByVehicleTypeIdsAsync(string[] vehicleTypeIds)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<LifFile> lifFiles = (await GetAllFilesAsync()).Where(f => f.SupportedVehicleTypes.Any(v => vehicleTypeIds.Contains(v))).ToList();
+        var lifFiles = (await GetAllFilesAsync()).Where(f => f.SupportedVehicleTypes.Any(v => vehicleTypeIds.Contains(v))).ToList();
         if (lifFiles.Count != 0)
         {
             // if lif is uploaded via file upload
-            ICollection<Layout> uploadedLayouts = await GetLayoutsByIdsAsync(lifFiles.SelectMany(f => f.LayoutIds).Distinct().ToList());
+            var uploadedLayouts = await GetLayoutsByIdsAsync(lifFiles.SelectMany(f => f.LayoutIds).Distinct().ToList());
             return (lifFiles, uploadedLayouts);
         }
         // if lif collection was uploaded directly
-        List<Layout> layouts = await context.Set<Layout>().ToListAsync();
+        var layouts = await context.Set<Layout>().ToListAsync();
         return ([], layouts.Where(l => l.GetSupportedVehicleTypes().Any(v => vehicleTypeIds.Contains(v))).ToList());
     }
 
@@ -126,14 +126,14 @@ public class EfLifRepository(IDbContextFactory<DeviceCommunicationVda5050DbConte
     public async Task<ICollection<Layout>> GetLayoutsByVehicleTypeIdAsync(string vehicleTypeId)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<LifFile> lifFiles = (await GetAllFilesAsync()).Where(f => f.SupportedVehicleTypes.Contains(vehicleTypeId)).ToList();
+        var lifFiles = (await GetAllFilesAsync()).Where(f => f.SupportedVehicleTypes.Contains(vehicleTypeId)).ToList();
         if (lifFiles.Count != 0)
         {
             // if lif is uploaded via file upload
             return await GetLayoutsByIdsAsync(lifFiles.SelectMany(f => f.LayoutIds).Distinct().ToList());
         }
         // if lif collection was uploaded directly
-        List<Layout> layouts = await context.Set<Layout>().ToListAsync();
+        var layouts = await context.Set<Layout>().ToListAsync();
         return layouts.Where(l => l.GetSupportedVehicleTypes().Contains(vehicleTypeId)).ToList();
     }
 }

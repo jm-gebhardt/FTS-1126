@@ -223,7 +223,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
 
     private bool TryReserveStep(RouteStep routeStep, Guid agvCorrelationId)
     {
-        if (reservationManager.TryReserve([routeStep.RoutingEdge, routeStep.RoutingEdge.EndNode], agvCorrelationId, out IReadOnlyCollection<ReservationTicket> tickets))
+        if (reservationManager.TryReserve([routeStep.RoutingEdge, routeStep.RoutingEdge.EndNode], agvCorrelationId, out var tickets))
         {
             routeStep.AddReservations(tickets);
             return true;

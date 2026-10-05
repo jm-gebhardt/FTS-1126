@@ -34,7 +34,7 @@ public abstract class SimulatorBase(IBus bus, ILogger<SimulatorBase> logger) : I
             return;
         }
 
-        (List<string> sources, List<string> destinations) = SourceDestinationPools[_random.Next(SourceDestinationPools.Count)];
+        var (sources, destinations) = SourceDestinationPools[_random.Next(SourceDestinationPools.Count)];
 
         _source = sources[_random.Next(sources.Count)];
         string destination = destinations[_random.Next(destinations.Count)];

@@ -13,7 +13,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using Trigger = Gebhardt.Acc.TransportOrder.Domain.Models.Trigger.Trigger;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -38,27 +37,27 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     /// <inheritdoc/>>
     public async Task Consume(ConsumeContext<GetTriggers> context)
     {
-        ICollection<Trigger> triggers = await triggerRepository.GetTriggers();
+        var triggers = await triggerRepository.GetTriggers();
         await context.RespondAsync(new GotTriggers(triggers));
     }
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetDeletedTriggers> context)
     {
-        ICollection<Trigger> triggers = await triggerRepository.GetDeletedTriggers();
+        var triggers = await triggerRepository.GetDeletedTriggers();
         await context.RespondAsync(new GotDeletedTriggers(triggers));
     }
 
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AssignTriggerToLocation> context)
     {
-        (var triggerId, var node, Guid? edgeId, ICollection<PolygonPoint> polygon, Guid? mapId, ICollection<ConfigurationParameter>? configurationParameters) = context.Message;
+        var (triggerId, node, edgeId, polygon, mapId, configurationParameters) = context.Message;
 
         await ValidateMessageContent(triggerId, node?.Id, edgeId, polygon, mapId, configurationParameters);
 
-        IRequestClient<AddTriggerLocation>? requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
+        var requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
 
-        Response<TriggerLocationAdded> response = await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, node, edgeId, polygon, mapId, configurationParameters));
+        var response = await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(triggerId, node, edgeId, polygon, mapId, configurationParameters));
         string? exceptionMessage = response.Message.Exception;
 
         if (exceptionMessage != null)
@@ -245,9 +244,9 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
     private async Task RequestAddingLocation<T>(ConsumeContext<T> context, Guid targetTriggerId, Location location)
     where T: class
     {
-        IRequestClient<AddTriggerLocation>? requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
+        var requestClient = context.CreateRequestClient<AddTriggerLocation>(bus);
 
-        Response<TriggerLocationAdded> response = await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(targetTriggerId, location.Node, location.EdgeId, location.Polygon.OrderBy(p => p.Index).Select(p => new PolygonPoint(p.X, p.Y)).ToList(), location.MapId, null));
+        var response = await requestClient.GetResponse<TriggerLocationAdded>(new AddTriggerLocation(targetTriggerId, location.Node, location.EdgeId, location.Polygon.OrderBy(p => p.Index).Select(p => new PolygonPoint(p.X, p.Y)).ToList(), location.MapId, null));
         string? exceptionMessage = response.Message.Exception;
 
         if (exceptionMessage != null)
@@ -263,7 +262,7 @@ public class TriggerRequestHandler(ITriggerRepository triggerRepository, IGraphR
         var (triggerId, targetTriggerId) = context.Message;
 
         var trigger = await triggerRepository.GetById(triggerId);
-        IEnumerable<Task> addingTasks = trigger.Locations.Select(l => RequestAddingLocation(context, targetTriggerId, l));
+        var addingTasks = trigger.Locations.Select(l => RequestAddingLocation(context, targetTriggerId, l));
         await Task.WhenAll(addingTasks);
         await context.RespondAsync(new Success());
     }

@@ -238,7 +238,7 @@ public class MoveAgvRequestHandler :
             shouldEscapeQueue: true,
             creator: creator
         );
-        IRequestClient<QueueActionGroup>? requestClient = context.CreateRequestClient<QueueActionGroup>(_bus);
+        var requestClient = context.CreateRequestClient<QueueActionGroup>(_bus);
         await requestClient.GetResponse<Success>(new QueueActionGroup(actionGroup, true));
     }
 

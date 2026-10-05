@@ -25,7 +25,7 @@ public class ExportedEdgeExtensionTest
             ControlPoints = [new ExportedControlPoint(1, 2), new ExportedControlPoint(2, 3), new ExportedControlPoint(3, 4), new ExportedControlPoint(5, 5)]
         };
 
-        ICollection<GraphEdge> edges = exportedEdge.ToGraphEdges(startNode, endNode);
+        var edges = exportedEdge.ToGraphEdges(startNode, endNode);
         edges.Select(e => e.Variant).Distinct().Single().ShouldBe(edgeType);
     }
 

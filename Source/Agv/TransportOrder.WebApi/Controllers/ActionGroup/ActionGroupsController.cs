@@ -51,7 +51,7 @@ public class ActionGroupsController : Controller
     [Route("/actionGroups")]
     public async Task<ActionResult<IEnumerable<ActionGroupDto>>> GetActionGroups(ActionGroupState[] states, DateTime? fromDate, DateTime? toDate, Guid? assignedAgv, int limit = 1000, SortBy sortBy = SortBy.CreatedDate, SortDirection sortDirection = SortDirection.Desc, CancellationToken cancellationToken = default)
     {
-        Response<GotActionGroups> response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>(new GetActionGroups(
+        var response = await _getAgvActionGroupsRequest.GetResponse<GotActionGroups>(new GetActionGroups(
             states,
             fromDate ?? DateTime.MinValue,
             toDate ?? DateTime.MaxValue,
@@ -60,7 +60,7 @@ public class ActionGroupsController : Controller
             sortBy,
             sortDirection == SortDirection.Desc),
             cancellationToken);
-        List<ActionGroupDto> actionGroups = response.Message.ActionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList();
+        var actionGroups = response.Message.ActionGroups.Select(g => _mapper.Map<ActionGroupDto>(g)).ToList();
         return Ok(actionGroups);
     }
 
@@ -72,7 +72,7 @@ public class ActionGroupsController : Controller
     [Route("/actionGroupsAggregate/byState")]
     public async Task<ActionResult<IEnumerable<AgvGroupCountByStateDto>>> GetActionGroupCountsByState(CancellationToken cancellationToken = default)
     {
-        Response<GotActionGroupCountsByState> response = await _getAgvActionGroupCountsByStateRequest.GetResponse<GotActionGroupCountsByState>(new GetActionGroupCountsByState(), cancellationToken);
+        var response = await _getAgvActionGroupCountsByStateRequest.GetResponse<GotActionGroupCountsByState>(new GetActionGroupCountsByState(), cancellationToken);
         var actionGroupCountByState = _mapper.Map<List<AgvGroupCountByStateDto>>(response.Message.AgvGroupCountByState);
         return Ok(actionGroupCountByState);
     }
@@ -89,7 +89,7 @@ public class ActionGroupsController : Controller
     [Route("/actionGroups/durationStatistics")]
     public async Task<ActionResult<IEnumerable<ActionDurationStatisticsDto>>> GetDurationStatistics([FromQuery] string? source, [FromQuery] string? target, CancellationToken cancellationToken = default)
     {
-        Response<GotActionGroupStatistics> response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()), cancellationToken);
+        var response = await _durationStatisticsRequest.GetResponse<GotActionGroupStatistics>(new GetActionGroupStatistics(source?.ToGuid(), target?.ToGuid()), cancellationToken);
         return Ok(_mapper.Map<List<ActionDurationStatisticsDto>>(response.Message.DurationStatistics));
     }
 
@@ -111,7 +111,7 @@ public class ActionGroupsController : Controller
             return ValidationProblem(ModelState);
         }
 
-        Response<GotFilteredActionGroups> result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []), cancellationToken);
+        var result = await _filteredActionGroupsRequest.GetResponse<GotFilteredActionGroups>(new GetFilteredActionGroups(filter, pageNumber, pageSize, direction, orderingProperties ?? []), cancellationToken);
         var mapped = _mapper.Map<PagedResult<FilteredActionGroupDto>>(result.Message.ActionGroups);
 
         return Ok(mapped);

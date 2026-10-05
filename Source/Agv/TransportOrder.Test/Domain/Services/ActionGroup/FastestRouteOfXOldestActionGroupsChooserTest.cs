@@ -18,7 +18,7 @@ public class FastestRouteOfXOldestActionGroupsChooserTest
         var newerFastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        ChooseAgvActionGroupTestFixture<FastestRouteOfXOldestActionGroupsChooser> fixture = new ChooseAgvActionGroupTestFixture<FastestRouteOfXOldestActionGroupsChooser>()
+        var fixture = new ChooseAgvActionGroupTestFixture<FastestRouteOfXOldestActionGroupsChooser>()
             .WithNotStartedActionGroup(oldSlowActionGroup)
             .WithNotStartedActionGroup(oldFastActionGroup)
             .WithNotStartedActionGroup(newerSlowActionGroup)

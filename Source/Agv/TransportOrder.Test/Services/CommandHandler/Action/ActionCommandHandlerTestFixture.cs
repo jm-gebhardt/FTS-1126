@@ -4,7 +4,6 @@ using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandle
 using JetBrains.Annotations;
 using MassTransit;
 using Moq;
-using Moq.Language;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.CommandHandler.Action;
@@ -29,7 +28,7 @@ public class ActionCommandHandlerTestFixture(TimeSpan? inactivityTimeout = null)
 
     public ActionCommandHandlerTestFixture WithMultipleRequiredActionGroups(ICollection<ActionGroup> actionGroups)
     {
-        ISetupSequentialResult<Task<ActionGroup>> setupSequence = ActionGroupRepository.SetupSequence(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>()));
+        var setupSequence = ActionGroupRepository.SetupSequence(x => x.GetRequiredActionGroupByIdAsync(It.IsAny<Guid>()));
 
         foreach (var actionGroup in actionGroups)
         {

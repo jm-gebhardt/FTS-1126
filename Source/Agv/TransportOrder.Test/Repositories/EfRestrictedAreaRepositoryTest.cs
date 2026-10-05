@@ -123,7 +123,7 @@ public class EfRestrictedAreaRepositoryTest
         await using var fixture = new EfRestrictedAreaRepositoryTestFixture();
         await fixture.AddAsync(restrictedArea);
 
-        List<PolygonPoint> updatedArea = polygon;
+        var updatedArea = polygon;
         updatedArea.Add(new PolygonPoint(4, 1, 4));
         restrictedArea.UpdateArea(updatedArea);
 

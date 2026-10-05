@@ -59,9 +59,9 @@ public class BezierGraphGenerator : GridGraphGenerator
     /// <inheritdoc />
     protected override void AddEdge(GraphNode fromNode, GraphNode toNode, bool bidirectional = true)
     {
-        Vector2[] controlPoints = GetControlPoints(fromNode, toNode);
+        var controlPoints = GetControlPoints(fromNode, toNode);
         float length = GetLength(controlPoints.ToList());
-        EdgeCoefficient[] edgeCoefficients = controlPoints.Skip(1).Take(4).Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray();
+        var edgeCoefficients = controlPoints.Skip(1).Take(4).Select(c => new EdgeCoefficient(c.X, c.Y)).ToArray();
         var timeStamp = new List<DateTime> { fromNode.TimeStamp, toNode.TimeStamp }.Max();
 
         Edges.Add(

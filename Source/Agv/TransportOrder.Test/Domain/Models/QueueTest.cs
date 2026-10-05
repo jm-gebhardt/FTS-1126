@@ -90,7 +90,7 @@ public class QueueTest
         var agv = Guid.NewGuid();
 
         queue.TryEnterQueue();
-        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
+        queue.TryEnqueue(agv, out var targetNode).ShouldBeTrue();
         queue.ConsideredAgvs.ShouldContain(agv);
         targetNode.ShouldBe(tail.NodeId);
         queue.Tail!.Position.ShouldBe(tail.Position + 1);
@@ -102,7 +102,7 @@ public class QueueTest
     {
         var queue = QueueGenerator.GenerateFullQueue();
         var agv = Guid.NewGuid();
-        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
+        queue.TryEnqueue(agv, out var targetNode).ShouldBeTrue();
         queue.ConsideredAgvs.ShouldContain(agv);
         targetNode.ShouldBe(queue.EntryNode);
     }
@@ -113,7 +113,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateEmptyQueue(size: 0);
         var agv = Guid.NewGuid();
 
-        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeFalse();
+        queue.TryEnqueue(agv, out var targetNode).ShouldBeFalse();
         queue.ConsideredAgvs.ShouldNotContain(agv);
         targetNode.ShouldBe(null);
     }
@@ -129,7 +129,7 @@ public class QueueTest
         tail.Position.ShouldBe(queue.Nodes.MaxBy(q => q.Position)!.Position);
         var agv = Guid.NewGuid();
 
-        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
+        queue.TryEnqueue(agv, out var targetNode).ShouldBeTrue();
 
         queue.ConsideredAgvs.ShouldContain(agv);
         targetNode.ShouldBe(tail.NodeId);
@@ -148,7 +148,7 @@ public class QueueTest
         tail.Position.ShouldBe(1);
         var agv = Guid.NewGuid();
 
-        queue.TryEnqueue(agv, out Guid? targetNode).ShouldBeTrue();
+        queue.TryEnqueue(agv, out var targetNode).ShouldBeTrue();
 
         targetNode.ShouldBe(tail.NodeId);
         queue.ConsideredAgvs.ShouldContain(agv);
@@ -162,7 +162,7 @@ public class QueueTest
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
 
-        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove).ShouldBeNull();
+        queue.TryDequeue(out var agvsToMove).ShouldBeNull();
         agvsToMove.ShouldBeEmpty();
     }
 
@@ -178,7 +178,7 @@ public class QueueTest
         var agvMovingFromPosition2To1 = queue.Nodes.Single(n => n.Position == 2).OccupiedAgv!.Value;
         var agvMovingFromPosition1ToHead = queue.Nodes.Single(n => n.Position == 1).OccupiedAgv!.Value;
 
-        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove).ShouldBe(dequeuedAgv);
+        queue.TryDequeue(out var agvsToMove).ShouldBe(dequeuedAgv);
 
         queue.IsFull.ShouldBeFalse();
         queue.AgvFillQuantity.ShouldBe(2);
@@ -203,7 +203,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateQueueWithCapacity(lockStates: lockStates);
         queue.Head.ShouldBeNull();
 
-        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove).ShouldBeNull();
+        queue.TryDequeue(out var agvsToMove).ShouldBeNull();
         agvsToMove.ShouldBeEmpty();
     }
 
@@ -214,7 +214,7 @@ public class QueueTest
         var head = queue.Head!;
         var agvAtQueueHead = new Guid(head.OccupiedAgv!.Value.ToString());
 
-        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove).ShouldBe(agvAtQueueHead);
+        queue.TryDequeue(out var agvsToMove).ShouldBe(agvAtQueueHead);
         agvsToMove.ShouldBeEmpty();
     }
 
@@ -229,7 +229,7 @@ public class QueueTest
         var dequeuedAgv = new Guid(head.OccupiedAgv!.Value.ToString());
         var movingAgv = queue.Nodes.Single(n => n.Position == head.Position + 1).GetCurrentAgv()!.Value;
 
-        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove).ShouldBe(dequeuedAgv);
+        queue.TryDequeue(out var agvsToMove).ShouldBe(dequeuedAgv);
 
         agvsToMove.Count.ShouldBe(1);
         agvsToMove[movingAgv].ShouldBe(head.NodeId);
@@ -239,7 +239,7 @@ public class QueueTest
     public void TryEscapeQueue_EmptyQueue_ReturnsNull()
     {
         var queue = QueueGenerator.GenerateEmptyQueue(nodes: 3);
-        queue.TryEscapeQueue(Guid.NewGuid(), out Dictionary<Guid, Guid> agvsToMove).ShouldBeNull();
+        queue.TryEscapeQueue(Guid.NewGuid(), out var agvsToMove).ShouldBeNull();
         agvsToMove.ShouldBeEmpty();
     }
 
@@ -249,7 +249,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateFullQueue();
         var escapedNode = queue.Nodes.OrderBy(n => n.Position).Skip(1).First();
 
-        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out Dictionary<Guid, Guid> agvsToMove, Guid.NewGuid()).ShouldBeNull();
+        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out var agvsToMove, Guid.NewGuid()).ShouldBeNull();
         agvsToMove.ShouldBeEmpty();
     }
 
@@ -260,7 +260,7 @@ public class QueueTest
         var escapedNode = queue.Nodes.OrderBy(n => n.Position).Skip(1).First();
         var movingAgv = queue.Nodes.OrderBy(n => n.Position).Last().OccupiedAgv!.Value;
 
-        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out Dictionary<Guid, Guid> agvsToMove).ShouldBe(escapedNode.NodeId);
+        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out var agvsToMove).ShouldBe(escapedNode.NodeId);
         agvsToMove.Count.ShouldBe(1);
         agvsToMove[movingAgv].ShouldBe(escapedNode.NodeId);
     }
@@ -271,7 +271,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateFullQueue();
         var escapedNode = queue.Nodes.MaxBy(n => n.Position)!;
 
-        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out Dictionary<Guid, Guid> agvsToMove).ShouldBe(escapedNode.NodeId);
+        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out var agvsToMove).ShouldBe(escapedNode.NodeId);
         agvsToMove.ShouldBeEmpty();
     }
 
@@ -281,13 +281,13 @@ public class QueueTest
         var queue = QueueGenerator.GenerateFullQueue();
         // Escape initiated by head evacuation
         var escapedNode = queue.Head!;
-        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out Dictionary<Guid, Guid> agvsToMoveFirstEscape).ShouldBe(escapedNode.NodeId);
+        queue.TryEscapeQueue(escapedNode.OccupiedAgv!.Value, out var agvsToMoveFirstEscape).ShouldBe(escapedNode.NodeId);
         agvsToMoveFirstEscape.Count.ShouldBe(2);
 
-        Guid? agvReservedForHead = queue.Nodes.MinBy(n => n.Position)!.ReservedAgv;
+        var agvReservedForHead = queue.Nodes.MinBy(n => n.Position)!.ReservedAgv;
         agvReservedForHead.ShouldNotBeNull();
         //Next head evacuation while move from first has not started yet
-        queue.TryEscapeQueue(agvReservedForHead.Value, out Dictionary<Guid, Guid> agvsToMoveSecondEscape).ShouldBe(escapedNode.NodeId);
+        queue.TryEscapeQueue(agvReservedForHead.Value, out var agvsToMoveSecondEscape).ShouldBe(escapedNode.NodeId);
         queue.Nodes.MinBy(n => n.Position)!.GetCurrentAgv().ShouldNotBe(agvReservedForHead);
         agvsToMoveSecondEscape.Count.ShouldBe(1);
     }
@@ -371,7 +371,7 @@ public class QueueTest
         var queue = QueueGenerator.GenerateEmptyQueue();
         queue.TryEnterQueue();
 
-        queue.TryEnqueue(agv, out Guid? target).ShouldBeTrue();
+        queue.TryEnqueue(agv, out var target).ShouldBeTrue();
 
         queue.ConsideredAgvs.ShouldContain(agv);
         queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
@@ -388,7 +388,7 @@ public class QueueTest
 
         var queue = QueueGenerator.GenerateEmptyQueue();
         queue.TryEnterQueue();
-        queue.TryEnqueue(agv, out Guid? target).ShouldBeTrue();
+        queue.TryEnqueue(agv, out var target).ShouldBeTrue();
 
         queue.ConsideredAgvs.ShouldContain(agv);
         queue.Nodes.Single(n => n.NodeId == target).ReservedAgv.ShouldBe(agv);
@@ -408,12 +408,12 @@ public class QueueTest
         queue.TryEnterQueue();
 
         // agv reaches the queue entry node first
-        queue.TryEnqueue(agv, out Guid? downstreamNode);
+        queue.TryEnqueue(agv, out var downstreamNode);
         queue.Nodes.Single(n => n.NodeId == downstreamNode).ReservedAgv.ShouldBe(agv);
         queue.ConsideredAgvs.ShouldContain(agv);
 
         // than agvThatDidNotReachNodeYet reaches the queue entry node
-        queue.TryEnqueue(agvThatDidNotReachNodeYet, out Guid? upstreamNode);
+        queue.TryEnqueue(agvThatDidNotReachNodeYet, out var upstreamNode);
         queue.Nodes.Single(n => n.NodeId == upstreamNode).ReservedAgv.ShouldBe(agvThatDidNotReachNodeYet);
         queue.ConsideredAgvs.ShouldContain(agvThatDidNotReachNodeYet);
 
@@ -423,7 +423,7 @@ public class QueueTest
         queue.IsAgvAtQueueHead(agv).ShouldBeTrue();
 
         // agv gets dequeued
-        queue.TryDequeue(out Dictionary<Guid, Guid> agvsToMove);
+        queue.TryDequeue(out var agvsToMove);
         queue.Nodes.Any(n => n.GetCurrentAgv() == agv).ShouldBeFalse();
         // and reserves the head for agvThatDidNotReachNodeYet
         agvsToMove[agvThatDidNotReachNodeYet].ShouldBe(downstreamNode.Value);
@@ -446,7 +446,7 @@ public class QueueTest
     {
         var queue = QueueGenerator.GenerateEmptyQueue();
 
-        queue.TrySwapAgv(Guid.NewGuid(), out Dictionary<Guid, Guid> agvsToMove);
+        queue.TrySwapAgv(Guid.NewGuid(), out var agvsToMove);
 
         agvsToMove.ShouldBeEmpty();
     }
@@ -458,7 +458,7 @@ public class QueueTest
         var node = queue.Nodes.Single(n => n.Position == 1);
         var agv = Guid.Parse(node.OccupiedAgv!.Value.ToString());
 
-        queue.TrySwapAgv(agv, out Dictionary<Guid, Guid> agvsToMove);
+        queue.TrySwapAgv(agv, out var agvsToMove);
 
         agvsToMove.ShouldNotBeEmpty();
         agvsToMove.Count.ShouldBe(1);
@@ -476,7 +476,7 @@ public class QueueTest
         var node = queue.Nodes.Single(n => n.Position == 0);
         var agv = Guid.Parse(node.GetCurrentAgv()!.Value.ToString());
 
-        queue.TrySwapAgv(agv, out Dictionary<Guid, Guid> agvsToMove);
+        queue.TrySwapAgv(agv, out var agvsToMove);
 
         agvsToMove.ShouldBeEmpty();
         queue.AgvFillQuantity.ShouldBe(1);

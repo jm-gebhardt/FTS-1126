@@ -66,7 +66,7 @@ public class ShortLoopWaitingPointTrigger(IBus bus, ILogger<ShortLoopWaitingPoin
             return;
         }
         var primaryTarget = GetPrimaryTarget(parameters);
-        ICollection<Guid> secondaryTargets = GetSecondaryTargets(parameters);
+        var secondaryTargets = GetSecondaryTargets(parameters);
         logger.LogInformation("Agv {AgvCorrelationId} passed short loop waiting trigger", agvData.AgvCorrelationId);
         await bus.Publish(new AgvPassedShortLoopWaitingHandler(agvData, agvStatus, actionGroup, cargo, errors, primaryTarget, secondaryTargets));
     }

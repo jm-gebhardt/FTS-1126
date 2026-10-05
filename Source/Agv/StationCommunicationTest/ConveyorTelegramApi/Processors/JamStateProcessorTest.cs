@@ -13,7 +13,7 @@ public class JamStateProcessorTest
     [TestMethod]
     public async Task ProcessReceivedTelegram_JamState_PublishesJamStateReceived()
     {
-        TelegramProcessorTestFixture<JamStateProcessor, JamState> fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, null)
+        var fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, null)
             .Build();
         var telegram = new JamState();
         telegram.Load(TestTelegram.JamState);
@@ -31,7 +31,7 @@ public class JamStateProcessorTest
     [TestMethod]
     public async Task ProcessReceivedTelegram_NotJamState_DoesNotPublishJamStateReceived()
     {
-        TelegramProcessorTestFixture<JamStateProcessor, JamState> fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, null)
+        var fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, null)
             .Build();
         var telegram = new Life(DateTime.UtcNow);
         telegram.Load(TestTelegram.Life);
@@ -46,7 +46,7 @@ public class JamStateProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoCurrentTelegram_ReturnsFalse()
     {
-        TelegramProcessorTestFixture<JamStateProcessor, JamState> fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, true)
+        var fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, true)
             .Build();
 
         fixture.Processor.GetNextTelegramToSend(out string nextTelegram).ShouldBeFalse();
@@ -56,7 +56,7 @@ public class JamStateProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_CurrentTelegram_ReturnsTrueAndAcknowledgement()
     {
-        TelegramProcessorTestFixture<JamStateProcessor, JamState> fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, true)
+        var fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, true)
             .Build();
 
         var telegram = new JamState();
@@ -70,7 +70,7 @@ public class JamStateProcessorTest
     [TestMethod]
     public void Cancel_CurrentTelegram_ResetsCurrentTelegram()
     {
-        TelegramProcessorTestFixture<JamStateProcessor, JamState> fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, true)
+        var fixture = new TelegramProcessorTestFixture<JamStateProcessor, JamState>(ServiceKeyProvider.FromWeStation, true)
             .Build();
 
         var telegram = new JamState();

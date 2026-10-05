@@ -11,7 +11,7 @@ public static class QueueGenerator
     public static Queue GenerateQueueWithCapacity(string name = "queue", ICollection<NodeLockState>? lockStates = null, int? size = null)
     {
         lockStates ??= [NodeLockState.Occupied, NodeLockState.Reserved, NodeLockState.Free];
-        NodeLock[] nodeLocks = lockStates.Select((n, _) =>
+        var nodeLocks = lockStates.Select((n, _) =>
                 new NodeLock(Guid.NewGuid().ToGraphNode(), n, false, n == NodeLockState.Free ? null : Guid.NewGuid(), DateTime.UtcNow))
             .ToArray();
         size ??= nodeLocks.Count(n => n.NodeState != NodeLockState.Free);
@@ -20,13 +20,13 @@ public static class QueueGenerator
 
     public static Queue GenerateEmptyQueue(string name = "queue", int nodes = 3, int? size = null)
     {
-        NodeLock[] nodeLocks = Enumerable.Range(0, nodes).Select(_ => new NodeLock(Guid.NewGuid().ToGraphNode(), NodeLockState.Free, false, null, DateTime.UtcNow)).ToArray();
+        var nodeLocks = Enumerable.Range(0, nodes).Select(_ => new NodeLock(Guid.NewGuid().ToGraphNode(), NodeLockState.Free, false, null, DateTime.UtcNow)).ToArray();
         return GenerateQueue(name, nodeStates: nodeLocks, size: size);
     }
 
     public static Queue GenerateFullQueue(string name = "queue", int nodes = 3)
     {
-        NodeLock[] nodeLocks = Enumerable.Range(0, nodes).Select(_ => new NodeLock(Guid.NewGuid().ToGraphNode(), NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow)).ToArray();
+        var nodeLocks = Enumerable.Range(0, nodes).Select(_ => new NodeLock(Guid.NewGuid().ToGraphNode(), NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow)).ToArray();
         return GenerateQueue(name, nodeStates: nodeLocks);
     }
 

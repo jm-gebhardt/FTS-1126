@@ -54,7 +54,7 @@ public class EfTriggerRepository : ITriggerRepository
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        List<Trigger> listAsync = await context.Set<Trigger>()
+        var listAsync = await context.Set<Trigger>()
             .Where(t => t.IsDeleted == whereDeleted)
             .Include(t => t.ConfigurationParameters)
             .Include(t => t.Locations)
@@ -102,7 +102,7 @@ public class EfTriggerRepository : ITriggerRepository
     public async Task<Trigger> GetById(Guid triggerId, bool includeDeleted = false)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        IQueryable<Trigger> query = context.Set<Trigger>().AsQueryable();
+        var query = context.Set<Trigger>().AsQueryable();
 
         if (!includeDeleted)
         {
@@ -168,8 +168,8 @@ public class EfTriggerRepository : ITriggerRepository
         {
             if (triggerToUpdate.Locations.Count > trigger.Locations.Count)
             {
-                List<Guid> newLocations = trigger.Locations.Select(l => l.Id).ToList();
-                List<Location> locationToRemove = triggerToUpdate.Locations.Where(l => !newLocations.Contains(l.Id)).ToList();
+                var newLocations = trigger.Locations.Select(l => l.Id).ToList();
+                var locationToRemove = triggerToUpdate.Locations.Where(l => !newLocations.Contains(l.Id)).ToList();
                 foreach (var location in locationToRemove)
                 {
                     if (location.Polygon.Count > 0)
@@ -182,8 +182,8 @@ public class EfTriggerRepository : ITriggerRepository
             }
             if (triggerToUpdate.Locations.Count < trigger.Locations.Count)
             {
-                List<Guid> oldLocations = triggerToUpdate.Locations.Select(l => l.Id).ToList();
-                List<Location> locationToAdd = trigger.Locations.Where(l => !oldLocations.Contains(l.Id)).ToList();
+                var oldLocations = triggerToUpdate.Locations.Select(l => l.Id).ToList();
+                var locationToAdd = trigger.Locations.Where(l => !oldLocations.Contains(l.Id)).ToList();
                 foreach (var location in locationToAdd)
                 {
                     if (location.Polygon.Count > 0)
@@ -197,8 +197,8 @@ public class EfTriggerRepository : ITriggerRepository
             else if (triggerToUpdate.Locations.Count > 0 && triggerToUpdate.Locations.Count == trigger.Locations.Count)
             {
                 _logger.LogInformation("Update(trigger): Location count {LocCount}", trigger.Locations.Count);
-                ICollection<Location> locationsToUpdate = triggerToUpdate.Locations;
-                ICollection<Location> newLocations = trigger.Locations;
+                var locationsToUpdate = triggerToUpdate.Locations;
+                var newLocations = trigger.Locations;
                 bool updateLocationSequence = !locationsToUpdate.SequenceEqual(newLocations);
 
                 if (updateLocationSequence)
@@ -323,7 +323,7 @@ public class EfTriggerRepository : ITriggerRepository
     {
         _triggerLocationDictionaryProvider.ConcurrentDict.Clear();
 
-        ICollection<Trigger> triggers = await GetTriggers();
+        var triggers = await GetTriggers();
         foreach (var trigger in triggers)
         {
             if (trigger.Locations.Count <= 0)

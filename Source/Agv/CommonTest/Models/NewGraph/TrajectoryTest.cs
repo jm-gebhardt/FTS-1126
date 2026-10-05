@@ -1,4 +1,3 @@
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Shouldly;
 
@@ -12,7 +11,7 @@ public class TrajectoryTest
     {
         var trajectory = CreateStraightLine();
 
-        IReadOnlyList<PolygonPoint> samples = trajectory.Sample(5);
+        var samples = trajectory.Sample(5);
 
         samples.Count.ShouldBe(5);
         samples[0].X.ShouldBe(0.0, Tolerance);

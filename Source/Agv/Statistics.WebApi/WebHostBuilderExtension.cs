@@ -119,7 +119,7 @@ public static class WebHostBuilderExtension
         }
 
         // Resolve <inheritdoc/> comments so they show up correctly in the API
-        IEnumerable<XDocument> resolvedXmlDocs = XmlDocResolver.ResolveInheritedDocs(xmlDocs, assemblies);
+        var resolvedXmlDocs = XmlDocResolver.ResolveInheritedDocs(xmlDocs, assemblies);
 
         // Add resolved XML docs to Swagger
         foreach (var doc in resolvedXmlDocs)

@@ -93,7 +93,7 @@ public class OrderTest
 
         result.IsSuccess.ShouldBeTrue();
         // Nodes: APL1@0 (kept from original), new route stitched in starting at stitching node "1"@2
-        List<OrderNode> nodes = order.PlannedRoute.Nodes.OrderBy(n => n.SequenceId).ToList();
+        var nodes = order.PlannedRoute.Nodes.OrderBy(n => n.SequenceId).ToList();
         nodes.Count.ShouldBe(5);
         nodes[0].NodeId.ShouldBe("APL1");
         nodes[0].SequenceId.ShouldBe(0);
@@ -106,7 +106,7 @@ public class OrderTest
         nodes[4].NodeId.ShouldBe("PS01");
         nodes[4].SequenceId.ShouldBe(8);
         // Edges: original APL1→1@1 (seq<3) is kept; new edges are shifted to seq=3,5,7
-        List<OrderEdge> edges = order.PlannedRoute.Edges.OrderBy(e => e.SequenceId).ToList();
+        var edges = order.PlannedRoute.Edges.OrderBy(e => e.SequenceId).ToList();
         edges.Count.ShouldBe(4);
         edges[0].SequenceId.ShouldBe(1);
         edges[0].StartNodeId.ShouldBe("APL1");

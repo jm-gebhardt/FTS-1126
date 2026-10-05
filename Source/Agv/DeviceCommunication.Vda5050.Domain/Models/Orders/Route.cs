@@ -55,9 +55,9 @@ public class Route
     public Route Subsample(int stitchingNodeSequenceId, int maximumNodeCount)
     {
         var stitchingNode = Nodes.Single(n => n.SequenceId == stitchingNodeSequenceId);
-        List<OrderNode> nodes = Nodes.Where(n => n.SequenceId >= stitchingNodeSequenceId && n.SequenceId <= stitchingNodeSequenceId + (maximumNodeCount - 1) * 2).ToList();
+        var nodes = Nodes.Where(n => n.SequenceId >= stitchingNodeSequenceId && n.SequenceId <= stitchingNodeSequenceId + (maximumNodeCount - 1) * 2).ToList();
         var firstEdge = Edges.OrderBy(e => e.SequenceId).First(e => e.StartNodeId == stitchingNode.NodeId);
-        List<OrderEdge> edges = Edges.Where(e => e.SequenceId >= firstEdge.SequenceId && e.SequenceId <= nodes.Last().SequenceId - 1).ToList();
+        var edges = Edges.Where(e => e.SequenceId >= firstEdge.SequenceId && e.SequenceId <= nodes.Last().SequenceId - 1).ToList();
         return new Route(nodes, edges);
     }
 

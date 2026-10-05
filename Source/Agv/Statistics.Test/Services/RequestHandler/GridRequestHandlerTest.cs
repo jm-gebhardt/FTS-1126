@@ -17,7 +17,7 @@ public class GridRequestHandlerTest
     public async Task Consume_GetGrids_ValidData_PublishesGotGrids()
     {
         var grid = GridGenerator.GenerateGrid();
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithGrids([grid]);
 
         await fixture.PublishMessageAsync(new GetGrids(Guid.NewGuid()));
@@ -39,7 +39,7 @@ public class GridRequestHandlerTest
         var agvCorrelationIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
         var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, [[0, 0, 100], [1, 0, 150]]);
 
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithStayDurations(heatMap)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -76,7 +76,7 @@ public class GridRequestHandlerTest
         const string errorCode = "Error";
         var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, [[0, 0, 5], [1, 0, 3]]);
 
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithErrorOccurence(heatMap)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -111,7 +111,7 @@ public class GridRequestHandlerTest
         var grid = GridGenerator.GenerateGrid();
         var map = MapGenerator.GenerateMap();
         var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, []);
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithFieldViolationOccurence(heatMap)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -133,7 +133,7 @@ public class GridRequestHandlerTest
         var grid = GridGenerator.GenerateGrid();
         var map = MapGenerator.GenerateMap();
         var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, []);
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithFieldViolationOccurence(heatMap)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -159,7 +159,7 @@ public class GridRequestHandlerTest
         var agvCorrelationIds = new[] { Guid.NewGuid() };
         var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, [[0, 0, 2], [1, 0, 4]]);
 
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithFieldViolationOccurence(heatMap)
             .WithGrids([grid])
             .WithMaps([map]);
@@ -194,7 +194,7 @@ public class GridRequestHandlerTest
         var agvCorrelationIds = new[] { Guid.NewGuid() };
         var heatMap = new ScalarHeatmap(grid.GridId, map.MapId, [[0, 0, -70], [1, 0, -65], [0, 1, -75]]);
 
-        MockDbConsumerTestFixture<GridRequestHandler> fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
+        var fixture = new MockDbConsumerTestFixture<GridRequestHandler>()
             .WithWifiSignalStrength(heatMap)
             .WithGrids([grid])
             .WithMaps([map]);

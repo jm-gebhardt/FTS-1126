@@ -42,7 +42,7 @@ public class DynamicPrioritizationChooser : BaseChooseAgvActionGroupService
             actionGroup.EstimatedDuration = TimeSpan.FromSeconds(firstActionCost.Value);
         }
         var now = DateTime.UtcNow;
-        IOrderedEnumerable<Models.ActionGroup.ActionGroup> sortedGroups = notStartedActionGroups
+        var sortedGroups = notStartedActionGroups
             .Where(a => a.EstimatedDuration != null).OrderBy(o =>
                 o.EstimatedDuration!.Value.TotalSeconds / (1 + Math.Pow((now - o.CreatedDate).TotalMinutes, 2)));
         return sortedGroups.FirstOrDefault();

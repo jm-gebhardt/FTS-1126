@@ -31,7 +31,7 @@ public class OwnedFilterRequestHandler(IOwnedFilterRepository ownedFilterReposit
     {
         string owner = context.Message.Owner;
 
-        ICollection<OwnedFilter> filters = await ownedFilterRepository.GetResourcesForOwner(owner);
+        var filters = await ownedFilterRepository.GetResourcesForOwner(owner);
 
         await context.RespondAsync(new GotOwnedFilters(filters));
     }

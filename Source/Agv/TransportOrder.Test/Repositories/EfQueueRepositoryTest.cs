@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 
@@ -16,7 +15,7 @@ public class EfQueueRepositoryTest
         var fixture = new EfQueueRepositoryTestFixture();
         fixture.Add(queue);
 
-        ICollection<Queue> queues = await fixture.Repository.GetQueues();
+        var queues = await fixture.Repository.GetQueues();
 
         queues.Count.ShouldBe(1);
 
@@ -41,7 +40,7 @@ public class EfQueueRepositoryTest
 
         await fixture.Repository.AddQueue(queue);
 
-        ICollection<Queue> queues = await fixture.Repository.GetQueues();
+        var queues = await fixture.Repository.GetQueues();
         queues.Count.ShouldBe(1);
 
         var returnedQueue = queues.First();
@@ -66,7 +65,7 @@ public class EfQueueRepositoryTest
         await fixture.AddRangeAsync(fullQueue);
         await fixture.AddRangeAsync(queueWithCapacity);
 
-        ICollection<Queue> queues = await fixture.Repository.GetQueuesWithCapacity();
+        var queues = await fixture.Repository.GetQueuesWithCapacity();
 
         queues.Count.ShouldBe(2);
         queues.Select(q => q.Name).ToList().ShouldBe(new List<string> { emptyQueue.Name, queueWithCapacity.Name }, ignoreOrder: true);
@@ -87,7 +86,7 @@ public class EfQueueRepositoryTest
         await fixture.AddRangeAsync(queueWithCapacity);
         await fixture.AddRangeAsync(queueWithCapacityHeadReserved);
 
-        ICollection<Queue> queues = await fixture.Repository.GetOccupiedQueues();
+        var queues = await fixture.Repository.GetOccupiedQueues();
 
         queues.Count.ShouldBe(3);
         queues.Select(q => q.Name).ToList().ShouldBe(new List<string> { fullQueue.Name, queueWithCapacity.Name, queueWithCapacityHeadReserved.Name }, ignoreOrder: true);
@@ -169,7 +168,7 @@ public class EfQueueRepositoryTest
         var fixture = new EfQueueRepositoryTestFixture();
         await fixture.AddRangeAsync(queueNotOnRoute, queueOnRoute);
 
-        ICollection<Queue> queues = await fixture.Repository.GetQueuesOnRoute(queueOnRoute.NonEntryNodes);
+        var queues = await fixture.Repository.GetQueuesOnRoute(queueOnRoute.NonEntryNodes);
         queues.Count.ShouldBe(1);
         queues.First().Id.ShouldBe(queueOnRoute.Id);
     }

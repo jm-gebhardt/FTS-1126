@@ -31,11 +31,11 @@ public class SimulatedAgvSpawner(ILogger<SimulatedAgvSpawner> logger, IBus bus) 
 
     private async Task<IReadOnlyCollection<Node>?> TryGetExistingGraphNodesAsync(CancellationToken cancellationToken)
     {
-        IRequestClient<GetGraph>? getGraphClient = bus.CreateRequestClient<GetGraph>();
+        var getGraphClient = bus.CreateRequestClient<GetGraph>();
         try
         {
-            Response<GotGraph> response = await getGraphClient.GetResponse<GotGraph>(new GetGraph(Guid.NewGuid()), cancellationToken);
-            IReadOnlyCollection<Node> nodes = response.Message.Graph.Nodes;
+            var response = await getGraphClient.GetResponse<GotGraph>(new GetGraph(Guid.NewGuid()), cancellationToken);
+            var nodes = response.Message.Graph.Nodes;
             if (nodes.Count == 0)
             {
                 logger.LogInformation("Existing graph is empty; AGVs will wait for GraphUpdated to initialize position");
@@ -76,8 +76,8 @@ public class SimulatedAgvSpawner(ILogger<SimulatedAgvSpawner> logger, IBus bus) 
     /// <inheritdoc/>
     public async Task ApplyAsync(SimulatedAgvTypeConfiguration? currentConfiguration, SimulatedAgvTypeConfiguration? newConfiguration, CancellationToken cancellationToken = default)
     {
-        HashSet<string> currentSerialNumbers = SerialNumbersOf(currentConfiguration);
-        HashSet<string> newSerialNumbers = SerialNumbersOf(newConfiguration);
+        var currentSerialNumbers = SerialNumbersOf(currentConfiguration);
+        var newSerialNumbers = SerialNumbersOf(newConfiguration);
 
         string[] added = newSerialNumbers.Except(currentSerialNumbers).ToArray();
         string[] removed = currentSerialNumbers.Except(newSerialNumbers).ToArray();
@@ -96,7 +96,7 @@ public class SimulatedAgvSpawner(ILogger<SimulatedAgvSpawner> logger, IBus bus) 
             const string mapId = FallbackMapId;
             if (added.Length > 0)
             {
-                IReadOnlyCollection<Node>? nodes = await TryGetExistingGraphNodesAsync(cancellationToken);
+                var nodes = await TryGetExistingGraphNodesAsync(cancellationToken);
                 tasks.Add(Task.WhenAll(added.Select(serialNumber => CreateAgvAsync(newConfiguration, serialNumber, mapId, nodes, cancellationToken))));
             }
             tasks.Add(Task.WhenAll(updated.Select(serialNumber => UpdateAgvAsync(newConfiguration, serialNumber, mapId, cancellationToken))));

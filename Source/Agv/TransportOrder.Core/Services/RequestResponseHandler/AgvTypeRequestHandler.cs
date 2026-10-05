@@ -45,7 +45,7 @@ public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeReques
     public async Task Consume(ConsumeContext<GetAgvType> context)
     {
         var agvType = await agvDb.AgvTypes.GetAgvTypeAsync(context.Message.CorrelationId, context.CancellationToken);
-        IReadOnlySet<Guid> typeIdsWithGraph = await agvDb.Agvs.GetTypeIdsWithGraphAsync();
+        var typeIdsWithGraph = await agvDb.Agvs.GetTypeIdsWithGraphAsync();
 
         await context.RespondAsync(new GotAgvType(context.Message.CorrelationId, ToReadModel(agvType, typeIdsWithGraph)));
     }
@@ -53,9 +53,9 @@ public class AgvTypeRequestHandler(IBus bus, IAgvDb agvDb, ILogger<AgvTypeReques
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetAllAgvTypes> context)
     {
-        ICollection<AgvType> agvTypes = await agvDb.AgvTypes.GetAllAgvTypesAsync(context.CancellationToken);
-        IReadOnlySet<Guid> typeIdsWithGraph = await agvDb.Agvs.GetTypeIdsWithGraphAsync();
-        List<AgvTypeReadModel> readModels = agvTypes.Select(agvType => ToReadModel(agvType, typeIdsWithGraph)).ToList();
+        var agvTypes = await agvDb.AgvTypes.GetAllAgvTypesAsync(context.CancellationToken);
+        var typeIdsWithGraph = await agvDb.Agvs.GetTypeIdsWithGraphAsync();
+        var readModels = agvTypes.Select(agvType => ToReadModel(agvType, typeIdsWithGraph)).ToList();
 
         await context.RespondAsync(new GotAgvTypes(context.Message.CorrelationId, readModels));
     }

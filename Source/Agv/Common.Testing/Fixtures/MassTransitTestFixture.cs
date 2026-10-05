@@ -70,7 +70,7 @@ public abstract class MassTransitTestFixture : FixtureBase
         await using var scope = Provider.CreateAsyncScope();
 
         var scheduler = scope.ServiceProvider.GetRequiredService<IMessageScheduler>();
-        ScheduledMessage<T> scheduledMessage = await scheduler.SchedulePublish(delay, message);
+        var scheduledMessage = await scheduler.SchedulePublish(delay, message);
         return scheduledMessage;
     }
 

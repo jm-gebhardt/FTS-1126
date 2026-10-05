@@ -167,7 +167,7 @@ internal static class QueryableHelper
         var resultBody = resultSelector.Body.ReplaceParameter(resultSelector.Parameters[0], outer);
         resultBody = resultBody.ReplaceParameter(resultSelector.Parameters[1], inner);
 
-        Expression<Func<T, TResult>> lambda = Expression.Lambda<Func<T, TResult>>(resultBody, false, param);
+        var lambda = Expression.Lambda<Func<T, TResult>>(resultBody, false, param);
 
         return queryable.Select(lambda);
     }

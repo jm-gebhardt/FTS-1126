@@ -100,7 +100,7 @@ public class ResetAgvErrorsRequestHandlerTest
 
         // Wait for both ResolveSystemAgvError messages (one per error source group) before asserting.
         await fixture.GetFirstPublishedMessageAsync<ResolveSystemAgvError>(2);
-        ICollection<ResolveSystemAgvError> resolveMessages = fixture.GetPublishedMessages<ResolveSystemAgvError>();
+        var resolveMessages = fixture.GetPublishedMessages<ResolveSystemAgvError>();
         resolveMessages.Count.ShouldBe(2);
         resolveMessages.ShouldContain(m => m.Errors.Count == 1 && m.Errors.Single().CorrelationId == errors[0].CorrelationId);
         resolveMessages.ShouldContain(m => m.Errors.Count == 1 && m.Errors.Single().CorrelationId == errors[1].CorrelationId);

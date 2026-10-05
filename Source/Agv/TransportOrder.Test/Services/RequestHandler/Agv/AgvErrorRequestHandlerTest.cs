@@ -18,7 +18,7 @@ public class AgvErrorRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
             .WithAgv(agv)
             .WithActiveAgvErrors(agv.CorrelationId, [new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node".ToGuid())])
             .WithPostion(position)
@@ -37,7 +37,7 @@ public class AgvErrorRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
             .WithAgv(agv)
             .WithActiveAgvErrors(agv.CorrelationId, [new ResourceBlockingError(agv.CorrelationId, DateTime.UtcNow, "node".ToGuid())])
             .WithPostion(position)
@@ -56,7 +56,7 @@ public class AgvErrorRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var position = AgvPositionStatusGenerator.Generate(correlationId: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SolveResourceBlockingErrors, AgvErrorRequestHandler>()
             .WithAgv(agv)
             .WithActiveAgvErrors(agv.CorrelationId, [new QueueBlockingError(agv.CorrelationId, DateTime.UtcNow)])
             .WithPostion(position)

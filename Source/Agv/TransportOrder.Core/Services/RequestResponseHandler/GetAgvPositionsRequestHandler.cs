@@ -1,4 +1,3 @@
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
@@ -31,10 +30,10 @@ public class GetAgvPositionsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetAgvPositions> context)
     {
-        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
+        var selectedAgvs = context.Message.CorrelationIds;
 
-        ICollection<AgvPositionStatus> fetchedPositions = _agvPositionRepository.GetSelectedAgvsPositions(selectedAgvs);
-        List<Messages.MessageContent.AgvPositionStatus> agvPositions = fetchedPositions.Select(p => new Messages.MessageContent.AgvPositionStatus(p.CorrelationId, p.SerialNumber, p.AgvPosition)).ToList();
+        var fetchedPositions = _agvPositionRepository.GetSelectedAgvsPositions(selectedAgvs);
+        var agvPositions = fetchedPositions.Select(p => new Messages.MessageContent.AgvPositionStatus(p.CorrelationId, p.SerialNumber, p.AgvPosition)).ToList();
         await context.RespondAsync(new GotAgvPositions(agvPositions));
     }
 

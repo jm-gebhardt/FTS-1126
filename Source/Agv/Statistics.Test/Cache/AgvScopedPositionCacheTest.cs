@@ -18,7 +18,7 @@ public class AgvScopedPositionCacheTest
 
         var fixture = new AgvScopedPositionCacheFixture();
         fixture.Cache.AddItem(Serial, _position, timeStamp, expectedId);
-        bool found = fixture.Cache.TryGet(Serial, _position, timeStamp, out List<Guid>? actualList);
+        bool found = fixture.Cache.TryGet(Serial, _position, timeStamp, out var actualList);
 
         found.ShouldBeTrue();
         actualList.ShouldNotBeNull();
@@ -38,12 +38,12 @@ public class AgvScopedPositionCacheTest
         fixture.Cache.AddItem(Serial, _position, timeStamp1, id1);
         fixture.Cache.AddItem(Serial, _position, timeStamp2, id2);
 
-        bool found1 = fixture.Cache.TryGet(Serial, _position, timeStamp1, out List<Guid>? list1);
+        bool found1 = fixture.Cache.TryGet(Serial, _position, timeStamp1, out var list1);
         found1.ShouldBeTrue();
         list1!.Count.ShouldBe(1);
         list1[0].ShouldBe(id1);
 
-        bool found2 = fixture.Cache.TryGet(Serial, _position, timeStamp2, out List<Guid>? list2);
+        bool found2 = fixture.Cache.TryGet(Serial, _position, timeStamp2, out var list2);
         found2.ShouldBeTrue();
         list2!.Count.ShouldBe(1);
         list2[0].ShouldBe(id2);

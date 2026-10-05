@@ -24,7 +24,7 @@ public static class XmlDocResolver
         // that have a 'name' attribute but don't contain an <inheritdoc> child element.
         foreach (var doc in xmlDocs)
         {
-            IEnumerable<XElement> members = doc.XPathSelectElements("/doc/members/member[@name and not(inheritdoc)]");
+            var members = doc.XPathSelectElements("/doc/members/member[@name and not(inheritdoc)]");
 
             foreach (var m in members)
             {
@@ -37,7 +37,7 @@ public static class XmlDocResolver
         // element (effectively this 'dereferences the pointer' which is something Swagger doesn't support).
         foreach (var doc in xmlDocs)
         {
-            IEnumerable<XElement> pointerMembers = doc.XPathSelectElements("/doc/members/member[inheritdoc]");
+            var pointerMembers = doc.XPathSelectElements("/doc/members/member[inheritdoc]");
 
             foreach (var pointerMember in pointerMembers)
             {
@@ -135,13 +135,13 @@ public static class XmlDocResolver
         }
 
         // Resolve <inheritdoc/> comments, so they show up correctly in the API
-        IEnumerable<XDocument> resolvedXmlDocs = ResolveInheritedDocs(xmlDocs, assemblies);
+        var resolvedXmlDocs = ResolveInheritedDocs(xmlDocs, assemblies);
         return resolvedXmlDocs;
     }
 
     private static string? GetMemberBaseType(Type memberType, string memberName)
     {
-        IEnumerable<Type> parents = GetParentTypes(memberType);
+        var parents = GetParentTypes(memberType);
 
         foreach (var parent in parents)
         {

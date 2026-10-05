@@ -28,7 +28,7 @@ public class InstantActionsCommandHandlerTest
 
         await fixture.ShouldHavePublishedAsync<MqttInstantActions>();
 
-        PublishContext<MqttInstantActions>? context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
+        var context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
         context.RoutingKey().ShouldBe(agv.GetRoutingKey(Vda5050Specifications.Subtopics.InstantActions));
     }
 }

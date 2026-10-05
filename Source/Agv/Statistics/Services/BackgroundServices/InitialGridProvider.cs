@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.Repositories;
 using Gebhardt.Acc.Statistics.Messages.Commands;
 using MassTransit;
@@ -47,7 +46,7 @@ public class InitialGridProvider : BackgroundService
         {
             var db = scope.ServiceProvider.GetRequiredService<IStatisticsDb>();
 
-            ICollection<Grid> grids = await db.Grids.GetAll();
+            var grids = await db.Grids.GetAll();
             if (grids.Count > 0)
             {
                 // A grid was created previously.

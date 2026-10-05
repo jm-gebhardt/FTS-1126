@@ -1,6 +1,5 @@
 using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Exceptions;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.Graphs.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
@@ -57,15 +56,15 @@ public class GetGraphRequestHandler :
     /// <exception cref="AgvsNotFoundException"></exception>
     public async Task Consume(ConsumeContext<GetAgvGraphs> context)
     {
-        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
+        var selectedAgvs = context.Message.CorrelationIds;
 
-        ICollection<Domain.Models.Agv.Agv> agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
+        var agvs = await _agvDb.Agvs.SelectExistingAgvsAsync(selectedAgvs.ToList());
         if (agvs.Count != selectedAgvs.Count)
         {
             throw new AgvsNotFoundException(selectedAgvs.Except(agvs.Select(a => a.CorrelationId)).ToList());
         }
 
-        ICollection<AgvGraph> agvGraphs = await _agvDb.Graphs.GetSelectedAgvGraphsAsync(selectedAgvs);
+        var agvGraphs = await _agvDb.Graphs.GetSelectedAgvGraphsAsync(selectedAgvs);
         var graphs = _mapper.Map<List<Graph>>(agvGraphs);
         await context.RespondAsync(new GotAgvGraphs(graphs));
     }

@@ -49,7 +49,7 @@ public record Trajectory
     /// <returns>The approximated length of the trajectory.</returns>
     public double CalculateLength(int sampleCount = DefaultSampleCount)
     {
-        IReadOnlyList<PolygonPoint> samples = Sample(sampleCount);
+        var samples = Sample(sampleCount);
 
         double length = 0.0;
         for (int i = 1; i < samples.Count; i++)
@@ -73,7 +73,7 @@ public record Trajectory
     {
         percent = Math.Clamp(percent, 0.0, 100.0);
 
-        IReadOnlyList<PolygonPoint> samples = Sample(sampleCount);
+        var samples = Sample(sampleCount);
         if (samples.Count == 0)
         {
             orientation = 0.0;
@@ -172,7 +172,7 @@ public record Trajectory
     /// <returns>The end angle in radians, range [-PI ... PI].</returns>
     public double CalculateEndAngle()
     {
-        IList<ControlPoint> controlPoints = ControlPoints as IList<ControlPoint> ?? [.. ControlPoints];
+        var controlPoints = ControlPoints as IList<ControlPoint> ?? [.. ControlPoints];
 
         int end = controlPoints.Count - 1;
         for (int i = end - 1; i >= 0; i--)
@@ -195,7 +195,7 @@ public record Trajectory
     /// <returns>The start angle in radians, range [-PI ... PI].</returns>
     public double CalculateStartAngle()
     {
-        IList<ControlPoint> controlPoints = ControlPoints as IList<ControlPoint> ?? [.. ControlPoints];
+        var controlPoints = ControlPoints as IList<ControlPoint> ?? [.. ControlPoints];
 
         for (int i = 1; i < controlPoints.Count; i++)
         {
@@ -217,7 +217,7 @@ public record Trajectory
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(sampleCount, 2);
 
-        IList<ControlPoint> controlPoints = ControlPoints as IList<ControlPoint> ?? [.. ControlPoints];
+        var controlPoints = ControlPoints as IList<ControlPoint> ?? [.. ControlPoints];
         if (controlPoints.Count == 0)
         {
             return [];

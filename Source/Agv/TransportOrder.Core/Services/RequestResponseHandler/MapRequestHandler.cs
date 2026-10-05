@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -8,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using JetBrains.Annotations;
 using MassTransit;
-using Map = Gebhardt.Acc.TransportOrder.Domain.Models.Map.Map;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -43,9 +41,9 @@ public class MapRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetMapList> context)
     {
-        ICollection<Map> fetchedMaps = await _mapRepository.GetAllMapsAsync();
+        var fetchedMaps = await _mapRepository.GetAllMapsAsync();
         // reversing the list is a quick fix that the global map is on that. This needs improvement in the future.
-        var maps = _mapper.Map<List<Messages.Requests.Map.Map>>(fetchedMaps.Reverse());
+        var maps = _mapper.Map<List<Map>>(fetchedMaps.Reverse());
         await context.RespondAsync(new GotMapList { Maps = maps });
     }
 
@@ -54,7 +52,7 @@ public class MapRequestHandler :
     {
         var correlationId = context.Message.CorrelationId;
         var fetchedMap = await _mapRepository.GetMapAsync(correlationId);
-        var map = _mapper.Map<Messages.Requests.Map.Map>(fetchedMap);
+        var map = _mapper.Map<Map>(fetchedMap);
         await context.RespondAsync(new GotMap(map));
     }
 
@@ -75,7 +73,7 @@ public class MapRequestHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<TrySettingNodeApproachingProperties> context)
     {
-        (var correlationId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var correlationId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, var dockingDirection) = context.Message;
         await _mapRepository.GetMapAsync(correlationId);
         await _graphRepository.GetNodeAsync(nodeId);
 

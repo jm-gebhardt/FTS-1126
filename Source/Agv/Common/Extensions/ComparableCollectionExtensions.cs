@@ -16,7 +16,7 @@ public static class ComparableCollectionExtensions
     public static T Median<T>(this ICollection<T> data) where T : IComparable<T>
     {
         //Sorted list of key-value pairs, where the keys are the elements of the input data and the values are the original indices.
-        List<KeyValuePair<T, int>> sortedList = data.Select((x, i) => new KeyValuePair<T, int>(x, i))
+        var sortedList = data.Select((x, i) => new KeyValuePair<T, int>(x, i))
             .OrderBy(x => x.Key).ToList();
         int size = sortedList.Count;
         int mid = size / 2;

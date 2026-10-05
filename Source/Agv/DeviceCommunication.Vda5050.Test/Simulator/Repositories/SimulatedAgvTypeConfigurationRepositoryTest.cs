@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Exceptions;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Extensions;
 using Shouldly;
 using Fixture = Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Repositories.SimulatedAgvTypeConfigurationRepositoryTestFixture;
@@ -50,7 +49,7 @@ public class SimulatedAgvTypeConfigurationRepositoryTest
         await fixture.Sut.AddAsync(Generator.Generate());
         await fixture.Sut.AddAsync(Generator.Generate(Fixture.OtherAgvTypeIdentifier));
 
-        IReadOnlyCollection<SimulatedAgvTypeConfiguration> configurations = await fixture.Sut.GetAllAsync();
+        var configurations = await fixture.Sut.GetAllAsync();
 
         configurations.Select(c => c.AgvTypeIdentifier)
             .ShouldBe(new[] { Fixture.AgvTypeIdentifier, Fixture.OtherAgvTypeIdentifier }, true);

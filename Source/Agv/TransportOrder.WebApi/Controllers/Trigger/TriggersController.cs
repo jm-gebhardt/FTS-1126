@@ -36,7 +36,7 @@ public class TriggersController : Controller
     [Route("/triggers")]
     public async Task<ActionResult<ICollection<TriggerDto>>> GetTriggers()
     {
-        Response<GotTriggers> response = await _getTriggersRequestClient.GetResponse<GotTriggers>(new GetTriggers());
+        var response = await _getTriggersRequestClient.GetResponse<GotTriggers>(new GetTriggers());
         var triggers = _mapper.Map<ICollection<TriggerDto>>(response.Message.Triggers);
         return Ok(triggers);
     }
@@ -49,7 +49,7 @@ public class TriggersController : Controller
     [Route("/triggers/deleted")]
     public async Task<ActionResult<ICollection<TriggerDto>>> GetDeletedTriggers()
     {
-        Response<GotDeletedTriggers> response = await _getDeletedTriggersRequestClient.GetResponse<GotDeletedTriggers>(new GetDeletedTriggers());
+        var response = await _getDeletedTriggersRequestClient.GetResponse<GotDeletedTriggers>(new GetDeletedTriggers());
         var triggers = _mapper.Map<ICollection<TriggerDto>>(response.Message.Triggers);
         return Ok(triggers);
     }

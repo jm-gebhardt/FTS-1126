@@ -39,7 +39,7 @@ public class LogEntryEventHandler(IMapper mapper, IAgvDb agvDb, IStationReposito
 
     private async Task<LogEntryDto> EnrichAgvs(LogEntryDto entry)
     {
-        Guid? agvId = entry.AgvCorrelationId;
+        var agvId = entry.AgvCorrelationId;
         if (agvId == null)
         {
             return entry;
@@ -52,7 +52,7 @@ public class LogEntryEventHandler(IMapper mapper, IAgvDb agvDb, IStationReposito
 
     private async Task<LogEntryDto> EnrichStations(LogEntryDto entry)
     {
-        Guid? stationId = entry.StationId;
+        var stationId = entry.StationId;
         if (stationId == null)
         {
             return entry;
@@ -67,7 +67,7 @@ public class LogEntryEventHandler(IMapper mapper, IAgvDb agvDb, IStationReposito
 
     private async Task<LogEntryDto> EnrichOrders(LogEntryDto entry)
     {
-        Guid? actionGroupId = entry.ActionGroupCorrelationId;
+        var actionGroupId = entry.ActionGroupCorrelationId;
         AgvAction? action = null;
 
         if (entry.Variables.TryGetValue(LogLabels.ActionId, out string? actionId))

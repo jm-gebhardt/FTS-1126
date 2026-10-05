@@ -70,7 +70,7 @@ public abstract class ControllerTestFixture<TRequest, TRequestHandler, TControll
 
     public async Task<TResponse> GetControllerResultAsync<TResult, TResponse>(Func<TController, Task<ActionResult<TResult>>> controllerAction) where TResponse : class
     {
-        ActionResult<TResult> controllerResult = await controllerAction(Controller);
+        var controllerResult = await controllerAction(Controller);
         var result = controllerResult.Result as TResponse;
         result.ShouldNotBeNull();
 

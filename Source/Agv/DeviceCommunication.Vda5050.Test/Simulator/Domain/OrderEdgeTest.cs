@@ -212,7 +212,7 @@ public class OrderEdgeTest
         var action2 = new OrderAction(Vda5050Specifications.ActionTypes.Drop, null, BlockingType.NONE, []);
         var edge = new OrderEdge { Actions = [action1, action2] };
 
-        ICollection<string> ids = edge.ActionIds;
+        var ids = edge.ActionIds;
 
         ids.Count.ShouldBe(2);
         ids.ShouldContain(action1.ActionId);

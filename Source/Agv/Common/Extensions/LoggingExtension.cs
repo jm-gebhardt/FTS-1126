@@ -37,7 +37,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogBatteryInformation(int code, Guid agvId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateAgvParameters(timeProvider ?? TimeProvider.System, code, nameof(Categories.Battery), agvId, title, message);
+            var parameters = CreateAgvParameters(timeProvider ?? TimeProvider.System, code, nameof(Categories.Battery), agvId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Information, message, parameters);
         }
@@ -54,7 +54,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogBatteryError(int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Battery), agvId, errorCode, title, message);
+            var parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Battery), agvId, errorCode, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Error, message, parameters);
         }
@@ -71,7 +71,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogBatteryWarning(int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Battery), agvId, errorCode, title, message);
+            var parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Battery), agvId, errorCode, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Warning, message, parameters);
         }
@@ -87,7 +87,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogAgvInformation(int code, Guid agvId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateAgvParameters(timeProvider ?? TimeProvider.System, code, nameof(Categories.Agv), agvId, title, message);
+            var parameters = CreateAgvParameters(timeProvider ?? TimeProvider.System, code, nameof(Categories.Agv), agvId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Information, message, parameters);
         }
@@ -104,7 +104,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogAgvError(int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Agv), agvId, errorCode, title, message);
+            var parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Agv), agvId, errorCode, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Error, message, parameters);
         }
@@ -121,7 +121,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogAgvWarning(int code, Guid agvId, string? errorCode, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Agv), agvId, errorCode, title, message);
+            var parameters = CreateAgvParametersWithError(timeProvider ?? TimeProvider.System, code, nameof(Categories.Agv), agvId, errorCode, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Warning, message, parameters);
         }
@@ -138,7 +138,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogOrderInformation(int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateOrderParameters(timeProvider ?? TimeProvider.System, code, agvId, actionGroupId, title, message);
+            var parameters = CreateOrderParameters(timeProvider ?? TimeProvider.System, code, agvId, actionGroupId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Information, message, parameters);
         }
@@ -155,7 +155,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogOrderWarning(int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateOrderParameters(timeProvider ?? TimeProvider.System, code, agvId, actionGroupId, title, message);
+            var parameters = CreateOrderParameters(timeProvider ?? TimeProvider.System, code, agvId, actionGroupId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Warning, message, parameters);
         }
@@ -172,7 +172,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogOrderError(int code, Guid agvId, Guid actionGroupId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateOrderParameters(timeProvider ?? TimeProvider.System, code, agvId, actionGroupId, title, message);
+            var parameters = CreateOrderParameters(timeProvider ?? TimeProvider.System, code, agvId, actionGroupId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Error, message, parameters);
         }
@@ -188,7 +188,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogStationInformation(int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateStationParameters(timeProvider ?? TimeProvider.System, code, stationId, title, message);
+            var parameters = CreateStationParameters(timeProvider ?? TimeProvider.System, code, stationId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Information, message, parameters);
         }
@@ -205,7 +205,7 @@ public static class LoggingExtension
         [PublicAPI]
         public void LogStationWarning(int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateStationParameters(timeProvider ?? TimeProvider.System, code, stationId, title, message);
+            var parameters = CreateStationParameters(timeProvider ?? TimeProvider.System, code, stationId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Warning, message, parameters);
         }
@@ -222,7 +222,7 @@ public static class LoggingExtension
         [PublicAPI]
         public void LogStationError(int code, Guid stationId, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateStationParameters(timeProvider ?? TimeProvider.System, code, stationId, title, message);
+            var parameters = CreateStationParameters(timeProvider ?? TimeProvider.System, code, stationId, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Error, message, parameters);
         }
@@ -237,7 +237,7 @@ public static class LoggingExtension
         /// <param name="timeProvider">The time provider. Defaults to <see cref="TimeProvider.System"/>.</param>
         public void LogSystemInformation(int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateSystemParameters(timeProvider ?? TimeProvider.System, code, title, message);
+            var parameters = CreateSystemParameters(timeProvider ?? TimeProvider.System, code, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Information, message, parameters);
         }
@@ -253,7 +253,7 @@ public static class LoggingExtension
         [PublicAPI]
         public void LogSystemWarning(int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateSystemParameters(timeProvider ?? TimeProvider.System, code, title, message);
+            var parameters = CreateSystemParameters(timeProvider ?? TimeProvider.System, code, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Warning, message, parameters);
         }
@@ -269,7 +269,7 @@ public static class LoggingExtension
         [PublicAPI]
         public void LogSystemError(int code, string title, string message, Dictionary<string, object?>? additionalLabels = null, TimeProvider? timeProvider = null)
         {
-            Dictionary<string, object?> parameters = CreateSystemParameters(timeProvider ?? TimeProvider.System, code, title, message);
+            var parameters = CreateSystemParameters(timeProvider ?? TimeProvider.System, code, title, message);
             AddLabels(parameters, additionalLabels);
             WriteLogLine(logger, LogLevel.Error, message, parameters);
         }
@@ -288,7 +288,7 @@ public static class LoggingExtension
 
     private static Dictionary<string, object?> CreateAgvParametersWithError(TimeProvider timeProvider, int code, string category, Guid agvId, string? errorCode, string title, string message)
     {
-        Dictionary<string, object?> parameters = CreateAgvParameters(timeProvider, code, category, agvId, title, message);
+        var parameters = CreateAgvParameters(timeProvider, code, category, agvId, title, message);
         parameters[ErrorCodeKey] = errorCode;
         return parameters;
     }
@@ -336,7 +336,7 @@ public static class LoggingExtension
         {
             var sb = new StringBuilder();
             sb.Append(message);
-            foreach (KeyValuePair<string, object?> param in s)
+            foreach (var param in s)
             {
                 sb.Append($" {{{param.Key}}}");
             }
@@ -348,7 +348,7 @@ public static class LoggingExtension
     {
         if (additionalLabels != null)
         {
-            foreach (KeyValuePair<string, object?> kvp in additionalLabels)
+            foreach (var kvp in additionalLabels)
             {
                 logParameters[kvp.Key] = kvp.Value;
             }

@@ -48,7 +48,7 @@ public class StationController : Controller
     [Route("/station/{id:Guid}")]
     public async Task<ActionResult<StationDto>> GetStation(Guid id)
     {
-        Response<GotStation> response = await _getStationClient.GetResponse<GotStation>(new GetStation(id));
+        var response = await _getStationClient.GetResponse<GotStation>(new GetStation(id));
         var stationDto = _mapper.Map<StationDto>(response.Message.Station);
         return Ok(stationDto);
     }
@@ -74,7 +74,7 @@ public class StationController : Controller
             return Unauthorized();
         }
 
-        Response<LockedUnlockedStation> response = await _lockStationClient.GetResponse<LockedUnlockedStation>(new TryLockStation(id, email, reason, lockDescription, lockedOrderHandling));
+        var response = await _lockStationClient.GetResponse<LockedUnlockedStation>(new TryLockStation(id, email, reason, lockDescription, lockedOrderHandling));
         bool result = response.Message.Result;
         return Ok(result);
     }
@@ -95,7 +95,7 @@ public class StationController : Controller
             return Unauthorized();
         }
 
-        Response<LockedUnlockedStation> response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new TryUnlockStation(id, email));
+        var response = await _unlockStationClient.GetResponse<LockedUnlockedStation>(new TryUnlockStation(id, email));
         bool result = response.Message.Result;
         return Ok(result);
     }

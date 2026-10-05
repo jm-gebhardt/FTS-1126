@@ -108,7 +108,7 @@ public class SimulatedAgvController(
     [Route("agv/{correlationId:guid}/state")]
     public async Task<ActionResult<Vda5050StateDto>> GetState([FromRoute] Guid correlationId, CancellationToken cancellationToken)
     {
-        Response<AgvStateResponse> response = await stateClient.GetResponse<AgvStateResponse>(new RequestAgvState(correlationId), cancellationToken);
+        var response = await stateClient.GetResponse<AgvStateResponse>(new RequestAgvState(correlationId), cancellationToken);
         if (response.Message.State == null)
         {
             return NoContent();

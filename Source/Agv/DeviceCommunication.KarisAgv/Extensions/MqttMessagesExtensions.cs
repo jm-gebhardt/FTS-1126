@@ -96,7 +96,7 @@ public static class MqttMessagesExtensions
         /// <param name="end">The end <see cref="MqttNode"/></param>
         public Polypath ToPolypath(MqttNode start, MqttNode end)
         {
-            List<Vector3> points = new[] { start.AsVector3() }
+            var points = new[] { start.AsVector3() }
                 .Concat(edge.ControlPoints?.Select(cp => cp.AsVector3()) ?? [])
                 .Concat([end.AsVector3()])
                 .ToList();

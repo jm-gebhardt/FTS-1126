@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
-using Gebhardt.Acc.OrderTranslator.Domain.Models.Station;
 using Gebhardt.Acc.OrderTranslator.Messages;
 using Gebhardt.Acc.OrderTranslator.Messages.Stations;
 using Gebhardt.Acc.OrderTranslator.Test.Helper;
@@ -31,7 +30,7 @@ public class StationCommandHandlerTest
         await fixture.PublishMessageAsync(new CreateOrUpdateStation(OrderGenerator.Apl1));
         await fixture.PublishMessageAsync(new CreateOrUpdateStation(OrderGenerator.Apl1));
 
-        ICollection<Station> allStations = await fixture.StationRepository.GetAll();
+        var allStations = await fixture.StationRepository.GetAll();
         allStations.Count(s => s.Name == OrderGenerator.Apl1.Name).ShouldBe(1);
         await fixture.ShouldHavePublishedAsync<StationConfigured>();
     }

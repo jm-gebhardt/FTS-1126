@@ -42,7 +42,7 @@ public class FilterableBinderTests
             ]
         );
         
-        Dictionary<int, IFilter> result = filter.SplitFilter(["A", "A.B"]);
+        var result = filter.SplitFilter(["A", "A.B"]);
 
         result.Keys.Count.ShouldBe(2);
         
@@ -95,7 +95,7 @@ public class FilterableBinderTests
             ]
         );
 
-        Dictionary<int, IFilter> result = filter.SplitFilter(["A", "A.B"]);
+        var result = filter.SplitFilter(["A", "A.B"]);
 
         result.Keys.Count.ShouldBe(2);
 
@@ -132,7 +132,7 @@ public class FilterableBinderTests
             ]
         );
 
-        Dictionary<int, IFilter> result = filter.SplitFilter(["A", "A.B", "A.B.C"]);
+        var result = filter.SplitFilter(["A", "A.B", "A.B.C"]);
 
         result.Values.Count.ShouldBe(1);
 
@@ -168,7 +168,7 @@ public class FilterableBinderTests
             ]
         );
 
-        Dictionary<int, IFilter> result = filter.SplitFilter(["A", "A.B", "A.B.C"]);
+        var result = filter.SplitFilter(["A", "A.B", "A.B.C"]);
 
         result.Values.Count.ShouldBe(1);
 
@@ -183,7 +183,7 @@ public class FilterableBinderTests
     public void ToExpressionTree_ValidIntData_CreatesExpressionTree()
     {
         var leaf = new ValueComparisonFilter<int>(nameof(TestValueHolder.Value), ComparisonVariant.Equals, 10);
-        Expression<Func<TestValueHolder, int>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
+        var accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)> { { nameof(TestValueHolder.Value), (accessor, false) } };
 
@@ -196,7 +196,7 @@ public class FilterableBinderTests
     public void ToExpressionTree_ValidStringData_CreatesExpressionTree()
     {
         var leaf = new ValueComparisonFilter<string>(nameof(TestValueHolder.StringValue), ComparisonVariant.Like, "EAE");
-        Expression<Func<TestValueHolder, string>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, string>(nameof(TestValueHolder.StringValue));
+        var accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, string>(nameof(TestValueHolder.StringValue));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)> { { nameof(TestValueHolder.StringValue), (accessor, false) } };
 
@@ -209,7 +209,7 @@ public class FilterableBinderTests
     public void ToExpressionTree_NotLike_ExcludesMatchingSubstring()
     {
         var leaf = new ValueComparisonFilter<string>(nameof(TestValueHolder.StringValue), ComparisonVariant.NotLike, "EAE");
-        Expression<Func<TestValueHolder, string>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, string>(nameof(TestValueHolder.StringValue));
+        var accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, string>(nameof(TestValueHolder.StringValue));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)> { { nameof(TestValueHolder.StringValue), (accessor, false) } };
 
@@ -226,9 +226,9 @@ public class FilterableBinderTests
 
         var colFilter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestValueHolder.IntValues), leaf);
 
-        Expression<Func<IntHolder, int>> accessor1 = FilterExpressionBuilder.CreatePropertyAccess<IntHolder, int>(nameof(IntHolder.Value));
+        var accessor1 = FilterExpressionBuilder.CreatePropertyAccess<IntHolder, int>(nameof(IntHolder.Value));
 
-        Expression<Func<TestValueHolder, ICollection<IntHolder>>> accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<IntHolder>>(nameof(TestValueHolder.IntValues));
+        var accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<IntHolder>>(nameof(TestValueHolder.IntValues));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)>
         {
@@ -248,9 +248,9 @@ public class FilterableBinderTests
 
         var colFilter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestValueHolder.DirectValues), leaf);
 
-        Expression<Func<IntHolder, int>> accessor1 = FilterExpressionBuilder.CreatePropertyAccess<IntHolder, int>(nameof(IntHolder.Value));
+        var accessor1 = FilterExpressionBuilder.CreatePropertyAccess<IntHolder, int>(nameof(IntHolder.Value));
 
-        Expression<Func<TestValueHolder, ICollection<int>>> accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<int>>(nameof(TestValueHolder.DirectValues));
+        var accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<int>>(nameof(TestValueHolder.DirectValues));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)>
         {
@@ -276,9 +276,9 @@ public class FilterableBinderTests
 
         var dirFilter = new CombinationFilter(op, [leaf1, leaf2, leaf3, leaf4]); 
 
-        Expression<Func<TestValueHolder, int>> accessor1 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
+        var accessor1 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
 
-        Expression<Func<TestValueHolder, ICollection<IntHolder>>> accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<IntHolder>>(nameof(TestValueHolder.IntValues));
+        var accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<IntHolder>>(nameof(TestValueHolder.IntValues));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)>
         {
@@ -301,9 +301,9 @@ public class FilterableBinderTests
 
         var dirFilter = new CombinationFilter(op, [leaf1]);
 
-        Expression<Func<TestValueHolder, int>> accessor1 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
+        var accessor1 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
 
-        Expression<Func<TestValueHolder, ICollection<IntHolder>>> accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<IntHolder>>(nameof(TestValueHolder.IntValues));
+        var accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, ICollection<IntHolder>>(nameof(TestValueHolder.IntValues));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)>
         {
@@ -326,10 +326,10 @@ public class FilterableBinderTests
 
         var dirFilter = new CombinationFilter(op, [leaf1]);
 
-        Expression<Func<TestValueHolder, int>> accessor1 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
-        Expression<Func<TestValueHolder, IntHolder>> accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, IntHolder>(nameof(TestValueHolder.NonList));
+        var accessor1 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, int>(nameof(TestValueHolder.Value));
+        var accessor2 = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder, IntHolder>(nameof(TestValueHolder.NonList));
 
-        Expression<Func<IntHolder, int>> accessor3 = FilterExpressionBuilder.CreatePropertyAccess<IntHolder, int>(nameof(IntHolder.Value));
+        var accessor3 = FilterExpressionBuilder.CreatePropertyAccess<IntHolder, int>(nameof(IntHolder.Value));
 
         var accessors = new Dictionary<string, (LambdaExpression, bool)>
         {

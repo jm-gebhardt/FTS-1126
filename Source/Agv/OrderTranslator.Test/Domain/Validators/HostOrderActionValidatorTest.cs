@@ -22,7 +22,7 @@ public class HostOrderActionValidatorTest
 
         var validator = new HostOrderActionValidator(OrderGenerator.TestConfiguration);
 
-        TestValidationResult<Action>? result = await validator.TestValidateAsync(hostOrderAction);
+        var result = await validator.TestValidateAsync(hostOrderAction);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -39,7 +39,7 @@ public class HostOrderActionValidatorTest
 
         var validator = new HostOrderActionValidator(OrderGenerator.TestConfiguration);
 
-        TestValidationResult<Action>? result = await validator.TestValidateAsync(hostOrderAction);
+        var result = await validator.TestValidateAsync(hostOrderAction);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -59,7 +59,7 @@ public class HostOrderActionValidatorTest
 
         var validator = new HostOrderActionValidator(config);
 
-        TestValidationResult<Action>? result = await validator.TestValidateAsync(hostOrderAction);
+        var result = await validator.TestValidateAsync(hostOrderAction);
 
         result.ShouldHaveValidationErrorFor(a => a.Node).WithErrorCode(errorCode);
     }

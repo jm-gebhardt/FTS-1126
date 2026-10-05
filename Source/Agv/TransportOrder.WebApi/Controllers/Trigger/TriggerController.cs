@@ -79,7 +79,7 @@ public class TriggerController : Controller
     [Route("/trigger/{id:guid}")]
     public async Task<ActionResult<TriggerDto>> GetTrigger([FromRoute] Guid id)
     {
-        Response<GotTrigger> response = await _getTriggerRequestClient.GetResponse<GotTrigger>(new GetTrigger(id));
+        var response = await _getTriggerRequestClient.GetResponse<GotTrigger>(new GetTrigger(id));
         var trigger = _mapper.Map<TriggerDto>(response.Message.Trigger);
         return Ok(trigger);
     }
@@ -130,9 +130,9 @@ public class TriggerController : Controller
     [Route("/trigger/{id:guid}/location")]
     public async Task<ActionResult<TriggerLocationDto>> AssignTriggerToLocation([FromRoute] Guid id, [FromBody] LocationDto location)
     {
-        ICollection<PolygonPoint> polygonPoints = location.Polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(location.Polygon) : [];
-        ICollection<ConfigurationParameter>? parameters = location.ConfigurationParameters != null ? _mapper.Map<ICollection<ConfigurationParameter>>(location.ConfigurationParameters) : null;
-        Response<TriggerLocationAssigned> response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, location.NodeId?.ToGraphNode(), location.EdgeId, polygonPoints, location.MapId, parameters));
+        var polygonPoints = location.Polygon != null ? _mapper.Map<ICollection<PolygonPoint>>(location.Polygon) : [];
+        var parameters = location.ConfigurationParameters != null ? _mapper.Map<ICollection<ConfigurationParameter>>(location.ConfigurationParameters) : null;
+        var response = await _assignTriggerLocationRequestClient.GetResponse<TriggerLocationAssigned>(new AssignTriggerToLocation(id, location.NodeId?.ToGraphNode(), location.EdgeId, polygonPoints, location.MapId, parameters));
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemTriggerAssignedToLocation } });
 
         var triggerLocationDto = _mapper.Map<TriggerLocationDto>(response.Message);

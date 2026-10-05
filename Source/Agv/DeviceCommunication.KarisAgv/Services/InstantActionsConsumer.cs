@@ -21,7 +21,7 @@ IConsumer<StartInstantAction>
     public async Task Consume(ConsumeContext<StartInstantAction> context)
     {
         string actionType = context.Message.AgvInstantActionType;
-        Dictionary<string, object>? parameters = context.Message.Parameters;
+        var parameters = context.Message.Parameters;
         var correlationId = context.Message.CorrelationId;
         string agvSerialNumber = context.Message.AgvSerialNumber;
         logger.LogInformation("Received StartInstantAction: {ActionType}/{CorrelationId} for AGV:{AgvId} ", actionType, correlationId, agvSerialNumber);

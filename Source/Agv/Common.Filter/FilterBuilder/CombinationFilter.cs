@@ -30,11 +30,11 @@ public sealed class CombinationFilter(LogicalCombinationVariant combinationVaria
             return new Dictionary<int, IFilter> { { GetDeepestSubstringIndex(names, domainAccessors?.Keys), this } };
         }
 
-        IEnumerable<Dictionary<int, IFilter>> intermediate = Children.Select(c => c.SplitFilter(names, domainAccessors));
+        var intermediate = Children.Select(c => c.SplitFilter(names, domainAccessors));
 
         Dictionary<int, CombinationFilter> result = new();
 
-        foreach (Dictionary<int, IFilter> childSplit in intermediate)
+        foreach (var childSplit in intermediate)
         {
             foreach ((int index, var child) in childSplit)
             {

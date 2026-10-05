@@ -14,7 +14,7 @@ public class IoStateTrackerService : IIoStateTrackerService
     {
         get
         {
-            if (_dictionaryByModuleConfig.TryGetValue(_moduleConfigProvider.ModuleConfig, out Dictionary<IoActionConfig, IoStateTracker>? dictionary))
+            if (_dictionaryByModuleConfig.TryGetValue(_moduleConfigProvider.ModuleConfig, out var dictionary))
             {
                 return dictionary;
             }

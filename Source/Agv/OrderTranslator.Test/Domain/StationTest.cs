@@ -14,7 +14,7 @@ public class StationTest
     {
         var station = OrderGenerator.Ps01;
 
-        Dictionary<string, object?> stationDict = station.AsDict();
+        var stationDict = station.AsDict();
         foreach (var property in TypeDescriptor.GetProperties(station).Cast<PropertyDescriptor>())
         {
             stationDict.ContainsKey(property.Name).ShouldBeTrue();
@@ -26,7 +26,7 @@ public class StationTest
     {
         var station = OrderGenerator.Ps01;
 
-        Dictionary<string, object?> stationDict = station.AsDict([nameof(Station.Name), nameof(Station.Id)]);
+        var stationDict = station.AsDict([nameof(Station.Name), nameof(Station.Id)]);
         stationDict.ContainsKey(nameof(Station.Name)).ShouldBeFalse();
         stationDict.ContainsKey(nameof(Station.Id)).ShouldBeFalse();
     }

@@ -162,11 +162,11 @@ public class AgvRequestsHandlerTestFixture<TRequestClient, TConsumer> : Mediator
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
         _actionGroupRetrievalService.Setup(r => r.GetCurrentAgvActionGroupWithNodesAsync(It.IsAny<Guid>()))
             .ReturnsAsync(actionGroup.ConvertFromActionGroupWithFakeNodeType());
-        IEnumerable<AgvData> specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(a.CorrelationId));
+        var specifications = agvs.Select((a, _) => AgvDataGenerator.GenerateAgvData(a.CorrelationId));
 
         _agvDb.Setup(x => x.Data.GetSelectedAgvDataAsync(It.IsAny<ICollection<Guid>>())).ReturnsAsync((ICollection<Guid> ids) => specifications.Where(s => ids.Contains(s.AgvCorrelationId)).ToList());
 
-        Dictionary<Guid, GraphNode?> nodes = agvs.ToDictionary(a => a.CorrelationId,
+        var nodes = agvs.ToDictionary(a => a.CorrelationId,
             a => a.AgvStatus!.LastNodeId != null ? NodeGenerator.GenerateNode(nodeName: a.AgvStatus!.LastNodeId!.ToString()!, x: 1.0f, y: 2.0f, z: 0.0f, theta: 0.0f, nodeType: AgvGraph.NodeType.WayPoint) : null);
 
         _agvDb.Setup(x => x.Graphs.GetLastNodesForAgvsAsync(It.IsAny<Dictionary<Guid, Guid?>>())).ReturnsAsync(() => nodes);

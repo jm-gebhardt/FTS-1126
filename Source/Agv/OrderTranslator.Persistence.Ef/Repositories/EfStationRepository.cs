@@ -32,7 +32,7 @@ public class EfStationRepository(IDbContextFactory<OrderTranslatorDbContext> con
     public async Task AddOrUpdateAsync(Station station)
     {
         await using var context = await ContextFactory.CreateDbContextAsync();
-        DbSet<Station> dbSet = context.Set<Station>();
+        var dbSet = context.Set<Station>();
 
         var existingStation = await dbSet.FirstOrDefaultAsync(s => s.Name == station.Name);
         if (existingStation == null)

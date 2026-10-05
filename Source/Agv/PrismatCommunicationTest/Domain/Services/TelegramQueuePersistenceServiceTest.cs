@@ -19,7 +19,7 @@ public class TelegramQueuePersistenceServiceTest
 
         fixture.Queue.Enqueue(arrival);
 
-        ICollection<Telegram> storedTelegrams = await fixture.Repository.GetAll();
+        var storedTelegrams = await fixture.Repository.GetAll();
         storedTelegrams.Count.ShouldBe(1);
 
         var telegram = storedTelegrams.Single();

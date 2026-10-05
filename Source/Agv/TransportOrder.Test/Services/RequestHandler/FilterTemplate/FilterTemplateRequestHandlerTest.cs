@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.FilterTemplate;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.OwnedFilter;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.FilterTemplate;
@@ -17,10 +16,10 @@ public class FilterTemplateRequestHandlerTest
     {
         var filterTemplate = new TransportOrder.Domain.Models.FilterTemplate.FilterTemplate() { Name = "name", FilterType = FilterType.Order };
         var id = Guid.NewGuid();
-        FilterTemplateRequestHandlerTestFixture<AddFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<AddFilterTemplate>()
+        var fixture = new FilterTemplateRequestHandlerTestFixture<AddFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
-        Response<AddedFilterTemplate> response = await fixture.GetResponseAsync<AddedFilterTemplate>(new AddFilterTemplate("owner", filterTemplate, filterTemplate.Name));
+        var response = await fixture.GetResponseAsync<AddedFilterTemplate>(new AddFilterTemplate("owner", filterTemplate, filterTemplate.Name));
         response.Message.FilterTemplateCorrelationId.ShouldBe(id);
     }
 
@@ -29,7 +28,7 @@ public class FilterTemplateRequestHandlerTest
     {
         var filterTemplate = new TransportOrder.Domain.Models.FilterTemplate.FilterTemplate() { Name = "name", FilterType = FilterType.Order };
         var id = Guid.NewGuid();
-        FilterTemplateRequestHandlerTestFixture<AddFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<AddFilterTemplate>()
+        var fixture = new FilterTemplateRequestHandlerTestFixture<AddFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
         await MediatorShould.ThrowRequestExceptionAsync<StringLengthExceededException>(async () => await fixture.GetResponseAsync<AddedFilterTemplate>(new AddFilterTemplate("owner", filterTemplate, new string('c', DbStringLimits.Description + 1))));
@@ -40,10 +39,10 @@ public class FilterTemplateRequestHandlerTest
     {
         var filterTemplate = new TransportOrder.Domain.Models.FilterTemplate.FilterTemplate() { Name = "name", FilterType = FilterType.Order };
         var id = Guid.NewGuid();
-        FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate>()
+        var fixture = new FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
-        Response<OwnedFilterModificationResult> response = await fixture.GetResponseAsync<OwnedFilterModificationResult>(new UpdateFilterTemplate("owner", filterTemplate, id, filterTemplate.Name));
+        var response = await fixture.GetResponseAsync<OwnedFilterModificationResult>(new UpdateFilterTemplate("owner", filterTemplate, id, filterTemplate.Name));
         response.Message.Result.ShouldBeTrue();
     }
 
@@ -52,7 +51,7 @@ public class FilterTemplateRequestHandlerTest
     {
         var filterTemplate = new TransportOrder.Domain.Models.FilterTemplate.FilterTemplate() { Name = "name", FilterType = FilterType.Order };
         var id = Guid.NewGuid();
-        FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate>()
+        var fixture = new FilterTemplateRequestHandlerTestFixture<UpdateFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
         await MediatorShould.ThrowRequestExceptionAsync<StringLengthExceededException>(async () => await fixture.GetResponseAsync<OwnedFilterModificationResult>(new UpdateFilterTemplate("owner", filterTemplate, id, new string('c', DbStringLimits.Description + 1))));
@@ -63,10 +62,10 @@ public class FilterTemplateRequestHandlerTest
     {
         var filterTemplate = new TransportOrder.Domain.Models.FilterTemplate.FilterTemplate() { Name = "name", FilterType = FilterType.Order };
         var id = Guid.NewGuid();
-        FilterTemplateRequestHandlerTestFixture<DeleteFilterTemplate> fixture = new FilterTemplateRequestHandlerTestFixture<DeleteFilterTemplate>()
+        var fixture = new FilterTemplateRequestHandlerTestFixture<DeleteFilterTemplate>()
             .WithFilterTemplate(filterTemplate, id);
 
-        Response<OwnedFilterModificationResult> response = await fixture.GetResponseAsync<OwnedFilterModificationResult>(new DeleteFilterTemplate(id, "owner"));
+        var response = await fixture.GetResponseAsync<OwnedFilterModificationResult>(new DeleteFilterTemplate(id, "owner"));
         response.Message.Result.ShouldBeTrue();
     }
 
@@ -75,10 +74,10 @@ public class FilterTemplateRequestHandlerTest
     {
         var filterTemplate = new TransportOrder.Domain.Models.FilterTemplate.FilterTemplate() { Name = "name", FilterType = FilterType.Order };
         var id = Guid.NewGuid();
-        FilterTemplateRequestHandlerTestFixture<GetFilterTemplates> fixture = new FilterTemplateRequestHandlerTestFixture<GetFilterTemplates>()
+        var fixture = new FilterTemplateRequestHandlerTestFixture<GetFilterTemplates>()
             .WithFilterTemplate(filterTemplate, id);
 
-        Response<GotFilterTemplates> response = await fixture.GetResponseAsync<GotFilterTemplates>(new GetFilterTemplates("owner"));
+        var response = await fixture.GetResponseAsync<GotFilterTemplates>(new GetFilterTemplates("owner"));
         response.Message.FilterTemplates.Count.ShouldBe(1);
     }
 }

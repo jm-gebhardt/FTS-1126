@@ -33,7 +33,7 @@ public class GraphMerger : IConsumer<InternalAgvGraphReceived>
     {
         var correlationId = context.Message.CorrelationId;
         _logger.LogInformation("Received graph from Agv {AgvId} with correlationId {CorrelationId}", context.Message.SerialNumber, correlationId);
-        Response<GotGraph> graphResponse = await _getGraphClient.GetResponse<GotGraph>(new GetGraph(correlationId));
+        var graphResponse = await _getGraphClient.GetResponse<GotGraph>(new GetGraph(correlationId));
         var graph = graphResponse.Message.Graph;
 
         if (graph.Merge(context.Message.Graph))

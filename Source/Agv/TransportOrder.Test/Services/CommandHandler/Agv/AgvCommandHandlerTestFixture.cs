@@ -32,7 +32,6 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Moq.Language;
 using System.Linq.Expressions;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
 using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
@@ -241,7 +240,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
 
     public AgvCommandHandlerTestFixture WithHasCargoStates(params bool[] hasCargos)
     {
-        ISetupSequentialResult<Task<bool>> setup = AgvDb.SetupSequence(x => x.Cargos.HasAgvCargoAsync(It.IsAny<Guid>()));
+        var setup = AgvDb.SetupSequence(x => x.Cargos.HasAgvCargoAsync(It.IsAny<Guid>()));
         foreach (bool hasCargo in hasCargos)
         {
             setup.ReturnsAsync(hasCargo);
@@ -396,7 +395,7 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
     public AgvCommandHandlerTestFixture WithAgvsGraph(bool withParkingNodes = true)
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        ICollection<GraphNode> nodes = withParkingNodes ? graph.Nodes : graph.Nodes.Where(n => !n.IsParker()).ToList();
+        var nodes = withParkingNodes ? graph.Nodes : graph.Nodes.Where(n => !n.IsParker()).ToList();
 
         // Expression "node => node.IsParker()"
         AgvDb.Setup(x => x.Graphs.GetNodesAsync(It.IsAny<Guid>(), It.IsAny<Expression<Func<GraphNode, bool>>?>()))
@@ -437,8 +436,8 @@ public class AgvCommandHandlerTestFixture : MassTransitConsumerTestFixture<AgvCo
         where TResult : class
         where TRequest : class
     {
-        IRequestClient<TRequest> client = TestHarness.Bus!.CreateRequestClient<TRequest>();
-        Response<TResult> response = await client.GetResponse<TResult>(request);
+        var client = TestHarness.Bus!.CreateRequestClient<TRequest>();
+        var response = await client.GetResponse<TResult>(request);
         return response;
     }
 

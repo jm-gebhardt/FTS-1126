@@ -38,7 +38,7 @@ public class StationTypeRequestHandlerTestFixture : MassTransitConsumerTestFixtu
 
     public async Task<Response<GotStationTypes>> GetResponseAsync(GetStationTypes request)
     {
-        IRequestClient<GetStationTypes>? client = TestHarness.Bus.CreateRequestClient<GetStationTypes>();
+        var client = TestHarness.Bus.CreateRequestClient<GetStationTypes>();
         return await client.GetResponse<GotStationTypes>(request);
     }
 }

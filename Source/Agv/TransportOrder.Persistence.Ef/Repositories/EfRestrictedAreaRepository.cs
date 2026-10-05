@@ -4,7 +4,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 
 namespace Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 
@@ -15,7 +14,7 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
     public async Task<bool> IsPointInRestrictedArea(float x, float y)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        List<RestrictedArea> restrictedAreas = await context.Set<RestrictedArea>()
+        var restrictedAreas = await context.Set<RestrictedArea>()
             .Include(a => a.Area.OrderBy(p => p.Index))
             .AsNoTracking()
             .ToListAsync();
@@ -43,11 +42,11 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
         }
         if (!restrictedAreaToUpdate.Area.Equals(restrictedArea.Area))
         {
-            List<Guid> oldArePoints = restrictedAreaToUpdate.Area.Select(a => a.Id).ToList();
-            List<Guid> newArePoints = restrictedArea.Area.Select(a => a.Id).ToList();
+            var oldArePoints = restrictedAreaToUpdate.Area.Select(a => a.Id).ToList();
+            var newArePoints = restrictedArea.Area.Select(a => a.Id).ToList();
 
-            List<RestrictedAreaPolygonPoint> areaPointsToAdd = restrictedArea.Area.Where(a => !oldArePoints.Contains(a.Id)).ToList();
-            List<RestrictedAreaPolygonPoint> areaPointsToRemove = restrictedAreaToUpdate.Area.Where(a => !newArePoints.Contains(a.Id)).ToList();
+            var areaPointsToAdd = restrictedArea.Area.Where(a => !oldArePoints.Contains(a.Id)).ToList();
+            var areaPointsToRemove = restrictedAreaToUpdate.Area.Where(a => !newArePoints.Contains(a.Id)).ToList();
             context.Set<RestrictedAreaPolygonPoint>().RemoveRange(areaPointsToRemove);
             await context.Set<RestrictedAreaPolygonPoint>().AddRangeAsync(areaPointsToAdd);
         }
@@ -69,7 +68,7 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
     public async Task<ICollection<RestrictedArea>> GetRestrictedAreas(Guid[] ids)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        IIncludableQueryable<RestrictedArea, IOrderedEnumerable<RestrictedAreaPolygonPoint>> restrictedAreas = context.Set<RestrictedArea>()
+        var restrictedAreas = context.Set<RestrictedArea>()
             .Include(a => a.Area.OrderBy(p => p.Index));
         if (ids.IsNullOrEmpty())
         {
@@ -78,8 +77,8 @@ public class EfRestrictedAreaRepository(IDbContextFactory<TransportOrderDbContex
 
         // Cast to IEnumerable to avoid C# 14 span overload resolution breaking change
         IEnumerable<Guid> areaIds = ids;
-        List<RestrictedArea> foundRestrictedAreas = await restrictedAreas.Where(r => areaIds.Contains(r.Id)).ToListAsync();
-        List<Guid> notFoundRestrictedAreas = ids.Except(foundRestrictedAreas.Select(r => r.Id).ToList()).ToList();
+        var foundRestrictedAreas = await restrictedAreas.Where(r => areaIds.Contains(r.Id)).ToListAsync();
+        var notFoundRestrictedAreas = ids.Except(foundRestrictedAreas.Select(r => r.Id).ToList()).ToList();
         if (notFoundRestrictedAreas.Count > 0)
         {
             throw new RestrictedAreaNotFoundException(notFoundRestrictedAreas);

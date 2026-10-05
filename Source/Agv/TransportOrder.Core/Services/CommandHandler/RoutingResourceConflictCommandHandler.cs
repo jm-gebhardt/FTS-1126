@@ -1,5 +1,4 @@
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Graph;
@@ -37,7 +36,7 @@ public class RoutingResourceConflictCommandHandler : IConsumer<DetectGraphConfli
 
     private async Task<IReadOnlyList<ResourceBoundingBox>> GetAllBoundingBoxesAsync()
     {
-        ICollection<AgvType> agvTypes = await _agvDb.AgvTypes.GetAllAgvTypesAsync();
+        var agvTypes = await _agvDb.AgvTypes.GetAllAgvTypesAsync();
         var boxes = new List<ResourceBoundingBox>();
 
         foreach (var agvType in agvTypes)
@@ -54,15 +53,15 @@ public class RoutingResourceConflictCommandHandler : IConsumer<DetectGraphConfli
         var sw = Stopwatch.StartNew();
 
         var graph = await _agvDb.NewGraphs.GetGraphAsync();
-        IReadOnlyList<ResourceBoundingBox> boxes = await GetAllBoundingBoxesAsync();
+        var boxes = await GetAllBoundingBoxesAsync();
 
         var loadDuration = sw.Elapsed;
         sw.Restart();
 
         var detector = new BoundingBoxConflictDetector(boxes, graph);
-        IReadOnlyList<BoundingBoxConflict> conflicts = detector.Detect();
+        var conflicts = detector.Detect();
 
-        List<ResourceConflict> pairs = conflicts
+        var pairs = conflicts
             .Select(c => new ResourceConflict(c.ResourceA.ResourceId, c.ResourceB.ResourceId))
             .ToList();
 

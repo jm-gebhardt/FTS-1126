@@ -22,7 +22,7 @@ internal class SocketCommunicatorTestFixture
         SocketMock.Setup(s => s.TryInitializeAsync()).ReturnsAsync(true);
 
         var processor = new TestTelegramProcessor();
-        ILogger<Sender<TestTelegram>> logger = NullLoggerFactory.Instance.CreateLogger<Sender<TestTelegram>>();
+        var logger = NullLoggerFactory.Instance.CreateLogger<Sender<TestTelegram>>();
 
         Sender = new TestSender(SocketMock.Object, "test", processor, logger)
         {

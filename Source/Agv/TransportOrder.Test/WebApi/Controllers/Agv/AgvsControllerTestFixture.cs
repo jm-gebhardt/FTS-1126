@@ -211,11 +211,11 @@ public class AgvsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
         _getCargosOfAgvsRequestClient ??= GetRequestClient<GetCargosOfAgvs>();
         _getAgvsSettingsRequestClient ??= GetRequestClient<GetAgvsSettings>();
         _getAgvsHasCargoRequestClient ??= GetRequestClient<GetAgvsHasCargo>();
-        IRequestClient<UpdateDefaultAgvSettings> updateDefaultSettingsRequestClient = GetRequestClient<UpdateDefaultAgvSettings>();
-        IRequestClient<UpdateAgvsSettings> updateAgvsSettingsRequestClient = GetRequestClient<UpdateAgvsSettings>();
-        IRequestClient<ResetAgvsSettingToDefault> resetAgvsSettingsRequestClient = GetRequestClient<ResetAgvsSettingToDefault>();
-        IRequestClient<GetAgvsInstantActionsDefinitions> instantActionsClient = GetRequestClient<GetAgvsInstantActionsDefinitions>();
-        IRequestClient<GetMaintenanceLogsForAgvs> getMaintenanceLogsClient = GetRequestClient<GetMaintenanceLogsForAgvs>();
+        var updateDefaultSettingsRequestClient = GetRequestClient<UpdateDefaultAgvSettings>();
+        var updateAgvsSettingsRequestClient = GetRequestClient<UpdateAgvsSettings>();
+        var resetAgvsSettingsRequestClient = GetRequestClient<ResetAgvsSettingToDefault>();
+        var instantActionsClient = GetRequestClient<GetAgvsInstantActionsDefinitions>();
+        var getMaintenanceLogsClient = GetRequestClient<GetMaintenanceLogsForAgvs>();
 
         var controller = new AgvsController(Mapper,
             _getAgvsRequestClient,

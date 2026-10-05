@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.LogEntry;
 using Gebhardt.Acc.OrderTranslator.Domain.Models.HostOrder;
-using Gebhardt.Acc.OrderTranslator.Domain.Models.Station;
 using Gebhardt.Acc.OrderTranslator.Domain.Repositories;
 using Gebhardt.Acc.OrderTranslator.Domain.Services;
 using MassTransit;
@@ -37,15 +36,15 @@ public class HostOrderCommandHandler(
             AssignedAgv = context.Message.AssignedAgv
         };
 
-        (Dictionary<InfoToAgvKey, string>? pickInfoToAgv, Dictionary<InfoToAgvKey, string>? dropInfoToAgv) = GeneratePickAndDropInformation(context.Message);
+        var (pickInfoToAgv, dropInfoToAgv) = GeneratePickAndDropInformation(context.Message);
         logger.LogDebug("pickInfoToAgv: {PickInfoToAgv}", pickInfoToAgv == null ? "empty" : string.Join(", ", pickInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
         logger.LogDebug("dropInfoToAgv: {DropInfoToAgv}", dropInfoToAgv == null ? "empty" : string.Join(", ", dropInfoToAgv.Select(kvp => $"{kvp.Key}: {kvp.Value}")));
 
         hostOrder.AddAction(orderDetails.Source, ActionType.Pick, pickInfoToAgv);
         hostOrder.AddAction(orderDetails.Destination, ActionType.Drop, dropInfoToAgv);
 
-        ICollection<Station> pickStations = await stationRepository.GetStationsByLane(hostOrder.Source);
-        ICollection<Station> dropStations = await stationRepository.GetStationsByLane(hostOrder.Target);
+        var pickStations = await stationRepository.GetStationsByLane(hostOrder.Source);
+        var dropStations = await stationRepository.GetStationsByLane(hostOrder.Target);
         if (pickStations.Count == 0 && dropStations.Count == 0)
         {
             logger.LogError("No station configuration for host order {OrderId}", hostOrder.CorrelationId);
@@ -62,7 +61,7 @@ public class HostOrderCommandHandler(
             return;
         }
 
-        ValidationError? validationError = await validationService.ValidateAsync(hostOrder);
+        var validationError = await validationService.ValidateAsync(hostOrder);
         if (validationError != null)
         {
             logger.LogError("Host order validation failed {ValidationError}", validationError);

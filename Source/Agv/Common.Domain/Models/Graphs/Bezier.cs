@@ -108,7 +108,7 @@ public class Bezier
     /// <param name="resolution">The resolution of the interpolation used to calculate the length.</param>
     public double GetLength(int resolution)
     {
-        ICollection<Vector2> interpolatedCurve = InterpolateCurve(resolution);
+        var interpolatedCurve = InterpolateCurve(resolution);
         double length = 0;
         foreach (var (p1, p2) in interpolatedCurve.SkipLast(1).Zip(interpolatedCurve.Skip(1)))
         {

@@ -1,6 +1,5 @@
 using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.MessageContent;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using JetBrains.Annotations;
@@ -43,10 +42,10 @@ public class CargoRequestHandler :
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetAgvsHasCargo> context)
     {
-        ICollection<Guid> agvCorrelationIds = context.Message.CorrelationIds;
-        IReadOnlyDictionary<Guid, bool> hasCargoByAgv = await _agvDb.Cargos.HaveAgvsCargoAsync(agvCorrelationIds);
-        IEnumerable<Guid> empty = hasCargoByAgv.Where(kvp => !kvp.Value).Select(kvp => kvp.Key);
-        List<Guid> agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
+        var agvCorrelationIds = context.Message.CorrelationIds;
+        var hasCargoByAgv = await _agvDb.Cargos.HaveAgvsCargoAsync(agvCorrelationIds);
+        var empty = hasCargoByAgv.Where(kvp => !kvp.Value).Select(kvp => kvp.Key);
+        var agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
         if (agvsWithoutCargo.Count != 0)
         {
             await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvsWithoutCargo);
@@ -58,7 +57,7 @@ public class CargoRequestHandler :
     public async Task Consume(ConsumeContext<GetCargosOfAgv> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        IReadOnlyCollection<Cargo> cargos = await _agvDb.Cargos.GetCargosAsync(agvCorrelationId);
+        var cargos = await _agvDb.Cargos.GetCargosAsync(agvCorrelationId);
         if (cargos.Count == 0)
         {
             await _agvDb.Agvs.ThrowIfAgvNotExistsAsync(agvCorrelationId);
@@ -70,16 +69,16 @@ public class CargoRequestHandler :
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetCargosOfAgvs> context)
     {
-        ICollection<Guid> agvCorrelationIds = context.Message.CorrelationIds;
-        IReadOnlyDictionary<Guid, IReadOnlyCollection<Cargo>> cargosByAgvCorrelationId = await _agvDb.Cargos.GetCargosAsync(agvCorrelationIds);
-        IEnumerable<Guid> empty = cargosByAgvCorrelationId.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key);
-        List<Guid> agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
+        var agvCorrelationIds = context.Message.CorrelationIds;
+        var cargosByAgvCorrelationId = await _agvDb.Cargos.GetCargosAsync(agvCorrelationIds);
+        var empty = cargosByAgvCorrelationId.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key);
+        var agvsWithoutCargo = agvCorrelationIds.Except(empty).ToList();
         if (agvsWithoutCargo.Count != 0)
         {
             await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(agvsWithoutCargo);
         }
         var messageDict = _mapper.Map<IReadOnlyDictionary<Guid, ICollection<Common.Domain.Models.Cargo>>>(cargosByAgvCorrelationId);
-        IEnumerable<AgvCargos> message = messageDict.Select(kv=> new AgvCargos(kv.Key, kv.Value));
+        var message = messageDict.Select(kv=> new AgvCargos(kv.Key, kv.Value));
 
         await context.RespondAsync(new GotCargosOfAgvs(message));
     }

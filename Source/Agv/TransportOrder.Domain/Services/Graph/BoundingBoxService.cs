@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder.Domain.Dictionaries;
-using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Microsoft.Extensions.Logging;
@@ -48,12 +47,12 @@ public class BoundingBoxService : IBoundingBoxService
     {
         return _calculationSemaphores.Get(agvTypeIdentifier).ExecuteLockedAsync(async () =>
         {
-            if (_cache.ConcurrentDict.TryGetValue(agvTypeIdentifier, out IReadOnlyList<ResourceBoundingBox>? cached))
+            if (_cache.ConcurrentDict.TryGetValue(agvTypeIdentifier, out var cached))
             {
                 return cached;
             }
 
-            ICollection<AgvType> agvTypes = await _agvDb.AgvTypes.GetAllAgvTypesAsync();
+            var agvTypes = await _agvDb.AgvTypes.GetAllAgvTypesAsync();
             var agvType = agvTypes.FirstOrDefault(t => t.AgvTypeIdentifier == agvTypeIdentifier);
             if (agvType is null)
             {
@@ -62,7 +61,7 @@ public class BoundingBoxService : IBoundingBoxService
             }
 
             var calculator = await CreateCalculatorAsync();
-            IReadOnlyList<ResourceBoundingBox> boxes = calculator.CalculateAll(agvType, _margins);
+            var boxes = calculator.CalculateAll(agvType, _margins);
             _cache.ConcurrentDict[agvTypeIdentifier] = boxes;
 
             _logger.LogInformation("Calculated {Count} bounding boxes for AGV type \"{AgvType}\"", boxes.Count, agvTypeIdentifier);
@@ -73,7 +72,7 @@ public class BoundingBoxService : IBoundingBoxService
     /// <inheritdoc />
     public Task<IReadOnlyList<ResourceBoundingBox>> GetByAgvTypeAsync(string agvTypeIdentifier)
     {
-        if (_cache.ConcurrentDict.TryGetValue(agvTypeIdentifier, out IReadOnlyList<ResourceBoundingBox>? cached))
+        if (_cache.ConcurrentDict.TryGetValue(agvTypeIdentifier, out var cached))
         {
             return Task.FromResult(cached);
         }
@@ -84,7 +83,7 @@ public class BoundingBoxService : IBoundingBoxService
     /// <inheritdoc />
     public async Task<ResourceBoundingBox?> GetAsync(Guid resourceId, string agvTypeIdentifier)
     {
-        IReadOnlyList<ResourceBoundingBox> boxes = await GetByAgvTypeAsync(agvTypeIdentifier);
+        var boxes = await GetByAgvTypeAsync(agvTypeIdentifier);
         return boxes.FirstOrDefault(b => b.ResourceId == resourceId);
     }
 
@@ -92,20 +91,20 @@ public class BoundingBoxService : IBoundingBoxService
     public async Task RecalculateAllAsync()
     {
         var sw = Stopwatch.StartNew();
-        ICollection<AgvType> agvTypes = await _agvDb.AgvTypes.GetAllAgvTypesAsync();
+        var agvTypes = await _agvDb.AgvTypes.GetAllAgvTypesAsync();
         var calculator = await CreateCalculatorAsync();
 
         await Task.WhenAll(agvTypes.Select(agvType => Task.Run(async () =>
             {
-                IReadOnlyList<ResourceBoundingBox> boxes = calculator.CalculateAll(agvType, _margins);
+                var boxes = calculator.CalculateAll(agvType, _margins);
 
                 await _calculationSemaphores.Get(agvType.AgvTypeIdentifier)
                     .ExecuteLockedAsync(() => _cache.ConcurrentDict[agvType.AgvTypeIdentifier] = boxes, CreateTimeoutToken());
             })
         ));
 
-        List<string> knownIdentifiers = agvTypes.Select(t => t.AgvTypeIdentifier).ToList();
-        List<string> staleIdentifiers = _cache.ConcurrentDict.Keys.Except(knownIdentifiers).ToList();
+        var knownIdentifiers = agvTypes.Select(t => t.AgvTypeIdentifier).ToList();
+        var staleIdentifiers = _cache.ConcurrentDict.Keys.Except(knownIdentifiers).ToList();
         foreach (string staleIdentifier in staleIdentifiers)
         {
             await _calculationSemaphores.Get(staleIdentifier)

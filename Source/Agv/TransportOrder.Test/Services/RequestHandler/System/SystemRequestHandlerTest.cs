@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.System;
@@ -11,12 +10,12 @@ public class SystemRequestHandlerTest
     public async Task Consume_GetSystemTime_RespondsGotSystemTime()
     {
         var now = DateTimeOffset.Now;
-        SystemRequestHandlerTestFixture<GetSystemTime> fixture = new SystemRequestHandlerTestFixture<GetSystemTime>()
+        var fixture = new SystemRequestHandlerTestFixture<GetSystemTime>()
             .WithCurrentTime(now)
             .Build();
         fixture.TimeProvider.SetNow(now);
 
-        Response<GotSystemTime> response = await fixture.GetResponseAsync<GotSystemTime>(new GetSystemTime(Guid.NewGuid()));
+        var response = await fixture.GetResponseAsync<GotSystemTime>(new GetSystemTime(Guid.NewGuid()));
         response.Message.SystemTime.ShouldBe(now.UtcDateTime);
     }
 }

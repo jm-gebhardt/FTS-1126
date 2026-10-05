@@ -48,7 +48,7 @@ public class TestPlanTriggerEventHandler : IConsumer<AgvBecameIdle>, IConsumer<A
     public async Task Consume(ConsumeContext<ActionGroupCompleted> context)
     {
         var actionGroupCorrelationId = context.Message.CorrelationId;
-        Guid? agvCorrelationId = context.Message.ActionGroup.AssignedAgv;
+        var agvCorrelationId = context.Message.ActionGroup.AssignedAgv;
         if (agvCorrelationId == null)
         {
             _logger.LogDebug("ActionGroupCompleted {ActionGroupId} has no assigned AGV, skipping", actionGroupCorrelationId);

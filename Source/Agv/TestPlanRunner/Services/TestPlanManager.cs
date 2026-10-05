@@ -8,7 +8,6 @@ using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TestPlanRunner.Domain.Providers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using MassTransit;
@@ -67,7 +66,7 @@ public class TestPlanManager : ITestPlanManager
 
         _testPlanProvider.ConcurrentDict.AddOrUpdate(testPlan.Name, testPlan, (_, _) => testPlan);
 
-        IEnumerable<Guid> affectedAgvIds = await GetAffectedAgvIdsAsync(testPlan);
+        var affectedAgvIds = await GetAffectedAgvIdsAsync(testPlan);
 
         foreach (var agvId in affectedAgvIds)
         {
@@ -326,7 +325,7 @@ public class TestPlanManager : ITestPlanManager
             bool hasUnstartedActions = await _actionGroupRepository.HasNotStartedActionsAsync(agvCorrelationId);
             if (hasUnstartedActions)
             {
-                List<TransportOrder.Domain.Models.ActionGroup.ActionGroup> notStartedActions = await _actionGroupRepository.GetNotStartedActionsAsync(agvCorrelationId);
+                var notStartedActions = await _actionGroupRepository.GetNotStartedActionsAsync(agvCorrelationId);
                 _logger.LogDebug("AGV {AgvCorrelationId} has pending action groups, returning", agvCorrelationId);
                 foreach (var actionGroup in notStartedActions)
                 {
@@ -422,7 +421,7 @@ public class TestPlanManager : ITestPlanManager
             return testPlan.AgvCorrelationIds!;
         }
 
-        ICollection<Agv> allAgvs = await _agvRepository.GetAllAgvsAsync();
+        var allAgvs = await _agvRepository.GetAllAgvsAsync();
         return allAgvs.Select(a => a.CorrelationId);
     }
 }

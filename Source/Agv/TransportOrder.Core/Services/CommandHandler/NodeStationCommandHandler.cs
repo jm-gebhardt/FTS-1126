@@ -7,9 +7,7 @@ using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Station;
@@ -85,7 +83,7 @@ public class NodeStationCommandHandler(
         var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         var settings = agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
         await Task.Delay(settings.OfflineTolerance);
-        ICollection<GraphNode> nodesForAgv = await nodeRepository.GetNodesForAgv(agvCorrelationId);
+        var nodesForAgv = await nodeRepository.GetNodesForAgv(agvCorrelationId);
         ICollection<Task> tasks = [];
         foreach (var node in nodesForAgv.Where(n => !n.IsCharger() && !n.IsParker()))
         {
@@ -102,10 +100,10 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateNodeOccupancy> context)
     {
-        (var agvCorrelationId, Guid? oldLastNodeId, Guid? newLastNodeId) = context.Message;
+        var (agvCorrelationId, oldLastNodeId, newLastNodeId) = context.Message;
         logger.LogTrace("{MessageType} for AGV {CorrelationId} received", nameof(UpdateNodeOccupancy), agvCorrelationId);
 
-        ICollection<GraphNode> nodes = await nodeRepository.GetNodesForAgv(agvCorrelationId);
+        var nodes = await nodeRepository.GetNodesForAgv(agvCorrelationId);
         var oldLastNode = nodes.SingleOrDefault(n => n.Id == oldLastNodeId);
         var newLastNode = nodes.SingleOrDefault(n => n.Id == newLastNodeId);
 
@@ -155,7 +153,7 @@ public class NodeStationCommandHandler(
 
     private async Task FreeUnusedNodes(IPublishEndpoint context, ICollection<GraphNode> nodes, Guid agvCorrelationId)
     {
-        ICollection<ActionGroup> agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
+        var agvActionGroups = await actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
         ICollection<Task> tasks = [];
         foreach (var node in nodes.Where(l => l.Lock != null && l.Lock.ModifiedDate < timeProvider.GetUtcNow().AddMinutes(-1)))
         {
@@ -215,7 +213,7 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<SetNodeApproachingProperties> context)
     {
-        (var mapId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var mapId, var nodeId, double? pickLiftHeight, double? dropLiftHeight, var dockingDirection) = context.Message;
 
         var node = await agvDb.Graphs.GetNodeAsync(nodeId);
         dockingDirection ??= DockingDirection.Both;
@@ -234,7 +232,7 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<InitializeNodeApproachingProperties> context)
     {
-        (var nodeId, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var nodeId, double? pickLiftHeight, double? dropLiftHeight, var dockingDirection) = context.Message;
 
         var node = await agvDb.Graphs.GetNodeAsync(nodeId);
 
@@ -279,7 +277,7 @@ public class NodeStationCommandHandler(
             logger.LogWarning("Could not retrieve node state for station {StationName}", stationId);
             return;
         }
-        Guid? agvCorrelationId = node.Lock.AgvCorrelationId;
+        var agvCorrelationId = node.Lock.AgvCorrelationId;
 
         if (!node.Free())
         {
@@ -387,7 +385,7 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetLockedStations> context)
     {
-        ICollection<Station> stations = await stationRepository.GetStations();
+        var stations = await stationRepository.GetStations();
 
         await context.RespondAsync(new GotLockedStations(stations.Where(s => s.IsLocked).Select(s => s.Name).ToList()));
     }
@@ -407,7 +405,7 @@ public class NodeStationCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateStationAdditionalInfo> context)
     {
-        (var stationId, Dictionary<string, object?> additionalInformation) = context.Message;
+        var (stationId, additionalInformation) = context.Message;
         var station = await stationRepository.GetStation(stationId);
         station.UpdateAdditionalInfo(additionalInformation);
         await stationRepository.Update(station);
@@ -419,8 +417,8 @@ public class NodeStationCommandHandler(
     public async Task Consume(ConsumeContext<Common.Messages.Maps.MapSaved> context)
     {
         var agvMap = context.Message.Map;
-        ICollection<Station> stations = await stationRepository.GetStations();
-        HashSet<Guid> nodeIds = agvMap.Nodes.Select(n => n.Id).ToHashSet();
+        var stations = await stationRepository.GetStations();
+        var nodeIds = agvMap.Nodes.Select(n => n.Id).ToHashSet();
         foreach (var station in stations.Where(s => nodeIds.Contains(s.Id)))
         {
             station.SetMap(agvMap.CorrelationId);

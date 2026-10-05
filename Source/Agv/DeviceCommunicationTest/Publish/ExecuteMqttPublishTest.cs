@@ -4,7 +4,6 @@ using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.DeviceCommunication.KarisAgv.Messages.Mqtt;
 using MassTransit;
 using MassTransit.Serialization;
-using MassTransit.Testing;
 using MassTransit.Testing.Implementations;
 using Shouldly;
 
@@ -34,7 +33,7 @@ public class ExecuteMqttPublishTest
         {
             await fixture.TestHarness.Bus.PublishMqtt(new MqttState(serialNumber, orderId) { OperatingMode = MqttOperatingMode.Automatic }, callback: null);
 
-            IPublishedMessage<MqttState> publishedMessage = publishObserver.Messages.Select<MqttState>().First();
+            var publishedMessage = publishObserver.Messages.Select<MqttState>().First();
 
             publishedMessage.Context.RoutingKey().ShouldBe(routingKeySpecified?.RoutingKeyValue);
             publishedMessage.Context.ContentType.ShouldBe(SystemTextJsonRawMessageSerializer.JsonContentType);

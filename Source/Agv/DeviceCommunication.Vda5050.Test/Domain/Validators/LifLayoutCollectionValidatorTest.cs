@@ -18,7 +18,7 @@ public class LifLayoutCollectionValidatorTest
     {
         var lif = new LifLayoutCollection { Layouts = [], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.ShouldHaveValidationErrorFor(x => x.Layouts);
     }
@@ -29,7 +29,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(edges: [LifGenerator.GenerateEdge("e1", "n1", "n2")]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
     }
@@ -40,7 +40,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [LifGenerator.GenerateNode("n1")]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
     }
@@ -53,7 +53,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [node], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("StartNodeId") && e.ErrorMessage.Contains("missing"));
@@ -67,7 +67,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [node], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("EndNodeId") && e.ErrorMessage.Contains("missing"));
@@ -87,7 +87,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2, n3], edges: [e1, e2], stations: [station]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e2") && ((LifValidationResult)e.CustomState!).Severity == Severity.Warn);
@@ -102,7 +102,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation("2.0.0") };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("version") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -118,7 +118,7 @@ public class LifLayoutCollectionValidatorTest
         var layout2 = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("LayoutId") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -135,7 +135,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge], stations: [station1, station2]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("StationId") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -152,7 +152,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2, n3], edges: [edge1, edge2]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("EdgeId") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -168,7 +168,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n1Duplicate, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("NodeId") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -189,7 +189,7 @@ public class LifLayoutCollectionValidatorTest
 
         var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("NodeId") && e.ErrorMessage.Contains("'n1'") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -210,7 +210,7 @@ public class LifLayoutCollectionValidatorTest
 
         var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("EdgeId") && e.ErrorMessage.Contains("'e1'") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -233,7 +233,7 @@ public class LifLayoutCollectionValidatorTest
 
         var lif = new LifLayoutCollection { Layouts = [layout1, layout2], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("StationId") && e.ErrorMessage.Contains("'s1'") && e.ErrorMessage.Contains("duplicated") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -248,7 +248,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("vehicle type edge properties") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -275,7 +275,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains(property) && e.ErrorMessage.Contains("must be >=0") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -291,7 +291,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2, isolated], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("isolated") && e.ErrorMessage.Contains("not connected to any edge") && ((LifValidationResult)e.CustomState!).Severity == Severity.Warn);
     }
@@ -307,7 +307,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2, n3], edges: [e1, e2]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("Dead node") && e.ErrorMessage.Contains("n3") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -324,7 +324,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2, n3], edges: [e1, e2]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("Unreachable node") && e.ErrorMessage.Contains("n1") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -340,7 +340,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge, returnEdge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("n1") && e.ErrorMessage.Contains("vehicle type node properties") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -356,7 +356,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge, returnEdge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("n1") && e.ErrorMessage.Contains("Theta") && ((LifValidationResult)e.CustomState!).Severity == Severity.Warn);
     }
@@ -371,7 +371,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge], stations: [station]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("s1") && e.ErrorMessage.Contains("does not define interaction nodes") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -387,7 +387,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge], stations: [station]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("s1") && e.ErrorMessage.Contains("missing") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -403,7 +403,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge], stations: [station]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("s1") && e.ErrorMessage.Contains("Theta") && ((LifValidationResult)e.CustomState!).Severity == Severity.Warn);
     }
@@ -424,7 +424,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("less than 2 control points") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -446,7 +446,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("inconsistent with degree") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -468,7 +468,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("inconsistent with number of control points") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -490,7 +490,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("range [0,1]") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -512,7 +512,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [node1, node2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("inconsistent with number of control points") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -558,7 +558,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [node1, node2], edges: [edge, returnEdge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -579,7 +579,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("degree needs to be in range") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -601,7 +601,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("first control point") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);
@@ -623,7 +623,7 @@ public class LifLayoutCollectionValidatorTest
         var layout = LifGenerator.GenerateLayout(nodes: [n1, n2], edges: [edge]);
         var lif = new LifLayoutCollection { Layouts = [layout], MetaInformation = LifGenerator.GenerateMetaInformation() };
 
-        TestValidationResult<LifLayoutCollection>? result = await _validator.TestValidateAsync(lif);
+        var result = await _validator.TestValidateAsync(lif);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage.Contains("e1") && e.ErrorMessage.Contains("last control point") && ((LifValidationResult)e.CustomState!).Severity == Severity.Err);

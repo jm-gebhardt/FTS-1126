@@ -17,7 +17,7 @@ public class OrderEventHandler :
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<OrderReportingRequested> context)
     {
-        (var correlationId, string targetStation, string? dropTarget, string? pickTarget, string? droppedHu, Guid? pickOrder) = context.Message;
+        (var correlationId, string targetStation, string? dropTarget, string? pickTarget, string? droppedHu, var pickOrder) = context.Message;
         await context.Publish(new ReportOrder(correlationId, targetStation, dropTarget, pickTarget, droppedHu, pickOrder));
     }
 

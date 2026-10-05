@@ -29,7 +29,7 @@ public class ConveyorTelegram: TelegramBase
     /// <inheritdoc cref="TelegramBase"/>>
     public override bool Load(string telegram)
     {
-        Dictionary<string, string> fields = TelegramParser.Parse(telegram);
+        var fields = TelegramParser.Parse(telegram);
 
         try
         {

@@ -48,7 +48,7 @@ public class FilterParserBaseTests
 
         var filter = new CollectionFilter(variant, nameof(TestCollectionEntity.Values), new ValueComparisonFilter<string>(nameof(TestCollectionEntity.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntity.StringValue),ComparisonVariant.Like, "AAA"));
 
-        ICollection<TestCollectionEntityReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         result.Count.ShouldBe(expectedCount);
     }
@@ -73,7 +73,7 @@ public class FilterParserBaseTests
 
         var filter = new CollectionFilter(CollectionAggregateVariant.All, nameof(TestCollectionEntityReadModel.Values), new ValueComparisonFilter<int>(nameof(TestCollectionEntityReadModel.Values) + IFilter.AccessLevelSeparator + nameof(TestDbEntityReadModel.IntValue), ComparisonVariant.Gt, -1));
 
-        ICollection<TestCollectionEntityReadModel> result = (await filterBy(filter, 4, 10, SortDirection.Desc, [])).Items;
+        var result = (await filterBy(filter, 4, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(10);
     }
@@ -103,14 +103,14 @@ public class FilterParserBaseTests
             results.Add(filterBy.Invoke(filter, i, 10, SortDirection.Desc, []));
         }
 
-        List<ICollection<TestCollectionEntityReadModel>> awaitedResults = (await Task.WhenAll(results)).Select(a => a.Items).ToList();
+        var awaitedResults = (await Task.WhenAll(results)).Select(a => a.Items).ToList();
 
-        List<HashSet<int>> intValues = awaitedResults.Select(t => t.SelectMany(e => e.Values.Select(ee => ee.IntValue)).ToHashSet()).ToList();
+        var intValues = awaitedResults.Select(t => t.SelectMany(e => e.Values.Select(ee => ee.IntValue)).ToHashSet()).ToList();
 
-        foreach (HashSet<int> page in intValues)
+        foreach (var page in intValues)
         {
             page.Count.ShouldBe(10);
-            foreach (HashSet<int> otherPage in intValues.Where(p => p!=page))
+            foreach (var otherPage in intValues.Where(p => p!=page))
             {
                 page.Intersect(otherPage).ShouldBeEmpty();
             }
@@ -129,7 +129,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<Guid>(nameof(TestDbEntityReadModel.Key), ComparisonVariant.Equals, entity.Key)]);
 
-        ICollection<TestDbEntityReadModel> result = (await filterBy.Invoke(filter, 0, 10, SortDirection.Desc, [])).Items;
+        var result = (await filterBy.Invoke(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(1);
     }
@@ -150,7 +150,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int>(nameof(TestJoinSourceReadModel.TjtFKey) + IFilter.AccessLevelSeparator + nameof(TestJoinTargetReadModel.Value), ComparisonVariant.Equals, 10)]);
 
-        ICollection<TestJoinSourceReadModel> result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
+        var result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(1);
     }
@@ -171,7 +171,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<bool>(nameof(TestJoinSourceReadModel.Exists), ComparisonVariant.Equals, true)]);
 
-        ICollection<TestJoinSourceReadModel> result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
+        var result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(2);
     }
@@ -190,7 +190,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int?>(nameof(TestDbEntity.NullablePrimitive) , ComparisonVariant.Equals, 10)]);
 
-        ICollection<TestDbEntityReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         result.Count.ShouldBe(1);
     }
@@ -209,7 +209,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<int>(nameof(TestDbEntity.IntValue), ComparisonVariant.Equals, 10)]);
 
-        ICollection<TestDbEntityReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         result.Count.ShouldBe(1);
         result.First().Converted.ShouldContainKeyAndValue("a", "b");
@@ -236,7 +236,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, [new ValueComparisonFilter<string>(nameof(TestParentReadModel.Name), ComparisonVariant.Equals, "Parent1")]);
 
-        ICollection<TestParentReadModel> result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
+        var result = (await filterBy(filter, 0, 10, SortDirection.Desc, [])).Items;
 
         result.Count.ShouldBe(1);
         var parent = result.First();
@@ -266,7 +266,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, []);
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         result.Count.ShouldBe(2);
         var p1 = result.First(p => p.Name == "Parent1");
@@ -293,7 +293,7 @@ public class FilterParserBaseTests
 
         var filter = new CombinationFilter(LogicalCombinationVariant.And, []);
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         result.Count.ShouldBe(2);
         var p1 = result.First(p => p.Name == "Parent1");
@@ -330,7 +330,7 @@ public class FilterParserBaseTests
             new ValueComparisonFilter<int>("Children.Score", ComparisonVariant.Equals, 20)
         );
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         // Only Parent1 should match because it has a child with Score 20
         result.Count.ShouldBe(1);
@@ -366,7 +366,7 @@ public class FilterParserBaseTests
             new ValueComparisonFilter<int>("Children.Score", ComparisonVariant.Equals, 30)
         ]));
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         // Parent1 (Score 10) and Parent2 (Score 30) should match
         result.Count.ShouldBe(2);
@@ -395,7 +395,7 @@ public class FilterParserBaseTests
         // Empty parent filter (all parents should be returned)
         var filter = new CollectionFilter(CollectionAggregateVariant.Where, nameof(TestParentReadModel.Children), new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+".Score", ComparisonVariant.Equals, 20));
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         // Both parents should be returned
         result.Count.ShouldBe(2);
@@ -443,7 +443,7 @@ public class FilterParserBaseTests
             new CollectionFilter(CollectionAggregateVariant.Where, nameof(TestParentReadModel.Children), new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+ ".Score", ComparisonVariant.Geq, 15))
         ]);
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         // Only Parent1 and Parent2 should be returned (Parent3 is filtered out by parent filter)
         result.Count.ShouldBe(2);
@@ -484,7 +484,7 @@ public class FilterParserBaseTests
             new ValueComparisonFilter<int>(nameof(TestParentReadModel.Children)+".Score", ComparisonVariant.Equals, 30)
         ]));
 
-        ICollection<TestParentReadModel> result = await filterBy(filter);
+        var result = await filterBy(filter);
 
         result.Count.ShouldBe(1);
         var p1 = result.First();

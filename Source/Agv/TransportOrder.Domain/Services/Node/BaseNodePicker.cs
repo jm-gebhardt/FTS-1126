@@ -62,7 +62,7 @@ public abstract class BaseNodePicker
     /// <param name="ignoredNodeIds">Node ids to ignore.</param>
     protected async Task<GraphNode> PickNode(Agv agv, AgvData? agvData, Guid? startNodeId = null, bool ignoreLocked = false, params Guid[] ignoredNodeIds)
     {
-        IEnumerable<GraphNode> availableNodes = (await GetAvailableNodes(agv, ignoreLocked)).Where(n => !ignoredNodeIds.Contains(n.Id));
+        var availableNodes = (await GetAvailableNodes(agv, ignoreLocked)).Where(n => !ignoredNodeIds.Contains(n.Id));
 
         var node = await SelectBestNode(availableNodes, agv, agvData, startNodeId);
 
@@ -82,8 +82,8 @@ public abstract class BaseNodePicker
 
     private async Task<IEnumerable<GraphNode>> GetAvailableNodes(Agv agv, bool ignoreLocked)
     {
-        IEnumerable<GraphNode> nodes = await AgvDb.Graphs.GetNodesAsync(agv.CorrelationId, NodeFilter);
-        List<GraphNode> availableNodes = nodes.Where(n => n.IsFree && (ignoreLocked || !n.IsLocked)).ToList();
+        var nodes = await AgvDb.Graphs.GetNodesAsync(agv.CorrelationId, NodeFilter);
+        var availableNodes = nodes.Where(n => n.IsFree && (ignoreLocked || !n.IsLocked)).ToList();
         if (availableNodes.Count == 0)
         {
             throw new NoNodesAvailableException(Description);
@@ -123,7 +123,7 @@ public abstract class BaseNodePicker
     {
         var rand = Random.Shared;
         // must use ToList, otherwise it can not be interpreted
-        List<GraphNode> nodes = availableNodes.ToList();
+        var nodes = availableNodes.ToList();
         var node = nodes.ElementAt(rand.Next(nodes.Count));
         return Task.FromResult(node);
     }
@@ -135,7 +135,7 @@ public abstract class BaseNodePicker
     /// <returns>True if the lastNodeId of the Agv is such a node, False if the lastNodeId of the agv is null</returns>
     protected async Task<bool> IsAgvOnSuchANode(Agv agv)
     {
-        Guid? lastNodeId = agv.AgvStatus?.LastNodeId;
+        var lastNodeId = agv.AgvStatus?.LastNodeId;
         if (lastNodeId == null)
         {
             return false;

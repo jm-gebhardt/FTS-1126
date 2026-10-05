@@ -37,7 +37,7 @@ public class RequireNonNullablePropertiesSchemaFilter(
 
             model.Required ??= new HashSet<string>();
 
-            IEnumerable<string> additionalRequiredProps = model.Properties
+            var additionalRequiredProps = model.Properties
                 .Where(x => x.Value.Type.HasValue && !x.Value.Type.Value.HasFlag(JsonSchemaType.Null) && !model.Required.Contains(x.Key))
                 .Select(x => x.Key);
             foreach (string propKey in additionalRequiredProps)

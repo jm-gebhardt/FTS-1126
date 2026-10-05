@@ -18,7 +18,7 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendActionGroupCreatedAsync_SendsActionGroupChanged_To_ActionGroupCreated()
     {
-        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
         var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, Priority.Default, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>(), false);
         var expectedDto = Mock.Of<ActionGroupDto>();
 
@@ -32,7 +32,7 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendActionGroupChangedAsync_SendsActionGroupChanged_To_ActionGroupChanged()
     {
-        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
         var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Created, ActionGroupCreator.TransportOrder, Priority.Default, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>(), false);
         var expectedDto = Mock.Of<ActionGroupDto>();
 
@@ -46,7 +46,7 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendActionGroupChangedAsync_SendsActionGroupChangedWithReason_To_ActionGroupChanged()
     {
-        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
         var data = new ActionGroupReadModel(Guid.NewGuid(), "order", Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, TimeSpan.Zero, ActionGroupState.Paused, ActionGroupCreator.TransportOrder, Priority.Default, "hu", new List<AgvActionReadModel>(), false, false, true, new List<Reason>() { new("Maintenance") }, false);
         var expectedDto = Mock.Of<ActionGroupDto>();
 
@@ -59,7 +59,7 @@ public class ActionGroupHubTest
     [TestMethod]
     public async Task SendLogEntryCreated_SendsLogEntryDto_BroadCastOrderLogCreated()
     {
-        PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient> fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
+        var fixture = new PublisherFixture<ActionGroupPublisher, ActionGroupHub, IActionGroupClient>().Build();
         var data = new LogEntry(LogCodes.OrderOperatorInteraction, Categories.Order, nameof(LogLevel.Information), DateTime.UtcNow, null, null, Guid.NewGuid());
 
         var expectedDto = Mock.Of<LogEntryCreatedDto>();

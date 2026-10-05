@@ -65,7 +65,7 @@ public class ActionGroupRepositoryTestFixture : NodeTestFixture
 
     public async Task AddActionGroupAsync(ActionGroup actionGroup, bool addStraightAway = false)
     {
-        HashSet<GraphNode> nodes = await AddNodesAsync(actionGroup, addStraightAway);
+        var nodes = await AddNodesAsync(actionGroup, addStraightAway);
 
         if (addStraightAway)
         {

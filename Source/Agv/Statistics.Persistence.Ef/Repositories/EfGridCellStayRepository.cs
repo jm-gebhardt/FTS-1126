@@ -11,7 +11,7 @@ public class EfGridCellStayRepository(StatisticsDbContext context) : HeatmapRepo
     /// <inheritdoc cref="IGridCellStayRepository"/>
     public async Task<ScalarHeatmap> GetStayDurations(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[] agvCorrelationIds)
     {
-        IQueryable<GridCellStay> query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvCorrelationIds);
+        var query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvCorrelationIds);
 
         var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId,
             g => (float) g.Sum(a => a.DurationSeconds));

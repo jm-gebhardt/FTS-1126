@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
@@ -53,12 +52,12 @@ internal class GraphManager(INewGraphRepository newGraphRepository, IAgvTypeRepo
     /// </summary>
     public async Task AddGraphSegmentAsync(CommonGraph graph, CancellationToken cancellationToken)
     {
-        ICollection<AgvType> allAgvTypes = await agvTypeRepository.GetAllAgvTypesAsync(cancellationToken); //todo: reuse Types (from AgvProvider? or store agvTypes in GraphManager?)
-        Dictionary<Guid, AgvType> agvTypes = allAgvTypes.ToDictionary(a => a.Id);
+        var allAgvTypes = await agvTypeRepository.GetAllAgvTypesAsync(cancellationToken); //todo: reuse Types (from AgvProvider? or store agvTypes in GraphManager?)
+        var agvTypes = allAgvTypes.ToDictionary(a => a.Id);
 
         var mappingWatch = Stopwatch.StartNew();
 
-        (IReadOnlyCollection<Node> nodes, IReadOnlyCollection<Edge> edges, IReadOnlyCollection<Station> stations) = GraphMapper.Convert(graph, agvTypes);
+        var (nodes, edges, stations) = GraphMapper.Convert(graph, agvTypes);
 
         // Add nodes, edges, and stations to the dictionaries with Add() so that duplicated Ids throw an exception. At the moment, Ids are unique, because updates are not supported.
 

@@ -53,7 +53,7 @@ public abstract class EfRepository<T, TContext> : IRepository<T>
         string? keyName = entityType?.FindPrimaryKey()?.Properties.Select(x => x.Name).Single();
 
         var parameter = Expression.Parameter(typeof(T), "e");
-        Expression<Func<T, bool>> predicate = Expression.Lambda<Func<T, bool>>(
+        var predicate = Expression.Lambda<Func<T, bool>>(
             Expression.Equal(
                 Expression.Property(parameter, keyName!),
                 Expression.Constant(id)
@@ -150,7 +150,7 @@ public abstract class EfRepository<T, TContext, TContextFactory> : IRepository<T
         string? keyName = entityType?.FindPrimaryKey()?.Properties.Select(x => x.Name).Single();
 
         var parameter = Expression.Parameter(typeof(T), "e");
-        Expression<Func<T, bool>> predicate = Expression.Lambda<Func<T, bool>>(
+        var predicate = Expression.Lambda<Func<T, bool>>(
             Expression.Equal(
                 Expression.Property(parameter, keyName!),
                 Expression.Constant(id)

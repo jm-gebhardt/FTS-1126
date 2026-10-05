@@ -21,10 +21,10 @@ public class InitializationProvider(IBus bus, ILogger<InitializationProvider> lo
         int attempts = 1;
         while (!responseReceived && attempts < MaxRetryAttempts )
         {
-            IRequestClient<RequestAgvAvailabilityStatus>? client = bus.CreateRequestClient<RequestAgvAvailabilityStatus>();
+            var client = bus.CreateRequestClient<RequestAgvAvailabilityStatus>();
             try
             {
-                Response<AgvAvailabilityStatusReceived> response = await client.GetResponse<AgvAvailabilityStatusReceived>(new RequestAgvAvailabilityStatus(), stoppingToken, _requestTimeOut);
+                var response = await client.GetResponse<AgvAvailabilityStatusReceived>(new RequestAgvAvailabilityStatus(), stoppingToken, _requestTimeOut);
                 responseReceived = true;
                 if (response.Message.HasAvailableAgvs)
                 {

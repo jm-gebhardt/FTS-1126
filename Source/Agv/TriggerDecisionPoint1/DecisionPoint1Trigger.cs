@@ -64,7 +64,7 @@ public class DecisionPoint1Trigger(IBus bus, ILogger<DecisionPoint1Trigger> logg
             logger.LogWarning("Skip triggering target order selection: Agv {AgvCorrelationId} passed short loop waiting handler without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
             return;
         }
-        ICollection<Guid> consideredStations = GetConsideredStations(parameters);
+        var consideredStations = GetConsideredStations(parameters);
         var moveTarget = GetMoveTarget(parameters);
         if (actionGroup.Actions.All(a => a.Target.Node?.Id != moveTarget))
         {

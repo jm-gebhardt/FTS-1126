@@ -16,7 +16,7 @@ public class ResendActionRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup();
-        ResendActionRequestHandlerTestFixture<ResendAction> fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
+        var fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
             .AddAgvs([agv])
             .AddActionGroup(actionGroup)
             .Build();
@@ -30,7 +30,7 @@ public class ResendActionRequestHandlerTest
     public async Task ResendAction_ActionGroupNotExisting_RespondsWithActionNotFound()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        ResendActionRequestHandlerTestFixture<ResendAction> fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
+        var fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
             .AddAgvs([agv])
             .AddActionGroup(null)
             .Build();
@@ -43,7 +43,7 @@ public class ResendActionRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(actionState: ActionState.Completed);
-        ResendActionRequestHandlerTestFixture<ResendAction> fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
+        var fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
             .AddAgvs([agv])
             .AddActionGroup(actionGroup)
             .Build();
@@ -57,7 +57,7 @@ public class ResendActionRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget(actionState: ActionState.Completed);
         actionGroup.Actions.Last().State = ActionState.Created;
-        ResendActionRequestHandlerTestFixture<ResendAction> fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
+        var fixture = new ResendActionRequestHandlerTestFixture<ResendAction>()
             .AddAgvs([agv])
             .AddActionGroup(actionGroup)
             .Build();

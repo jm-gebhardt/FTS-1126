@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Queue;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Queue;
@@ -18,11 +17,11 @@ public class QueueRequestHandlerTest
     public async Task GetQueues_ValidData_RespondsGotQueues()
     {
         var queue = new TransportOrder.Domain.Models.Queue.Queue("a queue");
-        QueueRequestHandlerTestFixture<GetQueues> fixture = new QueueRequestHandlerTestFixture<GetQueues>()
+        var fixture = new QueueRequestHandlerTestFixture<GetQueues>()
             .WithQueue(queue)
             .Build();
 
-        Response<GotQueues> response = await fixture.GetResponseAsync<GotQueues>(new GetQueues());
+        var response = await fixture.GetResponseAsync<GotQueues>(new GetQueues());
 
         response.Message.Queues.Count.ShouldBe(1);
         response.Message.Queues.First().ShouldBeEquivalentTo(queue);
@@ -32,10 +31,10 @@ public class QueueRequestHandlerTest
     public async Task GetQueue_ValidData_RespondsGotQueue()
     {
         var queue = new TransportOrder.Domain.Models.Queue.Queue("a queue");
-        QueueRequestHandlerTestFixture<GetQueue> fixture = new QueueRequestHandlerTestFixture<GetQueue>()
+        var fixture = new QueueRequestHandlerTestFixture<GetQueue>()
             .WithQueue(queue)
             .Build();
-        Response<GotQueue> response = await fixture.GetResponseAsync<GotQueue>(new GetQueue(queue.Id));
+        var response = await fixture.GetResponseAsync<GotQueue>(new GetQueue(queue.Id));
 
         response.Message.Queue.ShouldBeEquivalentTo(queue);
     }
@@ -44,10 +43,10 @@ public class QueueRequestHandlerTest
     public async Task DeleteQueue_ValidData_RespondsSuccess()
     {
         var queue = new TransportOrder.Domain.Models.Queue.Queue("a queue");
-        QueueRequestHandlerTestFixture<DeleteQueue> fixture = new QueueRequestHandlerTestFixture<DeleteQueue>()
+        var fixture = new QueueRequestHandlerTestFixture<DeleteQueue>()
             .WithQueue(queue)
             .Build();
-        Response<Success> response = await fixture.GetResponseAsync<Success>(new DeleteQueue(queue.Id));
+        var response = await fixture.GetResponseAsync<Success>(new DeleteQueue(queue.Id));
         response.ShouldNotBeNull();
     }
 
@@ -57,10 +56,10 @@ public class QueueRequestHandlerTest
         var queue = new TransportOrder.Domain.Models.Queue.Queue("a queue");
         var node = "node name".ToBaseNode();
         queue.AddNode(node.Id, 0);
-        QueueRequestHandlerTestFixture<TryAddQueue> fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
+        var fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
             .WithQueue(queue)
             .Build();
-        Response<GotQueue> response = await fixture.GetResponseAsync<GotQueue>(new TryAddQueue(queue.Name, queue.Nodes.Select(n => new QueueNode(node, n.Position, null, null)).ToList()));
+        var response = await fixture.GetResponseAsync<GotQueue>(new TryAddQueue(queue.Name, queue.Nodes.Select(n => new QueueNode(node, n.Position, null, null)).ToList()));
 
         response.Message.Queue.ShouldBeEquivalentTo(queue);
     }
@@ -68,7 +67,7 @@ public class QueueRequestHandlerTest
     [TestMethod]
     public async Task TryAddQueue_DuplicatedPosition_ThrowsQueueNodeExistsException()
     {
-        QueueRequestHandlerTestFixture<TryAddQueue> fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
+        var fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
@@ -78,7 +77,7 @@ public class QueueRequestHandlerTest
     [TestMethod]
     public async Task TryAddQueue_DuplicatedNodeId_ThrowsQueueNodeExistsException()
     {
-        QueueRequestHandlerTestFixture<TryAddQueue> fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
+        var fixture = new QueueRequestHandlerTestFixture<TryAddQueue>()
             .Build();
 
         await MediatorShould.ThrowRequestExceptionAsync<QueueNodeExistsException>(async () =>
@@ -89,7 +88,7 @@ public class QueueRequestHandlerTest
     public async Task Consume_RemoveAgvFromQueue_ShouldPublishRemoveAgvFromQueue()
     {
         var agvCorrelationId = Guid.NewGuid();
-        QueueRequestHandlerTestFixture<RemoveAgvFromQueue> fixture = new QueueRequestHandlerTestFixture<RemoveAgvFromQueue>()
+        var fixture = new QueueRequestHandlerTestFixture<RemoveAgvFromQueue>()
             .WithAgvIsInQueue(agvCorrelationId)
             .Build();
 

@@ -64,12 +64,12 @@ public class Route : IComparable<Route>
     /// <returns></returns>
     public static Route operator +(Route a, Route b)
     {
-        GraphNode[] nodes = a.Nodes.LastOrDefault()?.Id == b.Nodes.FirstOrDefault()?.Id ?
+        var nodes = a.Nodes.LastOrDefault()?.Id == b.Nodes.FirstOrDefault()?.Id ?
             a.Nodes.Concat(b.Nodes.Skip(1)).ToArray() // Skip first item of b if first and last are equal
             :
             a.Nodes.Concat(b.Nodes).ToArray();
 
-        Guid[] edges = a.Edges.LastOrDefault() == b.Edges.FirstOrDefault() ?
+        var edges = a.Edges.LastOrDefault() == b.Edges.FirstOrDefault() ?
             a.Edges.Concat(b.Edges.Skip(1)).ToArray() // Skip first item of b if first and last are equal
             :
             a.Edges.Concat(b.Edges).ToArray();

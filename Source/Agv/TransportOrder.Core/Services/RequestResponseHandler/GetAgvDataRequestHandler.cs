@@ -53,8 +53,8 @@ public class GetAgvDataRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<GetAgvsData> context)
     {
-        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
-        ICollection<Common.Domain.Models.AgvData> fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
+        var selectedAgvs = context.Message.CorrelationIds;
+        var fetchedData = await _agvDb.Data.GetSelectedAgvDataAsync(selectedAgvs);
         var agvDataList = _mapper.Map<List<AgvData>>(fetchedData);
         await context.RespondAsync(new GotAgvsData(agvDataList));
     }

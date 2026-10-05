@@ -11,7 +11,7 @@ public class EfAgvFieldViolationRepository(StatisticsDbContext context) : Heatma
     /// <inheritdoc cref="IAgvFieldViolationRepository"/>
     public async Task<ScalarHeatmap> GetFieldViolationOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[] agvSerialNumbers)
     {
-        IQueryable<AgvFieldViolation> query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers);
+        var query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers);
 
         var heatmap = await BuildScalarHeatmapAsync(query, gridId, mapId,
             g => g.Sum(a => a.ViolationCount));

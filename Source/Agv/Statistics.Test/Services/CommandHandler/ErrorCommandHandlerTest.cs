@@ -14,7 +14,7 @@ public class ErrorCommandHandlerTest
     public async Task ConsumeAddError_AgvError_AgvErrorAdded()
     {
         var position = GridCellGenerator.GenerateGridCell();
-        MockDbConsumerTestFixture<ErrorCommandHandler> fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
+        var fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
             .WithGridCells([position]);
         var error = AgvErrorGenerator.GenerateAgvError();
         await fixture.TestHarness.Bus.Publish(new AddError(error, [position.CellId]));
@@ -26,7 +26,7 @@ public class ErrorCommandHandlerTest
     public async Task ConsumeAddError_FieldViolation_AgvFieldViolationAdded()
     {
         var position = GridCellGenerator.GenerateGridCell();
-        MockDbConsumerTestFixture<ErrorCommandHandler> fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
+        var fixture = new MockDbConsumerTestFixture<ErrorCommandHandler>()
             .WithGridCells([position]);
         var fieldViolation = new FieldViolation(Guid.NewGuid(), DateTime.UtcNow);
         await fixture.TestHarness.Bus.Publish(new AddError(fieldViolation, [position.CellId]));

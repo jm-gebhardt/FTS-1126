@@ -81,7 +81,7 @@ public static class RoutingHelper
     public static GraphNode[] GetRemainingRoute(Guid? lastNodeId, GraphNode[] route)
     {
         uint currentIndex = GetFirstIndexOfNodeId(route, lastNodeId);
-        GraphNode[] remainingRoute = route.Skip((int) currentIndex).ToArray();
+        var remainingRoute = route.Skip((int) currentIndex).ToArray();
         return remainingRoute;
     }
 }

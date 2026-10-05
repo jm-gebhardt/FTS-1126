@@ -20,7 +20,7 @@ public class GraphNodeRepositoryTest
     {
         await using var fixture = new GraphNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        List<NodeLock> nodeLocks = agvGraph.Nodes.Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
+        var nodeLocks = agvGraph.Nodes.Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
         fixture.AddGraph(agvGraph);
         fixture.AddNodeLocks(nodeLocks);
 
@@ -33,12 +33,12 @@ public class GraphNodeRepositoryTest
         var mapCorrelationId = Guid.NewGuid();
         await using var fixture = new GraphNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        List<NodeLock> nodeLocks = agvGraph.Nodes.Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
+        var nodeLocks = agvGraph.Nodes.Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
         fixture.AddGraph(agvGraph);
         fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<GraphNode>>(agvGraph.Nodes)));
         fixture.AddNodeLocks(nodeLocks);
 
-        List<NodeLock> actualNodeStates = (await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId)).Select(x => x.NodeLock).ToList();
+        var actualNodeStates = (await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId)).Select(x => x.NodeLock).ToList();
 
         actualNodeStates.ShouldBe(nodeLocks, ignoreOrder: true);
     }
@@ -49,18 +49,18 @@ public class GraphNodeRepositoryTest
         var mapCorrelationId = Guid.NewGuid();
         await using var fixture = new GraphNodeRepositoryTestFixture();
         var agvGraph = AgvGraphGenerator.CreateDefaultGraph();
-        List<NodeLock> nodeLocks = agvGraph.Nodes.Take(1).Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
+        var nodeLocks = agvGraph.Nodes.Take(1).Select(n => new NodeLock(n, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow)).ToList();
         fixture.AddGraph(agvGraph);
         fixture.AddMap(MapGenerator.Generate(mapCorrelationId, nodes: Mapper.Map<ICollection<GraphNode>>(agvGraph.Nodes)));
         fixture.AddNodeLocks(nodeLocks);
 
-        List<Station> stations = agvGraph.Nodes.Take(5).Select(n => new Station(n.Name, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>())).ToList();
+        var stations = agvGraph.Nodes.Take(5).Select(n => new Station(n.Name, AgvGraph.NodeType.PickDrop, new List<AgvGraph.NodeType>())).ToList();
         fixture.AddStations(stations);
 
-        ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> actualNodeStates = await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId);
+        var actualNodeStates = await fixture.Repository.GetNodeStatesForMapAsync(mapCorrelationId);
         foreach (var agvGraphNode in agvGraph.Nodes)
         {
-            (NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName) actualNodeState = actualNodeStates.Single(ns => ns.NodeLock.NodeId == agvGraphNode.Id);
+            var actualNodeState = actualNodeStates.Single(ns => ns.NodeLock.NodeId == agvGraphNode.Id);
             if (nodeLocks.Select(nl => nl.NodeId).Contains(agvGraphNode.Id))
             {
                 actualNodeState.NodeLock.ShouldBe(nodeLocks.Single(nl => nl.NodeId == actualNodeState.NodeLock.NodeId));
@@ -119,7 +119,7 @@ public class GraphNodeRepositoryTest
         fixture.AddNodeLock(new NodeLock(node2, NodeLockState.Reserved, false, agvCorrelationId, DateTime.UtcNow));
         fixture.AddNodeLock(new NodeLock(node3, NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow));
 
-        ICollection<GraphNode> result = await fixture.Repository.GetNodesForAgv(agvCorrelationId);
+        var result = await fixture.Repository.GetNodesForAgv(agvCorrelationId);
 
         result.Count.ShouldBe(2);
         result.ShouldContain(n => n.Id == node1.Id);
@@ -136,7 +136,7 @@ public class GraphNodeRepositoryTest
         fixture.AddNode(node);
         fixture.AddNodeLock(new NodeLock(node, NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow));
 
-        ICollection<GraphNode> result = await fixture.Repository.GetNodesForAgv(agvCorrelationId);
+        var result = await fixture.Repository.GetNodesForAgv(agvCorrelationId);
 
         result.ShouldBeEmpty();
     }
@@ -153,7 +153,7 @@ public class GraphNodeRepositoryTest
         fixture.AddNodeLock(new NodeLock(node2, NodeLockState.Reserved, false, Guid.NewGuid(), DateTime.UtcNow));
         fixture.AddNodeLock(new NodeLock(node3, NodeLockState.Occupied, true, Guid.NewGuid(), DateTime.UtcNow));
 
-        IReadOnlyCollection<Guid>? result = await fixture.Repository.GetLockedNodes();
+        var result = await fixture.Repository.GetLockedNodes();
 
         result.ShouldNotBeNull();
         result.Count.ShouldBe(2);
@@ -170,7 +170,7 @@ public class GraphNodeRepositoryTest
         fixture.AddNode(node);
         fixture.AddNodeLock(new NodeLock(node, NodeLockState.Occupied, false, Guid.NewGuid(), DateTime.UtcNow));
 
-        IReadOnlyCollection<Guid>? result = await fixture.Repository.GetLockedNodes();
+        var result = await fixture.Repository.GetLockedNodes();
 
         result.ShouldNotBeNull();
         result.ShouldBeEmpty();

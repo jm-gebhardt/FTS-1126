@@ -2,7 +2,6 @@ using Gebhardt.Acc.WCSCommunication.Messages.Commands;
 using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface;
 using Gebhardt.Acc.WCSCommunication.WcsApi.DbInterface.Models;
 using Gebhardt.Acc.WCSCommunicationTest.Fixtures;
-using MassTransit.Testing;
 using Moq;
 using Shouldly;
 
@@ -63,7 +62,7 @@ public class WcsHostOrderServiceTest
         await fixture.Pollable.HandleNewTransportOrders(It.IsAny<CancellationToken>());
 
         await fixture.ShouldHavePublishedAsync<CreateHostOrder>();
-        IPublishedMessage<CreateHostOrder>? message = fixture.TestHarness.Published.Select<CreateHostOrder>().First();
+        var message = fixture.TestHarness.Published.Select<CreateHostOrder>().First();
 
         message.ShouldNotBeNull();
 

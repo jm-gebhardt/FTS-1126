@@ -32,7 +32,7 @@ public class QueuesController : Controller
     [Route("/queues")]
     public async Task<ActionResult<ICollection<QueueDto>>> GetQueues()
     {
-        Response<GotQueues> response = await _getQueuesClient.GetResponse<GotQueues>(new GetQueues());
+        var response = await _getQueuesClient.GetResponse<GotQueues>(new GetQueues());
         var queues = _mapper.Map<List<QueueDto>>(response.Message.Queues);
         return Ok(queues);
     }

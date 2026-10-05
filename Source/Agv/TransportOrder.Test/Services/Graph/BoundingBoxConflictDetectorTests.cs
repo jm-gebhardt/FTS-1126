@@ -14,7 +14,7 @@ public class BoundingBoxConflictDetectorTests
         var aId = Guid.NewGuid();
         var bId = Guid.NewGuid();
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(aId, ResourceType.Node, 0, 0, 1.0),
                 BoundingBoxGenerator.SquareBox(bId, ResourceType.Node, 1, 0, 1.0))
@@ -28,7 +28,7 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void Detect_TwoNonOverlappingBoxes_ReturnsEmpty()
     {
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 0, 0, 1),
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 5, 5, 1))
@@ -45,7 +45,7 @@ public class BoundingBoxConflictDetectorTests
         var edge = RoutingGraphGenerator.GenerateEdge(fromNode, toNode);
         var graph = RoutingGraphGenerator.GenerateGraph([fromNode, toNode], [edge]);
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingNode(fromNode).Id, ResourceType.Node, 0, 0, 1),
@@ -65,7 +65,7 @@ public class BoundingBoxConflictDetectorTests
         var edgeB = RoutingGraphGenerator.GenerateEdge(sharedNode, nodeB);
         var graph = RoutingGraphGenerator.GenerateGraph([nodeA, sharedNode, nodeB], [edgeA, edgeB]);
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id, ResourceType.Edge, 0, 0, 1),
@@ -86,7 +86,7 @@ public class BoundingBoxConflictDetectorTests
         var edgeB = RoutingGraphGenerator.GenerateEdge(nodeC, nodeD);
         var graph = RoutingGraphGenerator.GenerateGraph([nodeA, nodeB, nodeC, nodeD], [edgeA, edgeB]);
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id, ResourceType.Edge, 0, 0, 1),
@@ -99,7 +99,7 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void Detect_ThreeBoxesOnePairOverlaps_ReturnsOneConflict()
     {
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 0, 0, 1),
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 10, 10, 1),
@@ -112,7 +112,7 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void Detect_ContainedPolygon_ReturnedAsConflict()
     {
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 0, 0, 3.0),
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 0, 0, 1))
@@ -132,7 +132,7 @@ public class BoundingBoxConflictDetectorTests
         var boxA = BoundingBoxGenerator.PolygonBox(Guid.NewGuid(), ResourceType.Node, lShape);
         var boxB = BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 1.5, 0.5, 0.3);
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(boxA, boxB)
             .Detector.Detect();
 
@@ -145,7 +145,7 @@ public class BoundingBoxConflictDetectorTests
         var targetId = Guid.NewGuid();
         var neighbourId = Guid.NewGuid();
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(targetId, ResourceType.Node, 0, 0, 1.0),
                 BoundingBoxGenerator.SquareBox(neighbourId, ResourceType.Node, 1, 0, 1.0),
@@ -168,7 +168,7 @@ public class BoundingBoxConflictDetectorTests
         var edgeB = RoutingGraphGenerator.GenerateEdge(sharedNode, nodeB);
         var graph = RoutingGraphGenerator.GenerateGraph([nodeA, sharedNode, nodeB], [edgeA, edgeB]);
 
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithGraph(graph)
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(RoutingGraphGenerator.GetRoutingEdge(edgeA).Id, ResourceType.Edge, 0, 0, 1.0),
@@ -181,7 +181,7 @@ public class BoundingBoxConflictDetectorTests
     [TestMethod]
     public void DetectFor_UnknownResource_ReturnsEmpty()
     {
-        IReadOnlyList<BoundingBoxConflict> result = new BoundingBoxConflictDetectorTestFixture()
+        var result = new BoundingBoxConflictDetectorTestFixture()
             .WithBoxes(
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 0, 0, 1.0),
                 BoundingBoxGenerator.SquareBox(Guid.NewGuid(), ResourceType.Node, 1, 0, 1.0))

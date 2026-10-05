@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using JetBrains.Annotations;
 using Graph = Gebhardt.Acc.TransportOrder.Messages.MessageContent.Graph;
 using GraphEdge = Gebhardt.Acc.TransportOrder.Messages.MessageContent.GraphEdge;
-using GraphNode = Gebhardt.Acc.Common.Domain.Models.Graphs.GraphNode;
 
 namespace Gebhardt.Acc.TransportOrder.Messages.Profiles;
 
@@ -25,7 +24,7 @@ public class GraphGraphEdgeResolver : IValueResolver<IGraph, Graph, object>
     {
         var graphEdges = new List<GraphEdge>();
 
-        Dictionary<Guid, GraphNode> nodeDict = source.Nodes.ToDictionary(node => node.Id);
+        var nodeDict = source.Nodes.ToDictionary(node => node.Id);
 
         foreach (var edge in source.Edges)
         {

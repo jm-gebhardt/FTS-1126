@@ -16,7 +16,7 @@ public static class ServiceCollectionExtension
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static IServiceCollection RegisterTriggerDependencies(this IServiceCollection serviceCollection, ILogger initialLogger, TriggerServiceConfiguration triggerServiceConfiguration)
     {
-        IEnumerable<Type> plugins = ReflectionService.GetTriggerAssemblies(initialLogger, triggerServiceConfiguration.TriggerFolder)
+        var plugins = ReflectionService.GetTriggerAssemblies(initialLogger, triggerServiceConfiguration.TriggerFolder)
             .SelectMany(s => s.GetTypes())
             .Where(p => typeof(ITriggerPlugin).IsAssignableFrom(p) && !p.IsInterface);
         foreach (var trigger in plugins)

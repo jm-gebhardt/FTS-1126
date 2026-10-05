@@ -38,7 +38,7 @@ public class FilterTemplateController(
         {
             return Unauthorized();
         }
-        Response<GotFilterTemplates> result = await getFilterTemplatesRequestClient.GetResponse<GotFilterTemplates>(new GetFilterTemplates(user));
+        var result = await getFilterTemplatesRequestClient.GetResponse<GotFilterTemplates>(new GetFilterTemplates(user));
 
         var filterTemplates = mapper.Map<ICollection<FilterTemplateDto>>(result.Message.FilterTemplates);
 
@@ -62,7 +62,7 @@ public class FilterTemplateController(
             return Unauthorized();
         }
 
-        Response<AddedFilterTemplate> result = await addFilterTemplateRequestClient.GetResponse<AddedFilterTemplate>(new AddFilterTemplate(user, mapper.Map<FilterTemplate>(filterTemplate), name));
+        var result = await addFilterTemplateRequestClient.GetResponse<AddedFilterTemplate>(new AddFilterTemplate(user, mapper.Map<FilterTemplate>(filterTemplate), name));
 
         return Ok(result.Message.FilterTemplateCorrelationId);
     }
@@ -85,7 +85,7 @@ public class FilterTemplateController(
             return Unauthorized();
         }
 
-        Response<OwnedFilterModificationResult> result = await updateFilterTemplateRequestClient.GetResponse<OwnedFilterModificationResult>(new UpdateFilterTemplate(user, mapper.Map<FilterTemplate>(filterTemplate), correlationId, name));
+        var result = await updateFilterTemplateRequestClient.GetResponse<OwnedFilterModificationResult>(new UpdateFilterTemplate(user, mapper.Map<FilterTemplate>(filterTemplate), correlationId, name));
 
         return Ok(result.Message.Result);
     }
@@ -105,7 +105,7 @@ public class FilterTemplateController(
         {
             return Unauthorized();
         }
-        Response<OwnedFilterModificationResult> result = await deleteFilterTemplateRequestClient.GetResponse<OwnedFilterModificationResult>(new DeleteFilterTemplate(correlationId, user));
+        var result = await deleteFilterTemplateRequestClient.GetResponse<OwnedFilterModificationResult>(new DeleteFilterTemplate(correlationId, user));
 
         return Ok(result.Message.Result);
     }

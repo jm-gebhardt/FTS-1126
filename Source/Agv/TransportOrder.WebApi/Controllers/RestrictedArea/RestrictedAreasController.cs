@@ -35,7 +35,7 @@ public class RestrictedAreasController : Controller
     [Route("/restrictedAreas")]
     public async Task<ActionResult<ICollection<RestrictedAreaDto>>> GetRestrictedAreas([FromQuery] Guid[] ids)
     {
-        Response<GotRestrictedAreas> response = await _getRestrictedAreasClient.GetResponse<GotRestrictedAreas>(new GetRestrictedAreas(ids));
+        var response = await _getRestrictedAreasClient.GetResponse<GotRestrictedAreas>(new GetRestrictedAreas(ids));
         var restrictedAreas = _mapper.Map<List<RestrictedAreaDto>>(response.Message.RestrictedAreas);
         return Ok(restrictedAreas);
     }

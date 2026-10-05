@@ -44,7 +44,7 @@ public class MapProfileTest
             new Guid("3D3D5DA8-1A01-459E-B0DA-EBB875D393F6"),
             new Guid("A781AF33-CB57-4143-8EEF-1590FE9EC2ED")
         ]);
-        ImmutableDictionary<Guid, Guid[]> agvMapRelation = new Dictionary<Guid, Guid[]>
+        var agvMapRelation = new Dictionary<Guid, Guid[]>
         {
             {
                 correlationId,

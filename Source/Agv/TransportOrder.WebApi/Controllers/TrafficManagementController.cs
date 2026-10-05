@@ -33,7 +33,7 @@ public class TrafficManagementController(
             return BadRequest();
         }
 
-        Response<GotRoute, Rejected> response = await getRouteClient.GetResponse<GotRoute, Rejected>(new GetRoute(agvId));
+        var response = await getRouteClient.GetResponse<GotRoute, Rejected>(new GetRoute(agvId));
         if (response.Is(out Response<GotRoute>? gotRoute))
         {
             return Ok(gotRoute.Message);
@@ -59,7 +59,7 @@ public class TrafficManagementController(
             return BadRequest();
         }
 
-        Response<Success, Rejected> response = await startRouteToNodeClient.GetResponse<Success, Rejected>(new StartRouteToNode(agvId, nodeShortName));
+        var response = await startRouteToNodeClient.GetResponse<Success, Rejected>(new StartRouteToNode(agvId, nodeShortName));
         return response.Is(out Response<Rejected>? rejected) ? NotFound(rejected.Message.Reason) : Ok();
     }
 
@@ -80,7 +80,7 @@ public class TrafficManagementController(
             return BadRequest();
         }
 
-        Response<Success, Rejected> response = await startRouteWithPickClient.GetResponse<Success, Rejected>(new StartRouteWithPick(agvId, nodeShortName));
+        var response = await startRouteWithPickClient.GetResponse<Success, Rejected>(new StartRouteWithPick(agvId, nodeShortName));
         return response.Is(out Response<Rejected>? rejected) ? NotFound(rejected.Message.Reason) : Ok();
     }
 
@@ -101,7 +101,7 @@ public class TrafficManagementController(
             return BadRequest();
         }
 
-        Response<Success, Rejected> response = await startRouteWithDropClient.GetResponse<Success, Rejected>(new StartRouteWithDrop(agvId, nodeShortName));
+        var response = await startRouteWithDropClient.GetResponse<Success, Rejected>(new StartRouteWithDrop(agvId, nodeShortName));
         return response.Is(out Response<Rejected>? rejected) ? NotFound(rejected.Message.Reason) : Ok();
     }
 
@@ -121,7 +121,7 @@ public class TrafficManagementController(
             return BadRequest();
         }
 
-        Response<Success, Rejected> response = await abortRouteClient.GetResponse<Success, Rejected>(new AbortRoute(agvId));
+        var response = await abortRouteClient.GetResponse<Success, Rejected>(new AbortRoute(agvId));
         return response.Is(out Response<Rejected>? rejected) ? NotFound(rejected.Message.Reason) : Ok();
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Messages.Triggers;
-using Gebhardt.Acc.Common.TriggerDefinition;
 using Gebhardt.Acc.TriggerService.Domain.Services;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
@@ -32,7 +31,7 @@ public class TriggerConfigurator(ITriggerManager triggerManager, IBus bus, Trigg
 
     private async Task LoadTriggers(CancellationToken stoppingToken)
     {
-        IReadOnlyCollection<IFfcTrigger> triggers = await triggerManager.LoadTriggers();
+        var triggers = await triggerManager.LoadTriggers();
         foreach (var trigger in triggers)
         {
             await bus.Publish(new TriggerConfigured(trigger.GetProperties(), trigger.GetDefaultConfigurationParameters().Values), stoppingToken);

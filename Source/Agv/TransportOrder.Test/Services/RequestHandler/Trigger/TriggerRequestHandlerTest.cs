@@ -9,7 +9,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Trigger;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Shouldly;
 using PolygonPoint = Gebhardt.Acc.TransportOrder.Domain.Models.Polygon.PolygonPoint;
 
@@ -22,11 +21,11 @@ public class TriggerRequestHandlerTest
     public async Task Consume_GetTriggers_ValidData_RespondsGotTriggers()
     {
         List<TransportOrder.Domain.Models.Trigger.Trigger> triggers = [TriggerGenerator.CreateTrigger()];
-        TriggerRequestHandlerTestFixture<GetTriggers> fixture = new TriggerRequestHandlerTestFixture<GetTriggers>()
+        var fixture = new TriggerRequestHandlerTestFixture<GetTriggers>()
             .WithTriggers(triggers)
             .Build();
 
-        Response<GotTriggers> response = await fixture.GetResponseAsync<GotTriggers>(new GetTriggers());
+        var response = await fixture.GetResponseAsync<GotTriggers>(new GetTriggers());
         response.Message.Triggers.ShouldBeEquivalentTo(triggers);
     }
 
@@ -35,11 +34,11 @@ public class TriggerRequestHandlerTest
     {
         var trigger = TriggerGenerator.CreateTrigger();
 
-        TriggerRequestHandlerTestFixture<GetTrigger> fixture = new TriggerRequestHandlerTestFixture<GetTrigger>()
+        var fixture = new TriggerRequestHandlerTestFixture<GetTrigger>()
             .WithTriggers([trigger])
             .Build();
 
-        Response<GotTrigger> response = await fixture.GetResponseAsync<GotTrigger>(new GetTrigger(trigger.Id));
+        var response = await fixture.GetResponseAsync<GotTrigger>(new GetTrigger(trigger.Id));
         response.Message.Trigger.ShouldBeEquivalentTo(trigger);
     }
 
@@ -48,7 +47,7 @@ public class TriggerRequestHandlerTest
     {
         var trigger = TriggerGenerator.CreateTrigger();
 
-        TriggerRequestHandlerTestFixture<GetTrigger> fixture = new TriggerRequestHandlerTestFixture<GetTrigger>()
+        var fixture = new TriggerRequestHandlerTestFixture<GetTrigger>()
             .WithTriggers([trigger])
             .Build();
 
@@ -60,7 +59,7 @@ public class TriggerRequestHandlerTest
     {
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "value", string.Empty);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
-        TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -73,7 +72,7 @@ public class TriggerRequestHandlerTest
     {
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "value", string.Empty);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
-        TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -87,7 +86,7 @@ public class TriggerRequestHandlerTest
         const string isNumber = @"^-?\d+$";
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "0", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
-        TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateDefaultConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -101,7 +100,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter();
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -118,7 +117,7 @@ public class TriggerRequestHandlerTest
     {
         var trigger = TriggerGenerator.CreateTrigger();
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -137,7 +136,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -156,7 +155,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -175,7 +174,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryUpdateLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -192,7 +191,7 @@ public class TriggerRequestHandlerTest
         const string isNumber = @"^-?\d+$";
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "0", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(true)
@@ -218,7 +217,7 @@ public class TriggerRequestHandlerTest
         const string isNumber = @"^-?\d+$";
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "0", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(true)
@@ -241,7 +240,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_AssignTriggerToLocation_UnknownTrigger_ThrowsTriggerNotFoundException_DoesNotRequestAddTriggerLocation()
     {
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([])
             .Build();
 
@@ -259,7 +258,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_MultipleLocationsGiven_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
         var trigger = TriggerGenerator.CreateTrigger();
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(true)
@@ -279,7 +278,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_EdgeUnknown_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
         var trigger = TriggerGenerator.CreateTrigger();
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(false)
             .WithMapExists(true)
@@ -299,7 +298,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_NodeUnknown_ThrowsValidationException_DoesNotRequestAddTriggerLocation()
     {
         var trigger = TriggerGenerator.CreateTrigger();
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(false)
             .WithMapExists(true)
@@ -319,7 +318,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_AssignTriggerToLocation_MapGivenButUnknown_ThrowsTriggerAssignmentFailedException_DoesNotRequestAddTriggerLocation()
     {
         var trigger = TriggerGenerator.CreateTrigger();
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(false)
@@ -341,7 +340,7 @@ public class TriggerRequestHandlerTest
         var node = "a node".ToGraphNode();
         var trigger = TriggerGenerator.CreateTrigger();
         var location = new Location(node, null, Guid.NewGuid(), trigger.Id, []);
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(true)
@@ -349,7 +348,7 @@ public class TriggerRequestHandlerTest
             .WithNode(node)
             .Build();
 
-        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.Node!, null, [], location.MapId, null));
+        var response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.Node!, null, [], location.MapId, null));
         response.Message.Location.ShouldBeEquivalentTo(location);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
@@ -360,14 +359,14 @@ public class TriggerRequestHandlerTest
         var edgeId = "an edge".ToGuid();
         var trigger = TriggerGenerator.CreateTrigger();
         var edgeLocation = new Location(null, edgeId, Guid.NewGuid(), trigger.Id, []);
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(true)
             .WithLocationResponse(edgeLocation)
             .Build();
 
-        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, edgeLocation.EdgeId!, [], edgeLocation.MapId, null));
+        var response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, edgeLocation.EdgeId!, [], edgeLocation.MapId, null));
         response.Message.Location.ShouldBeEquivalentTo(edgeLocation);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
@@ -381,14 +380,14 @@ public class TriggerRequestHandlerTest
         var trigger = TriggerGenerator.CreateTrigger();
         var polygonLocation = new Location(domainPolygon, Guid.NewGuid(), trigger.Id, []);
 
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(false)
             .WithMapExists(true)
             .WithLocationResponse(polygonLocation)
             .Build();
 
-        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, null, triggerPolygon, polygonLocation.MapId, null));
+        var response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, null, null, triggerPolygon, polygonLocation.MapId, null));
         response.Message.Location.ShouldBeEquivalentTo(polygonLocation);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
@@ -399,7 +398,7 @@ public class TriggerRequestHandlerTest
         var node = "a node".ToGraphNode();
         var trigger = TriggerGenerator.CreateTrigger();
         var location = new Location(node, null, Guid.NewGuid(), trigger.Id, []);
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(false)
@@ -407,7 +406,7 @@ public class TriggerRequestHandlerTest
             .WithNode(node)
             .Build();
 
-        Response<TriggerLocationAssigned> response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.Node!, null, [], null, null));
+        var response = await fixture.GetResponseAsync<TriggerLocationAssigned>(new AssignTriggerToLocation(trigger.Id, location.Node!, null, [], null, null));
         response.Message.Location.ShouldBeEquivalentTo(location);
         await fixture.ShouldHavePublishedAsync<AddTriggerLocation>();
     }
@@ -418,7 +417,7 @@ public class TriggerRequestHandlerTest
         var node = "a node".ToGraphNode();
         var trigger = TriggerGenerator.CreateTrigger();
         var location = new Location(node, null, Guid.NewGuid(), trigger.Id, []);
-        TriggerRequestHandlerTestFixture<AssignTriggerToLocation> fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<AssignTriggerToLocation>()
             .WithTriggers([trigger])
             .WithGraphElementExists(true)
             .WithMapExists(true)
@@ -436,7 +435,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeId".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -451,7 +450,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("node".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -469,7 +468,7 @@ public class TriggerRequestHandlerTest
         var parameter = TriggerGenerator.CreateParameter("parameter name", "description", "12", isNumber);
         var trigger = TriggerGenerator.CreateTrigger(parameters: [parameter]);
         trigger.AddLocation("nodeName".ToGraphNode(), null, null);
-        TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter> fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryResetLocationConfigurationParameter>()
             .WithTriggers([trigger])
             .Build();
 
@@ -484,7 +483,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryMarkTriggerForDeletion_ValidData_PublishesMarkTriggerForDeletion()
     {
         var trigger = TriggerGenerator.CreateTrigger();
-        TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion> fixture = new TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion>()
             .WithTriggers([trigger])
             .Build();
 
@@ -496,7 +495,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryMarkTriggerForDeletion_UnknownTrigger_ThrowsTriggerNotFoundException()
     {
         var trigger = TriggerGenerator.CreateTrigger();
-        TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion> fixture = new TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryMarkTriggerForDeletion>()
             .WithTriggers([trigger])
             .Build();
 
@@ -509,11 +508,11 @@ public class TriggerRequestHandlerTest
     public async Task Consume_GetDeletedTriggers_ValidData_RespondsGotDeletedTriggers()
     {
         List<TransportOrder.Domain.Models.Trigger.Trigger> deletedTriggers = [TriggerGenerator.CreateTrigger(isDeleted: true)];
-        TriggerRequestHandlerTestFixture<GetDeletedTriggers> fixture = new TriggerRequestHandlerTestFixture<GetDeletedTriggers>()
+        var fixture = new TriggerRequestHandlerTestFixture<GetDeletedTriggers>()
             .WithDeletedTriggers(deletedTriggers)
             .Build();
 
-        Response<GotDeletedTriggers> response = await fixture.GetResponseAsync<GotDeletedTriggers>(new GetDeletedTriggers());
+        var response = await fixture.GetResponseAsync<GotDeletedTriggers>(new GetDeletedTriggers());
         response.Message.Triggers.ShouldBeEquivalentTo(deletedTriggers);
     }
 
@@ -521,7 +520,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryRestoreTrigger_ValidData_PublishesRestoreTriggerRespondsSuccess()
     {
         var deletedTrigger = TriggerGenerator.CreateTrigger(isDeleted: true);
-        TriggerRequestHandlerTestFixture<TryRestoreTrigger> fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
             .WithTriggers([deletedTrigger])
             .Build();
 
@@ -532,7 +531,7 @@ public class TriggerRequestHandlerTest
     [TestMethod]
     public async Task Consume_TryRestoreTrigger_UnknownTrigger_ThrowsTriggerNotFoundException()
     {
-        TriggerRequestHandlerTestFixture<TryRestoreTrigger> fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
             .WithTriggers([])
             .Build();
 
@@ -545,7 +544,7 @@ public class TriggerRequestHandlerTest
     public async Task Consume_TryRestoreTrigger_TriggerNotDeleted_ThrowsTriggerNotDeletedException()
     {
         var notDeletedTrigger = TriggerGenerator.CreateTrigger(isDeleted: false);
-        TriggerRequestHandlerTestFixture<TryRestoreTrigger> fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
+        var fixture = new TriggerRequestHandlerTestFixture<TryRestoreTrigger>()
             .WithTriggers([notDeletedTrigger])
             .Build();
 
@@ -564,7 +563,7 @@ public class TriggerRequestHandlerTest
         var sourceLocation = sourceTrigger.Locations.First();
         var duplicatedLocation = new Location(node, null, Guid.NewGuid(), targetTrigger.Id, []);
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
             .WithTriggers([sourceTrigger, targetTrigger])
             .WithLocationResponse(duplicatedLocation)
             .Build();
@@ -578,7 +577,7 @@ public class TriggerRequestHandlerTest
     {
         var targetTrigger = TriggerGenerator.CreateTrigger();
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
             .WithTriggers([targetTrigger])
             .Build();
 
@@ -594,7 +593,7 @@ public class TriggerRequestHandlerTest
         var targetTrigger = TriggerGenerator.CreateTrigger();
         sourceTrigger.AddLocation("a node".ToGraphNode(), null, null);
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
             .WithTriggers([sourceTrigger, targetTrigger])
             .Build();
 
@@ -611,7 +610,7 @@ public class TriggerRequestHandlerTest
         sourceTrigger.AddLocation("a node".ToGraphNode(), null, null);
         var sourceLocation = sourceTrigger.Locations.First();
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocation> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocation>()
             .WithTriggers([sourceTrigger, targetTrigger])
             .WithLocationResponse(null, "an exception")
             .Build();
@@ -629,7 +628,7 @@ public class TriggerRequestHandlerTest
         sourceTrigger.AddLocation("node2".ToGraphNode(), null, null);
         var duplicatedLocation = new Location("node1".ToGraphNode(), null, Guid.NewGuid(), targetTrigger.Id, []);
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
             .WithTriggers([sourceTrigger, targetTrigger])
             .WithLocationResponse(duplicatedLocation)
             .Build();
@@ -643,7 +642,7 @@ public class TriggerRequestHandlerTest
     {
         var targetTrigger = TriggerGenerator.CreateTrigger();
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
             .WithTriggers([targetTrigger])
             .Build();
 
@@ -658,7 +657,7 @@ public class TriggerRequestHandlerTest
         var sourceTrigger = TriggerGenerator.CreateTrigger();
         var targetTrigger = TriggerGenerator.CreateTrigger();
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
             .WithTriggers([sourceTrigger, targetTrigger])
             .Build();
 
@@ -673,7 +672,7 @@ public class TriggerRequestHandlerTest
         var targetTrigger = TriggerGenerator.CreateTrigger();
         sourceTrigger.AddLocation("a node".ToGraphNode(), null, null);
 
-        TriggerRequestHandlerTestFixture<DuplicateTriggerLocations> fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
+        var fixture = new TriggerRequestHandlerTestFixture<DuplicateTriggerLocations>()
             .WithTriggers([sourceTrigger, targetTrigger])
             .WithLocationResponse(null, "an exception")
             .Build();

@@ -18,7 +18,7 @@ public class ErrorCommandHandler(IStatisticsDb db) : IConsumer<AddError>
     /// </summary>
     public async Task Consume(ConsumeContext<AddError> context)
     {
-        (var agvError, List<Guid> gridCellIds) = context.Message;
+        var (agvError, gridCellIds) = context.Message;
 
         foreach (var gridCellId in gridCellIds)
         {

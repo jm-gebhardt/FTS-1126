@@ -37,7 +37,7 @@ public class FixtureBase
 
     private void LoadAutoMapperProfiles()
     {
-        Profile[] profiles = GetProfiles().ToArray();
+        var profiles = GetProfiles().ToArray();
 
         _useAutoMapper = profiles.Length != 0;
         if (_useAutoMapper)
@@ -82,7 +82,7 @@ public class FixtureBase
     /// <param name="services">The action of the service to add</param>
     protected void AddServices(params Action<IServiceCollection>[] services)
     {
-        foreach (Action<IServiceCollection> service in services)
+        foreach (var service in services)
         {
             service.Invoke(_serviceCollection);
         }

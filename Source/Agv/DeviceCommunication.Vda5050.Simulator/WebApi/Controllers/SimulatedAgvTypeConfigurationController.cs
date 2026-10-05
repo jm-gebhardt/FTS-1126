@@ -39,7 +39,7 @@ public class SimulatedAgvTypeConfigurationController(
     {
         logger.LogInformation("API to add the simulation configuration of agv type {AgvTypeIdentifier} called", configuration.AgvTypeIdentifier);
         var request = new RequestAddAgvTypeConfiguration(configuration.AgvTypeIdentifier.ToGuid(), configuration.AgvTypeIdentifier, mapper.Map<AgvTypeSimulationSettings>(configuration));
-        Response<AgvTypeConfigurationResponse> response = await addClient.GetResponse<AgvTypeConfigurationResponse>(request, cancellationToken);
+        var response = await addClient.GetResponse<AgvTypeConfigurationResponse>(request, cancellationToken);
         return Ok(mapper.Map<AgvTypeConfigurationDto>(response.Message.Configuration));
     }
 
@@ -60,7 +60,7 @@ public class SimulatedAgvTypeConfigurationController(
     {
         logger.LogInformation("API to update the simulation configuration of agv type {AgvTypeId} called", agvTypeId);
         var request = new RequestUpdateAgvTypeConfiguration(agvTypeId, mapper.Map<AgvTypeSimulationSettings>(configuration));
-        Response<AgvTypeConfigurationResponse> response = await updateClient.GetResponse<AgvTypeConfigurationResponse>(request, cancellationToken);
+        var response = await updateClient.GetResponse<AgvTypeConfigurationResponse>(request, cancellationToken);
         return Ok(mapper.Map<AgvTypeConfigurationDto>(response.Message.Configuration));
     }
 
@@ -91,7 +91,7 @@ public class SimulatedAgvTypeConfigurationController(
     [Route("agvTypeConfiguration/{agvTypeId:guid}")]
     public async Task<ActionResult<AgvTypeConfigurationDto>> GetAgvTypeConfiguration([FromRoute] Guid agvTypeId, CancellationToken cancellationToken)
     {
-        Response<AgvTypeConfigurationResponse> response = await configurationClient.GetResponse<AgvTypeConfigurationResponse>(new RequestAgvTypeConfiguration(agvTypeId), cancellationToken);
+        var response = await configurationClient.GetResponse<AgvTypeConfigurationResponse>(new RequestAgvTypeConfiguration(agvTypeId), cancellationToken);
         return Ok(mapper.Map<AgvTypeConfigurationDto>(response.Message.Configuration));
     }
 
@@ -104,7 +104,7 @@ public class SimulatedAgvTypeConfigurationController(
     [Route("agvTypeConfigurations")]
     public async Task<ActionResult<IEnumerable<AgvTypeConfigurationDto>>> GetAgvTypeConfigurations(CancellationToken cancellationToken)
     {
-        Response<AgvTypeConfigurationsResponse> response =
+        var response =
             await configurationsClient.GetResponse<AgvTypeConfigurationsResponse>(new RequestAgvTypeConfigurations(Guid.NewGuid()), cancellationToken);
         return Ok(response.Message.Configurations.Select(mapper.Map<AgvTypeConfigurationDto>));
     }

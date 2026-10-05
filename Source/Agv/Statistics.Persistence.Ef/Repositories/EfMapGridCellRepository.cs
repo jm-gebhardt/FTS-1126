@@ -18,19 +18,19 @@ public class EfMapGridCellRepository(StatisticsDbContext context) : EfRepository
     /// <inheritdoc />
     public async Task UpdateRelationsAsync(Map map)
     {
-        List<GridCell> gridCells = await Context.Set<GridCell>()
+        var gridCells = await Context.Set<GridCell>()
             .Where(gc => gc.XMin >= map.XMin && gc.XMax <= map.XMax
                                              && gc.YMin >= map.YMin && gc.YMax <= map.YMax)
             .ToListAsync();
 
-        List<MapGridCell> all = gridCells.Select(gc => new MapGridCell(map, gc)).ToList();
+        var all = gridCells.Select(gc => new MapGridCell(map, gc)).ToList();
 
-        List<Guid> existingKeys = await DbSet
+        var existingKeys = await DbSet
             .Where(m => all.Select(c => c.GridCellId).Contains(m.GridCellId) && m.MapId == map.MapId)
             .Select(m => m.GridCellId)
             .ToListAsync();
 
-        List<MapGridCell> toInsert = all
+        var toInsert = all
             .Where(c => !existingKeys.Contains(c.GridCellId))
             .ToList();
 

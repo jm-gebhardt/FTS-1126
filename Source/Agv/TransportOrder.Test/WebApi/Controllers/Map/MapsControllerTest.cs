@@ -10,7 +10,7 @@ public class MapsControllerTest
     [TestMethod]
     public async Task GetMaps_ShouldSendProperCommandToMediator_WhereRequestIsNotDefined()
     {
-        MapsControllerTestFixture<GetMapList, MapRequestHandler> fixture = new MapsControllerTestFixture<GetMapList, MapRequestHandler>()
+        var fixture = new MapsControllerTestFixture<GetMapList, MapRequestHandler>()
             .Build();
 
         await fixture.GetControllerResultAsync(c => c.GetMaps());

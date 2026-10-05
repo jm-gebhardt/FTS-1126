@@ -224,7 +224,7 @@ public class OrderExecutionStateMachineTest
 
         await fixture.PublishMessageAsync(new OrderResendRequested(startOrderCommand.CorrelationId));
 
-        ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
+        var publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
         publishedOrders.Count.ShouldBe(2);
         publishedOrders.Last().HeaderId.ShouldBe(2u);
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));
@@ -255,7 +255,7 @@ public class OrderExecutionStateMachineTest
         await fixture.PublishMessageAsync(new OrderUpdateRequested(startOrderCommand.CorrelationId, newOrder, null));
 
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Created));
-        ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
+        var publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
         publishedOrders.Count.ShouldBe(2);
         publishedOrders.Last().HeaderId.ShouldBe(2u);
     }
@@ -307,7 +307,7 @@ public class OrderExecutionStateMachineTest
 
         await fixture.PublishMessageAsync(new StartOrder(startOrderCommand.CorrelationId, order));
 
-        ICollection<MqttOrder> publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
+        var publishedOrders = fixture.GetPublishedMessages<MqttOrder>();
         publishedOrders.Count.ShouldBe(2);
         publishedOrders.Last().HeaderId.ShouldBe(2u);
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));

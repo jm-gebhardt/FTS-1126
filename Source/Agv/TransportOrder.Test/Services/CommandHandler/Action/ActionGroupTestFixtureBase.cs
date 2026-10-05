@@ -364,8 +364,8 @@ public abstract class ActionGroupTestFixtureBase<T> : MassTransitConsumerTestFix
         where TResult : class
         where TRequest : class
     {
-        IRequestClient<TRequest> client = TestHarness.Bus!.CreateRequestClient<TRequest>();
-        Response<TResult> response = await client.GetResponse<TResult>(request);
+        var client = TestHarness.Bus!.CreateRequestClient<TRequest>();
+        var response = await client.GetResponse<TResult>(request);
         return response;
     }
 

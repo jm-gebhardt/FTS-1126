@@ -62,13 +62,13 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     /// <exception cref="AgvLocationUnknownException"></exception>
     public async Task<Models.ActionGroup.ActionGroup?> GetNotStartedActionGroupAsync(Agv agv, AgvData? agvData, CancellationToken cancellationToken = default)
     {
-        IReadOnlyCollection<Guid>? lockedNodeIds = await _nodeRepository.GetLockedNodes();
+        var lockedNodeIds = await _nodeRepository.GetLockedNodes();
         if (lockedNodeIds is { Count: > 0 })
         {
             _logger.LogDebug("Locked nodes: {Ids}", string.Join(",", lockedNodeIds));
         }
 
-        IReadOnlyList<Models.ActionGroup.ActionGroup> notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
+        var notStartedActionGroups = await _actionGroupRepository.GetNotStartedActionGroupsAsync(agv.CorrelationId);
 
         //1) Action group assigned to the agv with the highest priority, that is not an automatic pick drop action group (e.g. charging, manual, queueing, queue evacuation)
         var nextActionGroup = notStartedActionGroups.FirstOrDefault(a => a.AssignedAgv == agv.CorrelationId && (a.IsManual || !a.IsMovingCargo));
@@ -97,10 +97,10 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         }
 
         // Filter action group which have actions with locked target.
-        IReadOnlyList<Models.ActionGroup.ActionGroup> filteredNextActionGroups = lockedNodeIds is { Count: > 0 } ? notStartedActionGroups.Where(g => g.Actions.All(a => lockedNodeIds.All(ln => ln != a.Target.Node?.Id))).ToList() : notStartedActionGroups;
+        var filteredNextActionGroups = lockedNodeIds is { Count: > 0 } ? notStartedActionGroups.Where(g => g.Actions.All(a => lockedNodeIds.All(ln => ln != a.Target.Node?.Id))).ToList() : notStartedActionGroups;
 
         //2) Action group assigned to the agv with the highest priority (e.g. Doppelspiel, re-assigned action groups, resumed action groups)
-        List<Models.ActionGroup.ActionGroup> assignedActionGroups = filteredNextActionGroups.Where(a => a.AssignedAgv == agv.CorrelationId).ToList();
+        var assignedActionGroups = filteredNextActionGroups.Where(a => a.AssignedAgv == agv.CorrelationId).ToList();
         if (assignedActionGroups.Count > 0)
         {
             nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, assignedActionGroups, []);
@@ -113,7 +113,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
 
         //Get nodes that are not allowed to be on the route from the current AGV
         //To be specific: Nodes that part of a queue and route would lead through a queue
-        ICollection<Guid> nodesToAvoid = await GetNodesToAvoid(agv.AgvStatus?.LastNodeId);
+        var nodesToAvoid = await GetNodesToAvoid(agv.AgvStatus?.LastNodeId);
 
         //If e.g., lastNodeId from AGV was not correct, we check if AGV is at queue head
         //and remove queue head node explicitly again from nodes to avoid
@@ -128,7 +128,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         }
 
         //3) Unassigned action groups with non-default priority
-        List<Models.ActionGroup.ActionGroup> priorityActionGroups = filteredNextActionGroups.Except(assignedActionGroups).Where(a => a.Priority > Priority.Default).ToList();
+        var priorityActionGroups = filteredNextActionGroups.Except(assignedActionGroups).Where(a => a.Priority > Priority.Default).ToList();
         if (priorityActionGroups.Count > 0)
         {
             nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, priorityActionGroups, nodesToAvoid);
@@ -140,7 +140,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
         }
 
         //4) Any other action group
-        List<Models.ActionGroup.ActionGroup> nextActionGroups = filteredNextActionGroups.Except(priorityActionGroups).ToList();
+        var nextActionGroups = filteredNextActionGroups.Except(priorityActionGroups).ToList();
         nextActionGroup = await SelectNextActionGroup(agv, agvData, cancellationToken, nextActionGroups.ToList(), nodesToAvoid);
         if (nextActionGroup != null)
         {
@@ -155,7 +155,7 @@ public abstract class BaseChooseAgvActionGroupService : IChooseAgvActionGroupSer
     private async Task<ICollection<Guid>> GetNodesToAvoid(Guid? lastNodeId)
     {
         // Avoid nodes of occupied queues
-        ICollection<Guid> queueNodes = await _queueRepository.GetBlockedQueueNodes();
+        var queueNodes = await _queueRepository.GetBlockedQueueNodes();
         return lastNodeId == null ? queueNodes : queueNodes.Except([lastNodeId.Value]).ToList();
     }
 

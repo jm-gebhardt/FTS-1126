@@ -15,7 +15,7 @@ public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
     {
         var graphEdges = new List<GraphEdgeDto>();
 
-        Dictionary<Guid, GraphNode> nodeDict = source.Nodes.ToDictionary(node => node.Id);
+        var nodeDict = source.Nodes.ToDictionary(node => node.Id);
 
         foreach (var edge in source.Edges)
         {

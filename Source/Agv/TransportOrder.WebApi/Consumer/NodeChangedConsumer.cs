@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Constants;
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Domain.Services.LogEntry;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
@@ -39,7 +38,7 @@ public class NodeChangedConsumer :
     /// </summary>
     public async Task Consume(ConsumeContext<NodeStateChanged> context)
     {
-        (var nodeLock, string nodeName, Guid? stationId, string? modifyingUser, string? lockReason, string? lockDescription) = context.Message;
+        (var nodeLock, string nodeName, var stationId, string? modifyingUser, string? lockReason, string? lockDescription) = context.Message;
 
        if (stationId != null && !nodeLock.IsLocked)
         {
@@ -59,7 +58,7 @@ public class NodeChangedConsumer :
     /// </summary>
     public Task Consume(ConsumeContext<NodeApproachingPropertiesUpdated> context)
     {
-        (var mapId, var node, double? pickLiftHeight, double? dropLiftHeight, DockingDirection? dockingDirection) = context.Message;
+        (var mapId, var node, double? pickLiftHeight, double? dropLiftHeight, var dockingDirection) = context.Message;
         return _mapPublisher.SendNodeApproachingPropertiesUpdated(mapId, node.Name, pickLiftHeight, dropLiftHeight, dockingDirection);
     }
 

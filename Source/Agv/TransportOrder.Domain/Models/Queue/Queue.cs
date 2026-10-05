@@ -258,7 +258,7 @@ public class Queue
     {
         foreach (var node in Nodes.Where(n => n.Position > startPosition && n.GetCurrentAgv() != null).OrderBy(n => n.Position))
         {
-            Guid? agv = node.GetCurrentAgv();
+            var agv = node.GetCurrentAgv();
             if (agv == null)
             {
                 continue;

@@ -13,7 +13,7 @@ public class EfGridRepository(StatisticsDbContext context) : EfRepository<Grid, 
     /// <inheritdoc />
     public async Task<ICollection<Grid>> GetGridsAsync()
     {
-        List<Grid> grids = await DbSet
+        var grids = await DbSet
             .Include(g => g.Maps)
             .AsNoTracking()
             .ToListAsync();

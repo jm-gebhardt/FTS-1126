@@ -1,5 +1,4 @@
 using Gebhardt.Acc.TestPlanRunner.Domain.Exceptions;
-using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TestPlanRunner.Messages.Requests;
 using Gebhardt.Acc.TestPlanRunner.Messages.Responses;
 using JetBrains.Annotations;
@@ -26,7 +25,7 @@ public class GetTestPlansHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetTestPlans> context)
     {
-        IEnumerable<TestPlan> testPlans = _testPlanManager.GetActiveTestPlans();
+        var testPlans = _testPlanManager.GetActiveTestPlans();
         await context.RespondAsync(new GotTestPlans(testPlans.ToList()));
     }
 

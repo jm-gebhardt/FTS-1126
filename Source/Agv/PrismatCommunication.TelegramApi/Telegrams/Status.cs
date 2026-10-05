@@ -59,7 +59,7 @@ public class Status : PrismatTelegram
             return false;
         }
 
-        Dictionary<string, string> fields = TelegramParser.Parse(telegram);
+        var fields = TelegramParser.Parse(telegram);
         try
         {
             if(!Enum.TryParse(fields["State"].TrimEnd('.'), out SystemState result))

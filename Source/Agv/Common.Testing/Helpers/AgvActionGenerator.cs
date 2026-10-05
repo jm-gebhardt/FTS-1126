@@ -23,7 +23,7 @@ public static class AgvActionGenerator
         int nodesToBeAdded = numberOfNodes - 2;
         if (nodesToBeAdded > 0)
         {
-            List<GraphNode>? graphNodes = availableNodes?.ToList();
+            var graphNodes = availableNodes?.ToList();
             if (graphNodes == null)
             {
                 throw new ArgumentException("availableNodeIds must be provided if numberOfNodes > 2");

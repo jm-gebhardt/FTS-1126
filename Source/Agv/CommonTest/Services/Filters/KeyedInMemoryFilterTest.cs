@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Services.Filters;
-using Gebhardt.Acc.Common.Testing.Filters;
+﻿using Gebhardt.Acc.Common.Testing.Filters;
 using Shouldly;
 
 namespace Gebhardt.Acc.CommonTest.Services.Filters;
@@ -14,14 +13,14 @@ public class KeyedInMemoryFilterTest
         var testObject = new Message();
         (await fixture.Filter.ShouldActAsync(testObject)).ShouldBeTrue();
         fixture.ConcurrentDictionaryProvider.ConcurrentDict.Count.ShouldBe(1);
-        KeyValuePair<Guid, IMessageFilter<Message>> filter = fixture.ConcurrentDictionaryProvider.ConcurrentDict.First();
+        var filter = fixture.ConcurrentDictionaryProvider.ConcurrentDict.First();
         filter.Key.ShouldBe(testObject.Key);
     }
 
     [TestMethod]
     public async Task ShouldAct_WhenDictionaryContainsFilterReturningTrue_ReturnsTrue()
     {
-        FilterMock<Message> filterMock = new FilterMock<Message>()
+        var filterMock = new FilterMock<Message>()
             .Returns(true);
         var testObject = new Message();
         var fixture = new KeyedInMemoryFilterTestFixture()
@@ -33,7 +32,7 @@ public class KeyedInMemoryFilterTest
     [TestMethod]
     public async Task ShouldAct_WhenDictionaryContainsFilterReturningFalse_ReturnsFalse()
     {
-        FilterMock<Message> filterMock = new FilterMock<Message>()
+        var filterMock = new FilterMock<Message>()
             .Returns(false);
         var testObject = new Message();
         var fixture = new KeyedInMemoryFilterTestFixture()

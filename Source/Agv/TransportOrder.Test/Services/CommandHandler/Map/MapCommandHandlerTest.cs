@@ -10,7 +10,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Map;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map.Image;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Map;
-using MassTransit;
 using Moq;
 using Shouldly;
 using AgvMap = Gebhardt.Acc.Common.Domain.Models.Graphs.Map;
@@ -33,7 +32,7 @@ public class MapCommandHandlerTest
             MapBackgroundGenerator.Image1
         );
 
-        Response<Success> response = await fixture.GetResponseAsync<Success>(request);
+        var response = await fixture.GetResponseAsync<Success>(request);
 
         response.Message.ShouldBeOfType<Success>();
         fixture.MapRepositoryMock.Verify(r => r.SetCustomBackgroundAsync(correlationId, It.Is<MapBackground>(m => m.Width == 1)), Times.Once);
@@ -66,7 +65,7 @@ public class MapCommandHandlerTest
     public async Task DeleteBackground_ShouldNotPublish_WhenNoBackgroundExisted()
     {
         var mapBackground = MapBackgroundGenerator.Generate();
-        MapRequestTestFixture<DeleteBackground, MapCommandHandler> fixture = new MapRequestTestFixture<DeleteBackground, MapCommandHandler>()
+        var fixture = new MapRequestTestFixture<DeleteBackground, MapCommandHandler>()
             .WithMapBackground(mapBackground);
         fixture.MapRepositoryMock.Setup(r => r.DeleteCustomBackgroundAsync(mapBackground.CorrelationId)).ReturnsAsync(false);
 
@@ -204,7 +203,7 @@ public class MapCommandHandlerTest
             .Returns<Func<TransportOrder.Domain.Models.Map.Map, CancellationToken, Task<(TransportOrder.Domain.Models.Map.Map, Guid)?>>, CancellationToken>(
                 async (fn, ct) =>
                 {
-                    (TransportOrder.Domain.Models.Map.Map, Guid)? result = await fn(defaultMap, ct);
+                    var result = await fn(defaultMap, ct);
                     if (result is null)
                     {
                         return false;

@@ -31,7 +31,7 @@ public class NodeTestFixture : TransportOrderDbFixture
 
     public async Task AddNodesAsync(List<GraphNode> nodes, bool addStraightAway = true)
     {
-        ICollection<GraphNode> existingNodes = await _graphRepository.GetNodesByIdsAsync(nodes.Select(n => n.Id).ToList());
+        var existingNodes = await _graphRepository.GetNodesByIdsAsync(nodes.Select(n => n.Id).ToList());
 
         foreach (var existingNode in existingNodes)
         {

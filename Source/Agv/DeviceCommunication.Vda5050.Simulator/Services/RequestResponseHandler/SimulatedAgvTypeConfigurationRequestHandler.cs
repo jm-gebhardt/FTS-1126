@@ -113,7 +113,7 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<RequestAgvTypeConfigurations> context)
     {
-        IReadOnlyCollection<SimulatedAgvTypeConfiguration> configurations = await repository.GetAllAsync();
+        var configurations = await repository.GetAllAsync();
         await context.RespondAsync(new AgvTypeConfigurationsResponse(configurations));
     }
 }

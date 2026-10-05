@@ -20,7 +20,7 @@ public class PolypathEdge : BaseEdge
     {
         var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
 
-        (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
+        var (sections, nodes) = edge.GetSections(sourceNode, targetNode);
         nodes.AddRange([sourceNode, targetNode]);
         foreach (var section in sections)
         {

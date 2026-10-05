@@ -53,7 +53,7 @@ public class GraphBoundingBoxCalculator
 
     private static void AddIncidentEdge(Dictionary<Guid, List<RoutingEdge>> incidentEdges, Guid routingNodeId, RoutingEdge routingEdge)
     {
-        if (!incidentEdges.TryGetValue(routingNodeId, out List<RoutingEdge>? edges))
+        if (!incidentEdges.TryGetValue(routingNodeId, out var edges))
         {
             edges = [];
             incidentEdges[routingNodeId] = edges;

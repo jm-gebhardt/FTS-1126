@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Statistics.Domain.Models;
 using Gebhardt.Acc.Statistics.Domain.ReadModels;
 using Gebhardt.Acc.Statistics.Test.Helper;
-using Gebhardt.Acc.Statistics.WebApi.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 
@@ -18,7 +17,7 @@ public class GridControllerTest
             .WithGrids(grids)
             .Build();
 
-        List<GridDto> gridDtos = (await fixture.GetControllerResultValueAsync(c => c.GetGrids())).ToList();
+        var gridDtos = (await fixture.GetControllerResultValueAsync(c => c.GetGrids())).ToList();
 
         gridDtos.ShouldNotBeNull();
         gridDtos.Count.ShouldBe(grids.Count);

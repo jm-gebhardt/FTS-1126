@@ -56,7 +56,7 @@ public class ActionGroupTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
-        GraphNode[] nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
+        var nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
         Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
 
         actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges, now);
@@ -242,7 +242,7 @@ public class ActionGroupTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
 
         actionGroup.StartedDate.ShouldBeNull();
-        GraphNode[] nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
+        var nodes = new[] { "source", "target" }.Select(n => n.ToGraphNode()).ToArray();
         Guid[] edges = [Guid.NewGuid(), Guid.NewGuid()];
         actionGroup.StartAction(actionGroup.Actions[0].CorrelationId, nodes, edges, now);
 

@@ -62,7 +62,7 @@ public abstract class KeyedInMemoryFilter<TKey, TObject> : IMessageFilter<TObjec
         return await _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var key = GetKey(value);
-            if (_concurrentDictionaryProvider.ConcurrentDict.TryGetValue(key, out IMessageFilter<TObject>? existingFilter))
+            if (_concurrentDictionaryProvider.ConcurrentDict.TryGetValue(key, out var existingFilter))
             {
                 return await existingFilter.ShouldActAsync(value);
             }

@@ -10,7 +10,7 @@ public class EfConfigurationTest
     [TestMethod]
     public void Model_Builds_Without_Throwing()
     {
-        DbContextOptions<TransportOrderDbContext> options = new DbContextOptionsBuilder<TransportOrderDbContext>()
+        var options = new DbContextOptionsBuilder<TransportOrderDbContext>()
             .UseSqlServer("Server=.;Database=x;Trusted_Connection=True;TrustServerCertificate=True;")
             .Options;
         using var context = new TransportOrderDbContext(options);

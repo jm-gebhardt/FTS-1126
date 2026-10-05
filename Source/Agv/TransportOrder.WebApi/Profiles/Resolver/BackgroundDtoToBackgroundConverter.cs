@@ -22,13 +22,13 @@ public class BackgroundDtoToBackgroundConverter : ITypeConverter<BackgroundDto, 
     {
         var background = new Background{Name = source.Name, MapId = source.MapId, Id = source.Id};
 
-        List<BackgroundObject> objects = source.Objects.Select(dto => MapObject(dto, background.Id)).ToList();
+        var objects = source.Objects.Select(dto => MapObject(dto, background.Id)).ToList();
         foreach (var obj in objects)
         {
             background.Objects.Add(obj);
         }
 
-        Dictionary<int, BackgroundObject> objectsByExternalId = objects.ToDictionary(o => o.ExternalId);
+        var objectsByExternalId = objects.ToDictionary(o => o.ExternalId);
         foreach (var layerDto in source.Layers)
         {
             var layer = new BackgroundLayer(background.Id, layerDto.Id, layerDto.Name, layerDto.Visible, layerDto.Locked);

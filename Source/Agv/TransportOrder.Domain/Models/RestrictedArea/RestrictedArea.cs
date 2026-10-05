@@ -37,17 +37,17 @@ public class RestrictedArea: IEquatable<RestrictedArea>
     /// <param name="newArea">The area.</param>
     public void UpdateArea(ICollection<PolygonPoint> newArea)
     {
-        List<Guid> oldAreaPoints = Area.Select(a => a.Id).ToList();
-        List<Guid> newAreaPoints = newArea.Select(a => a.Id).ToList();
+        var oldAreaPoints = Area.Select(a => a.Id).ToList();
+        var newAreaPoints = newArea.Select(a => a.Id).ToList();
 
-        List<PolygonPoint> newPoints = newArea.Where(a => !oldAreaPoints.Contains(a.Id)).ToList();
+        var newPoints = newArea.Where(a => !oldAreaPoints.Contains(a.Id)).ToList();
         foreach (var newPoint in newPoints)
         {
             var point = new RestrictedAreaPolygonPoint(newPoint.X, newPoint.Y, newPoint.Index, Id){Id = newPoint.Id};
             Area.Add(point);
         }
 
-        List<RestrictedAreaPolygonPoint> pointsToRemove= Area.Where(a => !newAreaPoints.Contains(a.Id)).ToList();
+        var pointsToRemove= Area.Where(a => !newAreaPoints.Contains(a.Id)).ToList();
         foreach (var point in pointsToRemove)
         {
             Area.Remove(point);

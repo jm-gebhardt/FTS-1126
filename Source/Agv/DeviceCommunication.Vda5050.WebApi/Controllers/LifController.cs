@@ -51,7 +51,7 @@ public class LifController(
         byte[] content = memoryStream.ToArray();
 
         var request = new UploadLif(Guid.NewGuid(), timeProvider.GetUtcNow().UtcDateTime, content, file.FileName, file.ContentType, email);
-        Response<LifUploaded, LifValidationFailed> response = await uploadLifClient.GetResponse<LifUploaded, LifValidationFailed>(request);
+        var response = await uploadLifClient.GetResponse<LifUploaded, LifValidationFailed>(request);
         FileMetaInformationDto? lifFile;
         if (response.Message is LifUploaded uploaded)
         {
@@ -76,7 +76,7 @@ public class LifController(
     [Route("/lif/files")]
     public async Task<ActionResult<ICollection<FileMetaInformationDto>>> GetAllLifs()
     {
-        Response<GotLifFiles> response = await getLifsClient.GetResponse<GotLifFiles>(new GetLifFiles());
+        var response = await getLifsClient.GetResponse<GotLifFiles>(new GetLifFiles());
         var lifFiles = mapper.Map<List<FileMetaInformationDto>>(response.Message.LifFiles);
         return Ok(lifFiles);
     }
@@ -104,7 +104,7 @@ public class LifController(
     [Route("/lif/file/{id:guid}")]
     public async Task<ActionResult<FileMetaInformationDto>> GetLifFile([FromRoute] Guid id)
     {
-        Response<GotLifFile> response = await getLifClient.GetResponse<GotLifFile>(new GetLifFile(id));
+        var response = await getLifClient.GetResponse<GotLifFile>(new GetLifFile(id));
         var lifFile = mapper.Map<FileMetaInformationDto>(response.Message.LifFile);
         return Ok(lifFile);
     }
@@ -119,7 +119,7 @@ public class LifController(
     [Produces("application/json")]
     public async Task<IActionResult> DownloadLifFile([FromRoute] Guid id)
     {
-        Response<GotLifFileDownload> response = await downloadLifClient.GetResponse<GotLifFileDownload>(new DownloadLifFile(id));
+        var response = await downloadLifClient.GetResponse<GotLifFileDownload>(new DownloadLifFile(id));
         var lifFile = response.Message.LifFile;
         logger.LogInformation("Downloading LIF file {Filename}", lifFile.MetaInformation.Filename);
         return File(lifFile.RawJson!, "application/json", lifFile.MetaInformation.Filename);

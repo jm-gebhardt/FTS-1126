@@ -159,7 +159,7 @@ public class AgvEfRepositoryTest
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow);
         agv.SetOnline();
         await fixture.Add(agv);
-        ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        var agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.Single().CorrelationId.ShouldBe(agv.CorrelationId);
     }
 
@@ -169,7 +169,7 @@ public class AgvEfRepositoryTest
         var fixture = new EfAgvRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.UserMode));
         await fixture.Add(agv);
-        ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        var agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.ShouldBeEmpty();
     }
 
@@ -179,7 +179,7 @@ public class AgvEfRepositoryTest
         var fixture = new EfAgvRepositoryTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.BatteryLevelLow, mode: new AgvMode(ModeType.Maintenance));
         await fixture.Add(agv);
-        ICollection<Agv> agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        var agvs = await fixture.Repository.GetReadyAgvsWithAtLeastLowBatteryLevel();
         agvs.ShouldBeEmpty();
     }
 
@@ -190,7 +190,7 @@ public class AgvEfRepositoryTest
         var lockedAgv = AgvGenerator.GenerateChargingAgv(batteryCharge: EfAgvSettingsProvider.DefaultSettings.MinChargeUp, mode: new AgvMode(ModeType.Locked));
         await fixture.Add(lockedAgv);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetChargingAgvsWithMinBatteryLevelAsync();
+        var agvs = await fixture.Repository.GetChargingAgvsWithMinBatteryLevelAsync();
         agvs.ShouldBeEmpty();
     }
 
@@ -302,7 +302,7 @@ public class AgvEfRepositoryTest
         await fixture.AddChargingAgv(agvLowLevel);
         await fixture.AddChargingAgv(agvMinLevel);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel();
+        var agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel();
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBeEquivalentTo(agvMinLevel.CorrelationId);
@@ -319,7 +319,7 @@ public class AgvEfRepositoryTest
         await fixture.AddChargingAgv(unreachableAgv);
         await fixture.AddWithGraph(requestingAgv, new GraphNode("C-1".ToGuid(), "C-1"));
 
-        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(requestingAgv.CorrelationId);
+        var agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(requestingAgv.CorrelationId);
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBe(reachableAgv.CorrelationId);
@@ -332,7 +332,7 @@ public class AgvEfRepositoryTest
         var fixture = new EfAgvRepositoryTestFixture();
         await fixture.AddChargingAgv(chargingAgv);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(Guid.NewGuid());
+        var agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(Guid.NewGuid());
 
         agvs.ShouldBeEmpty();
     }
@@ -348,7 +348,7 @@ public class AgvEfRepositoryTest
         await fixture.AddChargingAgv(unreachableAgv);
         await fixture.AddWithGraph(requestingAgv, new GraphNode("C-1".ToGuid(), "C-1"));
 
-        ICollection<Agv> agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(0, requestingAgv.CorrelationId);
+        var agvs = await fixture.Repository.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(0, requestingAgv.CorrelationId);
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBe(reachableAgv.CorrelationId);
@@ -363,7 +363,7 @@ public class AgvEfRepositoryTest
         await fixture.Add(agvCriticalLevel);
         await fixture.AddChargingAgv(chargingAgv);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(null);
+        var agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(null);
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBe(agvCriticalLevel.CorrelationId);
@@ -379,7 +379,7 @@ public class AgvEfRepositoryTest
         await fixture.AddWithGraph(reachableAgv, chargerNode);
         await fixture.Add(unreachableAgv);
 
-        ICollection<Agv> agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(chargerNode.Id);
+        var agvs = await fixture.Repository.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(chargerNode.Id);
 
         agvs.ShouldNotBeEmpty();
         agvs.Single().CorrelationId.ShouldBe(reachableAgv.CorrelationId);

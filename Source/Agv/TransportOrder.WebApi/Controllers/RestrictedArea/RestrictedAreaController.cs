@@ -59,7 +59,7 @@ public class RestrictedAreaController : Controller
     [Route("/restrictedArea/{id:guid}")]
     public async Task<ActionResult<RestrictedAreaDto>> GetRestrictedArea([FromRoute] Guid id)
     {
-        Response<GotRestrictedArea> response = await _getRestrictedAreaClient.GetResponse<GotRestrictedArea>(new GetRestrictedArea(id));
+        var response = await _getRestrictedAreaClient.GetResponse<GotRestrictedArea>(new GetRestrictedArea(id));
         var restrictedArea = _mapper.Map<RestrictedAreaDto>(response.Message.RestrictedArea);
         return Ok(restrictedArea);
     }
@@ -75,7 +75,7 @@ public class RestrictedAreaController : Controller
     [Route("/restrictedArea")]
     public async Task<ActionResult<RestrictedAreaDto>> AddRestrictedArea([FromBody] [Required] ICollection<PolygonPointDto> area)
     {
-        Response<RestrictedAreaAdded> response = await _addRestrictedAreaClient.GetResponse<RestrictedAreaAdded>(new AddRestrictedArea(_mapper.Map<ICollection<PolygonPoint>>(area)));
+        var response = await _addRestrictedAreaClient.GetResponse<RestrictedAreaAdded>(new AddRestrictedArea(_mapper.Map<ICollection<PolygonPoint>>(area)));
         var restrictedArea = _mapper.Map<RestrictedAreaDto>(response.Message.RestrictedArea);
         await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemRestrictedAreaAdded } });
         return Ok(restrictedArea);

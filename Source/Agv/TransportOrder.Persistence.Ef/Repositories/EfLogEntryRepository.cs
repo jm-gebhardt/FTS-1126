@@ -32,7 +32,7 @@ public class EfLogEntryRepository : ILogEntryRepository
     /// <inheritdoc cref="ILogEntryRepository"/>>
     public async Task<LogEntry> AddAsync(Categories logCategory, int logCode, string logLevel, Guid? agvCorrelationId, Guid? actionGroupCorrelationId, Guid? stationId, DateTime timestamp, Dictionary<string, object?> variables)
     {
-        Dictionary<string, string> vars = variables.ToDictionary(
+        var vars = variables.ToDictionary(
             v => v.Key,
             v => v.Value?.ToString() ?? string.Empty
         );
@@ -59,7 +59,7 @@ public class EfLogEntryRepository : ILogEntryRepository
     /// <inheritdoc cref="ILogEntryRepository"/>>
     public async Task<PagedResult<LogEntry>> FilterAsync(IFilter logEntryFilter, int pageNr, int pageSize, CancellationToken cancellationToken)
     {
-        PagedResult<LogEntryFilterable> logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)], cancellationToken);
+        var logs = await _filter.Invoke(logEntryFilter, pageNr, pageSize, SortDirection.Desc, [nameof(LogEntry.Timestamp)], cancellationToken);
         return _mapper.Map<PagedResult<LogEntryFilterable>, PagedResult<LogEntry>>(logs);
     }
 

@@ -16,7 +16,7 @@ public static class ExportedStationExtension
     /// <returns></returns>
     public static GraphNode ToGraphNode(this ExportedStation station)
     {
-        ICollection<AgvGraph.NodeType> types = GetNodeTypes(station.Function);
+        var types = GetNodeTypes(station.Function);
         return new GraphNode(station.Identifier.ToGuid(), station.Identifier, station.Position.X, station.Position.Y, 0f, types, null, null, null)
         {
             Theta = station.Position.Theta,

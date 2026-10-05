@@ -19,7 +19,7 @@ public class EfAgvDataRepository(IDbContextFactory<DeviceCommunicationVda5050DbC
     public async Task AddOrUpdateAsync(AgvData agvData)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        DbSet<AgvData> dbSet = context.Set<AgvData>();
+        var dbSet = context.Set<AgvData>();
 
         if (dbSet.Any(a => a.AgvCorrelationId == agvData.AgvCorrelationId))
         {

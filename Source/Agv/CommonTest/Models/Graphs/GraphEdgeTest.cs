@@ -15,7 +15,7 @@ public class GraphEdgeTest
         var source = NodeGenerator.GenerateNode(nodeName: "source");
         var target = NodeGenerator.GenerateNode(nodeName: "target");
         var edge = GraphEdge.CreateDirect(source.Id, target.Id);
-        (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(source, target);
+        var (sections, virtualNodes) = edge.GetSections(source, target);
         virtualNodes.ShouldBeEmpty();
         sections.ShouldBeEmpty();
     }
@@ -32,7 +32,7 @@ public class GraphEdgeTest
             new(1, 1)
         });
         var edge = GraphEdge.CreateBezier2(source.Id, target.Id, (float) bezier.GetLength(100), 1, 0);
-        (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(source, target);
+        var (sections, virtualNodes) = edge.GetSections(source, target);
         virtualNodes.ShouldBeEmpty();
         sections.ShouldBeEmpty();
     }
@@ -45,7 +45,7 @@ public class GraphEdgeTest
         var target = NodeGenerator.GenerateNode(nodeName: "target", x: 1, y: 1, z: 0);
 
         var edge = AgvGraphGenerator.CreateSlantedEdge(source.Name, target.Name, west, 1.0, [source, target]);
-        (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(source, target);
+        var (sections, virtualNodes) = edge.GetSections(source, target);
         sections.Count.ShouldBe(3);
         sections.All(s => s.Variant == EdgeType.Direct).ShouldBeTrue();
         sections.Single(s => s.FromNodeId == source.Id).Length.ShouldBe(1);
@@ -68,7 +68,7 @@ public class GraphEdgeTest
                 new EdgeCoefficient(0, 1)
             ],
             [source, target]);
-        (List<GraphEdge> sections, List<GraphNode> virtualNodes) = edge.GetSections(source, target);
+        var (sections, virtualNodes) = edge.GetSections(source, target);
         sections.Count.ShouldBe(2);
         sections.All(s => s.Variant == EdgeType.Direct).ShouldBeTrue();
         sections.Single(s => s.FromNodeId == source.Id).Length.ShouldBe(1);
@@ -92,7 +92,7 @@ public class GraphEdgeTest
             new(3, 3),
             new(4, 4)
         };
-        EdgeCoefficient[] edgeCoefficients = controlPoints.Skip(1).Take(4).Select(p => new EdgeCoefficient(p.X, p.Y)).ToArray();
+        var edgeCoefficients = controlPoints.Skip(1).Take(4).Select(p => new EdgeCoefficient(p.X, p.Y)).ToArray();
         var edgeId = Guid.NewGuid();
         var bezier = new Bezier(controlPoints);
         float edgeLength = (float) bezier.GetLength(100);
@@ -108,7 +108,7 @@ public class GraphEdgeTest
     [TestMethod]
     public void CreateBezier5_Not4ControlPoints_ThrowsException()
     {
-        EdgeCoefficient[] edgeCoefficients = Enumerable.Range(0, 2).Select(_ => new EdgeCoefficient(1, 1)).ToArray();
+        var edgeCoefficients = Enumerable.Range(0, 2).Select(_ => new EdgeCoefficient(1, 1)).ToArray();
         Should.Throw<Exception>(() => GraphEdge.CreateBezier5("source".ToGuid(), "target".ToGuid(), 12.0f, edgeCoefficients, Guid.NewGuid()));
     }
 
@@ -123,7 +123,7 @@ public class GraphEdgeTest
             new(1, 0),
             new(4, 4)
         };
-        List<EdgeCoefficient> edgeCoefficients = controlPoints.Skip(1).Take(1).Select(p => new EdgeCoefficient(p.X, p.Y)).ToList();
+        var edgeCoefficients = controlPoints.Skip(1).Take(1).Select(p => new EdgeCoefficient(p.X, p.Y)).ToList();
         var edgeId = Guid.NewGuid();
         var bezier = new Bezier(controlPoints);
         float edgeLength = (float) bezier.GetLength(100);
@@ -148,7 +148,7 @@ public class GraphEdgeTest
             new(2, 2),
             new(4, 4)
         };
-        List<EdgeCoefficient> edgeCoefficients = controlPoints.Skip(1).Take(2).Select(p => new EdgeCoefficient(p.X, p.Y)).ToList();
+        var edgeCoefficients = controlPoints.Skip(1).Take(2).Select(p => new EdgeCoefficient(p.X, p.Y)).ToList();
         var edgeId = Guid.NewGuid();
         var bezier = new Bezier(controlPoints);
         float edgeLength = (float) bezier.GetLength(100);

@@ -92,11 +92,11 @@ internal static class FilterExpressionBuilder
     /// <typeparam name="TProperty">The type of the property.</typeparam>
     public static Expression<Func<TInstance?, TProperty?>> CreateCoalescingStructAccessor<TInstance, TProperty>(string propertyName) where TInstance : struct where TProperty : struct
     {
-        Expression<Func<TInstance?, bool>> nullCheck = CreatePropertyAccess<TInstance?, bool>(nameof(Nullable<>.HasValue));
-        Expression<Func<TInstance?, TInstance>> valueAccess = CreatePropertyAccess<TInstance?, TInstance>(nameof(Nullable<>.Value));
-        Expression<Func<TInstance, TProperty?>> propAccess = CreatePropertyAccessWithCast<TInstance, TProperty?>(propertyName);
+        var nullCheck = CreatePropertyAccess<TInstance?, bool>(nameof(Nullable<>.HasValue));
+        var valueAccess = CreatePropertyAccess<TInstance?, TInstance>(nameof(Nullable<>.Value));
+        var propAccess = CreatePropertyAccessWithCast<TInstance, TProperty?>(propertyName);
 
-        Expression<Func<TInstance?, TProperty?>> composed = ExpressionHelper.Compose(valueAccess, propAccess);
+        var composed = ExpressionHelper.Compose(valueAccess, propAccess);
 
         var param = nullCheck.Parameters.First();
 
@@ -137,8 +137,8 @@ internal static class FilterExpressionBuilder
             return Expression.Lambda<Func<TInstance, int>>(compareBody, otherParam);
         }
 
-        Expression<Func<TProperty, int>> compareCall = Expression.Lambda<Func<TProperty, int>>(compareBody, otherParam);
-        Expression<Func<TInstance, TProperty>> propAccess = accessor ?? CreatePropertyAccess<TInstance, TProperty>(propertyName);
+        var compareCall = Expression.Lambda<Func<TProperty, int>>(compareBody, otherParam);
+        var propAccess = accessor ?? CreatePropertyAccess<TInstance, TProperty>(propertyName);
 
         return ExpressionHelper.Compose(propAccess, compareCall);
     }
@@ -203,7 +203,7 @@ internal static class FilterExpressionBuilder
     /// <param name="parameterName">The name of the property on the instance.</param>
     public static Expression<Func<TInstance, bool>> CreateIsOneOfPredicate<TInstance, TProperty>(ICollection<TProperty> collection, string parameterName)
     {
-        Expression<Func<TInstance, TProperty>> accessor = CreatePropertyAccess<TInstance, TProperty>(parameterName);
+        var accessor = CreatePropertyAccess<TInstance, TProperty>(parameterName);
 
         var param = Expression.Parameter(typeof(TProperty), typeof(TProperty).PrettyParameterName());
 
@@ -213,7 +213,7 @@ internal static class FilterExpressionBuilder
 
         var call = Expression.Call(collectionConst, methodInfo, param);
 
-        Expression<Func<TProperty, bool>> lambda = Expression.Lambda<Func<TProperty, bool>>(call, param);
+        var lambda = Expression.Lambda<Func<TProperty, bool>>(call, param);
 
         return ExpressionHelper.Compose(accessor, lambda);
     }
@@ -241,7 +241,7 @@ internal static class FilterExpressionBuilder
             _ => throw new FilterExecutionException($"Unknown operation type in this context: {variant.ToString()}")
         };
 
-        Expression<Func<int, bool>> result = Expression.Lambda<Func<int, bool>>(comparison, param);
+        var result = Expression.Lambda<Func<int, bool>>(comparison, param);
 
         return ExpressionHelper.Compose(compareExpression, result);
     }
@@ -273,7 +273,7 @@ internal static class FilterExpressionBuilder
     /// <param name="accessor">Optional accessor of the string property.</param>
     public static Expression<Func<T, bool>> GenerateContainsPredicate<T>(string other, string propertyName, Expression<Func<T, string>>? accessor = null) where T : class
     {
-        Expression<Func<T, string>> propertyAccess = accessor ?? CreatePropertyAccess<T, string>(propertyName);
+        var propertyAccess = accessor ?? CreatePropertyAccess<T, string>(propertyName);
 
         var otherConstant = Expression.Constant(other, typeof(string));
 
@@ -288,7 +288,7 @@ internal static class FilterExpressionBuilder
 
         var compareBody = Expression.Call(param, containsMethod, otherConstant);
 
-        Expression<Func<string, bool>> compareLambda = Expression.Lambda<Func<string, bool>>(compareBody, param);
+        var compareLambda = Expression.Lambda<Func<string, bool>>(compareBody, param);
 
         return ExpressionHelper.Compose(propertyAccess, compareLambda);
     }
@@ -348,12 +348,12 @@ internal static class FilterExpressionBuilder
 
         if (isEqualityComparison && !isComparable)
         {
-            Expression<Func<T, bool>> predicate = GenerateEqualsPredicate(other, propertyName, accessor);
+            var predicate = GenerateEqualsPredicate(other, propertyName, accessor);
 
             return variant is ComparisonVariant.Neq ? NegatePredicate(predicate) : predicate;
         }
 
-        Expression<Func<T, int>> comparison = CreateCompareToExpression(other, propertyName, accessor);
+        var comparison = CreateCompareToExpression(other, propertyName, accessor);
 
         return GenerateNumericalPredicate(comparison, variant);
     }
@@ -378,7 +378,7 @@ internal static class FilterExpressionBuilder
         
         var baseType = Nullable.GetUnderlyingType(typeof(TProperty?)) ?? typeof(TProperty);
 
-        Expression<Func<T, bool>> nullCheck = needsAccessor ? ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty?>()) : CreateNotNullCheck<T>();
+        var nullCheck = needsAccessor ? ExpressionHelper.Compose(accessor!, CreateNotNullCheck<TProperty?>()) : CreateNotNullCheck<T>();
 
         var param = nullCheck.Parameters.First();
 
@@ -412,7 +412,7 @@ internal static class FilterExpressionBuilder
             return NegatePredicate(CreateConstantTruePredicate<T>());
         }
 
-        Expression<Func<TProperty, bool>> nullCheck = CreateNotNullCheck<TProperty>();
+        var nullCheck = CreateNotNullCheck<TProperty>();
 
         if (variant is not ComparisonVariant.Neq)
         {
@@ -433,14 +433,14 @@ internal static class FilterExpressionBuilder
     /// <inheritdoc cref="GenerateNumericalPredicate{T}"/>
     public static Expression<Func<T, bool>> GenerateNumericalPredicate<T, TProperty>(TProperty other, ComparisonVariant variant, Expression<Func<T, TProperty?>> accessor) where TProperty : struct
     {
-        Expression<Func<TProperty?, bool>> nullCheck = CreateNotNullCheck<TProperty?>();
+        var nullCheck = CreateNotNullCheck<TProperty?>();
 
-        Expression<Func<T, bool>> propertyNullCheck = ExpressionHelper.Compose(accessor, nullCheck);
+        var propertyNullCheck = ExpressionHelper.Compose(accessor, nullCheck);
 
         var body = Expression.Convert(accessor.Body, typeof(TProperty));
-        Expression<Func<T, TProperty>> notnullAccessor = Expression.Lambda<Func<T, TProperty>>(body, false, accessor.Parameters.First());
+        var notnullAccessor = Expression.Lambda<Func<T, TProperty>>(body, false, accessor.Parameters.First());
 
-        Expression<Func<T, bool>> predicate = GenerateNumericalPredicate(other, "", variant, notnullAccessor);
+        var predicate = GenerateNumericalPredicate(other, "", variant, notnullAccessor);
 
         return ConnectPredicates(propertyNullCheck, predicate, LogicalCombinationVariant.And);
     }
@@ -463,7 +463,7 @@ internal static class FilterExpressionBuilder
 
         var equalsExpression = Expression.Equal(param, otherConst);
 
-        Expression<Func<TProperty, bool>> localPredicate = Expression.Lambda<Func<TProperty, bool>>(equalsExpression, false, param);
+        var localPredicate = Expression.Lambda<Func<TProperty, bool>>(equalsExpression, false, param);
 
         return ExpressionHelper.Compose(accessor, localPredicate);
     }
@@ -515,7 +515,7 @@ internal static class FilterExpressionBuilder
     {
         var param = expression.Parameters.First();
 
-        Expression<Func<TIn?, bool>> nullCheck = CreateNotNullCheck<TIn?>();
+        var nullCheck = CreateNotNullCheck<TIn?>();
 
         var constNull = Expression.Constant(null, typeof(TOut?));
 

@@ -33,16 +33,16 @@ public class MapControllerTestFixture<TRequest, TRequestHandler> : ControllerTes
 
     protected override MapController GetController()
     {
-        IRequestClient<GetBackgroundImage> getBackgroundImageRequestClient = GetRequestClient<GetBackgroundImage>();
-        IRequestClient<SetBackground> setBackgroundRequestClient = GetRequestClient<SetBackground>();
-        IRequestClient<DeleteBackground> deleteBackgroundRequestClient = GetRequestClient<DeleteBackground>();
+        var getBackgroundImageRequestClient = GetRequestClient<GetBackgroundImage>();
+        var setBackgroundRequestClient = GetRequestClient<SetBackground>();
+        var deleteBackgroundRequestClient = GetRequestClient<DeleteBackground>();
 
-        IRequestClient<GetMap> getMapRequestClient = GetRequestClient<GetMap>();
-        IRequestClient<UpdateMap> updateMapRequestClient = GetRequestClient<UpdateMap>();
-        IRequestClient<GetMapGraph> getMapGraphClient = GetRequestClient<GetMapGraph>();
-        IRequestClient<GetMapNodeStates> getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
-        IRequestClient<GetMapStations> getStationsClient = GetRequestClient<GetMapStations>();
-        IRequestClient<TrySettingNodeApproachingProperties> nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
+        var getMapRequestClient = GetRequestClient<GetMap>();
+        var updateMapRequestClient = GetRequestClient<UpdateMap>();
+        var getMapGraphClient = GetRequestClient<GetMapGraph>();
+        var getMapNodeStatesClient = GetRequestClient<GetMapNodeStates>();
+        var getStationsClient = GetRequestClient<GetMapStations>();
+        var nodeApproachingPropertiesClient = GetRequestClient<TrySettingNodeApproachingProperties>();
         var loggingService = new LoggingService(_logEntryRepository.Object, TestHarness.Bus, Mapper, _actionGroupRepository.Object);
         var controller = new MapController(Mapper,
             new Mock<ILogger<MapController>>().Object,

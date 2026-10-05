@@ -1,4 +1,3 @@
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Profiles;
@@ -13,7 +12,7 @@ public class CargoProfileTest
     public void Map_ShouldMapAllPropertiesCorrectly_WhereCargoIsMappedToCargoDto()
     {
         var agvCorrelationId = Guid.NewGuid();
-        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
+        var cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
         var mapper = MappingHelper.GetMapper(new CargoProfile());
 
         var cargoDtos = mapper.Map<List<CargoDto>>(cargos);

@@ -160,7 +160,7 @@ public class RouteService : IRouteService
                 return null; // Break if a target node is not reachable
             }
 
-            IEnumerable<Guid> prohibitedNodes = route.Nodes.Where(n => n.Id != agv.AgvStatus?.LastNodeId).Select(n => n.Id).Intersect(nodesToAvoid);
+            var prohibitedNodes = route.Nodes.Where(n => n.Id != agv.AgvStatus?.LastNodeId).Select(n => n.Id).Intersect(nodesToAvoid);
             if (prohibitedNodes.Any() && action.ActionType == ActionType.Pick) // drop actions are not time-critical and can wait for prohibited nodes to be freed again
             {
                 return null; // Break if a route to a pick passes nodes to avoid.
@@ -206,7 +206,7 @@ public class RouteService : IRouteService
 
         while (hasRouteTasks.Count != 0)
         {
-            Task<double?> finishedTask = await Task.WhenAny(hasRouteTasks);
+            var finishedTask = await Task.WhenAny(hasRouteTasks);
 
             if (finishedTask.Result != null)
             {
@@ -262,7 +262,7 @@ public class RouteService : IRouteService
     public async Task<GraphNode> GetNodeWithLowestCostsAsync(Agv agv, IList<GraphNode> availableNodes, AgvData? agvData, Guid? startNodeId = null)
     {
         IEnumerable<GraphNode> graphNodes = availableNodes.ToList();
-        List<Route> routes = await Task.WhenAll(graphNodes
+        var routes = await Task.WhenAll(graphNodes
                 .Select(n => GetRouteIfExistingAsync(agv, n.Id, agvData: agvData, startNodeId: startNodeId)))
             .ContinueWith(x => x.Result.Where(route => route != null)
                 .Cast<Route>().ToList(), TaskContinuationOptions.NotOnFaulted);
@@ -301,9 +301,9 @@ public class RouteService : IRouteService
             return (null, null);
         }
 
-        ICollection<Guid> queueNodes = await _queueRepository.GetBlockedQueueNodes();
+        var queueNodes = await _queueRepository.GetBlockedQueueNodes();
 
-        List<(Guid CorrelationId, Route? Route)> routes = routesWithIds.Where(r =>
+        var routes = routesWithIds.Where(r =>
             r.Route != null &&
             (queueNodes.Contains(r.Route.Nodes.First().Id) || !r.Route.Nodes.Select(n => n.Id).Intersect(queueNodes).Any())).ToList();
 

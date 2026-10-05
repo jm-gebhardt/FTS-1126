@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.TransportOrder.Domain.Validators;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using AgvAction = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.AgvAction;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Domain.Validators;
 
@@ -16,7 +15,7 @@ public class AgvActionValidatorTest
 
         var agvActionValidator = new AgvActionValidator();
 
-        TestValidationResult<AgvAction> validationResult = await agvActionValidator.TestValidateAsync(action);
+        var validationResult = await agvActionValidator.TestValidateAsync(action);
 
         validationResult.ShouldNotHaveAnyValidationErrors();
     }
@@ -29,7 +28,7 @@ public class AgvActionValidatorTest
 
         var agvActionValidator = new AgvActionValidator();
 
-        TestValidationResult<AgvAction> validationResult = await agvActionValidator.TestValidateAsync(action);
+        var validationResult = await agvActionValidator.TestValidateAsync(action);
 
         validationResult.ShouldHaveValidationErrorFor(x => x.State).WithErrorMessage("Action state must be created, but was Canceled");
     }

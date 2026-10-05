@@ -19,7 +19,7 @@ public class StationControllerTests
             MapId = map.CorrelationId
         };
 
-        StationControllerTestFixture<GetStation, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<GetStation, StationsRequestHandler>()
                 .WithMap(map)
                 .WithStation(station)
@@ -43,7 +43,7 @@ public class StationControllerTests
     {
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
 
-        StationControllerTestFixture<TryLockStation, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<TryLockStation, StationsRequestHandler>()
                 .WithStation(station)
                 .WithUser(null, "user")
@@ -63,7 +63,7 @@ public class StationControllerTests
     {
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
         station.Lock("user", "reason", "description", LockedOrderHandlingType.AllowFinish);
-        StationControllerTestFixture<TryUnlockStation, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<TryUnlockStation, StationsRequestHandler>()
                 .WithStation(station)
                 .WithActionGroups(new List<TransportOrder.Domain.Models.ActionGroup.ActionGroup>())
@@ -83,7 +83,7 @@ public class StationControllerTests
     {
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
 
-        StationControllerTestFixture<UnblockStation, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<UnblockStation, StationsRequestHandler>()
                 .WithStation(station)
                 .Build();
@@ -101,7 +101,7 @@ public class StationControllerTests
         var infos = new Dictionary<string, object?> { { "HasJamState", true } };
 
         station.UpdateAdditionalInfo(infos);
-        StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler>()
                 .WithStation(station)
                 .Build();
@@ -120,7 +120,7 @@ public class StationControllerTests
 
         station.UpdateAdditionalInfo(infos);
 
-        StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler>()
                 .WithStation(station)
                 .Build();
@@ -136,7 +136,7 @@ public class StationControllerTests
     {
         var station = new TransportOrder.Domain.Models.Station.Station("PickDropStation", AgvGraph.NodeType.PickDrop, []);
 
-        StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler> fixture =
+        var fixture =
             new StationControllerTestFixture<SendJamStateRequest, StationsRequestHandler>()
                 .WithStation(station)
                 .Build();

@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Shouldly;
 
@@ -13,11 +12,11 @@ public class EfAgvDataRepositoryTest
     {
         var fixture = new AgvDataRepositoryTestFixture();
 
-        List<AgvData> specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        var specifications = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         await fixture.AddRangeAsync(specifications);
 
-        List<Guid> correlationIds = specifications.Take(2).Select(s => s.AgvCorrelationId).ToList();
-        ICollection<AgvData> selectedAgvData = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
+        var correlationIds = specifications.Take(2).Select(s => s.AgvCorrelationId).ToList();
+        var selectedAgvData = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
         selectedAgvData.ShouldNotBeNull();
         selectedAgvData.Count.ShouldBe(correlationIds.Count);
         foreach (var actualData in selectedAgvData)
@@ -31,12 +30,12 @@ public class EfAgvDataRepositoryTest
     {
         var fixture = new AgvDataRepositoryTestFixture();
 
-        List<AgvData> knownData = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
+        var knownData = Enumerable.Range(0, 4).Select(_ => AgvDataGenerator.GenerateAgvData()).ToList();
         await fixture.AddRangeAsync(knownData);
 
-        List<Guid> correlationIds = knownData.Select(s => s.AgvCorrelationId).ToList();
+        var correlationIds = knownData.Select(s => s.AgvCorrelationId).ToList();
         correlationIds.Add("Unknown".ToGuid());
-        ICollection<AgvData> actualDataOfAgvs = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
+        var actualDataOfAgvs = await fixture.Repository.GetSelectedAgvDataAsync(correlationIds);
         actualDataOfAgvs.ShouldNotBeNull();
         actualDataOfAgvs.Count.ShouldBe(knownData.Count);
         foreach (var actualAgvData in actualDataOfAgvs)

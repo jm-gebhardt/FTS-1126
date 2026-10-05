@@ -14,10 +14,10 @@ public class PlcConnectionRepositoryTest
             .WithStation(Ps02, FromWe, AplWe)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> result1 = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
+        var result1 = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
         result1.ShouldBeEmpty();
 
-        List<(Guid stationId, bool isOnline)> result2 = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
+        var result2 = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
         result2.ShouldContain((Ps01Guid, true));
         result2.ShouldContain((Ps02Guid, true));
     }
@@ -33,7 +33,7 @@ public class PlcConnectionRepositoryTest
         _ = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
         _ = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(FromWe, false).ToList();
+        var result = fixture.Repository.UpdateChannelState(FromWe, false).ToList();
 
         result.ShouldContain((Ps01Guid, false));
         result.ShouldContain((Ps02Guid, false));
@@ -50,7 +50,7 @@ public class PlcConnectionRepositoryTest
         _ = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
         _ = fixture.Repository.UpdateChannelState(FromWe, false).ToList();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(AplWe, false).ToList();
+        var result = fixture.Repository.UpdateChannelState(AplWe, false).ToList();
 
         result.ShouldBeEmpty();
     }
@@ -67,7 +67,7 @@ public class PlcConnectionRepositoryTest
         _ = fixture.Repository.UpdateChannelState(FromWe, false).ToList();
         _ = fixture.Repository.UpdateChannelState(AplWe, false).ToList();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
+        var result = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
 
         result.ShouldBeEmpty();
     }
@@ -86,7 +86,7 @@ public class PlcConnectionRepositoryTest
         _ = fixture.Repository.UpdateChannelState(AplWe, false).ToList();
 
         _ = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
+        var result = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
 
         result.ShouldContain((Ps01Guid, true));
         result.ShouldContain((Ps02Guid, true));
@@ -101,7 +101,7 @@ public class PlcConnectionRepositoryTest
             .WithStation(Unmonitored)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> result1 = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
+        var result1 = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
 
         result1.ShouldNotContain(r => r.stationId == unmonitoredId);
     }
@@ -116,7 +116,7 @@ public class PlcConnectionRepositoryTest
 
         _ = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
+        var result = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
         result.ShouldBeEmpty();
     }
 
@@ -127,7 +127,7 @@ public class PlcConnectionRepositoryTest
             .WithStation(Apl1, Cargo)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(Cargo, true).ToList();
+        var result = fixture.Repository.UpdateChannelState(Cargo, true).ToList();
 
         result.Count.ShouldBe(1);
         result.ShouldContain((Apl1Guid, true));
@@ -142,7 +142,7 @@ public class PlcConnectionRepositoryTest
             .WithActiveChannelKeys(FromWe)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
+        var result = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
 
         result.ShouldContain((Ps01Guid, true));
         result.ShouldContain((Ps02Guid, true));
@@ -155,7 +155,7 @@ public class PlcConnectionRepositoryTest
             .WithStation(Ps01, FromWe, AplWe)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(FromWe, false, includeUntracked: true).ToList();
+        var result = fixture.Repository.UpdateChannelState(FromWe, false, includeUntracked: true).ToList();
 
         result.Count.ShouldBe(1);
         result.ShouldContain((Ps01Guid, false));
@@ -168,8 +168,8 @@ public class PlcConnectionRepositoryTest
             .WithStation(Ps01, FromWe, AplWe)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> first = fixture.Repository.UpdateChannelState(FromWe, false, includeUntracked: true).ToList();
-        List<(Guid stationId, bool isOnline)> second = fixture.Repository.UpdateChannelState(AplWe, false, includeUntracked: true).ToList();
+        var first = fixture.Repository.UpdateChannelState(FromWe, false, includeUntracked: true).ToList();
+        var second = fixture.Repository.UpdateChannelState(AplWe, false, includeUntracked: true).ToList();
 
         first.ShouldContain((Ps01Guid, false));
         second.ShouldBeEmpty();
@@ -186,7 +186,7 @@ public class PlcConnectionRepositoryTest
         _ = fixture.Repository.UpdateChannelState(AplWe, false, includeUntracked: true).ToList();
 
         _ = fixture.Repository.UpdateChannelState(FromWe, true).ToList();
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
+        var result = fixture.Repository.UpdateChannelState(AplWe, true).ToList();
 
         result.ShouldContain((Ps01Guid, true));
     }
@@ -199,7 +199,7 @@ public class PlcConnectionRepositoryTest
             .WithActiveChannelKeys(FromWe)
             .Build();
 
-        List<(Guid stationId, bool isOnline)> result = fixture.Repository.UpdateChannelState(AplWe, false, includeUntracked: true).ToList();
+        var result = fixture.Repository.UpdateChannelState(AplWe, false, includeUntracked: true).ToList();
 
         result.ShouldBeEmpty();
     }

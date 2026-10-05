@@ -2,7 +2,6 @@ using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Housekeeping;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Housekeeping;
-using MassTransit;
 using Moq;
 using Shouldly;
 
@@ -16,7 +15,7 @@ public class HousekeepingRequestHandlerTest
     {
         var fixture = new HousekeepingRequestHandlerTestFixture<UpdateHousekeepingConfiguration>();
 
-        Response<Success> response = await fixture.GetResponseAsync<Success>(new UpdateHousekeepingConfiguration(HousekeepingEntityType.Logs, 14, HousekeepingInterval.Days, 3, HousekeepingInterval.Days, 1, 1));
+        var response = await fixture.GetResponseAsync<Success>(new UpdateHousekeepingConfiguration(HousekeepingEntityType.Logs, 14, HousekeepingInterval.Days, 3, HousekeepingInterval.Days, 1, 1));
 
         response.Message.ShouldNotBeNull();
     }

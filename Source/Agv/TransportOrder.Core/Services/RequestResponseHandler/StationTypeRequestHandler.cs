@@ -1,6 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.Stations;
 using Gebhardt.Acc.Common.Messages.Stations.Requests;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using JetBrains.Annotations;
 using MassTransit;
@@ -16,8 +15,8 @@ public class StationTypeRequestHandler(IStationRepository stationRepository) : I
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetStationTypes> context)
     {
-        ICollection<Station> stations = await stationRepository.GetStations();
-        List<StationTypeInfo> stationTypes = stations
+        var stations = await stationRepository.GetStations();
+        var stationTypes = stations
             .Select(s => new StationTypeInfo(s.Name, s.PrimaryType, s.AdditionalTypes))
             .ToList();
         await context.RespondAsync(new GotStationTypes(stationTypes));

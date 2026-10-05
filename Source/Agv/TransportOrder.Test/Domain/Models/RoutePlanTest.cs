@@ -11,7 +11,7 @@ public class RoutePlanTest
     private static RoutePlan CreatePlan(int nodeCount)
     {
         var plan = RoutePlan.FromAction(new CommonAgvAction());
-        List<Guid> nodeIds = Enumerable.Range(0, nodeCount).Select(_ => Guid.NewGuid()).ToList();
+        var nodeIds = Enumerable.Range(0, nodeCount).Select(_ => Guid.NewGuid()).ToList();
         foreach (var id in nodeIds)
         {
             plan.Nodes.Add(new RouteNode(new GraphNode(id, id.ToString()), released: false));

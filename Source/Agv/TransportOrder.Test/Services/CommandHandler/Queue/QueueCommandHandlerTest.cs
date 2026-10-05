@@ -33,12 +33,12 @@ public class QueueCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<EvacuateQueue>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
 
-        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        var queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(queue.AgvFillQuantity);
 
         foreach (var node in queue.Nodes)
         {
-            Guid? agv = node.GetCurrentAgv();
+            var agv = node.GetCurrentAgv();
             var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
             message.ShouldNotBeNull();
             message.ActionGroup.IsManual.ShouldBeFalse();
@@ -107,12 +107,12 @@ public class QueueCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<EvacuateQueue>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
 
-        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        var queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(queue.AgvFillQuantity + 1);
 
         foreach (var node in queue.Nodes)
         {
-            Guid? agv = node.GetCurrentAgv();
+            var agv = node.GetCurrentAgv();
             if (agv == null)
             {
                 continue;
@@ -175,12 +175,12 @@ public class QueueCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
 
-        ICollection<QueueActionGroup> queueActionGroupMessages = fixture.GetPublishedMessages<QueueActionGroup>();
+        var queueActionGroupMessages = fixture.GetPublishedMessages<QueueActionGroup>();
         queueActionGroupMessages.Count.ShouldBe(1);
 
         queue.Head.ShouldNotBeNull();
 
-        Guid? agv = queue.Head.GetCurrentAgv();
+        var agv = queue.Head.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
         message.ActionGroup.IsManual.ShouldBeFalse();
@@ -190,7 +190,7 @@ public class QueueCommandHandlerTest
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
 
         await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
-        ICollection<CancelOrAbortActionGroup> cancelOrAbortActionGroupMessages = fixture.GetPublishedMessages<CancelOrAbortActionGroup>();
+        var cancelOrAbortActionGroupMessages = fixture.GetPublishedMessages<CancelOrAbortActionGroup>();
         cancelOrAbortActionGroupMessages.Count.ShouldBe(1);
         cancelOrAbortActionGroupMessages.Single().CorrelationId.ShouldBe(moveToCenter.CorrelationId);
     }
@@ -264,12 +264,12 @@ public class QueueCommandHandlerTest
         await fixture.ShouldHaveConsumedAsync<EvacuateQueueHead>();
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
 
-        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        var queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(1);
 
         queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv().ShouldNotBeNull();
 
-        Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
+        var agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
         message.ActionGroup.IsManual.ShouldBeFalse();
@@ -288,7 +288,7 @@ public class QueueCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
         var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
-        Guid? agv = queue.Head?.GetCurrentAgv();
+        var agv = queue.Head?.GetCurrentAgv();
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
 
@@ -343,12 +343,12 @@ public class QueueCommandHandlerTest
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
         await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
 
-        ICollection<QueueActionGroup> queueActionGroupMessages = fixture.GetPublishedMessages<QueueActionGroup>();
+        var queueActionGroupMessages = fixture.GetPublishedMessages<QueueActionGroup>();
         queueActionGroupMessages.Count.ShouldBe(1);
 
         queue.Head.ShouldNotBeNull();
 
-        Guid? agv = queue.Head.GetCurrentAgv();
+        var agv = queue.Head.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
         message.ActionGroup.IsManual.ShouldBeFalse();
@@ -358,7 +358,7 @@ public class QueueCommandHandlerTest
         message.ActionGroup.Actions.Single(a => a.ActionType == ActionType.Move).Target.Node!.Id.ShouldBe(command.EvacuationTargetId);
 
         await fixture.ShouldHavePublishedAsync<CancelOrAbortActionGroup>();
-        ICollection<CancelOrAbortActionGroup> cancelOrAbortActionGroupMessages = fixture.GetPublishedMessages<CancelOrAbortActionGroup>();
+        var cancelOrAbortActionGroupMessages = fixture.GetPublishedMessages<CancelOrAbortActionGroup>();
         cancelOrAbortActionGroupMessages.Count.ShouldBe(1);
         cancelOrAbortActionGroupMessages.Single().CorrelationId.ShouldBe(moveToCenter.CorrelationId);
         await fixture.ShouldHavePublishedAsync<TryAssignDelayedOrderToAgv>();
@@ -488,12 +488,12 @@ public class QueueCommandHandlerTest
         var command = new EvacuateOrAssignQueueHead(queue.Name, queue.EntryNode!.Value, Guid.NewGuid(), "APL1");
         await fixture.PublishMessageAsync<EvacuateOrAssignQueueHead, string>(command);
 
-        List<QueueActionGroup> queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
+        var queueActionGroupMessages = fixture.TestHarness.Published.Select<QueueActionGroup>().Select(m => m.Context.Message).ToList();
         queueActionGroupMessages.Count.ShouldBe(1);
 
         queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv().ShouldNotBeNull();
 
-        Guid? agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
+        var agv = queue.Nodes.MinBy(n => n.Position)?.GetCurrentAgv();
         var message = queueActionGroupMessages.SingleOrDefault(m => m.ActionGroup.AssignedAgv == agv);
         message.ShouldNotBeNull();
         message.ActionGroup.IsManual.ShouldBeFalse();
@@ -565,7 +565,7 @@ public class QueueCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
         var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
-        Guid? agv = queue.Head?.GetCurrentAgv();
+        var agv = queue.Head?.GetCurrentAgv();
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
 
@@ -590,7 +590,7 @@ public class QueueCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
         var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
-        Guid? agv = queue.Head?.GetCurrentAgv();
+        var agv = queue.Head?.GetCurrentAgv();
         string queueEntryNodeName = queue.Nodes.Single(n => n.NodeId == queue.EntryNode).Node!.Name;
         var queueActionGroup = AgvActionGenerator.GenerateMoveActionGroup(targetNodeId: queueEntryNodeName, assignedAgv: agv);
 
@@ -615,7 +615,7 @@ public class QueueCommandHandlerTest
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(dropActionState: ActionState.Started);
         var triggeringAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         triggeringAction.Nodes = ["a start".ToGraphNode(), new GraphNode(queue.Nodes.First().NodeId, "queue node"), "target".ToGraphNode()];
-        Guid? agv = queue.Head?.GetCurrentAgv();
+        var agv = queue.Head?.GetCurrentAgv();
         var previousActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv, destination: "APL1");
 
         var fixture = new QueueCommandHandlerTestFixture(orderToAssign: Guid.NewGuid())

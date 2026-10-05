@@ -17,7 +17,7 @@ internal static class RouteStepExtensions
     public static CommonRouteStep ToMessage(this RouteStep routeStep)
     {
         var routingEdge = routeStep.RoutingEdge;
-        Guid? edgeId = (routingEdge.Parent as Edge)?.Id;
+        var edgeId = (routingEdge.Parent as Edge)?.Id;
 
         return new CommonRouteStep(
             routeStep.RouteStepId,

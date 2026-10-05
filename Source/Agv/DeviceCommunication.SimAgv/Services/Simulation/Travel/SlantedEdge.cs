@@ -15,7 +15,7 @@ public class SlantedEdge : BaseEdge
     public SlantedEdge(GraphEdge edge, GraphNode sourceNode, GraphNode targetNode, bool agvGoesBackwards = false) : base(edge, sourceNode, targetNode)
     {
         var timeStamp = new List<DateTime> { sourceNode.TimeStamp, targetNode.TimeStamp }.Max();
-        (List<GraphEdge> sections, List<GraphNode> nodes) = edge.GetSections(sourceNode, targetNode);
+        var (sections, nodes) = edge.GetSections(sourceNode, targetNode);
         nodes.AddRange([sourceNode, targetNode]);
         foreach (var section in sections)
         {

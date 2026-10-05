@@ -32,7 +32,7 @@ public class StationsControllerTestFixture<TRequest, TRequestHandler> : Controll
 
     protected override StationsController GetController()
     {
-        IRequestClient<GetStations> getStationRequestClient = GetRequestClient<GetStations>();
+        var getStationRequestClient = GetRequestClient<GetStations>();
         var controller = new StationsController(Mapper, getStationRequestClient);
         return controller;
     }

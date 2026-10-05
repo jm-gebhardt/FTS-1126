@@ -13,7 +13,7 @@ public class EfAgvErrorRepository(StatisticsDbContext context) : HeatmapReposito
     /// <inheritdoc cref="IAgvErrorRepository"/>
     public async Task<ScalarHeatmap> GetErrorOccurence(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[] agvSerialNumbers, ErrorLevel errorLevel, string? errorCode)
     {
-        IQueryable<AgvError> query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers)
+        var query = BuildBaseQuery(gridId, mapId, fromDate, toDate, agvSerialNumbers)
             .Where(e => e.ErrorLevel == errorLevel)
             .WhereIf(e => e.ErrorCode == errorCode, errorCode != null);
 

@@ -31,7 +31,7 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
     /// <inheritdoc />
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        IRequestClient<GetNotificationTypesQuery> getNotificationTypesClient = clientFactory.CreateRequestClient<GetNotificationTypesQuery>();
+        var getNotificationTypesClient = clientFactory.CreateRequestClient<GetNotificationTypesQuery>();
         Response<GetNotificationTypesQueryResult>? getNotificationsResult = null;
 
         while (getNotificationsResult == null && Retries < configuration.MaximumConnectionRetries)
@@ -54,18 +54,18 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
             return;
         }
 
-        List<NotificationType> registeredNotifications = getNotificationsResult.Message.NotificationTypes.Where(nt => nt.Application == NotificationType.PlatformModule).Select(NotificationType.FromDto).ToList();
-        List<NotificationType> unregisteredNotifications = configuration.NotificationTypes.Except(registeredNotifications).ToList();
+        var registeredNotifications = getNotificationsResult.Message.NotificationTypes.Where(nt => nt.Application == NotificationType.PlatformModule).Select(NotificationType.FromDto).ToList();
+        var unregisteredNotifications = configuration.NotificationTypes.Except(registeredNotifications).ToList();
 
         foreach (var registeredNotification in registeredNotifications)
         {
             _managedNotifications.TryAdd(registeredNotification, true);
         }
-        IRequestClient<RegisterNotificationTypeCommand> registrationClient = clientFactory.CreateRequestClient<RegisterNotificationTypeCommand>();
+        var registrationClient = clientFactory.CreateRequestClient<RegisterNotificationTypeCommand>();
 
-        IEnumerable<Task<Response<Result>>> tasks = unregisteredNotifications.Select(n => registrationClient.GetResponse<Result>(new RegisterNotificationTypeCommand(n.Name, [n.Name], NotificationType.PlatformModule), cancellationToken));
+        var tasks = unregisteredNotifications.Select(n => registrationClient.GetResponse<Result>(new RegisterNotificationTypeCommand(n.Name, [n.Name], NotificationType.PlatformModule), cancellationToken));
 
-        Response<Result>[] results = await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks);
         IEnumerable<(NotificationType notificationType, bool isRegistered)> zippedResults = unregisteredNotifications.Zip(results.Select(r => r.Message.IsSuccess));
 
         foreach ((var notificationType, bool isRegistered) in zippedResults)
@@ -90,7 +90,7 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
             return;
         }
 
-        if (!_unregisteredNotificationQueues.TryGetValue(notification.Type, out ConcurrentQueue<Models.Notification>? notifications))
+        if (!_unregisteredNotificationQueues.TryGetValue(notification.Type, out var notifications))
         {
             notifications ??= new ConcurrentQueue<Models.Notification>();
             _unregisteredNotificationQueues.TryAdd(notification.Type, notifications);
@@ -116,14 +116,14 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
             return;
         }
 
-        IRequestClient<RegisterNotificationTypeCommand> client = clientFactory.CreateRequestClient<RegisterNotificationTypeCommand>();
+        var client = clientFactory.CreateRequestClient<RegisterNotificationTypeCommand>();
 
         if (IsRegistered(notificationType))
         {
             return;
         }
 
-        Response<Result> response = await client.GetResponse<Result>(new RegisterNotificationTypeCommand(notificationType.Name, [notificationType.Name], NotificationType.PlatformModule));
+        var response = await client.GetResponse<Result>(new RegisterNotificationTypeCommand(notificationType.Name, [notificationType.Name], NotificationType.PlatformModule));
 
         bool isRegistered = response.Message.IsSuccess;
 
@@ -144,9 +144,9 @@ public class NotificationManager(IClientFactory clientFactory, IBus bus, ILogger
 
     private async Task SendQueuedNotifications(NotificationType notificationType)
     {
-        if (_unregisteredNotificationQueues.TryRemove(notificationType, out ConcurrentQueue<Models.Notification>? notifications))
+        if (_unregisteredNotificationQueues.TryRemove(notificationType, out var notifications))
         {
-            IEnumerable<Task> tasks = notifications.Select(n => bus.Publish(new RaiseNotificationCommand(n.ToDto())));
+            var tasks = notifications.Select(n => bus.Publish(new RaiseNotificationCommand(n.ToDto())));
 
             await Task.WhenAll(tasks);
         }

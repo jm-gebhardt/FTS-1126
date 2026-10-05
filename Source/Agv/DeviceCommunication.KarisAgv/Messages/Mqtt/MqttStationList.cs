@@ -224,7 +224,7 @@ public class JsonFunctionConverter : JsonConverter<object>
                 break;
 
             case List<Function> functionList:
-                List<string> functions = functionList.Select(f => f.ToString()).ToList();
+                var functions = functionList.Select(f => f.ToString()).ToList();
                 JsonSerializer.Serialize(writer, functions, options);
                 break;
 

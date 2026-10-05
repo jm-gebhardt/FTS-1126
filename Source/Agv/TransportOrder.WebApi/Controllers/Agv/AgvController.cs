@@ -187,7 +187,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}")]
     public async Task<ActionResult<AgvDto>> GetAgv(Guid correlationId)
     {
-        Response<GotAgv> response = await _getAgvClient.GetResponse<GotAgv>(new GetAgv(correlationId));
+        var response = await _getAgvClient.GetResponse<GotAgv>(new GetAgv(correlationId));
         var agv = _mapper.Map<AgvDto>(response.Message.Agv);
         return Ok(agv);
     }
@@ -203,7 +203,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/graph")]
     public async Task<ActionResult<GraphDto>> GetAgvGraph(Guid correlationId)
     {
-        Response<GotAgvGraph> response = await _getAgvGraphClient.GetResponse<GotAgvGraph>(new GetAgvGraph(correlationId));
+        var response = await _getAgvGraphClient.GetResponse<GotAgvGraph>(new GetAgvGraph(correlationId));
         var graph = _mapper.Map<GraphDto>(response.Message.AgvGraph);
         return Ok(graph);
     }
@@ -219,7 +219,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/data")]
     public async Task<ActionResult<AgvDataDto>> GetAgvData(Guid correlationId)
     {
-        Response<GotAgvData> response = await _getAgvDataClient.GetResponse<GotAgvData>(new GetAgvData(correlationId));
+        var response = await _getAgvDataClient.GetResponse<GotAgvData>(new GetAgvData(correlationId));
         var agvData = _mapper.Map<AgvDataDto>(response.Message.AgvData);
         return Ok(agvData);
     }
@@ -234,7 +234,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/battery")]
     public async Task<ActionResult<AgvBatteryStatusDto>> GetAgvBattery(Guid correlationId)
     {
-        Response<GotAgvBattery> response = await _getAgvBatteryClient.GetResponse<GotAgvBattery>(new GetAgvBattery(correlationId));
+        var response = await _getAgvBatteryClient.GetResponse<GotAgvBattery>(new GetAgvBattery(correlationId));
         var agvBattery = _mapper.Map<AgvBatteryStatusDto>((response.Message.AgvBatteryStatus, response.Message.AgvSettings));
         return Ok(agvBattery);
     }
@@ -250,7 +250,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/settings")]
     public async Task<ActionResult<AgvSettingsResponseDto>> GetAgvSettings(Guid correlationId)
     {
-        Response<GotAgvSettings> response = await _getAgvSettingsClient.GetResponse<GotAgvSettings>(new GetAgvSettings(correlationId));
+        var response = await _getAgvSettingsClient.GetResponse<GotAgvSettings>(new GetAgvSettings(correlationId));
         var dto = _mapper.Map<AgvSettingsResponseDto>(response.Message.AgvSettings);
         return Ok(dto);
     }
@@ -331,7 +331,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/currentRoute")]
     public async Task<ActionResult<CurrentRouteDto?>> GetAgvRoute(Guid correlationId)
     {
-        Response<GotCurrentAgvRoute> response = await _getCurrentAgvRouteClient.GetResponse<GotCurrentAgvRoute>(new GetCurrentAgvRoute(correlationId));
+        var response = await _getCurrentAgvRouteClient.GetResponse<GotCurrentAgvRoute>(new GetCurrentAgvRoute(correlationId));
         var dto = _mapper.Map<CurrentRouteDto>(response.Message.AgvRoute);
         return Ok(dto);
     }
@@ -352,7 +352,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/route")]
     public async Task<ActionResult<RouteDto>> GetAgvRoute(Guid correlationId, [Required] string destinationNodeId, string? startNodeId = null)
     {
-        Response<GotRoute> response = await _getRouteClient.GetResponse<GotRoute>(new GetRoute(correlationId, destinationNodeId.ToGuid(), startNodeId?.ToGuid()));
+        var response = await _getRouteClient.GetResponse<GotRoute>(new GetRoute(correlationId, destinationNodeId.ToGuid(), startNodeId?.ToGuid()));
         var dto = _mapper.Map<RouteDto>(response.Message.Route);
         return Ok(dto);
     }
@@ -367,7 +367,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/position")]
     public async Task<ActionResult<AgvPositionStatusDto>> GetAgvPosition(Guid correlationId)
     {
-        Response<GotAgvPosition> response = await _getAgvPositionClient.GetResponse<GotAgvPosition>(new GetAgvPosition(correlationId));
+        var response = await _getAgvPositionClient.GetResponse<GotAgvPosition>(new GetAgvPosition(correlationId));
 
         var positionStatus = _mapper.Map<AgvPositionStatusDto>(response.Message.AgvPositions);
         return Ok(positionStatus);
@@ -381,7 +381,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/errors")]
     public async Task<ActionResult<IEnumerable<AgvErrorDto>>> GetAgvErrors(Guid correlationId)
     {
-        Response<GotActiveAgvErrors> response = await _getAgvErrorsRequestClient.GetResponse<GotActiveAgvErrors>(new GetActiveAgvErrors(correlationId));
+        var response = await _getAgvErrorsRequestClient.GetResponse<GotActiveAgvErrors>(new GetActiveAgvErrors(correlationId));
         var errors = _mapper.Map<List<AgvErrorDto>>(response.Message.AgvErrors);
         return Ok(errors);
     }
@@ -405,7 +405,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<ResetAgvErrorsResult> response = await _resetAgvErrorsClient.GetResponse<ResetAgvErrorsResult>(new ResetAgvErrors(correlationId, errorIds ?? new Collection<Guid>(), email));
+        var response = await _resetAgvErrorsClient.GetResponse<ResetAgvErrorsResult>(new ResetAgvErrors(correlationId, errorIds ?? new Collection<Guid>(), email));
         return Ok(response.Message.Description);
     }
 
@@ -420,7 +420,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/errorHistory")]
     public async Task<ActionResult<IEnumerable<AgvErrorDto>>> GetAgvErrorHistory(Guid correlationId, DateTime? dateFrom, DateTime? dateTo)
     {
-        Response<GotAgvErrors> response = await _getAgvErrorHistoryRequestClient.GetResponse<GotAgvErrors>(new GetAgvErrors(correlationId, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
+        var response = await _getAgvErrorHistoryRequestClient.GetResponse<GotAgvErrors>(new GetAgvErrors(correlationId, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue));
         var errors = _mapper.Map<List<AgvErrorDto>>(response.Message.AgvErrors);
         return Ok(errors);
     }
@@ -441,7 +441,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<AcceptAgvSucceeded, AcceptAgvRejected, AgvNotFoundResult> response =
+        var response =
             await _acceptAgvClient.GetResponse<AcceptAgvSucceeded, AcceptAgvRejected, AgvNotFoundResult>(new AcceptAgvCommand(correlationId));
 
         if (response.Message is AcceptAgvSucceeded)
@@ -488,7 +488,7 @@ public class AgvController : Controller
             currentActionGroupPolicy,
             cancelManualActions);
 
-        Response<LockAgvResult, AgvNotFoundResult> response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(lockAgvCommand);
+        var response = await _lockAgvClient.GetResponse<LockAgvResult, AgvNotFoundResult>(lockAgvCommand);
 
         if (response.Message is AgvNotFoundResult)
         {
@@ -642,7 +642,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<AgvMoveSuccessful> response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId.ToGuid(), ActionGroupCreator.TransportOrderWebApi, email, theta));
+        var response = await _moveAgvClient.GetResponse<AgvMoveSuccessful>(new MoveAgv(correlationId, destinationNodeId.ToGuid(), ActionGroupCreator.TransportOrderWebApi, email, theta));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -669,7 +669,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<AgvMoveSuccessful> response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi, email));
+        var response = await _moveAgvToCoordinateClient.GetResponse<AgvMoveSuccessful>(new MoveAgvToCoordinate(correlationId, x, y, theta, ActionGroupCreator.TransportOrderWebApi, email));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -696,7 +696,7 @@ public class AgvController : Controller
         {
             return Unauthorized();
         }
-        Response<AgvMoveSuccessful> response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId.ToGuid(), email));
+        var response = await _chargeAgvClient.GetResponse<AgvMoveSuccessful>(new ChargeAgv(correlationId, chargerId.ToGuid(), email));
 
         return Ok(response.Message.ActionGroupCorrelationId);
     }
@@ -711,7 +711,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/setForceIdle")]
     public async Task<ActionResult> SetForceIdle(Guid correlationId)
     {
-        Response<SetAgvForceIdleResult, AgvNotFoundResult> response = await _setForceIdleClient.GetResponse<SetAgvForceIdleResult, AgvNotFoundResult>(new SetAgvForceIdle(correlationId));
+        var response = await _setForceIdleClient.GetResponse<SetAgvForceIdleResult, AgvNotFoundResult>(new SetAgvForceIdle(correlationId));
         if (response.Message is AgvNotFoundResult)
         {
             return NotFound();
@@ -731,7 +731,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/hasCargo")]
     public async Task<ActionResult<bool>> HasCargo(Guid correlationId)
     {
-        Response<GotAgvHasCargo> response = await _getAgvHasCargoClient.GetResponse<GotAgvHasCargo>(new GetAgvHasCargo(correlationId));
+        var response = await _getAgvHasCargoClient.GetResponse<GotAgvHasCargo>(new GetAgvHasCargo(correlationId));
         return Ok(response.Message.AgvHasCargo.HasCargo);
     }
 
@@ -745,7 +745,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/cargos")]
     public async Task<ActionResult<ICollection<CargoDto>>> GetCargosOfAgv(Guid correlationId)
     {
-        Response<GotCargosOfAgv> response = await _getCargosOfAgvClient.GetResponse<GotCargosOfAgv>(new GetCargosOfAgv(correlationId));
+        var response = await _getCargosOfAgvClient.GetResponse<GotCargosOfAgv>(new GetCargosOfAgv(correlationId));
         var dto = _mapper.Map<ICollection<CargoDto>>(response.Message.Cargos);
         return Ok(dto);
     }
@@ -782,7 +782,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/instantActions")]
     public async Task<ActionResult<ICollection<AgvInstantActionDefinitionDto>>> GetInstantActionDefinitions(Guid correlationId)
     {
-        Response<GotAgvInstantActionDefinitions> response = await _getInstantActionsClient.GetResponse<GotAgvInstantActionDefinitions>(new GetAgvInstantActionDefinitions(correlationId));
+        var response = await _getInstantActionsClient.GetResponse<GotAgvInstantActionDefinitions>(new GetAgvInstantActionDefinitions(correlationId));
         var instantActions = _mapper.Map<ICollection<AgvInstantActionDefinitionDto>>(response.Message.AgvInstantActionDefinitions);
         return Ok(instantActions);
     }
@@ -827,7 +827,7 @@ public class AgvController : Controller
             return Unauthorized();
         }
 
-        Response<Success, ActionNotFound> result = await _resendActionClient.GetResponse<Success, ActionNotFound>(new ResendAction(correlationId, email));
+        var result = await _resendActionClient.GetResponse<Success, ActionNotFound>(new ResendAction(correlationId, email));
         if (result.Message is ActionNotFound)
         {
             return Conflict();
@@ -931,7 +931,7 @@ public class AgvController : Controller
     [Route("/agv/{correlationId:guid}/maintenanceLog")]
     public async Task<ActionResult<ICollection<AgvMaintenanceLogDto>>> GetMaintenanceLog([FromRoute] Guid correlationId, [FromQuery] MaintenanceType? maintenanceType)
     {
-        Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv(correlationId, maintenanceType));
+        var response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv(correlationId, maintenanceType));
         return Ok(_mapper.Map<List<AgvMaintenanceLogDto>>(response.Message.MaintenanceLogs));
     }
 

@@ -109,7 +109,7 @@ public class AgvPositionReceivedConsumerTest
             .UseAgvPositionRepositoryMock()
             .Build();
 
-        Mock<IAgvPositionRepository> agvPositionRepositoryMock = fixture.AgvPositionRepositoryMock!;
+        var agvPositionRepositoryMock = fixture.AgvPositionRepositoryMock!;
 
         await fixture.TestHarness.Bus.Publish(
             new AgvPositionReceived(

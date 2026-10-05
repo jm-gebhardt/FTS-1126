@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.WebApi;
-using Gebhardt.Acc.TransportOrder.Domain.Models.InstantActionDefinition;
 using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -94,7 +93,7 @@ public class AgvsController : Controller
     [Route("/agvs")]
     public async Task<ActionResult<IEnumerable<AgvDto>>> GetAgvs()
     {
-        Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new List<Guid>()));
+        var response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new List<Guid>()));
         var agvs = _mapper.Map<List<AgvDto>>(response.Message.Agvs);
         return Ok(agvs);
         
@@ -113,7 +112,7 @@ public class AgvsController : Controller
         {
             return Ok(new List<AgvDto>());
         }
-        Response<GotAgvs> response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(correlationIds));
+        var response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(correlationIds));
         var agvs = _mapper.Map<List<AgvDto>>(response.Message.Agvs);
         return Ok(agvs);
     }
@@ -127,7 +126,7 @@ public class AgvsController : Controller
     [Route("/agvs/position")]
     public async Task<ActionResult<IEnumerable<AgvPositionStatusDto>>> GetAgvPositions([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotAgvPositions> response = await _getAgvPositionsClient.GetResponse<GotAgvPositions>(new GetAgvPositions(correlationIds));
+        var response = await _getAgvPositionsClient.GetResponse<GotAgvPositions>(new GetAgvPositions(correlationIds));
 
         var positionStatus = _mapper.Map<List<AgvPositionStatusDto>>(response.Message.AgvPositions);
         return Ok(positionStatus);
@@ -147,7 +146,7 @@ public class AgvsController : Controller
         {
             return Ok(new List<GraphDto>());
         }
-        Response<GotAgvGraphs> response = await _getAgvGraphsClient.GetResponse<GotAgvGraphs>(new GetAgvGraphs(correlationIds));
+        var response = await _getAgvGraphsClient.GetResponse<GotAgvGraphs>(new GetAgvGraphs(correlationIds));
         var graphs = _mapper.Map<List<GraphDto>>(response.Message.Graphs);
         return Ok(graphs);
     }
@@ -161,7 +160,7 @@ public class AgvsController : Controller
     [Route("/agvs/data")]
     public async Task<ActionResult<IEnumerable<AgvDataDto>>> GetAgvsData([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotAgvsData> response = await _getAgvDataClient.GetResponse<GotAgvsData>(new GetAgvsData(correlationIds));
+        var response = await _getAgvDataClient.GetResponse<GotAgvsData>(new GetAgvsData(correlationIds));
         var agvDataDtos = _mapper.Map<List<AgvDataDto>>(response.Message.AgvData);
         return Ok(agvDataDtos);
     }
@@ -180,7 +179,7 @@ public class AgvsController : Controller
         {
             return Ok(new List<AgvBatteryStatusDto>());
         }
-        Response<GotAgvsBattery> response = await _getAgvsBatteryClient.GetResponse<GotAgvsBattery>(new GetAgvsBattery(correlationIds));
+        var response = await _getAgvsBatteryClient.GetResponse<GotAgvsBattery>(new GetAgvsBattery(correlationIds));
         var agvBattery = _mapper.Map<List<AgvBatteryStatusDto>>(response.Message.AgvBatteryStatus);
         return Ok(agvBattery);
     }
@@ -198,9 +197,9 @@ public class AgvsController : Controller
         {
             return Ok(new List<CurrentRouteDto>());
         }
-        Response<GotCurrentAgvRoutes> response = await _getCurrentAgvRoutesClient.GetResponse<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(correlationIds));
+        var response = await _getCurrentAgvRoutesClient.GetResponse<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(correlationIds));
         var dto = _mapper.Map<List<CurrentRouteDto>>(response.Message.AgvRoutes);
-        List<CurrentRouteDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new CurrentRouteDto(c, [], [])).ToList();
+        var result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new CurrentRouteDto(c, [], [])).ToList();
         result.AddRange(dto ?? []);
         return Ok(result);
     }
@@ -215,9 +214,9 @@ public class AgvsController : Controller
     [Route("/agvs/errors")]
     public async Task<ActionResult<IEnumerable<AgvErrorsDto>>> GetErrorsForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotActiveErrorsForAgvs> response = await _getActiveErrorsClient.GetResponse<GotActiveErrorsForAgvs>(new GetActiveErrorsForAgvs(correlationIds));
+        var response = await _getActiveErrorsClient.GetResponse<GotActiveErrorsForAgvs>(new GetActiveErrorsForAgvs(correlationIds));
         var dto = _mapper.Map<List<AgvErrorsDto>>(response.Message.AgvsErrors);
-        List<AgvErrorsDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
+        var result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
         result.AddRange(dto);
         return Ok(result);
     }
@@ -235,9 +234,9 @@ public class AgvsController : Controller
     [Route("/agvs/errorHistory")]
     public async Task<ActionResult<IEnumerable<AgvErrorsDto>>> GetErrorHistoryForSelectedAgvs([FromQuery] ICollection<Guid> correlationIds, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken)
     {
-        Response<GotErrorHistoryForAgvs> response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue), cancellationToken);
+        var response = await _getErrorHistoryClient.GetResponse<GotErrorHistoryForAgvs>(new GetErrorHistoryForAgvs(correlationIds, dateFrom ?? DateTime.MinValue, dateTo ?? DateTime.MaxValue), cancellationToken);
         var dto = _mapper.Map<List<AgvErrorsDto>>(response.Message.AgvsErrors);
-        List<AgvErrorsDto> result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
+        var result = correlationIds.Except(dto.Select(d => d.CorrelationId)).Select(c => new AgvErrorsDto(c, [])).ToList();
         result.AddRange(dto);
         return Ok(result);
     }
@@ -252,7 +251,7 @@ public class AgvsController : Controller
     [Route("/agvs/cargos")]
     public async Task<ActionResult<IEnumerable<CargosDto>>> GetCargosOfAgvs([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotCargosOfAgvs> response = await _getCargosOfAgvsClient.GetResponse<GotCargosOfAgvs>(new GetCargosOfAgvs(correlationIds));
+        var response = await _getCargosOfAgvsClient.GetResponse<GotCargosOfAgvs>(new GetCargosOfAgvs(correlationIds));
         var dto = _mapper.Map<IEnumerable<CargosDto>>(response.Message.AgvCargosList);
         return Ok(dto);
     }
@@ -267,7 +266,7 @@ public class AgvsController : Controller
     [Route("/agvs/hasCargo")]
     public async Task<ActionResult<IEnumerable<AgvHasCargoDto>>> HasCargo([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotAgvsHasCargo> response = await _getAgvsHasCargoClient.GetResponse<GotAgvsHasCargo>(new GetAgvsHasCargo(correlationIds));
+        var response = await _getAgvsHasCargoClient.GetResponse<GotAgvsHasCargo>(new GetAgvsHasCargo(correlationIds));
         var dto = _mapper.Map<List<AgvHasCargoDto>>(response.Message.AgvsHasCargo);
         return Ok(dto);
     }
@@ -282,7 +281,7 @@ public class AgvsController : Controller
     [Route("/agvs/settings")]
     public async Task<ActionResult<IEnumerable<AgvSettingsResponseDto>>> GetAgvSettings([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotAgvsSettings> response = await _getAgvsSettingsClient.GetResponse<GotAgvsSettings>(new GetAgvsSettings(correlationIds));
+        var response = await _getAgvsSettingsClient.GetResponse<GotAgvsSettings>(new GetAgvsSettings(correlationIds));
         var dto = _mapper.Map<List<AgvSettingsResponseDto>>(response.Message.AgvSettings);
         return Ok(dto);
     }
@@ -358,9 +357,9 @@ public class AgvsController : Controller
     [Route("/agvs/instantActions")]
     public async Task<ActionResult<Dictionary<Guid, List<AgvInstantActionDefinitionDto>>>> GetInstantActionDefinitions([FromQuery] ICollection<Guid> correlationIds)
     {
-        Response<GotAgvsInstantActionDefinitions> response = await _instantActionsClient.GetResponse<GotAgvsInstantActionDefinitions>(new GetAgvsInstantActionsDefinitions(correlationIds));
+        var response = await _instantActionsClient.GetResponse<GotAgvsInstantActionDefinitions>(new GetAgvsInstantActionsDefinitions(correlationIds));
         var instantActions = new Dictionary<Guid, List<AgvInstantActionDefinitionDto>>();
-        foreach ((var agv, List<InstantActionDefinition> instantActionDefinitions) in response.Message.InstantActionDefinitions)
+        foreach (var (agv, instantActionDefinitions) in response.Message.InstantActionDefinitions)
         {
             instantActions.Add(agv, _mapper.Map<List<AgvInstantActionDefinitionDto>>(instantActionDefinitions));
         }
@@ -378,8 +377,8 @@ public class AgvsController : Controller
     [Route("/agvs/maintenanceLog")]
     public async Task<ActionResult<Dictionary<Guid, ICollection<AgvMaintenanceLogDto>>>> GetMaintenanceLog([FromQuery] ICollection<Guid> correlationIds, [FromQuery] MaintenanceType? maintenanceType)
     {
-        Response<GotMaintenanceLogs> response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgvs(correlationIds, maintenanceType));
-        Dictionary<Guid, ICollection<AgvMaintenanceLogDto>> logs = response.Message.MaintenanceLogs
+        var response = await _getMaintenanceLogsClient.GetResponse<GotMaintenanceLogs>(new GetMaintenanceLogsForAgvs(correlationIds, maintenanceType));
+        var logs = response.Message.MaintenanceLogs
             .GroupBy(log => log.AgvCorrelationId)
             .ToDictionary(
                 group => group.Key, 

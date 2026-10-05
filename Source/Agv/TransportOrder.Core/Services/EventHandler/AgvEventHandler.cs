@@ -21,7 +21,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
-using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
@@ -112,7 +111,7 @@ public class AgvEventHandler :
             }
 
             // Only start charging if we must or if there is nothing else to do
-            IReadOnlyList<ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+            var actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
             var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
             if (actionGroup != null)
             {
@@ -254,7 +253,7 @@ public class AgvEventHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvErrorStatusReceived> context)
     {
-        List<AgvError> agvErrors = context.Message.Errors;
+        var agvErrors = context.Message.Errors;
         await context.Publish(new UpdateErrorStatus(context.Message.CorrelationId, agvErrors, context.Message.AgvPosition));
     }
 
@@ -329,9 +328,9 @@ public class AgvEventHandler :
         {
             return;
         }
-        ICollection<ActionGroup> actionGroups = await _actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
+        var actionGroups = await _actionGroupRepository.GetPendingActionGroupsForAgvAsync(agvCorrelationId);
 
-        ICollection<Guid> queueHeadAgvs = await _queueManager.GetAgvsAtQueueHeads();
+        var queueHeadAgvs = await _queueManager.GetAgvsAtQueueHeads();
 
         bool needsToBeRemovedFromQueue = agv.IsQueueing || queueHeadAgvs.Contains(agv.CorrelationId);
 
@@ -410,7 +409,7 @@ public class AgvEventHandler :
         ICollection<Agv> candidatesToStopCharging = (await _agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(agv.CorrelationId)).Where(c => excludedAgv == null || c.CorrelationId != excludedAgv).ToList();
         if (candidatesToStopCharging.Count == 0)
         {
-            ICollection<Agv> agvs = await _agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(0, agv.CorrelationId);
+            var agvs = await _agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel(0, agv.CorrelationId);
             await _loggingService.LogBattery(_logger,
                 LogLevel.Warning,
                 LogCodes.BatteryNeedsChargingAllOccupied,
@@ -447,7 +446,7 @@ public class AgvEventHandler :
             return;
         }
 
-        ICollection<Agv> candidatesToStartCharging = await _agvDb.Agvs.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(agv.AgvStatus?.LastNodeId);
+        var candidatesToStartCharging = await _agvDb.Agvs.GetNotChargingAgvsWithCriticalBatteryLevelThatCanReachCharger(agv.AgvStatus?.LastNodeId);
 
         if (candidatesToStartCharging.Count == 0)
         {
@@ -498,7 +497,7 @@ public class AgvEventHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         if (agv.IsQueueing || await _queueRepository.GetQueueForAgv(agvCorrelationId) != null)
         {
-            IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+            var activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
             bool hasQueueBlockingError = activeErrors.Any(e => e.IsQueueBlockingError());
             if (!hasQueueBlockingError)
             {

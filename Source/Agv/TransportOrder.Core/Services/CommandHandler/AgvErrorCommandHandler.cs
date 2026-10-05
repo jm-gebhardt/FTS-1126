@@ -113,15 +113,15 @@ public class AgvErrorCommandHandler :
         bool changed = newErrors.Count > 0 || resolvedErrors.Count > 0;
         if (changed)
         {
-            List<AgvError> wifiInformation = newErrors.Where(e => e.IsWifiMessage()).ToList();
-            List<AgvError> newErrorsWithoutWifiInfo = newErrors.Where(e => !e.IsWifiMessage()).ToList();
+            var wifiInformation = newErrors.Where(e => e.IsWifiMessage()).ToList();
+            var newErrorsWithoutWifiInfo = newErrors.Where(e => !e.IsWifiMessage()).ToList();
             if(newErrorsWithoutWifiInfo.Count > 0 || resolvedErrors.Count > 0)
             {
                 await _agvDb.Errors.AddAndUpdateAgvErrorAsync(newErrorsWithoutWifiInfo, resolvedErrors, correlationId);
                 await LogErrors(newErrors, agv);
             }
            
-            IReadOnlyList<AgvError> allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+            var allErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
             await publishEndpoint.Publish(new AgvErrorChanged(correlationId, [..allErrors.ToList(), ..wifiInformation], newErrors, resolvedErrors));
         }
 
@@ -150,13 +150,13 @@ public class AgvErrorCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateErrorStatus> context)
     {
-        (var correlationId, List<AgvError> errors, var position) = context.Message;
+        var (correlationId, errors, position) = context.Message;
 
-        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+        var activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
 
         List<AgvError> newErrors = [];
-        List<AgvError> previousErrors = activeErrors.ToList();
-        List<AgvError> resolvedErrors = previousErrors.Where(p => !errors.Any(p.IsSameError) && p.Source != AgvErrorSource.System).ToList();
+        var previousErrors = activeErrors.ToList();
+        var resolvedErrors = previousErrors.Where(p => !errors.Any(p.IsSameError) && p.Source != AgvErrorSource.System).ToList();
 
         if (errors.Count != 0)
         {
@@ -169,7 +169,7 @@ public class AgvErrorCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AddSystemAgvErrors> context)
     {
-        (var correlationId, List<AgvError> newErrors, var position) = context.Message;
+        var (correlationId, newErrors, position) = context.Message;
 
         await HandleErrorChangesAsync(context, newErrors, [], correlationId, position);
     }
@@ -177,7 +177,7 @@ public class AgvErrorCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<UpdateSystemAgvErrors> context)
     {
-        (var correlationId, List<AgvError> errorsToAdd, List<AgvError> errorsToResolve, var position) = context.Message;
+        var (correlationId, errorsToAdd, errorsToResolve, position) = context.Message;
 
         await HandleErrorChangesAsync(context, errorsToAdd, errorsToResolve, correlationId, position);
     }
@@ -185,7 +185,7 @@ public class AgvErrorCommandHandler :
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ResolveSystemAgvError> context)
     {
-        (var correlationId, List<AgvError> errors) = context.Message;
+        var (correlationId, errors) = context.Message;
 
         await HandleErrorChangesAsync(context, [], errors, correlationId, null);
     }

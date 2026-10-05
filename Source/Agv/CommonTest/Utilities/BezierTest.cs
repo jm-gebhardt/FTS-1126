@@ -46,7 +46,7 @@ public class BezierTest
     {
         var bezier = new Bezier(new List<Vector2> { new(0, 0), new(0, 1), new(1, 1), new(1, 0) });
 
-        ICollection<Vector2> interpolation = bezier.InterpolateCurve(100);
+        var interpolation = bezier.InterpolateCurve(100);
         interpolation.Count.ShouldBe(100);
 
         // Check symmetry
@@ -112,7 +112,7 @@ public class BezierTest
         // (0,0) → (0,1) → (1,1) → (1,0) — symmetric arch
         var bezier = new Bezier(new List<Vector2> { new(0, 0), new(0, 1), new(1, 1), new(1, 0) });
 
-        (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] samples = bezier.GetSamples(5);
+        var samples = bezier.GetSamples(5);
 
         samples.Length.ShouldBe(5);
         samples[0].Point.X.ShouldBe(0f, 0.0001f);
@@ -126,7 +126,7 @@ public class BezierTest
     {
         var bezier = new Bezier(new List<Vector2> { new(0, 0), new(1, 0), new(2, 0), new(3, 0) });
 
-        (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] samples = bezier.GetSamples(10);
+        var samples = bezier.GetSamples(10);
 
         foreach (var (_, tangent, normal) in samples)
         {

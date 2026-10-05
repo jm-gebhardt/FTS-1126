@@ -31,7 +31,7 @@ public class DirectEdgePolygonProvider : EdgePolygonProviderBase
     {
         var samplePolygon = GetEdgeSamplePolygon(edge, agvType, margins, 0); //todo: get tangential orientation form graph model and assert it is constant for the whole edge
 
-        (_, _, List<Vector2> startCap, List<Vector2> endCap) = SplitPolygon(samplePolygon.Points.Select(p => p.ToVector2()).ToList());
+        var (_, _, startCap, endCap) = SplitPolygon(samplePolygon.Points.Select(p => p.ToVector2()).ToList());
 
         var from = new Vector2((float)startNode.X, (float)startNode.Y);
         var to = new Vector2((float)endNode.X, (float)endNode.Y);
@@ -56,7 +56,7 @@ public class DirectEdgePolygonProvider : EdgePolygonProviderBase
             ring.Add(Transform(endFrame, vertex));
         }
 
-        List<PolygonPoint> polygonPoints = ring.Select(p => new PolygonPoint(p.X, p.Y)).ToList();
+        var polygonPoints = ring.Select(p => new PolygonPoint(p.X, p.Y)).ToList();
 
         return new Polygon(polygonPoints);
     }

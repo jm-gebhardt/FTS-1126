@@ -19,7 +19,7 @@ public class StationProvider : IStationProvider
     /// <inheritdoc/>
     public bool StationHasAnyType(string station, params AgvGraph.NodeType[] types)
     {
-        return _stationTypes.TryGetValue(station, out ImmutableHashSet<AgvGraph.NodeType>? stationTypes) && types.Any(stationTypes.Contains);
+        return _stationTypes.TryGetValue(station, out var stationTypes) && types.Any(stationTypes.Contains);
     }
 
     /// <inheritdoc/>

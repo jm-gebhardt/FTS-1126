@@ -19,7 +19,7 @@ public class ResendCommandHandlerTest
         await fixture.PublishMessageAsync(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
 
         await fixture.ShouldHavePublishedAsync<MqttInstantActions>();
-        PublishContext<MqttInstantActions> context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
+        var context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
         context.Message.Actions.ShouldHaveSingleItem();
         context.Message.Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.RequestFactsheet);
     }
@@ -32,7 +32,7 @@ public class ResendCommandHandlerTest
 
         await fixture.PublishMessageAsync(new RequestAgvData(agv.CorrelationId, agv.SerialNumber));
 
-        PublishContext<MqttInstantActions> context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
+        var context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
         context.RoutingKey().ShouldBe(agv.GetRoutingKey(Vda5050Specifications.Subtopics.InstantActions));
     }
 

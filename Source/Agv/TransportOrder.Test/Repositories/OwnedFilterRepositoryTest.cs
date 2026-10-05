@@ -19,7 +19,7 @@ public class OwnedFilterRepositoryTest
         await fixture.AddAsync(new OwnedFilter(Guid.NewGuid(), owner, new CombinationFilterDto([], LogicalCombinationVariant.And), "A"));
         await fixture.AddAsync(new OwnedFilter(Guid.NewGuid(), owner, new CombinationFilterDto([], LogicalCombinationVariant.Or), "A"));
 
-        ICollection<OwnedFilter> result = await fixture.FilterRepository.GetResourcesForOwner(owner);
+        var result = await fixture.FilterRepository.GetResourcesForOwner(owner);
 
         result.Count.ShouldBe(2);
     }
@@ -50,7 +50,7 @@ public class OwnedFilterRepositoryTest
 
         result.ShouldBeTrue();
 
-        ICollection<OwnedFilter> updated = await fixture.FilterRepository.GetResourcesForOwner(owner);
+        var updated = await fixture.FilterRepository.GetResourcesForOwner(owner);
 
         updated.Count.ShouldBe(1);
 
@@ -83,7 +83,7 @@ public class OwnedFilterRepositoryTest
 
         result.ShouldBeTrue();
 
-        ICollection<OwnedFilter> updated = await fixture.FilterRepository.GetResourcesForOwner(owner);
+        var updated = await fixture.FilterRepository.GetResourcesForOwner(owner);
 
         updated.Count.ShouldBe(0);
     }

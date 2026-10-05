@@ -41,7 +41,7 @@ public class PosStateReq : ConveyorTelegram
         {
             return false;
         }
-        Dictionary<string, string> fields = TelegramParser.Parse(telegram);
+        var fields = TelegramParser.Parse(telegram);
         try
         {
             Pos = fields["Pos"].TrimEnd('.');

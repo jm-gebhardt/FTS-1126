@@ -104,7 +104,7 @@ public class EfGraphRepositoryTest
     [TestMethod]
     public async Task ConsolidateGraphAsync_DatabaseThrows_ReturnsFalse()
     {
-        DbContextOptions<TransportOrderDbContext> options = new DbContextOptionsBuilder<TransportOrderDbContext>()
+        var options = new DbContextOptionsBuilder<TransportOrderDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;

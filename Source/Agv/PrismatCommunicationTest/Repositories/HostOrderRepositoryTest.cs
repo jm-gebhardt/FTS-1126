@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.PrismatCommunication.Domain.Models.HostOrder;
-using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
+﻿using Gebhardt.Acc.PrismatCommunicationTest.Fixtures;
 using Gebhardt.Acc.PrismatCommunicationTest.Helper;
 using Shouldly;
 
@@ -26,7 +25,7 @@ public class HostOrderRepositoryTest
         fixture.Repository.AddRange(unfinishedOrder, anotherUnfinishedOrder, finishedOrder, unfinishedOrderForDifferentHu, orderCreatedAtRequestTime);
         await fixture.Repository.SaveAsync();
 
-        ICollection<HostOrder> hostOrders = await fixture.Repository.GetLatestUnfinishedOrdersByHu(hu, requestDate);
+        var hostOrders = await fixture.Repository.GetLatestUnfinishedOrdersByHu(hu, requestDate);
         hostOrders.Count.ShouldBe(2);
         hostOrders.Select(h => h.OrderId).ShouldBeSubsetOf([unfinishedOrder.OrderId, anotherUnfinishedOrder.OrderId]);
     }

@@ -1,6 +1,5 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Polygon;
 using Gebhardt.Acc.TransportOrder.Domain.Models.RestrictedArea;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.RestrictedArea;
@@ -26,7 +25,7 @@ public class RestrictedAreaRequestHandler(IBus bus, IRestrictedAreaRepository re
     /// </summary>
     public async Task Consume(ConsumeContext<AddRestrictedArea> context)
     {
-        ICollection<PolygonPoint> polygon = context.Message.AreaPolygon;
+        var polygon = context.Message.AreaPolygon;
 
         if (polygon.Count < 3)
         {
@@ -45,7 +44,7 @@ public class RestrictedAreaRequestHandler(IBus bus, IRestrictedAreaRepository re
     /// </summary>
     public async Task Consume(ConsumeContext<TryUpdateRestrictedArea> context)
     {
-        (var restrictedAreaId, ICollection<PolygonPoint> updatedPolygon) = context.Message;
+        var (restrictedAreaId, updatedPolygon) = context.Message;
 
         if (updatedPolygon.Count < 3)
         {
@@ -88,7 +87,7 @@ public class RestrictedAreaRequestHandler(IBus bus, IRestrictedAreaRepository re
     /// </summary>
     public async Task Consume(ConsumeContext<GetRestrictedAreas> context)
     {
-        ICollection<RestrictedArea> restrictedAreas = await restrictedAreaRepository.GetRestrictedAreas(context.Message.RestrictedAreaIds.ToArray());
+        var restrictedAreas = await restrictedAreaRepository.GetRestrictedAreas(context.Message.RestrictedAreaIds.ToArray());
 
         await context.RespondAsync(new GotRestrictedAreas(restrictedAreas));
     }

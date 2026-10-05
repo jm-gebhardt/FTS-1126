@@ -16,7 +16,7 @@ public class FastestRouteAndThresholdChooserTest
         var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        ChooseAgvActionGroupTestFixture<FastestRouteAndThresholdChooser> fixture = new ChooseAgvActionGroupTestFixture<FastestRouteAndThresholdChooser>()
+        var fixture = new ChooseAgvActionGroupTestFixture<FastestRouteAndThresholdChooser>()
             .WithNotStartedActionGroup(slowActionGroup)
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, slowActionGroup.Actions.First().Target.Node!.Name, slowActionGroup.Actions.Last().Target.Node!.Name, slowActionGroup, 10f)
@@ -38,7 +38,7 @@ public class FastestRouteAndThresholdChooserTest
         var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, createdDate: now.AddMinutes(-threshold));
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        ChooseAgvActionGroupTestFixture<FastestRouteAndThresholdChooser> fixture = new ChooseAgvActionGroupTestFixture<FastestRouteAndThresholdChooser>()
+        var fixture = new ChooseAgvActionGroupTestFixture<FastestRouteAndThresholdChooser>()
             .WithNotStartedActionGroup(slowOldActionGroup)
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, slowOldActionGroup.Actions.First().Target.Node!.Name, slowOldActionGroup.Actions.Last().Target.Node!.Name, slowOldActionGroup, 10f)

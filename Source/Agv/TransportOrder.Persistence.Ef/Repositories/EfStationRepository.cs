@@ -36,14 +36,14 @@ public class EfStationRepository(
             await using var context = await dbContextFactory.CreateDbContextAsync();
             (double maxWidth, double maxLength) stationSize = await GetLargestAgvDimensionAsync(context);
 
-            List<GraphNode> nodeStations = graph.Nodes
+            var nodeStations = graph.Nodes
                 .Where(efNode => efNode.IsStation())
                 .ToList();
 
-            List<Station> existingStations = await context.Set<Station>()
+            var existingStations = await context.Set<Station>()
                 .Where(s => nodeStations.Select(n => n.Id).Contains(s.Id))
                 .ToListAsync();
-            List<GraphNode> newNodes = nodeStations.Where(efNode => !existingStations.Select(s => s.Id).Contains(efNode.Id)).ToList();
+            var newNodes = nodeStations.Where(efNode => !existingStations.Select(s => s.Id).Contains(efNode.Id)).ToList();
 
             var map = (await context.Set<Domain.Models.Map.Map>()
                     .Include(g => g.Nodes).ToListAsync())
@@ -64,7 +64,7 @@ public class EfStationRepository(
                 context.Update(station).CurrentValues.SetValues(station);
             }
 
-            List<Station> newStations = newNodes.ToList().Select(n =>
+            var newStations = newNodes.ToList().Select(n =>
             {
                 var station = new Station(n.Name, n.GetPrimaryType(), n.GetAdditionalTypes())
                 {
@@ -83,7 +83,7 @@ public class EfStationRepository(
 
     private async Task<(double, double)> GetLargestAgvDimensionAsync(TransportOrderDbContext context)
     {
-        IQueryable<AgvData> agvData = context.Set<AgvData>().AsNoTracking();
+        var agvData = context.Set<AgvData>().AsNoTracking();
         double maxWidth = 0.0;
         double maxLength = 0.0;
         if (await agvData.AnyAsync())
@@ -205,7 +205,7 @@ public class EfStationRepository(
 
         var rows = await query.ToListAsync(cancellationToken: cancellationToken);
 
-        List<Station> stations = rows.Select(r =>
+        var stations = rows.Select(r =>
         {
             var station = r.Station;
 
@@ -226,9 +226,9 @@ public class EfStationRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        List<Guid> idsList = ids.ToList();
+        var idsList = ids.ToList();
 
-        List<Station> stations = await context.Set<Station>()
+        var stations = await context.Set<Station>()
             .Where(s => ids.Contains(s.Id))
             .ToListAsync();
 

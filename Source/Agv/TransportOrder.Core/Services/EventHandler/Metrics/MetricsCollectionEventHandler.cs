@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
@@ -121,7 +120,7 @@ public class MetricsCollectionEventHandler(IMetricCollectionService metricCollec
     /// </summary>
     public Task Consume(ConsumeContext<AgvErrorChanged> context)
     {
-        (var correlationId, _, List<AgvError> newErrors, List<AgvError> resolvedErrors) = context.Message;
+        var (correlationId, _, newErrors, resolvedErrors) = context.Message;
         metricCollectionService.CollectSafetyFieldViolationMetrics(correlationId, newErrors, resolvedErrors);
         return Task.CompletedTask;
     }

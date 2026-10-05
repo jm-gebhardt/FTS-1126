@@ -58,7 +58,7 @@ public static class QueryableExtensions
                     IsolationLevel = IsolationLevel.ReadUncommitted
                 },
                 TransactionScopeAsyncFlowOption.Enabled);
-            List<T> result = await source.ToListAsync(cancellationToken);
+            var result = await source.ToListAsync(cancellationToken);
             scope.Complete();
             return result;
         }
@@ -76,7 +76,7 @@ public static class QueryableExtensions
         {
             if (items?.Length > 0)
             {
-                Expression<Func<T, bool>> predicate = Expression.Lambda<Func<T, bool>>(
+                var predicate = Expression.Lambda<Func<T, bool>>(
                     Expression.Call(
                         typeof(Enumerable),
                         nameof(Enumerable.Contains),
@@ -105,13 +105,13 @@ public static class QueryableExtensions
             DateTime? toDate,
             Expression<Func<T, DateTime>> timestampSelector)
         {
-            IQueryable<T> query = source;
+            var query = source;
 
             if (fromDate is { } fd && fd > DateTime.MinValue)
             {
                 var param = timestampSelector.Parameters[0];
                 var body = Expression.GreaterThanOrEqual(timestampSelector.Body, Expression.Constant(fd));
-                Expression<Func<T, bool>> predicate = Expression.Lambda<Func<T, bool>>(body, param);
+                var predicate = Expression.Lambda<Func<T, bool>>(body, param);
                 query = query.Where(predicate);
             }
 
@@ -119,7 +119,7 @@ public static class QueryableExtensions
             {
                 var param = timestampSelector.Parameters[0];
                 var body = Expression.LessThanOrEqual(timestampSelector.Body, Expression.Constant(td));
-                Expression<Func<T, bool>> predicate = Expression.Lambda<Func<T, bool>>(body, param);
+                var predicate = Expression.Lambda<Func<T, bool>>(body, param);
                 query = query.Where(predicate);
             }
 

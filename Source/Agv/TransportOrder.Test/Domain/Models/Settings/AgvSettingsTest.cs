@@ -499,7 +499,7 @@ public class AgvSettingsTest
         var agvSettings = new AgvSettings(Guid.NewGuid());
         agvSettings.Update(EfAgvSettingsProvider.DefaultSettings, false);
 
-        ICollection<Setting?> settings = agvSettings.GetAllSettings();
+        var settings = agvSettings.GetAllSettings();
 
         foreach ((string name, object? value) in EfAgvSettingsProvider.DefaultSettings.GetValidPropertiesInformation())
         {

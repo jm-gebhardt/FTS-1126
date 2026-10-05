@@ -23,8 +23,8 @@ public static class RouteServiceExtensions
         /// <param name="edges">Optional edge IDs in the route.</param>
         public void WithRoute(double costs, string[] nodes, Guid[]? edges = null)
         {
-            Guid[] routeEdges = edges ?? [];
-            GraphNode[] graphNodes = nodes.Select(n => n.ToGraphNode()).ToArray();
+            var routeEdges = edges ?? [];
+            var graphNodes = nodes.Select(n => n.ToGraphNode()).ToArray();
             routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<AgvData>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Route(costs, graphNodes, routeEdges));
             routeServiceMock.Setup(x => x.GetRouteAsync(It.IsAny<TransportOrder.Domain.Models.Agv.Agv>(), It.IsAny<IList<Guid>>(), It.IsAny<Guid?>(), It.IsAny<AgvData>())).ReturnsAsync(new Route(costs, graphNodes, routeEdges));
         }

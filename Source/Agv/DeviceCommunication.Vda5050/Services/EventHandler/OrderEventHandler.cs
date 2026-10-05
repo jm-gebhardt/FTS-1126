@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Exceptions;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Caches;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Events;
 using JetBrains.Annotations;
@@ -21,7 +20,7 @@ public class OrderEventHandler(IOrderActionStatusCacheProvider actionStatusCache
     public async Task Consume(ConsumeContext<OrderStateReceived> context)
     {
         var (correlationId, orderState) = context.Message;
-        actionStatusCache.ConcurrentDict.TryGetValue(correlationId, out IList<OrderActionState>? previousOrderActionStatus);
+        actionStatusCache.ConcurrentDict.TryGetValue(correlationId, out var previousOrderActionStatus);
         if (orderState.ActionStates.Count == 0)
         {
             return;

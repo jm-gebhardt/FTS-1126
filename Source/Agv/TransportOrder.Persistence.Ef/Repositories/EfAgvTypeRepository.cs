@@ -29,7 +29,7 @@ public class EfAgvTypeRepository(IDbContextFactory<TransportOrderDbContext> dbCo
     public async Task AddOrUpdateAsync(AgvType agvType, CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        DbSet<AgvType> set = dbContext.Set<AgvType>();
+        var set = dbContext.Set<AgvType>();
         var existing = await set.SingleOrDefaultAsync(a => a.AgvTypeIdentifier == agvType.AgvTypeIdentifier, cancellationToken: cancellationToken);
 
         if (existing is null)

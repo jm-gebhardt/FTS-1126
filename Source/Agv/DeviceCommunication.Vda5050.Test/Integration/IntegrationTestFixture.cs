@@ -137,7 +137,7 @@ public class IntegrationTestFixture : MassTransitTestFixture
 
     public void AddLayout(string vehicleTypeId, Layout layout)
     {
-        if (!_layoutsByVehicleType.TryGetValue(vehicleTypeId, out List<Layout>? layouts))
+        if (!_layoutsByVehicleType.TryGetValue(vehicleTypeId, out var layouts))
         {
             layouts = [];
             _layoutsByVehicleType[vehicleTypeId] = layouts;

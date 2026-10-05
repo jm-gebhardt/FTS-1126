@@ -31,7 +31,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     private void SetupCargoRepositoryMock()
     {
-        AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _cargosByAgv.TryGetValue(correlationId, out IReadOnlyCollection<Cargo>? cargos) ? cargos : new List<Cargo>());
+        AgvDb.Setup(x => x.Cargos.GetCargosAsync(It.IsAny<Guid>())).ReturnsAsync((Guid correlationId) => _cargosByAgv.TryGetValue(correlationId, out var cargos) ? cargos : new List<Cargo>());
         AgvDb.Setup(x => x.Cargos.GetCargosAsync((ICollection<Guid>)It.IsAny<IEnumerable<Guid>>())).ReturnsAsync((IEnumerable<Guid> correlationIds) => _cargosByAgv.Where(kvp => correlationIds.Contains(kvp.Key)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
 
         AgvDb.Setup(x => x.Cargos.HaveAgvsCargoAsync(It.IsAny<ICollection<Guid>>()))
@@ -64,7 +64,7 @@ public class CargoRequestHandlerTestFixture<TRequest, TConsumer> : MediatorTestF
 
     public CargoRequestHandlerTestFixture<TRequest, TConsumer> WithCargos(Dictionary<Guid, ICollection<Common.Domain.Models.Cargo>> cargosByAgv)
     {
-        foreach (KeyValuePair<Guid, ICollection<Common.Domain.Models.Cargo>> kv in cargosByAgv)
+        foreach (var kv in cargosByAgv)
         {
             WithCargo(kv.Key, kv.Value.ToList());
         }

@@ -66,7 +66,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
             throw new AssignedAgvNotFoundException(assignedAgv, agvSerialNumber, action);
         }
 
-        Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
+        var vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)
         {
             logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);
@@ -95,7 +95,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         var action = context.Message.Action;
         string agvSerialNumber = context.Message.SerialNumber;
         var assignedAgv = context.Message.CorrelationId;
-        Guid? abortedActionCorrelationId = context.Message.AbortedActionCorrelationId;
+        var abortedActionCorrelationId = context.Message.AbortedActionCorrelationId;
         string orderId = abortedActionCorrelationId == null ? action.CorrelationId.ToString() : abortedActionCorrelationId.Value.ToString();
         var routePlan = context.Message.Route;
 
@@ -132,7 +132,7 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
         var routePlan = context.Message.Route;
 
         string orderId = action.CorrelationId.ToString();
-        Guid? vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
+        var vehicleOrderId = await actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)
         {
             logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);
@@ -148,8 +148,8 @@ public class ActionCommandConsumer(ILogger<ActionCommandConsumer> logger, IAgvRe
 
     private async Task<MqttOrder> GetOrder(AgvAction action, RoutePlan routePlan, string agvSerialNumber, OrderRecordType recordType, string orderId)
     {
-        List<object> routeNodes = await GetRouteNodes(routePlan);
-        List<object> routeEdges = await GetRouteEdges(routePlan);
+        var routeNodes = await GetRouteNodes(routePlan);
+        var routeEdges = await GetRouteEdges(routePlan);
 
         return action.ConvertToOrder(orderId, recordType, agvSerialNumber, routeNodes, routeEdges);
     }

@@ -16,7 +16,7 @@ public class AlternatingModeChooserTest
         var actionGroup2 = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        ChooseAgvActionGroupTestFixture<AlternatingModeChooser> fixture = new ChooseAgvActionGroupTestFixture<AlternatingModeChooser>()
+        var fixture = new ChooseAgvActionGroupTestFixture<AlternatingModeChooser>()
             .WithNotStartedActionGroup(actionGroup1)
             .WithNotStartedActionGroup(actionGroup2)
             .WithAgvHasRouteToDestination(agv, actionGroup1.Actions.First().Target.Node!.Name, actionGroup1.Actions.Last().Target.Node!.Name, actionGroup1, 10f)
@@ -40,7 +40,7 @@ public class AlternatingModeChooserTest
         var fastActionGroup = AgvActionGenerator.GeneratePickDropActionGroup(source: AgvGraphGenerator.SourceClose.Name, createdDate: now);
         var agv = AgvGenerator.GenerateIdleAgv(0, AgvGraphGenerator.ParkClose.Name);
 
-        ChooseAgvActionGroupTestFixture<AlternatingModeChooser> fixture = new ChooseAgvActionGroupTestFixture<AlternatingModeChooser>()
+        var fixture = new ChooseAgvActionGroupTestFixture<AlternatingModeChooser>()
             .WithNotStartedActionGroup(oldSlowActionGroup)
             .WithNotStartedActionGroup(fastActionGroup)
             .WithAgvHasRouteToDestination(agv, oldSlowActionGroup.Actions.First().Target.Node!.Name, oldSlowActionGroup.Actions.Last().Target.Node!.Name, oldSlowActionGroup, 10f)

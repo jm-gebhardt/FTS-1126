@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
-using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.WebApi.Consumer;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Moq;
@@ -18,7 +17,7 @@ public class ActionStartedConsumerTest
         var agvCorrelationId = Guid.NewGuid();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, ["1".ToGraphNode(), "2".ToGraphNode()], []);
         var fixture = new ConsumerHubTestFixture<ActionStartedConsumer, IAgvPublisher>();
-        Mock<IAgvRouteRetrievalService> agvRouteRetrievalService = fixture.AgvRouteServiceMock;
+        var agvRouteRetrievalService = fixture.AgvRouteServiceMock;
         agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<Guid?>())).ReturnsAsync(agvRoute);
         var action = AgvActionGenerator.GenerateMoveAction();
 
@@ -36,7 +35,7 @@ public class ActionStartedConsumerTest
         var agvCorrelationId = Guid.NewGuid();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, ["1".ToGraphNode(), "2".ToGraphNode()], []);
         var fixture = new ConsumerHubTestFixture<ActionStartedConsumer, IAgvPublisher>();
-        Mock<IAgvRouteRetrievalService> agvRouteRetrievalService = fixture.AgvRouteServiceMock;
+        var agvRouteRetrievalService = fixture.AgvRouteServiceMock;
         agvRouteRetrievalService.Setup(m => m.GetAgvRouteAsync(agvCorrelationId, It.IsAny<Guid?>())).ReturnsAsync(agvRoute);
         var action = AgvActionGenerator.GenerateMoveAction();
 

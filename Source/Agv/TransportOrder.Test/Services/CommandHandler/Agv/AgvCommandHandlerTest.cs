@@ -19,13 +19,11 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Moq;
 using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using AgvStatus = Gebhardt.Acc.Common.Domain.Models.AgvStatus;
 using AgvStatusGenerator = Gebhardt.Acc.Common.Testing.Helpers.AgvStatusGenerator;
-using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
 using QueueActionGroup = Gebhardt.Acc.Common.Messages.ActionGroups.Commands.QueueActionGroup;
 using RequestAgvData = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvData;
@@ -430,7 +428,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agv.CorrelationId);
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes)
@@ -452,7 +450,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph([lastNode.Id]);
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph([lastNode.Id]);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([])
             .WithNodesStates([], nodes, lastNodeId: lastNode.Name)
@@ -474,7 +472,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1);
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes)
@@ -495,7 +493,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1);
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes, nodeReservationFails: true)
@@ -519,7 +517,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1);
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var nodeLock = NodeLockGenerator.GenerateNodeLock(nodeName: AgvGraphGenerator.Crg1, agvCorrelationId: agv.CorrelationId, nodeLockState: NodeLockState.Reserved);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
@@ -543,7 +541,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv.CorrelationId, targetNodeName: AgvGraphGenerator.Crg1, createdDate: DateTime.UtcNow.AddMinutes(-15));
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes)
@@ -567,7 +565,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Way1, createdDate: DateTime.UtcNow.AddMinutes(-15));
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes)
@@ -590,7 +588,7 @@ public class AgvCommandHandlerTest
         agv.GoOffline();
         agv.IsOnline.ShouldBeFalse();
         var actionGroup = AgvActionGenerator.GenerateMoveActionGroup(assignedAgv: agv.CorrelationId, targetNodeId: AgvGraphGenerator.Way1);
-        ICollection<GraphNode> nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
+        var nodes = AgvGraphGenerator.GetNodesOfDefaultGraph(actionGroup.GetTargets());
         var fixture = new AgvCommandHandlerTestFixture()
             .WithCurrentStartedOrCreatedActionGroups([actionGroup])
             .WithNodesStates([], nodes)
@@ -960,7 +958,7 @@ public class AgvCommandHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
 
-        Response<LockAgvResult> response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(
+        var response = await fixture.GetResponseAsync<LockAgvResult, LockAgv>(
             new LockAgv(agv.CorrelationId, LockReason.Other, "reason description", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
 
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
@@ -973,7 +971,7 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(
+        var response = await fixture.GetResponseAsync<AgvNotFoundResult, LockAgv>(
             new LockAgv(agvCorrelationId, LockReason.Other, "reason", "agv", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
@@ -984,7 +982,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        Response<UnlockAgvResult> response = await fixture.GetResponseAsync<UnlockAgvResult, UnlockAgv>(new UnlockAgv(agv.CorrelationId));
+        var response = await fixture.GetResponseAsync<UnlockAgvResult, UnlockAgv>(new UnlockAgv(agv.CorrelationId));
         response.Message.AgvCorrelationId.ShouldBe(agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
         await fixture.ShouldHavePublishedAsync<AgvLockedChanged>();
@@ -998,7 +996,7 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, UnlockAgv>(new UnlockAgv(agvCorrelationId));
+        var response = await fixture.GetResponseAsync<AgvNotFoundResult, UnlockAgv>(new UnlockAgv(agvCorrelationId));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
 
@@ -1008,7 +1006,7 @@ public class AgvCommandHandlerTest
         var fixture = new AgvCommandHandlerTestFixture();
         var agv = AgvGenerator.GenerateIdleAgv();
         fixture.AddAgvs(new List<TransportOrder.Domain.Models.Agv.Agv> { agv });
-        Response<SetAgvForceIdleResult> response = await fixture.GetResponseAsync<SetAgvForceIdleResult, SetAgvForceIdle>(new SetAgvForceIdle(agv.CorrelationId));
+        var response = await fixture.GetResponseAsync<SetAgvForceIdleResult, SetAgvForceIdle>(new SetAgvForceIdle(agv.CorrelationId));
         response.Message.CorrelationId.ShouldBe(agv.CorrelationId);
         await fixture.ShouldHavePublishedAsync<AgvBecameIdle>();
     }
@@ -1019,7 +1017,7 @@ public class AgvCommandHandlerTest
         var agvCorrelationId = Guid.NewGuid();
         var fixture = new AgvCommandHandlerTestFixture()
             .WithoutAgv();
-        Response<AgvNotFoundResult> response = await fixture.GetResponseAsync<AgvNotFoundResult, SetAgvForceIdle>(new SetAgvForceIdle(agvCorrelationId));
+        var response = await fixture.GetResponseAsync<AgvNotFoundResult, SetAgvForceIdle>(new SetAgvForceIdle(agvCorrelationId));
         response.Message.CorrelationId.ShouldBe(agvCorrelationId);
     }
 
@@ -1399,7 +1397,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_UpdateCargo_CargoChanged_PublishesHasCargoChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
+        var cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
         var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
 
         var fixture = new AgvCommandHandlerTestFixture()
@@ -1419,7 +1417,7 @@ public class AgvCommandHandlerTest
     public async Task Consume_UpdateCargo_CargoUnchanged_DoesNotPublishHasCargoChanged()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
+        var cargos = CargoGenerator.GenerateCargos(agv.CorrelationId);
         var domainCargos = _mapper.Map<IReadOnlyCollection<TransportOrder.Domain.Models.Agv.Cargo>>(cargos);
         var fixture = new AgvCommandHandlerTestFixture()
             .WithHasCargoStates(true, true)
@@ -2139,7 +2137,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvsFailed>();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
 
-        List<CreateQueueingActionGroup> createQueueActionGroupMessages = fixture.TestHarness.Published.Select<CreateQueueingActionGroup>().Select(m => m.Context.Message).ToList();
+        var createQueueActionGroupMessages = fixture.TestHarness.Published.Select<CreateQueueingActionGroup>().Select(m => m.Context.Message).ToList();
         createQueueActionGroupMessages.Count.ShouldBe(2);
         createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == chargingAgv.CorrelationId).QueueNode.Id.ShouldBe(queueEntryNode.ToGuid());
         createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == agvToMove.CorrelationId).QueueNode.Id.ShouldBe(queueNode.Id);
@@ -2220,7 +2218,7 @@ public class AgvCommandHandlerTest
         await fixture.ShouldNotHavePublishedAsync<SwitchChargingAgvsFailed>();
         await fixture.ShouldNotHavePublishedAsync<QueueActionGroup>();
 
-        List<CreateQueueingActionGroup> createQueueActionGroupMessages = fixture.TestHarness.Published.Select<CreateQueueingActionGroup>().Select(m => m.Context.Message).ToList();
+        var createQueueActionGroupMessages = fixture.TestHarness.Published.Select<CreateQueueingActionGroup>().Select(m => m.Context.Message).ToList();
         createQueueActionGroupMessages.Count.ShouldBe(1);
         createQueueActionGroupMessages.Single(m => m.AgvCorrelationId == chargingAgv.CorrelationId).QueueNode.Id.ShouldBe(queueEntryNode.ToGuid());
 

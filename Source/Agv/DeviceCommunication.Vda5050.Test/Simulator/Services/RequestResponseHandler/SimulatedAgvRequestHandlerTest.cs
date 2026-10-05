@@ -5,7 +5,6 @@ using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.DeviceCommunication.Common.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services.RequestResponseHandler;
@@ -29,7 +28,7 @@ public class SimulatedAgvRequestHandlerTest
     {
         var fixture = new SimulatedAgvRequestHandlerTestFixture().Build();
 
-        Response<AgvStateResponse> response = await fixture.GetResponseAsync<AgvStateResponse>(new RequestAgvState(Guid.NewGuid()));
+        var response = await fixture.GetResponseAsync<AgvStateResponse>(new RequestAgvState(Guid.NewGuid()));
 
         response.Message.State.ShouldBeNull();
     }
@@ -42,7 +41,7 @@ public class SimulatedAgvRequestHandlerTest
             .WithCachedState(cachedState)
             .Build();
 
-        Response<AgvStateResponse> response = await fixture.GetResponseAsync<AgvStateResponse>(new RequestAgvState(Guid.NewGuid()));
+        var response = await fixture.GetResponseAsync<AgvStateResponse>(new RequestAgvState(Guid.NewGuid()));
 
         response.Message.State.ShouldBe(cachedState);
     }
@@ -54,7 +53,7 @@ public class SimulatedAgvRequestHandlerTest
             .WithOperatingMode(AgvOperatingMode.Manual)
             .Build();
 
-        Response<Success> response = await fixture.GetResponseAsync<RequestAddLoad, Success>(
+        var response = await fixture.GetResponseAsync<RequestAddLoad, Success>(
             new RequestAddLoad(Guid.NewGuid(),
                 SimulatedAgvRequestHandlerTestFixture.LoadId,
                 SimulatedAgvRequestHandlerTestFixture.LoadType,
@@ -119,7 +118,7 @@ public class SimulatedAgvRequestHandlerTest
             .WithOperatingMode(AgvOperatingMode.Manual)
             .Build();
 
-        Response<Success> response = await fixture.GetResponseAsync<RequestRemoveLoad, Success>(
+        var response = await fixture.GetResponseAsync<RequestRemoveLoad, Success>(
             new RequestRemoveLoad(Guid.NewGuid(), SimulatedAgvRequestHandlerTestFixture.LoadId));
 
         response.Message.ShouldNotBeNull();

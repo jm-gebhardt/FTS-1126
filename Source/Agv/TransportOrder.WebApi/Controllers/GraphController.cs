@@ -31,7 +31,7 @@ public class GraphController(
     [Route("/graph/boundingBoxes")]
     public async Task<ActionResult<IReadOnlyList<ResourceBoundingBoxDto>>> GetBoundingBoxes([FromQuery] string agvType)
     {
-        Response<GotBoundingBoxes> response = await getBoundingBoxesClient.GetResponse<GotBoundingBoxes>(
+        var response = await getBoundingBoxesClient.GetResponse<GotBoundingBoxes>(
             new GetBoundingBoxes(Guid.NewGuid(), agvType, null));
         return Ok(mapper.Map<IReadOnlyList<ResourceBoundingBoxDto>>(response.Message.BoundingBoxes));
     }
@@ -44,7 +44,7 @@ public class GraphController(
     [Route("/graph/conflicts")]
     public async Task<ActionResult<IReadOnlyList<BoundingBoxConflictDto>>> GetConflicts()
     {
-        Response<GotBoundingBoxConflicts> response = await getConflictsClient.GetResponse<GotBoundingBoxConflicts>(
+        var response = await getConflictsClient.GetResponse<GotBoundingBoxConflicts>(
             new GetBoundingBoxConflicts(Guid.NewGuid()));
         return Ok(mapper.Map<IReadOnlyList<BoundingBoxConflictDto>>(response.Message.Conflicts));
     }
@@ -59,7 +59,7 @@ public class GraphController(
     [Route("/graph/node/{nodeId:guid}/conflicts")]
     public async Task<ActionResult<IReadOnlyList<Guid>>> GetNodeConflicts(Guid nodeId)
     {
-        Response<GotBoundingBoxConflicts> response = await getNodeConflictsClient.GetResponse<GotBoundingBoxConflicts>(
+        var response = await getNodeConflictsClient.GetResponse<GotBoundingBoxConflicts>(
             new GetNodeBoundingBoxConflicts(Guid.NewGuid(), nodeId));
         return Ok(response.Message.Conflicts.ConflictingResourceIds(nodeId));
     }
@@ -74,7 +74,7 @@ public class GraphController(
     [Route("/graph/edge/{edgeId:guid}/conflicts")]
     public async Task<ActionResult<IReadOnlyList<Guid>>> GetEdgeConflicts(Guid edgeId)
     {
-        Response<GotBoundingBoxConflicts> response = await getEdgeConflictsClient.GetResponse<GotBoundingBoxConflicts>(
+        var response = await getEdgeConflictsClient.GetResponse<GotBoundingBoxConflicts>(
             new GetEdgeBoundingBoxConflicts(Guid.NewGuid(), edgeId));
         return Ok(response.Message.Conflicts.ConflictingResourceIds(edgeId));
     }

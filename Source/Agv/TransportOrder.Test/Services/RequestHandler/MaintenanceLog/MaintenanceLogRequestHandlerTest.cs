@@ -7,7 +7,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.MaintenanceLog;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.MaintenanceLog;
@@ -19,7 +18,7 @@ public class MaintenanceLogRequestHandlerTest
     public async Task Consume_TriggerAddingMaintenanceLog_ValidData_PublishesAddMaintenanceLog()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        MaintenanceLogRequestHandlerTestFixture<TriggerAddingMaintenanceLog, MaintenanceLogRequestHandler> fixture = new MaintenanceLogRequestHandlerTestFixture<TriggerAddingMaintenanceLog, MaintenanceLogRequestHandler>()
+        var fixture = new MaintenanceLogRequestHandlerTestFixture<TriggerAddingMaintenanceLog, MaintenanceLogRequestHandler>()
             .WithAgvs([agv]);
 
         await fixture.GetResponseAsync<Success>(new TriggerAddingMaintenanceLog("user", agv.CorrelationId, MaintenanceType.TiresReplaced, DateTime.UtcNow, "comment"));
@@ -31,7 +30,7 @@ public class MaintenanceLogRequestHandlerTest
     public async Task Consume_TriggerAddingMaintenanceLog_UnknownAgv_ThrowsAgvNotFoundException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        MaintenanceLogRequestHandlerTestFixture<TriggerAddingMaintenanceLog, MaintenanceLogRequestHandler> fixture = new MaintenanceLogRequestHandlerTestFixture<TriggerAddingMaintenanceLog, MaintenanceLogRequestHandler>()
+        var fixture = new MaintenanceLogRequestHandlerTestFixture<TriggerAddingMaintenanceLog, MaintenanceLogRequestHandler>()
             .WithAgvs([]);
 
         await MediatorShould.ThrowRequestExceptionAsync<AgvNotFoundException>(async () => await fixture.GetResponseAsync<Success>(new TriggerAddingMaintenanceLog("user", agv.CorrelationId, MaintenanceType.TiresReplaced, DateTime.UtcNow, "comment")));
@@ -42,11 +41,11 @@ public class MaintenanceLogRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var maintenanceLog = new TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog("user", agv.CorrelationId, DateTime.UtcNow, MaintenanceType.TiresReplaced, "comment");
-        MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgv, MaintenanceLogRequestHandler> fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgv, MaintenanceLogRequestHandler>()
+        var fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgv, MaintenanceLogRequestHandler>()
             .WithAgvs([agv])
             .WithMaintenanceLogs([maintenanceLog]);
 
-        Response<GotMaintenanceLogs> response = await fixture.GetResponseAsync<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv(agv.CorrelationId, maintenanceLog.MaintenanceType));
+        var response = await fixture.GetResponseAsync<GotMaintenanceLogs>(new GetMaintenanceLogsForAgv(agv.CorrelationId, maintenanceLog.MaintenanceType));
 
         response.Message.MaintenanceLogs.Single().ShouldBe(maintenanceLog);
     }
@@ -56,7 +55,7 @@ public class MaintenanceLogRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var maintenanceLog = new TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog("user", agv.CorrelationId, DateTime.UtcNow, MaintenanceType.TiresReplaced, "comment");
-        MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgv, MaintenanceLogRequestHandler> fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgv, MaintenanceLogRequestHandler>()
+        var fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgv, MaintenanceLogRequestHandler>()
             .WithAgvs([])
             .WithMaintenanceLogs([maintenanceLog]);
 
@@ -68,11 +67,11 @@ public class MaintenanceLogRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var maintenanceLog = new TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog("user", agv.CorrelationId, DateTime.UtcNow, MaintenanceType.TiresReplaced, "comment");
-        MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgvs, MaintenanceLogRequestHandler> fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgvs, MaintenanceLogRequestHandler>()
+        var fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgvs, MaintenanceLogRequestHandler>()
             .WithAgvs([agv])
             .WithMaintenanceLogs([maintenanceLog]);
 
-        Response<GotMaintenanceLogs> response = await fixture.GetResponseAsync<GotMaintenanceLogs>(new GetMaintenanceLogsForAgvs([agv.CorrelationId], maintenanceLog.MaintenanceType));
+        var response = await fixture.GetResponseAsync<GotMaintenanceLogs>(new GetMaintenanceLogsForAgvs([agv.CorrelationId], maintenanceLog.MaintenanceType));
 
         response.Message.MaintenanceLogs.Single().ShouldBe(maintenanceLog);
     }
@@ -82,7 +81,7 @@ public class MaintenanceLogRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var maintenanceLog = new TransportOrder.Domain.Models.MaintenanceLog.MaintenanceLog("user", agv.CorrelationId, DateTime.UtcNow, MaintenanceType.TiresReplaced, "comment");
-        MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgvs, MaintenanceLogRequestHandler> fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgvs, MaintenanceLogRequestHandler>()
+        var fixture = new MaintenanceLogRequestHandlerTestFixture<GetMaintenanceLogsForAgvs, MaintenanceLogRequestHandler>()
             .WithAgvs([])
             .WithMaintenanceLogs([maintenanceLog]);
 

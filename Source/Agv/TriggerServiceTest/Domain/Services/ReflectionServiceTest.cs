@@ -61,7 +61,7 @@ public class ReflectionServiceTest
         var fixture = new ReflectionServiceTestFixture();
 
         var reflectedType = typeof(WithProvidedDependency);
-        ILogger<WithProvidedDependency> dependency = new Mock<ILogger<WithProvidedDependency>>().Object;
+        var dependency = new Mock<ILogger<WithProvidedDependency>>().Object;
         fixture.ReflectionService.GetInstance<ITestInterface>(reflectedType, [dependency]).ShouldBeEquivalentTo(new WithProvidedDependency(dependency));
     }
 

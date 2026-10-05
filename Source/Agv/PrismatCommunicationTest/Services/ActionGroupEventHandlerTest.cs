@@ -108,7 +108,7 @@ public class ActionGroupEventHandlerTest
     {
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         order.Start(DateTime.UtcNow, Guid.NewGuid());
-        HostOrderConsumerTestFixture<ActionGroupEventHandler> fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
             .WithHostOrders([order]);
 
         var pickActionCompleted = new PickActionCompleted(order.CorrelationId, order.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, DateTime.UtcNow);
@@ -125,7 +125,7 @@ public class ActionGroupEventHandlerTest
     {
         var order = OrderGenerator.GenerateHostOrderFromOrderDetails(OrderGenerator.GenerateShortCircuitOrder(pickAt1020: true));
         order.Start(DateTime.UtcNow, Guid.NewGuid());
-        HostOrderConsumerTestFixture<ActionGroupEventHandler> fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
+        var fixture = new HostOrderConsumerTestFixture<ActionGroupEventHandler>()
             .WithHostOrders([]);
 
         var pickActionCompleted = new PickActionCompleted(order.CorrelationId, order.Actions.Single(a => a.ActionType == ActionType.Pick).CorrelationId, DateTime.UtcNow);

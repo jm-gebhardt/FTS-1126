@@ -53,7 +53,7 @@ public class BackgroundControllerTest
             .WithBackground(background)
             .Build();
 
-        ICollection<BackgroundDto> result = await fixture.GetControllerResultValueAsync(
+        var result = await fixture.GetControllerResultValueAsync(
             c => c.GetBackgrounds([BackgroundGenerator.DefaultMapId], maxCount: 50));
 
         result.Count.ShouldBe(1);
@@ -69,7 +69,7 @@ public class BackgroundControllerTest
             .WithBackgrounds([background1, background2])
             .Build();
 
-        ICollection<BackgroundDto> result = await fixture.GetControllerResultValueAsync(
+        var result = await fixture.GetControllerResultValueAsync(
             c => c.GetBackgrounds(null, maxCount: 50));
 
         result.Count.ShouldBe(2);

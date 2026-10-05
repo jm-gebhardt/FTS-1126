@@ -4,7 +4,6 @@ using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.AgvType;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.AgvType;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.AgvType;
@@ -19,7 +18,7 @@ public class AgvTypeRequestHandlerTest
     public async Task Consume_RequestAgvTypeAcknowledgement_ExistingAgvType_PublishesAcknowledgeAgvTypeAndRespondsSuccess()
     {
         var agvType = CreateAgvType();
-        AgvTypeRequestHandlerTestFixture<RequestAgvTypeAcknowledgement, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<RequestAgvTypeAcknowledgement, AgvTypeRequestHandler>()
                 .WithAgvTypes(agvType)
                 .Build();
@@ -32,7 +31,7 @@ public class AgvTypeRequestHandlerTest
     [TestMethod]
     public async Task Consume_RequestAgvTypeAcknowledgement_UnknownAgvType_ThrowsAgvTypeNotFoundException()
     {
-        AgvTypeRequestHandlerTestFixture<RequestAgvTypeAcknowledgement, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<RequestAgvTypeAcknowledgement, AgvTypeRequestHandler>()
                 .Build();
 
@@ -44,12 +43,12 @@ public class AgvTypeRequestHandlerTest
     public async Task Consume_GetAgvType_ExistingAgvType_RespondsWithAgvType()
     {
         var agvType = CreateAgvType();
-        AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler>()
                 .WithAgvTypes(agvType)
                 .Build();
 
-        Response<GotAgvType> response = await fixture.GetResponseAsync<GotAgvType>(new GetAgvType(agvType.Id));
+        var response = await fixture.GetResponseAsync<GotAgvType>(new GetAgvType(agvType.Id));
 
         response.Message.CorrelationId.ShouldBe(agvType.Id);
         response.Message.AgvType.Id.ShouldBe(agvType.Id);
@@ -61,12 +60,12 @@ public class AgvTypeRequestHandlerTest
     public async Task Consume_GetAgvType_ExistingAgvType_RespondsWithReportedByAgv(bool reportedByAgv)
     {
         var agvType = CreateAgvType(reportedByAgv: reportedByAgv);
-        AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler>()
                 .WithAgvTypes(agvType)
                 .Build();
 
-        Response<GotAgvType> response = await fixture.GetResponseAsync<GotAgvType>(new GetAgvType(agvType.Id));
+        var response = await fixture.GetResponseAsync<GotAgvType>(new GetAgvType(agvType.Id));
 
         response.Message.AgvType.ReportedByAgv.ShouldBe(reportedByAgv);
     }
@@ -74,7 +73,7 @@ public class AgvTypeRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAgvType_UnknownAgvType_ThrowsAgvTypeNotFoundException()
     {
-        AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<GetAgvType, AgvTypeRequestHandler>()
                 .Build();
 
@@ -85,11 +84,11 @@ public class AgvTypeRequestHandlerTest
     [TestMethod]
     public async Task Consume_GetAllAgvTypes_EmptyRepository_ReturnsEmptyList()
     {
-        AgvTypeRequestHandlerTestFixture<GetAllAgvTypes, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<GetAllAgvTypes, AgvTypeRequestHandler>()
                 .Build();
 
-        Response<GotAgvTypes> response = await fixture.GetResponseAsync<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()));
+        var response = await fixture.GetResponseAsync<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()));
 
         response.Message.AgvTypes.ShouldBeEmpty();
     }
@@ -99,12 +98,12 @@ public class AgvTypeRequestHandlerTest
     {
         var agvType1 = CreateAgvType("manufacturer.series");
         var agvType2 = CreateAgvType("manufacturer.anotherseries");
-        AgvTypeRequestHandlerTestFixture<GetAllAgvTypes, AgvTypeRequestHandler> fixture =
+        var fixture =
             new AgvTypeRequestHandlerTestFixture<GetAllAgvTypes, AgvTypeRequestHandler>()
                 .WithAgvTypes(agvType1, agvType2)
                 .Build();
 
-        Response<GotAgvTypes> response = await fixture.GetResponseAsync<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()));
+        var response = await fixture.GetResponseAsync<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()));
 
         response.Message.AgvTypes.Count.ShouldBe(2);
         response.Message.AgvTypes.ShouldContain(a => a.Id == agvType1.Id);

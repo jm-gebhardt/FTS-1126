@@ -27,7 +27,7 @@ public class Polypath
     /// </summary>
     /// <returns></returns>
     public double GetLength() {
-        IEnumerable<(Vector3 First, Vector3 Second)> zipped = Points.SkipLast(1).Zip(Points.Skip(1));
+        var zipped = Points.SkipLast(1).Zip(Points.Skip(1));
         double length = 0;
         foreach (var (from, to) in zipped)
         {

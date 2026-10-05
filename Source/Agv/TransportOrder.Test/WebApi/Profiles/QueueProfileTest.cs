@@ -73,7 +73,7 @@ public class QueueProfileTest
     {
         var mapper = MappingHelper.GetMapper(new QueueProfile());
 
-        List<QueueNodeDto> nodeListDto = _fixture.CreateMany<QueueNodeDto>(2).ToList();
+        var nodeListDto = _fixture.CreateMany<QueueNodeDto>(2).ToList();
 
         var nodeList = mapper.Map<List<Common.Messages.Queue.QueueNode>>(nodeListDto);
         nodeList.Count.ShouldBe(nodeListDto.Count);

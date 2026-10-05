@@ -25,8 +25,8 @@ public class MqttZonesConsumer(ILogger<MqttZonesConsumer> logger, IZoneRefreshSt
         logger.LogInformation("Incoming MqttZones: {AgvSerialNumber} / {CorrelationId}", context.Message.SerialNumber, context.Message.RequestId);
         try
         {
-            Dictionary<Guid, ICollection<string>> removedZonesByAgv =  await zonesRefreshStateService.UpdateAgvsFromRefreshedZones(context.Message.Zones);
-            foreach ((var agv, ICollection<string> zones) in removedZonesByAgv)
+            var removedZonesByAgv =  await zonesRefreshStateService.UpdateAgvsFromRefreshedZones(context.Message.Zones);
+            foreach (var (agv, zones) in removedZonesByAgv)
             {
                 await context.Publish(new AgvRemovedFromZones(agv, zones));
             }

@@ -35,7 +35,7 @@ public class RandomAccessStackTest
     {
         var stack = new RandomAccessStack<int> { 2, 1, 3, 4 };
 
-        List<int> result = stack.After(1).ToList();
+        var result = stack.After(1).ToList();
 
         result.Count.ShouldBe(2);
         result.ShouldBe([3, 4]);

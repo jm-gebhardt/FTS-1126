@@ -28,7 +28,7 @@ public class QueueRequestHandler(IQueueRepository queueRepository, IQueueManager
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetQueues> context)
     {
-        ICollection<Queue> queues = await queueRepository.GetQueues();
+        var queues = await queueRepository.GetQueues();
         await context.RespondAsync(new GotQueues(queues));
     }
 
@@ -42,10 +42,10 @@ public class QueueRequestHandler(IQueueRepository queueRepository, IQueueManager
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<TryAddQueue> context)
     {
-        (string name, ICollection<QueueNode> queueNodes) = context.Message;
+        (string name, var queueNodes) = context.Message;
         CheckQueue(name, queueNodes);
-        IRequestClient<AddQueue>? requestClient = context.CreateRequestClient<AddQueue>(bus);
-        Response<GotQueue> response = await requestClient.GetResponse<GotQueue>(new AddQueue(name, queueNodes));
+        var requestClient = context.CreateRequestClient<AddQueue>(bus);
+        var response = await requestClient.GetResponse<GotQueue>(new AddQueue(name, queueNodes));
         await context.RespondAsync(response.Message);
     }
 

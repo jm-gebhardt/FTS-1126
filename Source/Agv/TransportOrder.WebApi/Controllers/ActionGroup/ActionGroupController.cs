@@ -70,7 +70,7 @@ public class ActionGroupController : Controller
     [Route("/actionGroup/{correlationId:guid}")]
     public async Task<ActionResult<ActionGroupDto>> GetActionGroup(Guid correlationId)
     {
-        Response<GotAgvActionGroup> response = await _getActionGroupRequestClient.GetResponse<GotAgvActionGroup>(new GetActionGroup(correlationId));
+        var response = await _getActionGroupRequestClient.GetResponse<GotAgvActionGroup>(new GetActionGroup(correlationId));
         var actionGroup = _mapper.Map<ActionGroupDto>(response.Message.AgvActionGroup);
         return Ok(actionGroup!);
     }
@@ -111,7 +111,7 @@ public class ActionGroupController : Controller
         {
             return Unauthorized();
         }
-        Response<ActionGroupCanceled, ActionGroupCancelFailed> response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi, User.GetEmail()));
+        var response = await _cancelActionGroupRequestClient.GetResponse<ActionGroupCanceled, ActionGroupCancelFailed>(new CancelActionGroup(correlationId, CancelReason.WebApi, User.GetEmail()));
         return response.Message switch
         {
             ActionGroupCanceled => Ok(),
@@ -180,7 +180,7 @@ public class ActionGroupController : Controller
         {
             return Unauthorized();
         }
-        Response<ActionGroupCreated> response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(
+        var response = await _createActionGroupClient.GetResponse<ActionGroupCreated>(new CreatePickDropActionGroup(
             pickStation?.ToGuid(),
             dropStation?.ToGuid(),
             dockFrontPick,

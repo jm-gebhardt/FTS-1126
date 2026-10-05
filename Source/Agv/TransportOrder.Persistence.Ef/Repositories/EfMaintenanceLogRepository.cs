@@ -20,7 +20,7 @@ public class EfMaintenanceLogRepository(IDbContextFactory<TransportOrderDbContex
     public async Task<IReadOnlyCollection<MaintenanceLog>> GetMaintenancesLogsAsync(ICollection<Guid>? agvIds = null, MaintenanceType? maintenanceType = null)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        IQueryable<MaintenanceLog> logs = context.Set<MaintenanceLog>().AsNoTracking();
+        var logs = context.Set<MaintenanceLog>().AsNoTracking();
 
         if (maintenanceType != null)
         {
@@ -55,7 +55,7 @@ public class EfMaintenanceLogRepository(IDbContextFactory<TransportOrderDbContex
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        List<MaintenanceLog> latestLogs = await context.Set<MaintenanceLog>()
+        var latestLogs = await context.Set<MaintenanceLog>()
             .Where(l => agvCorrelationIds.Contains(l.AgvCorrelationId))
             .GroupBy(l => l.AgvCorrelationId)
             .Select(g => g.OrderByDescending(l => l.ExecutionDate).First())

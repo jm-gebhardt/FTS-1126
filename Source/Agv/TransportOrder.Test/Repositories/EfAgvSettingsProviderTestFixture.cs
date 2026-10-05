@@ -48,7 +48,7 @@ public class EfAgvSettingsProviderTestFixture
     public async Task ResetDb()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        List<AgvSettingsGroup> groups = await context.Set<AgvSettingsGroup>().ToListAsync();
+        var groups = await context.Set<AgvSettingsGroup>().ToListAsync();
         context.RemoveRange(groups);
         await context.SaveChangesAsync();
     }

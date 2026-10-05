@@ -21,7 +21,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Node;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Settings;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Station;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Domain.SemaphoreProvider;
 using Gebhardt.Acc.TransportOrder.Domain.Services.ActionGroup;
@@ -42,10 +41,8 @@ using System.Collections.ObjectModel;
 using Agv = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Agv;
 using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 using AgvStatus = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvStatus;
-using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 using CreateQueueingActionGroup = Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup.CreateQueueingActionGroup;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
-using Queue = Gebhardt.Acc.TransportOrder.Domain.Models.Queue.Queue;
 using RequestAgvData = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvData;
 using RequestAgvGraph = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvGraph;
 using RequestAgvZones = Gebhardt.Acc.Common.Messages.AgvManagement.Commands.RequestAgvZones;
@@ -175,7 +172,7 @@ public class AgvCommandHandler :
         }
 
         // Let's see if there is a created charge action group
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
+        var actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agvCorrelationId);
         var actionGroup = actionGroups.FirstOrDefault(a => a.Actions.Any(ac => ac.ActionType == ActionType.Charge));
         if (actionGroup != null)
         {
@@ -285,7 +282,7 @@ public class AgvCommandHandler :
             return true;
         }
 
-        Guid? targetNodeId = await _queueManager.TryEnterQueue(agv);
+        var targetNodeId = await _queueManager.TryEnterQueue(agv);
         if (targetNodeId == null)
         {
             return false;
@@ -357,7 +354,7 @@ public class AgvCommandHandler :
         var cancellationToken = context.CancellationToken;
         await _agvsSemaphore.ExecuteLockedAsync(async () =>
         {
-            ICollection<Agv> goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync();
+            var goodAgvs = await _agvDb.Agvs.GetChargingAgvsWithMinBatteryLevelAsync();
 
             // preliminary logic: just go through all potential available Agvs and try to start a new action
             foreach (var agv in goodAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge))
@@ -389,7 +386,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<AgvErrorChanged> context)
     {
-        (var correlationId, List<AgvError> errors, _, _) = context.Message;
+        var (correlationId, errors, _, _) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(correlationId, context.CancellationToken);
         bool hadError = agv.HasError;
         bool agvHasError = errors.HasAnyError();
@@ -583,7 +580,7 @@ public class AgvCommandHandler :
 
     private async Task TryUpdateOrderMismatchWarning(IPublishEndpoint context, Agv agv, AgvStatus? oldStatus, AgvStatus newStatus)
     {
-        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
+        var activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
         bool hasWarning = activeErrors.Any(e => e.IsOrderMismatchError());
         bool reportsNoOrder = string.IsNullOrEmpty(newStatus.OrderId);
 
@@ -602,7 +599,7 @@ public class AgvCommandHandler :
             return;
         }
 
-        List<AgvError> updatedErrors = activeErrors.ToList();
+        var updatedErrors = activeErrors.ToList();
         if (orderStillAssigned)
         {
             _logger.LogInformation("Agv {AgvCorrelationId} reports idle but has a started order assigned, raising order mismatch warning", agv.CorrelationId);
@@ -780,7 +777,7 @@ public class AgvCommandHandler :
             }
             if (agv.AgvStatus?.ZoneIds?.Count > 0)
             {
-                List<string> onlineAgvs = (await _agvDb.Agvs.GetAllAgvsAsync()).Where(a => a.IsOnline).Select(a => a.SerialNumber).ToList();
+                var onlineAgvs = (await _agvDb.Agvs.GetAllAgvsAsync()).Where(a => a.IsOnline).Select(a => a.SerialNumber).ToList();
                 await context.Publish(new AgvWentOfflineInZones(agv.CorrelationId, agv.SerialNumber, agv.AgvStatus!.ZoneIds, onlineAgvs));
             }
             await context.Publish(new ClearNodesFromAgv(agv.CorrelationId));
@@ -799,8 +796,8 @@ public class AgvCommandHandler :
 
     private async Task UpdateOfflineErrors(IPublishEndpoint context, Agv agv, bool handleZoneErrors = true, bool handleResourceErrors = true, bool handleQueueBlockingErrors = false)
     {
-        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
-        List<AgvError> updatedErrors = activeErrors.ToList();
+        var activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agv.CorrelationId);
+        var updatedErrors = activeErrors.ToList();
         try
         {
             var position = _agvDb.Positions.GetPosition(agv.CorrelationId);
@@ -857,7 +854,7 @@ public class AgvCommandHandler :
         }
 
         // Add ResourceBlockingError(s)
-        ICollection<GraphNode> nodes = await _nodeRepository.GetNodesForAgv(agv.CorrelationId);
+        var nodes = await _nodeRepository.GetNodesForAgv(agv.CorrelationId);
         if (!hasResourceErrors && !agv.IsOnline && nodes.Count > 0)
         {
             _logger.LogInformation("Adding resource blocking errors for agv {AgvCorrelationId}", agv.CorrelationId);
@@ -877,7 +874,7 @@ public class AgvCommandHandler :
         if (hasZonesInStatus && !hasZoneErrors && !agv.IsOnline)
         {
             _logger.LogInformation("Adding zone errors for agv {AgvCorrelationId}", agv.CorrelationId);
-            ICollection<Zone> zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
+            var zones = await _agvDb.Zones.GetZones(agv.AgvStatus!.ZoneIds!.ToArray());
             foreach (var zone in zones)
             {
                 errors.Add(new ZoneError(agv.CorrelationId, DateTime.UtcNow, zone.ZoneName));
@@ -1018,7 +1015,7 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
     {
-        (var agvCorrelationId, string? initiatingUser, MaintenanceReason? maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, var maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
         agv.PrepareMaintenanceMode(maintenanceReason, reasonDescription, initiatingUser, currentActionPolicy, assignedActionPolicy, cancelManualActions);
@@ -1306,7 +1303,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<UpdateCargo> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        IReadOnlyCollection<Cargo> receivedCargos = context.Message.Cargos;
+        var receivedCargos = context.Message.Cargos;
 
         bool hadCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
         var cargos = _mapper.Map<Collection<Domain.Models.Agv.Cargo>>(receivedCargos);
@@ -1329,7 +1326,7 @@ public class AgvCommandHandler :
 
     private async Task TryDequeueAgv(IPublishEndpoint context, Agv agv, Guid currentActionGroup)
     {
-        Dictionary<Guid, Guid>? agvsToMove = await _queueManager.TryDequeueAgv(agv.CorrelationId, agv.AgvStatus?.LastNodeId);
+        var agvsToMove = await _queueManager.TryDequeueAgv(agv.CorrelationId, agv.AgvStatus?.LastNodeId);
         if (agvsToMove == null)
         {
             return;
@@ -1339,10 +1336,10 @@ public class AgvCommandHandler :
             await context.Publish(new QueueBecameEmpty());
         }
 
-        ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId);
+        var queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId);
         await Task.WhenAll(queueEvacuationMoves.Where(a => a != currentActionGroup).Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
 
-        foreach (KeyValuePair<Guid, Guid> agvIdToMove in agvsToMove)
+        foreach (var agvIdToMove in agvsToMove)
         {
             var agvToMove = await _agvDb.Agvs.GetAgvAsync(agvIdToMove.Key);
             if (agvToMove.IsQueueing)
@@ -1365,7 +1362,7 @@ public class AgvCommandHandler :
 
         await _queueSemaphoreProvider.ExecuteLockedAsync(async () =>
         {
-            Guid? targetNodeId = await _queueManager.TryEnqueueAgv(agvCorrelationId, entryNode);
+            var targetNodeId = await _queueManager.TryEnqueueAgv(agvCorrelationId, entryNode);
             if (targetNodeId != null && targetNodeId != entryNode)
             {
                 var targetNode = await _agvDb.Graphs.GetNodeAsync(targetNodeId.Value);
@@ -1383,16 +1380,16 @@ public class AgvCommandHandler :
     private async Task<bool> TryEscapeQueue(IPublishEndpoint context, Agv agv, Guid currentActionGroup, Guid? queueId = null, Guid? queueNodeId = null)
     {
         var agvCorrelationId = agv.CorrelationId;
-        Guid? agvLastNodeId = agv.AgvStatus?.LastNodeId;
+        var agvLastNodeId = agv.AgvStatus?.LastNodeId;
 
-        List<Guid> actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv, queueId)).ToList();
-        (Dictionary<Guid, Guid>? agvsToMove, int? queueSize) = await _queueManager.TryEscapeQueue(agvCorrelationId, agvLastNodeId, queueId, queueNodeId);
+        var actionGroupsToAbort = (await _queueManager.GetQueueInternalActionGroups(agv, queueId)).ToList();
+        (var agvsToMove, int? queueSize) = await _queueManager.TryEscapeQueue(agvCorrelationId, agvLastNodeId, queueId, queueNodeId);
         if (agvsToMove == null)
         {
             return false;
         }
 
-        ICollection<Guid> queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId, queueId);
+        var queueEvacuationMoves = await _queueManager.GetQueueEvacuationMoves(agv.CorrelationId, queueId);
         actionGroupsToAbort.AddRange(queueEvacuationMoves);
         await Task.WhenAll(actionGroupsToAbort.Where(a => a != currentActionGroup).Select(ag => context.Publish(new CancelOrAbortActionGroup(ag))));
         if (queueSize == 0)
@@ -1420,9 +1417,9 @@ public class AgvCommandHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<TryReactivateParkingAgvs> context)
     {
-        ICollection<Guid> agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
-        ICollection<Agv> readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
-        IOrderedEnumerable<Agv> readyAgvsOrderedByBatteryCharge = readyAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge);
+        var agvsAtQueueHeads = await _queueManager.GetAgvsAtQueueHeads();
+        var readyAgvs = await _agvDb.Agvs.GetReadyAgvsWithAtLeastLowBatteryLevel();
+        var readyAgvsOrderedByBatteryCharge = readyAgvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge);
         foreach (var agv in agvsAtQueueHeads.Union(readyAgvsOrderedByBatteryCharge.Select(a => a.CorrelationId)))
         {
             await context.Publish(new AgvBecameIdle(agv));
@@ -1435,7 +1432,7 @@ public class AgvCommandHandler :
     public async Task Consume(ConsumeContext<ReceiveAgvZones> context)
     {
         var agvCorrelationId = context.Message.CorrelationId;
-        ICollection<AgvZone> zones = context.Message.AgvZones;
+        var zones = context.Message.AgvZones;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
         agv.ZonesExist = true;
@@ -1710,7 +1707,7 @@ public class AgvCommandHandler :
             return;
         }
 
-        IReadOnlyList<AgvError> errors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        var errors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
         var queueBlockingError = errors.ToList().FirstOrDefault(e => e.IsQueueBlockingError());
         if (queueBlockingError == null)
         {
@@ -1724,21 +1721,21 @@ public class AgvCommandHandler :
     {
         _logger.LogInformation("Preparing nodes for AGV {AgvCorrelationId}. Last node id of AGV is {LastNodeId}", agv.CorrelationId, agvStatus.LastNodeId);
 
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agv.CorrelationId);
+        var actionGroups = await _actionGroupRepository.GetCreatedAndStartedActionGroupsForAgvAsync(agv.CorrelationId);
         if (actionGroups.Count < 1 && agvStatus.LastNodeId == Guid.Empty)
         {
             return;
         }
         var agvSettings = _agvDb.AgvSettings.GetSettingsForAgvGroup(agv.AgvSettingsGroup);
-        List<Guid> lockedNodes = (await _nodeRepository.GetNodesForAgv(agv.CorrelationId)).Select(n => n.Id).ToList();
+        var lockedNodes = (await _nodeRepository.GetNodesForAgv(agv.CorrelationId)).Select(n => n.Id).ToList();
 
-        List<Guid> currentNodeIds = actionGroups.SelectMany(a => a.Actions).Select(a => a.Target.Node?.Id).Where(t => t != null).Select(t => t!.Value).ToList();
+        var currentNodeIds = actionGroups.SelectMany(a => a.Actions).Select(a => a.Target.Node?.Id).Where(t => t != null).Select(t => t!.Value).ToList();
         if (agvStatus.LastNodeId != null && agvStatus.LastNodeId != Guid.Empty)
         {
             currentNodeIds.Add(agvStatus.LastNodeId.Value);
         }
         ICollection<GraphNode> currentNodes = (await _agvDb.Graphs.GetNodesAsync(n => currentNodeIds.Contains(n.Id))).ToList();
-        IEnumerable<Guid> parkers = currentNodes.Where(t => t.IsParker()).Select(t => t.Id);
+        var parkers = currentNodes.Where(t => t.IsParker()).Select(t => t.Id);
 
         var now = DateTime.UtcNow;
         foreach (var node in currentNodes.Where(n => n.NeedsReservation() && !lockedNodes.Contains(n.Id)))
@@ -1812,7 +1809,7 @@ public class AgvCommandHandler :
 
         _logger.LogInformation("Try switching charging agv {AgvCorrelationId} with non-charging agv {NonChargingAgvCorrelationId}", chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
 
-        ICollection<GraphNode> nodesForChargingAgv = await _nodeRepository.GetNodesForAgv(chargingAgvId);
+        var nodesForChargingAgv = await _nodeRepository.GetNodesForAgv(chargingAgvId);
         var chargingNode = nodesForChargingAgv.FirstOrDefault(n => n.Lock!.IsOccupiedByAgv(chargingAgvId)) ??
                            (chargingAgv.AgvStatus == null ?
                                null :
@@ -1853,7 +1850,7 @@ public class AgvCommandHandler :
 
         if (!await TryParking(context, chargingAgv, nonChargingAgv))
         {
-            Guid? fallbackSwitchPositionId = nonChargingAgv.AgvStatus?.LastNodeId;
+            var fallbackSwitchPositionId = nonChargingAgv.AgvStatus?.LastNodeId;
             if (fallbackSwitchPositionId == null)
             {
                 _logger.LogError("{Command}: Cannot use fallback of LastNodeId to switch out {ChargingAgvCorrelationId} with {NonChargingAgvCorrelationId}", nameof(SwitchChargingAgvs), chargingAgv.CorrelationId, nonChargingAgv.CorrelationId);
@@ -1897,8 +1894,8 @@ public class AgvCommandHandler :
 
     private async Task<bool> TrySwapAgvsInQueue(IPublishEndpoint context, Agv queuingAgv, Agv agvToQueue)
     {
-        ICollection<Guid> actionGroupsToAbort = await _queueManager.GetQueueInternalActionGroups(queuingAgv);
-        (Dictionary<Guid, Guid>? agvsToMove, Guid? queueEntryNodeId, bool swapped) = await _queueManager.TrySwapAgv(queuingAgv, agvToQueue);
+        var actionGroupsToAbort = await _queueManager.GetQueueInternalActionGroups(queuingAgv);
+        (var agvsToMove, var queueEntryNodeId, bool swapped) = await _queueManager.TrySwapAgv(queuingAgv, agvToQueue);
         if (!swapped || queueEntryNodeId == null)
         {
             return false;
@@ -1975,7 +1972,7 @@ public class AgvCommandHandler :
 
         bool hasCargo = await _agvDb.Cargos.HasAgvCargoAsync(agvCorrelationId);
 
-        IReadOnlyList<Domain.Models.ActionGroup.ActionGroup> actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Paused, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId, maxItems: 3, sortBy: SortBy.StartedDate);
+        var actionGroups = await _actionGroupRepository.GetActionGroupsAsync(states: [ActionGroupState.Completed, ActionGroupState.Paused, ActionGroupState.Started], assignedAgvCorrelationId: agvCorrelationId, maxItems: 3, sortBy: SortBy.StartedDate);
 
         var actionGroup = actionGroups.SingleOrDefault(a => a.State == ActionGroupState.Started) ?? actionGroups.OrderBy(a => a.StartedDate).LastOrDefault();
 
@@ -1986,7 +1983,7 @@ public class AgvCommandHandler :
         }
 
         IReadOnlyList<AgvError> activeErrors = (await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId)).ToList();
-        List<AgvError> updatedErrors = activeErrors.ToList();
+        var updatedErrors = activeErrors.ToList();
         bool hasCargoError = activeErrors.Any(e => e.IsCargoMismatchError());
         var position = _agvDb.Positions.GetPosition(agvCorrelationId);
 
@@ -2033,8 +2030,8 @@ public class AgvCommandHandler :
         {
             if (message.AlsoRemoveFromConsideration)
             {
-                List<Queue> queues = (await _queueRepository.GetQueues()).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId) &&
-                                                                                     (message.QueueId == null || message.QueueId == q.Id)).ToList();
+                var queues = (await _queueRepository.GetQueues()).Where(q => q.ConsideredAgvs.Contains(agv.CorrelationId) &&
+                                                                             (message.QueueId == null || message.QueueId == q.Id)).ToList();
 
                 foreach (var queue in queues)
                 {
@@ -2065,8 +2062,8 @@ public class AgvCommandHandler :
             return;
         }
 
-        IReadOnlyList<AgvError> activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
-        List<AgvError> updatedErrors = activeErrors.ToList();
+        var activeErrors = await _agvDb.Errors.GetActiveErrorsAsync(agvCorrelationId);
+        var updatedErrors = activeErrors.ToList();
         var blockingError = updatedErrors.SingleOrDefault(e => e.IsQueueBlockingError());
 
         if (blockingError == null)
@@ -2080,7 +2077,7 @@ public class AgvCommandHandler :
     /// <inheritdoc cref="AgvCommandHandler"/>
     public async Task Consume(ConsumeContext<RemoveAgvFromZones> context)
     {
-        (var agvCorrelationId, ICollection<string> removedZones) = context.Message;
+        var (agvCorrelationId, removedZones) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, context.CancellationToken);
         if (agv.AgvStatus?.ZoneIds?.Count > 0)
@@ -2142,7 +2139,7 @@ public class AgvCommandHandler :
     /// <inheritdoc cref="AgvCommandHandler"/>
     public async Task Consume(ConsumeContext<CreateAgv> context)
     {
-        (var correlationId, string agvSerialNumber, Guid? agvTypeId, bool hasValidConfiguration) = context.Message;
+        (var correlationId, string agvSerialNumber, var agvTypeId, bool hasValidConfiguration) = context.Message;
         var agv = await _agvDb.Agvs.TryGetAgvAsync(correlationId);
         bool isNewAgv = agv == null;
         if (isNewAgv)

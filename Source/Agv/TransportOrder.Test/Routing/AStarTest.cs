@@ -167,7 +167,7 @@ public class AStarTest
             new(5f, [], [])
         };
 
-        List<Route?> sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
+        var sorted = routes.OrderByDescending(n => n != null).ThenBy(n => n).ToList();
         sorted[0]!.Costs.ShouldBe(routes[1]!.Costs, 0.00001f);
         sorted[1]!.Costs.ShouldBe(routes[3]!.Costs, 0.00001f);
         sorted[2]!.Costs.ShouldBe(routes[0]!.Costs, 0.00001f);

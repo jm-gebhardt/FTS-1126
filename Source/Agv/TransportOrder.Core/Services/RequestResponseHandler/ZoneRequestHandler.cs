@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.TransportOrder.Domain.Models.Zone;
-using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using JetBrains.Annotations;
 using MassTransit;
@@ -18,7 +17,7 @@ public class ZoneRequestHandler(IZoneRepository zoneRepository): IConsumer<GetZo
     public async Task Consume(ConsumeContext<GetZones> context)
     {
         var cancellationToken = context.CancellationToken;
-        ICollection<Zone> zones = await zoneRepository.GetZones(cancellationToken);
+        var zones = await zoneRepository.GetZones(cancellationToken);
         await context.RespondAsync(new GotZones(zones));
     }
 }

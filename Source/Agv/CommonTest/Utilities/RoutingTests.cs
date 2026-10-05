@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.Common.Domain.Utilities;
+﻿using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Testing.Extensions;
 using Shouldly;
 
@@ -77,7 +76,7 @@ public class RoutingTests
     [DataRow(new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" }, null, new[] { "N002-001", "N003-001", "N003-002", "N004-002", "D2" })]
     public void GetRemainingRoute_WithValidParameters_ShouldReturnCorrectRemainingRoute(string[] route, string? lastNodeId, string[] expectedRemainingRoute)
     {
-        GraphNode[] remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId?.ToGuid(), route.ToGraphNodeArray());
+        var remainingRoute = RoutingHelper.GetRemainingRoute(lastNodeId?.ToGuid(), route.ToGraphNodeArray());
 
         remainingRoute.ShouldBe(expectedRemainingRoute.ToGraphNodeArray());
     }

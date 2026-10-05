@@ -16,7 +16,7 @@ public static class TelegramParser
     /// <returns>A dictionary with the fields keys and values.</returns>
     public static Dictionary<string, string> Parse(string telegram)
     {
-        Dictionary<string, string> content = telegram
+        var content = telegram
             .Split([EndSymbol], StringSplitOptions.None)[0]
             .Split([FieldSeparator], StringSplitOptions.RemoveEmptyEntries)
             .Select(field => field.Split([KeyValueSeparator], StringSplitOptions.None))

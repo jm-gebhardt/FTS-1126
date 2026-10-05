@@ -3,7 +3,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.Extensions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Graph;
-using MassTransit;
 using Shouldly;
 using Fixture = Gebhardt.Acc.TransportOrder.Test.Core.Services.BoundingBoxConflictRequestHandlerTestFixture;
 
@@ -17,7 +16,7 @@ public class BoundingBoxConflictRequestHandlerTests
     {
         var fixture = new Fixture().Build();
 
-        Response<GotBoundingBoxConflicts> response =
+        var response =
             await fixture.GetResponseAsync<GotBoundingBoxConflicts>(new GetBoundingBoxConflicts(Guid.NewGuid()));
 
         response.Message.Conflicts.ShouldBeEmpty();
@@ -32,7 +31,7 @@ public class BoundingBoxConflictRequestHandlerTests
                 new ResourceConflict(Fixture.OtherResourceId, Fixture.EdgeId))
             .Build();
 
-        Response<GotBoundingBoxConflicts> response =
+        var response =
             await fixture.GetResponseAsync<GotBoundingBoxConflicts>(new GetBoundingBoxConflicts(Guid.NewGuid()));
 
         response.Message.Conflicts.Count.ShouldBe(2);
@@ -48,7 +47,7 @@ public class BoundingBoxConflictRequestHandlerTests
                 new ResourceConflict(Fixture.EdgeId, Fixture.OtherResourceId))
             .Build();
 
-        Response<GotBoundingBoxConflicts> response =
+        var response =
             await fixture.RequestConflictsAsync(new GetNodeBoundingBoxConflicts(Guid.NewGuid(), Fixture.NodeId));
 
         response.Message.Conflicts.ConflictingResourceIds(Fixture.NodeId).ShouldBe([Fixture.OtherResourceId]);
@@ -62,7 +61,7 @@ public class BoundingBoxConflictRequestHandlerTests
             .WithConflicts(new ResourceConflict(Fixture.OtherResourceId, Fixture.NodeId))
             .Build();
 
-        Response<GotBoundingBoxConflicts> response =
+        var response =
             await fixture.RequestConflictsAsync(new GetNodeBoundingBoxConflicts(Guid.NewGuid(), Fixture.NodeId));
 
         response.Message.Conflicts.ConflictingResourceIds(Fixture.NodeId).ShouldBe([Fixture.OtherResourceId]);
@@ -76,7 +75,7 @@ public class BoundingBoxConflictRequestHandlerTests
             .WithConflicts(new ResourceConflict(Fixture.EdgeId, Fixture.OtherResourceId))
             .Build();
 
-        Response<GotBoundingBoxConflicts> response =
+        var response =
             await fixture.RequestConflictsAsync(new GetNodeBoundingBoxConflicts(Guid.NewGuid(), Fixture.NodeId));
 
         response.Message.Conflicts.ShouldBeEmpty();
@@ -111,7 +110,7 @@ public class BoundingBoxConflictRequestHandlerTests
                 new ResourceConflict(Fixture.NodeId, Fixture.OtherResourceId))
             .Build();
 
-        Response<GotBoundingBoxConflicts> response =
+        var response =
             await fixture.RequestConflictsAsync(new GetEdgeBoundingBoxConflicts(Guid.NewGuid(), Fixture.EdgeId));
 
         response.Message.Conflicts.ConflictingResourceIds(Fixture.EdgeId).ShouldBe([Fixture.OtherResourceId]);

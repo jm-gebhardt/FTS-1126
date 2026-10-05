@@ -22,7 +22,7 @@ public class CargoTriggerPointEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<AgvPassedCargoTriggerPoint> context)
     {
-        (var agv, Guid? actionGroupCorrelationId, var action, bool hasCargo) = context.Message;
+        (var agv, var actionGroupCorrelationId, var action, bool hasCargo) = context.Message;
         
         if (actionGroupCorrelationId == null)
         {

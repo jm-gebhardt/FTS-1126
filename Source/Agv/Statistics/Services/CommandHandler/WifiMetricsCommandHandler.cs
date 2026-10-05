@@ -16,7 +16,7 @@ public class WifiMetricsCommandHandler(IStatisticsDb db, IMapper mapper) : ICons
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AddWifiMetrics> context)
     {
-        (var agvCorrelationId, var wifiMetrics, List<Guid> gridCellIds) = context.Message;
+        var (agvCorrelationId, wifiMetrics, gridCellIds) = context.Message;
 
         foreach (var gridCellId in gridCellIds)
         {

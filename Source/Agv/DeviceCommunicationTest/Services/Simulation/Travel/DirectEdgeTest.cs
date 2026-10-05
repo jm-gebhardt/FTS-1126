@@ -334,7 +334,7 @@ public class DirectEdgeTest
         var agvData = new KarisType1(correlationId, "ip address");
         SetupWoodShop();
         string[] nodes = { "D-Press", "WP-0011", "WP-0016", "WP-0015", "WP-0017", "WP-0123", "PD-QA" };
-        Guid[] edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), WoodShop.Edges.ToList());
+        var edges = AgvGraphGenerator.SelectRouteEdges(nodes.ToList(), WoodShop.Edges.ToList());
         var startNode = WoodShop.Nodes.First(n => n.Name == nodes.First());
         var position = new AgvPosition(true, startNode.X, startNode.Y, startNode.Z, startNode.Theta);
         SetupWoodShopSimulator(position);

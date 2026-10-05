@@ -44,7 +44,7 @@ internal class PlcConnectionRepositoryTestFixture
         var repository = new PlcConnectionRepository(
             new ConcurrentDictionaryProvider<string, bool>(),
             new ConcurrentDictionaryProvider<Guid, bool>());
-        List<string> keys = _activeChannelKeys ?? _stations.SelectMany(s => s.PlcConnections).Distinct().ToList();
+        var keys = _activeChannelKeys ?? _stations.SelectMany(s => s.PlcConnections).Distinct().ToList();
         repository.Initialize(_stations, keys);
         Repository = repository;
         return this;

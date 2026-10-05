@@ -36,7 +36,7 @@ public class AgvZonesRequestHandler(ILogger<AgvZonesRequestHandler> logger, IBus
         }
 
         // trigger removal on device side
-        List<Task> publishTasks = offlineAgv.AgvStatus!.ZoneIds!.Select(z => bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, offlineAgv.SerialNumber, z))).ToList();
+        var publishTasks = offlineAgv.AgvStatus!.ZoneIds!.Select(z => bus.Publish(new Common.Messages.AgvManagement.Commands.RemoveAgvFromZone(onlineAgv.CorrelationId, onlineAgv.SerialNumber, offlineAgv.SerialNumber, z))).ToList();
         // trigger cleanup of agv status and error
         publishTasks.Add(bus.Publish(new RemoveAgvFromAllZones(agvCorrelationId, user)));
         // respond

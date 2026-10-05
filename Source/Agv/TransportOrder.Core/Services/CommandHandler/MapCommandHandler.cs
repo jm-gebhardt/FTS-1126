@@ -82,8 +82,8 @@ public class MapCommandHandler :
                 return null;
             }
 
-            HashSet<Guid> defaultNodeIds = defaultDomainMap.Nodes.Select(n => n.Id).ToHashSet();
-            HashSet<Guid> defaultEdgeIds = defaultDomainMap.Edges.Select(e => e.Id).ToHashSet();
+            var defaultNodeIds = defaultDomainMap.Nodes.Select(n => n.Id).ToHashSet();
+            var defaultEdgeIds = defaultDomainMap.Edges.Select(e => e.Id).ToHashSet();
             bool defaultContainsAllIncoming = incomingNodes.All(n => defaultNodeIds.Contains(n.Id))
                 && incomingEdges.All(e => defaultEdgeIds.Contains(e.Id));
             bool agvInDefault = defaultDomainMap.MapAgvs.Any(a => a.AgvId == agvCorrelationId);
@@ -106,11 +106,11 @@ public class MapCommandHandler :
                 (float)defaultDomainMap.BaseBackground.XOffset,
                 (float)defaultDomainMap.BaseBackground.YOffset);
 
-            List<GraphNode> newNodes = incomingNodes.Where(n => !defaultNodeIds.Contains(n.Id)).ToList();
-            List<GraphEdge> newEdges = incomingEdges.Where(e => !defaultEdgeIds.Contains(e.Id)).ToList();
+            var newNodes = incomingNodes.Where(n => !defaultNodeIds.Contains(n.Id)).ToList();
+            var newEdges = incomingEdges.Where(e => !defaultEdgeIds.Contains(e.Id)).ToList();
 
-            List<GraphNode> allNodes = defaultDomainMap.Nodes.Concat(newNodes).ToList();
-            List<GraphEdge> allEdges = defaultDomainMap.Edges.Concat(newEdges).ToList();
+            var allNodes = defaultDomainMap.Nodes.Concat(newNodes).ToList();
+            var allEdges = defaultDomainMap.Edges.Concat(newEdges).ToList();
 
             // Use the incoming map's own resolution to get its correct world-space extent.
             // Using the default map's resolution here produces a wrong extent (see GetMapBoundaries formula).
@@ -127,7 +127,7 @@ public class MapCommandHandler :
 
             byte[] imageBytes = MapCompositor.Composite(baseMap, messageMap, extendedMap, _logger);
 
-            ICollection<Guid> agvIds = await _graphRepository.GetAgvIdsRelatedToNodesAsync(newNodes);
+            var agvIds = await _graphRepository.GetAgvIdsRelatedToNodesAsync(newNodes);
 
             var updatedDomainMap = new Domain.Models.Map.Map(
                 defaultDomainMap.CorrelationId,
@@ -175,7 +175,7 @@ public class MapCommandHandler :
     private async Task StoreIncomingMapAsync(Map messageMap, List<GraphNode> nodes, List<GraphEdge> edges, Guid agvCorrelationId, IPublishEndpoint publishEndpoint, CancellationToken cancellationToken)
     {
         byte[] mapValue = Convert.FromBase64String(messageMap.ImageData);
-        ICollection<Guid> agvIds = await _graphRepository.GetAgvIdsRelatedToNodesAsync(nodes);
+        var agvIds = await _graphRepository.GetAgvIdsRelatedToNodesAsync(nodes);
 
         var map = new Domain.Models.Map.Map(
             messageMap.CorrelationId,

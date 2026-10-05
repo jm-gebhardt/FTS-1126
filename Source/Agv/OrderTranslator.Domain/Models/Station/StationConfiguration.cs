@@ -69,9 +69,9 @@ public class StationConfiguration
     /// </summary>
     public HashSet<string> GetLabels()
     {
-        ICollection<string> sources = GetKnownSources();
-        ICollection<string> targets = GetKnownTargets();
-        List<string> names = Stations.Select(s => s.Name).ToList();
+        var sources = GetKnownSources();
+        var targets = GetKnownTargets();
+        var names = Stations.Select(s => s.Name).ToList();
         return [..names, ..sources, ..targets];
     }
 }

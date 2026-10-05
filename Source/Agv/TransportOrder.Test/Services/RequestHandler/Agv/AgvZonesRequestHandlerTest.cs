@@ -20,7 +20,7 @@ public class AgvZonesRequestHandlerTest
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
         var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
-        AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
             .WithAgv(agv)
             .WithOnlineAgv(null)
             .Build();
@@ -36,7 +36,7 @@ public class AgvZonesRequestHandlerTest
         var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         offlineAgv.GoOffline();
         var onlineAgv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromAllZones, AgvZonesRequestHandler>()
             .WithAgv(offlineAgv)
             .WithOnlineAgv(onlineAgv)
             .Build();
@@ -58,7 +58,7 @@ public class AgvZonesRequestHandlerTest
         var position = AgvPositionStatusGenerator.Generate();
         var zone = ZoneHelper.GenerateZoneFromPosition(position, isInside: true);
         var agv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
-        AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
             .WithAgv(agv)
             .WithOnlineAgv(null)
             .Build();
@@ -74,7 +74,7 @@ public class AgvZonesRequestHandlerTest
         var offlineAgv = AgvGenerator.GenerateIdleAgv(zoneIds: [zone.ZoneName]);
         offlineAgv.GoOffline();
         var onlineAgv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
             .WithAgv(offlineAgv)
             .WithOnlineAgv(onlineAgv)
             .Build();
@@ -95,7 +95,7 @@ public class AgvZonesRequestHandlerTest
         var offlineAgv = AgvGenerator.GenerateIdleAgv();
         offlineAgv.GoOffline();
         var onlineAgv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler> fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<RemoveAgvFromZone, AgvZonesRequestHandler>()
             .WithAgv(offlineAgv)
             .WithOnlineAgv(onlineAgv)
             .Build();

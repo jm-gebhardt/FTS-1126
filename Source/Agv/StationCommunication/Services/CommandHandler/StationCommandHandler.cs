@@ -29,10 +29,10 @@ public class StationCommandHandler(
         configuration.Reload();
         connectionRepository.Initialize(configuration.Stations, activeChannelKeyProvider.GetActiveChannelKeys());
 
-        List<string> stationNames = configuration.Stations.Where(s => s.HasJamState).Select(s => s.Name).ToList();
+        var stationNames = configuration.Stations.Where(s => s.HasJamState).Select(s => s.Name).ToList();
         logger.LogInformation("Requesting jam state for stations {Stations}", string.Join(", ", stationNames));
 
-        IEnumerable<Task> tasks = stationNames.Select(s => context.Publish(new RequestJamState(s)));
+        var tasks = stationNames.Select(s => context.Publish(new RequestJamState(s)));
 
         foreach (var station in configuration.Stations)
         {

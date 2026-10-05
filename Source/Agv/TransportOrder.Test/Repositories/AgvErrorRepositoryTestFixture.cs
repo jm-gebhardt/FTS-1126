@@ -38,7 +38,7 @@ public class AgvErrorRepositoryTestFixture : TransportOrderDbFixture
 
     public List<AgvError> GetCachedErrors(Guid agvCorrelationId)
     {
-        _errorCache.TryGet(agvCorrelationId, out List<AgvError>? errors);
+        _errorCache.TryGet(agvCorrelationId, out var errors);
         return errors ?? [];
     }
 }

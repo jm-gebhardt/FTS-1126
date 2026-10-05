@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Constants;
 using Gebhardt.Acc.Common.Domain.Exceptions;
-using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Domain;
@@ -16,7 +15,6 @@ using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using AgvStatus = Gebhardt.Acc.Common.Domain.Models.AgvStatus;
-using Cargo = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.Cargo;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.EventHandler;
 
@@ -59,12 +57,12 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
     /// <returns></returns>
     public async Task Consume(ConsumeContext<AgvLastNodeIdChanged> context)
     {
-        (var agvId, Guid? oldLastNodeId, Guid? newLastNodeId) = context.Message;
+        var (agvId, oldLastNodeId, newLastNodeId) = context.Message;
         await context.Publish(new UpdateNodeOccupancy(agvId, oldLastNodeId, newLastNodeId));
 
         if (newLastNodeId != null)
         {
-            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(newLastNodeId.Value).ToList();
+            var triggerLocations = _triggerRepository.GetNodeTriggerLocations(newLastNodeId.Value).ToList();
             if (triggerLocations.Count > 0)
             {
                 await PublishAgvReachedOrLeftTrigger(context, agvId, triggerLocations, false);
@@ -72,7 +70,7 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         }
         if (oldLastNodeId != null && oldLastNodeId != Guid.Empty)
         {
-            List<Location> triggerLocations = _triggerRepository.GetNodeTriggerLocations(oldLastNodeId.Value).ToList();
+            var triggerLocations = _triggerRepository.GetNodeTriggerLocations(oldLastNodeId.Value).ToList();
             if (triggerLocations.Count > 0)
             {
                 await PublishAgvReachedOrLeftTrigger(context, agvId, triggerLocations, true);
@@ -89,9 +87,9 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
     {
         var (agvId, newAgvPosition, _, _) = context.Message;
 
-        ICollection<PolygonTriggerResult> triggerLocations = await _triggerRepository.GetPolygonTriggerLocations(agvId, newAgvPosition);
-        List<Location> enteredTriggers = triggerLocations.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
-        List<Location> leftTriggers = triggerLocations.Where(l => l.Action == PolygonTriggerAction.Left).Select(l => l.Location).ToList();
+        var triggerLocations = await _triggerRepository.GetPolygonTriggerLocations(agvId, newAgvPosition);
+        var enteredTriggers = triggerLocations.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
+        var leftTriggers = triggerLocations.Where(l => l.Action == PolygonTriggerAction.Left).Select(l => l.Location).ToList();
         if (enteredTriggers.Count > 0)
         {
             await PublishAgvReachedOrLeftTrigger(context, agvId, enteredTriggers, false);
@@ -121,10 +119,10 @@ public class AgvPositionChangedEventHandler : IConsumer<AgvPositionChanged>, ICo
         var currentActionGroup = await _actionGroupRepository.GetCurrentAssignedActionGroupAsync(agvId);
         var commonActionGroup = _mapper.Map<ActionGroup>(currentActionGroup);
 
-        IReadOnlyCollection<Cargo> cargoList = await _agvDb.Cargos.GetCargosAsync(agvId);
+        var cargoList = await _agvDb.Cargos.GetCargosAsync(agvId);
         ICollection<Common.Domain.Models.Cargo> commonCargoList = cargoList.Select(cargo => _mapper.Map<Common.Domain.Models.Cargo>(cargo)).ToList();
 
-        IReadOnlyList<AgvError> errorList = await _agvDb.Errors.GetActiveErrorsAsync(agvId);
+        var errorList = await _agvDb.Errors.GetActiveErrorsAsync(agvId);
 
         foreach (var triggerLocation in triggerLocations)
         {

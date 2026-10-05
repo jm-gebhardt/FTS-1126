@@ -29,7 +29,7 @@ public class ConveyorReportingEventHandler(
     /// </summary>
     public async Task Consume(ConsumeContext<DroppingAgvPassedDoppelspielTriggerPoint> context)
     {
-        (var actionDropTarget, var agvCorrelationId, var droppingHostOrderCorrelationId, Guid? nextPickHostOrderCorrelationId) = context.Message;
+        var (actionDropTarget, agvCorrelationId, droppingHostOrderCorrelationId, nextPickHostOrderCorrelationId) = context.Message;
 
         var targetStation = await stationRepository.GetStationByName(actionDropTarget.Name);
         if ( targetStation is { NeedsPalletReporting: false } or null)

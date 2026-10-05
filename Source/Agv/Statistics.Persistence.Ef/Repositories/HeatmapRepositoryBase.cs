@@ -27,7 +27,7 @@ public abstract class HeatmapRepositoryBase<TEntity>(StatisticsDbContext context
     /// <returns>IQueryable representing the filtered entity set.</returns>
     protected IQueryable<TEntity> BuildBaseQuery(Guid gridId, Guid mapId, DateTime? fromDate, DateTime? toDate, Guid[]? agvCorrelationIds = null)
     {
-        IQueryable<TEntity> query = DbSet
+        var query = DbSet
             .Where(e => e.GridCell.GridId == gridId)
             .Include(e => e.GridCell.MapGridCell)
             .Where(e => e.GridCell.MapGridCell!.Any(mp => mp.MapId == mapId))
@@ -69,9 +69,9 @@ public abstract class HeatmapRepositoryBase<TEntity>(StatisticsDbContext context
             Expression.ElementInit(addMethod, aggregator.Body)
         );
 
-        Expression<Func<IGrouping<GridCell, TEntity>, List<float>>> selector = Expression.Lambda<Func<IGrouping<GridCell, TEntity>, List<float>>>(listInit, false, param);
+        var selector = Expression.Lambda<Func<IGrouping<GridCell, TEntity>, List<float>>>(listInit, false, param);
 
-        List<ICollection<float>> frequencies = await query
+        var frequencies = await query
             .GroupBy(e => e.GridCell)
             .Select(selector)
             .Select(l => l as ICollection<float>)
@@ -85,7 +85,7 @@ public abstract class HeatmapRepositoryBase<TEntity>(StatisticsDbContext context
     {
         if (Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
-            List<TEntity> oldRows = await DbSet.Where(p => p.Timestamp < timestamp).ToListAsync();
+            var oldRows = await DbSet.Where(p => p.Timestamp < timestamp).ToListAsync();
             Context.RemoveRange(oldRows);
             await Context.SaveChangesAsync();
         }

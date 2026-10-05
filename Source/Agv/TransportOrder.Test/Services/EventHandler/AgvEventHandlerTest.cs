@@ -15,7 +15,6 @@ using Shouldly;
 using AgvActionGenerator = Gebhardt.Acc.TransportOrder.Test.Helper.AgvActionGenerator;
 using AgvMode = Gebhardt.Acc.TransportOrder.Domain.Models.Agv.AgvMode;
 using AgvStatus = Gebhardt.Acc.Common.Domain.Models.AgvStatus;
-using Cargo = Gebhardt.Acc.Common.Domain.Models.Cargo;
 using ParkingNodeSelectedForAgv = Gebhardt.Acc.TransportOrder.Messages.Events.Agv.ParkingNodeSelectedForAgv;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.EventHandler;
@@ -290,7 +289,7 @@ public class AgvEventHandlerTest
     {
         var fixture = new AgvEventHandlerTestFixture();
         var agvCorrelationId = Guid.NewGuid();
-        ICollection<Cargo> cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
+        var cargos = CargoGenerator.GenerateCargos(agvCorrelationId);
         var agvLoadStatusReceived = new AgvLoadStatusReceived(agvCorrelationId, cargos.ToList().AsReadOnly());
 
         await fixture.PublishMessageAsync(agvLoadStatusReceived);

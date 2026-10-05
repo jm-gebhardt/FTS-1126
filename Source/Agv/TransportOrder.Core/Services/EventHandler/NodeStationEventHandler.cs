@@ -1,7 +1,6 @@
 ﻿﻿using Gebhardt.Acc.Common.Messages.Graphs.Events;
 using Gebhardt.Acc.Common.Messages.Stations.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Node;
 using JetBrains.Annotations;
@@ -26,12 +25,12 @@ public class NodeStationEventHandler(IAgvDb agvDb) :
 
         // With infinite charging there could be no parking agvs,
         // reactivate also charging agvs
-        ICollection<Agv> agvs = await agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel();
+        var agvs = await agvDb.Agvs.GetAgvsOnChargerReachableByAgvWithAtLeastMinChargeUpLevel();
         if (agvs.Count == 0)
         {
             return;
         }
-        IOrderedEnumerable<Agv> agvsOrderedByBatteryCharge = agvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge);
+        var agvsOrderedByBatteryCharge = agvs.OrderByDescending(a => a.AgvStatus!.BatteryCharge);
         await context.Publish(new TryReactivateChargingAgv(agvsOrderedByBatteryCharge.First().CorrelationId));
     }
 

@@ -41,7 +41,7 @@ public class EfAgvActionRepositoryTest
         await fixture.Repository.AddOrUpdateActionsAsync([firstAction, latestAction], serialNumber);
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
-        List<AgvAction> storedActions = await context.Set<AgvAction>()
+        var storedActions = await context.Set<AgvAction>()
             .AsNoTracking()
             .Where(action => action.AgvSerialNumber == serialNumber)
             .ToListAsync();

@@ -43,7 +43,7 @@ public class RouteRequestHandler : IConsumer<GetRoute>
         {
             var modelRoute = await _routeService.GetRouteAsync(agv, getRoute.DestinationNodeId, getRoute.StartNodeId, agvData);
 
-            GraphNode[]? nodes = _mapper.Map<GraphNode[]>(modelRoute.Nodes);
+            var nodes = _mapper.Map<GraphNode[]>(modelRoute.Nodes);
             route = new Route(agv.CorrelationId, nodes, modelRoute.Edges);
         }
         catch (RouteNotFoundException)

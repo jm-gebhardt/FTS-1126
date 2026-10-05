@@ -91,7 +91,7 @@ public class RouteExecution
     public Result ReleaseSteps(ICollection<Guid> routeStepIds)
     {
         List<RouteStepExecution> orderedSteps = [.. Steps];
-        HashSet<Guid> knownStepIds = orderedSteps.Select(s => s.RouteStepId).ToHashSet();
+        var knownStepIds = orderedSteps.Select(s => s.RouteStepId).ToHashSet();
         if (routeStepIds.Any(id => !knownStepIds.Contains(id)))
         {
             return RouteExecutionErrors.RouteStepNotFound;
@@ -171,7 +171,7 @@ public class RouteExecution
 
     private void MergeSteps(ICollection<RouteStepExecution> newSteps)
     {
-        Dictionary<Guid, RouteStepExecution> existingById = Steps.ToDictionary(s => s.RouteStepId);
+        var existingById = Steps.ToDictionary(s => s.RouteStepId);
         Steps.Clear();
         foreach (var step in newSteps)
         {

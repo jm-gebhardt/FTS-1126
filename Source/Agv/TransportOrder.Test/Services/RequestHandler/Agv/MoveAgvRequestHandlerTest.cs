@@ -22,7 +22,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_MoveAgv_AgvDoesNotExist_ThrowsAgvNotFoundException()
     {
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([])
             .BuildAsync();
 
@@ -35,7 +35,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
 
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode([null])
             .BuildAsync();
@@ -48,7 +48,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgv_AgvIsLocked_ThrowsActionNotAllowedInModeException()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
 
@@ -61,7 +61,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = NodeGenerator.GenerateNode(nodeName: "target");
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
             .BuildAsync();
@@ -75,7 +75,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = NodeGenerator.GenerateNode(nodeName: "target", nodeType: AgvGraph.NodeType.Park);
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
             .BuildAsync();
@@ -91,7 +91,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = NodeGenerator.GenerateNodeWithMultipleTypes([AgvGraph.NodeType.Park, AgvGraph.NodeType.Charge], nodeId: "target");
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
             .BuildAsync();
@@ -107,7 +107,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var targetNode = NodeGenerator.GenerateNode(nodeName: "target", nodeType: AgvGraph.NodeType.Park);
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(targetNode)
             .BuildAsync();
@@ -123,7 +123,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var charger = NodeGenerator.GenerateNode(nodeName: "park", nodeType: AgvGraph.NodeType.Park);
-        MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
             .BuildAsync();
@@ -135,7 +135,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_ChargeAgv_AgvDoesNotExist_ThrowsAgvNotFoundException()
     {
-        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([])
             .BuildAsync();
 
@@ -148,7 +148,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
 
-        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode([null])
             .BuildAsync();
@@ -161,7 +161,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_ChargeAgv_AgvIsLocked_ThrowsActionNotAllowedInModeException()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
-        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
 
@@ -174,7 +174,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var charger = NodeGenerator.GenerateNode(nodeName: "charger", nodeType: AgvGraph.NodeType.Charge);
-        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
             .BuildAsync();
@@ -194,7 +194,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var node = NodeGenerator.GenerateNode(nodeName: "charger", nodeType: type);
-        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(node)
             .BuildAsync();
@@ -209,7 +209,7 @@ public class MoveAgvRequestHandlerTest
         var agv = AgvGenerator.GenerateIdleAgv();
 
         var charger = NodeGenerator.GenerateNode(nodeName: "target", nodeType: AgvGraph.NodeType.Charge);
-        MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithNode(charger)
             .BuildAsync();
@@ -223,7 +223,7 @@ public class MoveAgvRequestHandlerTest
     [TestMethod]
     public async Task Consume_MoveAgvToCoordinate_AgvDoesNotExist_ThrowsAgvNotFoundException()
     {
-        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([])
             .BuildAsync();
 
@@ -235,7 +235,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_AgvIsLocked_ThrowsActionNotAllowedInModeException()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
-        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
 
@@ -247,7 +247,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_AgvIsInAutomaticMode_ThrowsActionNotAllowedInModeException()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .BuildAsync();
 
@@ -260,7 +260,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.PrepareMaintenanceMode(MaintenanceReason.Other, "Reason Description");
-        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(true)
             .BuildAsync();
@@ -274,7 +274,7 @@ public class MoveAgvRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         agv.PrepareMaintenanceMode(MaintenanceReason.Other, "Reason Description");
-        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(false)
             .BuildAsync();
@@ -287,7 +287,7 @@ public class MoveAgvRequestHandlerTest
     public async Task Consume_MoveAgvToCoordinate_ValidData_UserMode_RespondsAgvMoveSuccessfulPublishesQueueActionGroup()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.UserMode));
-        MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new MoveAgvRequestHandlerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .AddAgvs([agv])
             .WithInsideRestrictedArea(false)
             .BuildAsync();

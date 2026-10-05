@@ -41,11 +41,11 @@ public class StationControllerTestFixture<TRequest, TRequestHandler> : Controlle
 
     protected override StationController GetController()
     {
-        IRequestClient<GetStation> getStationRequestClient = GetRequestClient<GetStation>();
-        IRequestClient<TryLockStation> lockStationRequestClient = GetRequestClient<TryLockStation>();
-        IRequestClient<TryUnlockStation> unlockStationRequestClient = GetRequestClient<TryUnlockStation>();
-        IRequestClient<UnblockStation> unblockStationRequestClient = GetRequestClient<UnblockStation>();
-        IRequestClient<SendJamStateRequest> sendJamStateRequestClient = GetRequestClient<SendJamStateRequest>();
+        var getStationRequestClient = GetRequestClient<GetStation>();
+        var lockStationRequestClient = GetRequestClient<TryLockStation>();
+        var unlockStationRequestClient = GetRequestClient<TryUnlockStation>();
+        var unblockStationRequestClient = GetRequestClient<UnblockStation>();
+        var sendJamStateRequestClient = GetRequestClient<SendJamStateRequest>();
         var controller = new StationController(Mapper, getStationRequestClient, lockStationRequestClient, unlockStationRequestClient,
             unblockStationRequestClient, sendJamStateRequestClient);
         return controller;

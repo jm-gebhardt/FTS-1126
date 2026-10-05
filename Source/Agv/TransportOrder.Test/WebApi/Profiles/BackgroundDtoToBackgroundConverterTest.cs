@@ -92,11 +92,11 @@ public class BackgroundDtoToBackgroundConverterTest
 
         var background = _mapper.Map<Background>(dto);
 
-        List<int> lineColors = background.ColorEntries
+        var lineColors = background.ColorEntries
             .Where(c => c.PaletteType == ColorPaletteType.Line)
             .Select(c => c.Value)
             .ToList();
-        List<int> fillColors = background.ColorEntries
+        var fillColors = background.ColorEntries
             .Where(c => c.PaletteType == ColorPaletteType.Fill)
             .Select(c => c.Value)
             .ToList();

@@ -8,7 +8,6 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using MassTransit;
 using Moq;
 using Shouldly;
 using ValidationResult = FluentValidation.Results.ValidationResult;
@@ -128,7 +127,7 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, ActionGroupCreator.TransportOrderWebApi, "user"));
+        var response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, agv.CorrelationId, null, null, ActionGroupCreator.TransportOrderWebApi, "user"));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBe(agv.CorrelationId);
         response.Message.ActionGroup.IsManual.ShouldBeTrue();
@@ -155,7 +154,7 @@ public class CreateActionGroupRequestHandlerTest
             .WithValidationResult(new ValidationResult())
             .Build();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, ActionGroupCreator.TransportOrderWebApi, "user"));
+        var response = await fixture.GetResponseAsync<ActionGroupCreated>(new CreatePickDropActionGroup(sourceNode.Id, targetNode.Id, false, false, null, null, null, null, ActionGroupCreator.TransportOrderWebApi, "user"));
 
         response.Message.ActionGroup.AssignedAgv.ShouldBeNull();
         response.Message.ActionGroup.Creator.ShouldBe(ActionGroupCreator.TransportOrderWebApi);
@@ -263,7 +262,7 @@ public class CreateActionGroupRequestHandlerTest
 
         agv.IsInMaintenance.ShouldBeTrue();
 
-        Response<ActionGroupCreated> response = await fixture.GetResponseAsync<ActionGroupCreated>(
+        var response = await fixture.GetResponseAsync<ActionGroupCreated>(
             new CreatePickDropActionGroup(source != null ? node.Id : source?.ToGuid(),
                 target != null ? node.Id : target?.ToGuid(),
                 false,

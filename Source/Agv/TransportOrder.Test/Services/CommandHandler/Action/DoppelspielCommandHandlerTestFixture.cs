@@ -90,7 +90,7 @@ public class DoppelspielCommandHandlerTestFixture(TimeSpan? inactivityTimeout = 
 
     public DoppelspielCommandHandlerTestFixture WithPreAssignedOrder(ActionGroup? actionGroup)
     {
-        List<ActionGroup> actionGroups = actionGroup != null ? new List<ActionGroup> { actionGroup } : new List<ActionGroup>();
+        var actionGroups = actionGroup != null ? new List<ActionGroup> { actionGroup } : new List<ActionGroup>();
         ActionGroupRepository.Setup(x => x.GetActionGroupsAsync(
             It.IsAny<IList<ActionGroupState>?>(),
             It.IsAny<DateTime?>(),

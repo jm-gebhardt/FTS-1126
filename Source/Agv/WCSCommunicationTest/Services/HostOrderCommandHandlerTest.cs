@@ -16,7 +16,7 @@ public class HostOrderCommandHandlerTest
     [TestMethod]
     public async Task Consume_CreateHostOrder_ValidData_CreatesOrderPublishesHostOrderCreated()
     {
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(null)
             .WithHostCommunicator();
 
@@ -39,7 +39,7 @@ public class HostOrderCommandHandlerTest
     {
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
         await fixture.TestHarness.Bus.Publish(new RemoveInvalidHostOrder(hostOrder.CorrelationId));
@@ -54,7 +54,7 @@ public class HostOrderCommandHandlerTest
     {
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -70,7 +70,7 @@ public class HostOrderCommandHandlerTest
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         hostOrder.Finish(now.AddDays(1));
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -84,7 +84,7 @@ public class HostOrderCommandHandlerTest
     {
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
         
@@ -100,7 +100,7 @@ public class HostOrderCommandHandlerTest
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         hostOrder.Cancel(now.AddDays(1));
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -116,7 +116,7 @@ public class HostOrderCommandHandlerTest
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         hostOrder.Finish(now.AddDays(1));
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -130,7 +130,7 @@ public class HostOrderCommandHandlerTest
     { 
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
        
@@ -147,7 +147,7 @@ public class HostOrderCommandHandlerTest
         var now = DateTime.UtcNow;
         hostOrder.Start(now.AddDays(1));
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
        
@@ -162,7 +162,7 @@ public class HostOrderCommandHandlerTest
     {
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -177,7 +177,7 @@ public class HostOrderCommandHandlerTest
     {
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 
@@ -194,7 +194,7 @@ public class HostOrderCommandHandlerTest
         var hostOrder = new HostOrder(Guid.NewGuid(), "OrderId");
         hostOrder.HandleFailure(now.AddDays(1));
         
-        using HostOrderConsumerTestFixture<HostOrderCommandHandler> fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
+        using var fixture = new HostOrderConsumerTestFixture<HostOrderCommandHandler>()
             .WithHostOrderRepository(hostOrder)
             .WithHostCommunicator();
 

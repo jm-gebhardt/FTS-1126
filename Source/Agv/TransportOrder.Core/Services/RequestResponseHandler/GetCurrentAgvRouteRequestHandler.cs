@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Domain.Services.Routing;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using JetBrains.Annotations;
@@ -36,10 +35,10 @@ public class GetCurrentAgvRouteRequestHandler : IConsumer<GetCurrentAgvRoute>, I
     /// <inheritdoc cref="GetCurrentAgvRouteRequestHandler"/>
     public async Task Consume(ConsumeContext<GetCurrentAgvRoutes> context)
     {
-        ICollection<Guid> correlationIds = context.Message.CorrelationIds;
+        var correlationIds = context.Message.CorrelationIds;
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(correlationIds);
 
-        ICollection<CurrentAgvRouteReadModel> agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationIds);
+        var agvRoute = await _agvRouteRetrievalService.GetAgvRouteAsync(correlationIds);
         await context.RespondAsync(new GotCurrentAgvRoutes(agvRoute));
     }
 }

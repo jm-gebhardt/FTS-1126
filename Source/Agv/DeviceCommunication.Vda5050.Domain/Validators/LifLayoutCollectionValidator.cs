@@ -8,7 +8,6 @@ using Edge = Vdma.Lif.Edge;
 using Layout = Vdma.Lif.Layout;
 using LifLayoutCollection = Vdma.Lif.LifLayoutCollection;
 using Node = Vdma.Lif.Node;
-using Station = Vdma.Lif.Station;
 using VehicleTypeEdgeProperty = Vdma.Lif.VehicleTypeEdgeProperty;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Validators;
@@ -51,7 +50,7 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
 
             layout.RuleFor(l => l).Custom((l, context) =>
             {
-                HashSet<string> nodeIds = l.Nodes.Select(n => n.NodeId).ToHashSet();
+                var nodeIds = l.Nodes.Select(n => n.NodeId).ToHashSet();
 
                 ValidateEdges(l, nodeIds, context);
                 ValidateStations(l, context, nodeIds);
@@ -62,7 +61,7 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
 
     private static void ValidateLayoutIds(Layout[] l, ValidationContext<LifLayoutCollection> context)
     {
-        List<Layout> duplicateLayouts = l.GroupBy(g => g.LayoutId).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
+        var duplicateLayouts = l.GroupBy(g => g.LayoutId).Where(g => g.Count() > 1).SelectMany(g => g).ToList();
         foreach (var duplicateLayout in duplicateLayouts.DistinctBy(d => d.LayoutId))
         {
             string message = $"LayoutId '{duplicateLayout.LayoutId}' duplicated.";
@@ -97,7 +96,7 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
             }
             var startNode = l.Nodes.FirstOrDefault(n => n.NodeId == edge.StartNodeId);
             var endNode = l.Nodes.FirstOrDefault(n => n.NodeId == edge.EndNodeId);
-            Edge[] previousEdges = l.Edges.Where(e => string.Equals(e.EndNodeId, edge.StartNodeId, StringComparison.InvariantCultureIgnoreCase)).ToArray();
+            var previousEdges = l.Edges.Where(e => string.Equals(e.EndNodeId, edge.StartNodeId, StringComparison.InvariantCultureIgnoreCase)).ToArray();
             foreach (var property in edge.VehicleTypeEdgeProperties)
             {
                 ValidateTrajectory(property.Trajectory, edge, property, l, startNode, endNode, context);
@@ -169,8 +168,8 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
 
     private static void ValidateNodes(Layout l, ValidationContext<Layout> context)
     {
-        HashSet<string> startNodeIds = l.Edges.Select(e => e.StartNodeId).ToHashSet();
-        HashSet<string> endNodeIds = l.Edges.Select(e => e.EndNodeId).ToHashSet();
+        var startNodeIds = l.Edges.Select(e => e.StartNodeId).ToHashSet();
+        var endNodeIds = l.Edges.Select(e => e.EndNodeId).ToHashSet();
         foreach (var node in l.Nodes)
         {
             if (!startNodeIds.Contains(node.NodeId) && !endNodeIds.Contains(node.NodeId))
@@ -299,24 +298,24 @@ public class LifLayoutCollectionValidator : AbstractValidator<LifLayoutCollectio
 
     private static void ValidateElementIds(Layout[] layouts, ValidationContext<LifLayoutCollection> context)
     {
-        IEnumerable<(Layout Layout, Station Station)> stations = layouts.SelectMany(l => l.Stations.Select(s => (Layout: l, Station: s)));
-        foreach (IGrouping<string, (Layout Layout, Station Station)> duplicateGroup in stations.GroupBy(x => x.Station.StationId).Where(g => g.Count() > 1))
+        var stations = layouts.SelectMany(l => l.Stations.Select(s => (Layout: l, Station: s)));
+        foreach (var duplicateGroup in stations.GroupBy(x => x.Station.StationId).Where(g => g.Count() > 1))
         {
             string message = $"StationId '{duplicateGroup.Key}' duplicated";
             var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Station, duplicateGroup.Key, Models.Lif.Severity.Err, message) };
             context.AddFailure(failure);
         }
 
-        IEnumerable<(Layout Layout, Edge Edge)> edges = layouts.SelectMany(l => l.Edges.Select(e => (Layout: l, Edge: e)));
-        foreach (IGrouping<string, (Layout Layout, Edge Edge)> duplicateGroup in edges.GroupBy(x => x.Edge.EdgeId).Where(g => g.Count() > 1))
+        var edges = layouts.SelectMany(l => l.Edges.Select(e => (Layout: l, Edge: e)));
+        foreach (var duplicateGroup in edges.GroupBy(x => x.Edge.EdgeId).Where(g => g.Count() > 1))
         {
             string message = $"EdgeId '{duplicateGroup.Key}' duplicated";
             var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Edge, duplicateGroup.Key, Models.Lif.Severity.Err, message) };
             context.AddFailure(failure);
         }
 
-        IEnumerable<(Layout Layout, Node Node)> nodes = layouts.SelectMany(l => l.Nodes.Select(n => (Layout: l, Node: n)));
-        foreach (IGrouping<string, (Layout Layout, Node Node)> duplicateGroup in nodes.GroupBy(x => x.Node.NodeId).Where(g => g.Count() > 1))
+        var nodes = layouts.SelectMany(l => l.Nodes.Select(n => (Layout: l, Node: n)));
+        foreach (var duplicateGroup in nodes.GroupBy(x => x.Node.NodeId).Where(g => g.Count() > 1))
         {
             string message = $"NodeId '{duplicateGroup.Key}' duplicated";
             var failure = new ValidationFailure { ErrorMessage = message, CustomState = new LifValidationResult(ResourceType.Node, duplicateGroup.Key, Models.Lif.Severity.Err, message) };

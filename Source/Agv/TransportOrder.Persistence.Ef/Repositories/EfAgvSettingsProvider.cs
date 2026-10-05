@@ -143,7 +143,7 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
     private async Task<ICollection<AgvSettingsGroup>> ReloadInMemorySettings()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        List<AgvSettingsGroup> groups = await context.Set<AgvSettingsGroup>().ToListAsync();
+        var groups = await context.Set<AgvSettingsGroup>().ToListAsync();
         foreach (var group in groups)
         {
             var settings = group.AgvSetting.ToReadModel();
@@ -166,7 +166,7 @@ public class EfAgvSettingsProvider : IAgvSettingsProvider
     /// <inheritdoc />
     public async Task InitializeSettingsGroups()
     {
-        ICollection<AgvSettingsGroup> groups = await ReloadInMemorySettings();
+        var groups = await ReloadInMemorySettings();
 
         if (groups.All(g => g.GroupType != GroupType.All))
         {

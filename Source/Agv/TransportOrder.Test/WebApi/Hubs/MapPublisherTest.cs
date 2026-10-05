@@ -12,7 +12,7 @@ public class MapPublisherTest
     [TestMethod]
     public async Task SendNodeStateChangedAsync_ValidData_NodeStateChangedSentToAllClients()
     {
-        PublisherFixture<MapPublisher, MapHub, IMapClient> fixture = new PublisherFixture<MapPublisher, MapHub, IMapClient>().Build();
+        var fixture = new PublisherFixture<MapPublisher, MapHub, IMapClient>().Build();
 
         const string nodeName = "NodeId";
         var stationId = Guid.NewGuid();

@@ -18,8 +18,8 @@ public static class SystemAgvErrorFactory
     /// <returns>An UpdateSystemAgvErrors instance or null if no changes are required.</returns>
     public static UpdateSystemAgvErrors? CreateUpdateSystemAgvErrors(Guid agvCorrelationId, IReadOnlyCollection<AgvError> currentErrors, ICollection<AgvError> updatedErrors, AgvPosition position)
     {
-        List<AgvError> errorsToAdd = updatedErrors.Where(e => !currentErrors.Any(c => c.IsSameError(e))).ToList();
-        List<AgvError> errorsToResolve = currentErrors.Where(c => !updatedErrors.Any(u => u.IsSameError(c))).ToList();
+        var errorsToAdd = updatedErrors.Where(e => !currentErrors.Any(c => c.IsSameError(e))).ToList();
+        var errorsToResolve = currentErrors.Where(c => !updatedErrors.Any(u => u.IsSameError(c))).ToList();
 
         if (errorsToAdd.Count == 0 && errorsToResolve.Count == 0)
         {

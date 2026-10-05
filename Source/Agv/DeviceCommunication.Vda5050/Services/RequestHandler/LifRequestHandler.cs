@@ -3,7 +3,6 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Extensions;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Agvs;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Commands.Lif;
@@ -46,7 +45,7 @@ public class LifRequestHandler(
         LifFile lifFile;
         string fileName = Path.GetFileName(uploadedFileName);
         double fileSizeMb = content.Length / 1024.0 / 1024.0;
-        (var vdmaCollection, byte[] rawJson, ICollection<LifValidationResult> validationResults) = await ExtractFileContent(content);
+        (var vdmaCollection, byte[] rawJson, var validationResults) = await ExtractFileContent(content);
         if (vdmaCollection == null)
         {
             lifFile = new LifFile { Id = Guid.NewGuid(), MetaInformation = new LifFileMetaInformation(uploadedTimestamp, fileName, fileSizeMb, uploadedBy) { ValidationResults = validationResults } };
@@ -75,10 +74,10 @@ public class LifRequestHandler(
 
         logger.LogInformation("LIF file '{FileName}' with {LayoutCount} layout(s) uploaded", fileName, lifFile.LayoutIds.Count);
 
-        IRequestClient<StoreLif>? requestClient = context.CreateRequestClient<StoreLif>(bus);
+        var requestClient = context.CreateRequestClient<StoreLif>(bus);
         try
         {
-            Response<Success, LifStoringFailed> response = await requestClient.GetResponse<Success, LifStoringFailed>(new StoreLif(lifFile, lifLayoutCollection));
+            var response = await requestClient.GetResponse<Success, LifStoringFailed>(new StoreLif(lifFile, lifLayoutCollection));
             if (response.Message is Success)
             {
                 await context.RespondAsync(new LifUploaded(lifFile));
@@ -99,7 +98,7 @@ public class LifRequestHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<GetLifFiles> context)
     {
-        ICollection<LifFile> files = await lifRepository.GetAllFilesAsync();
+        var files = await lifRepository.GetAllFilesAsync();
         await context.RespondAsync(new GotLifFiles(files));
     }
 
@@ -190,7 +189,7 @@ public class LifRequestHandler(
         {
             string errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
             logger.LogError("LIF validation failed: {Errors}", errors);
-            List<LifValidationResult> results = validationResult.Errors.Where(e => e.CustomState is LifValidationResult).Select(e => (LifValidationResult)e.CustomState).ToList();
+            var results = validationResult.Errors.Where(e => e.CustomState is LifValidationResult).Select(e => (LifValidationResult)e.CustomState).ToList();
             validationResults.AddRange(results);
         }
 
@@ -200,8 +199,8 @@ public class LifRequestHandler(
     private async Task ValidateLifCanBeDeleted(LifFile lif)
     {
         //TODO: validation need to be updated: by using LIF.MetaInformation.Creator to identify LIF files, we could have more than one LIF for a vehicleType
-        ICollection<Agv> agvs = await agvRepository.GetAllForVehicleTypesAsync(lif.SupportedVehicleTypes);
-        List<string> agvsRunningOrders = agvs.Where(a => a.CurrentOrder != null).Select(a => a.SerialNumber).ToList();
+        var agvs = await agvRepository.GetAllForVehicleTypesAsync(lif.SupportedVehicleTypes);
+        var agvsRunningOrders = agvs.Where(a => a.CurrentOrder != null).Select(a => a.SerialNumber).ToList();
         if (agvsRunningOrders.Any())
         {
             throw new LifDeletionFailedException($"Failed to delete lif file: agvs {string.Join(",", agvsRunningOrders)} are currently running orders and use graph information from this lif");
@@ -210,8 +209,8 @@ public class LifRequestHandler(
 
     private async Task TriggerGraphSegmentDeletion(ConsumeContext<DeleteLifFile> context, LifFile file)
     {
-        IRequestClient<DeleteGraphSegment>? requestClient = context.CreateRequestClient<DeleteGraphSegment>(bus);
-        Response<Success, Failed> response = await requestClient.GetResponse<Success, Failed>(new DeleteGraphSegment(context.Message.CorrelationId, file.LifCollectionMetaInformation.Creator.ToGuid()));
+        var requestClient = context.CreateRequestClient<DeleteGraphSegment>(bus);
+        var response = await requestClient.GetResponse<Success, Failed>(new DeleteGraphSegment(context.Message.CorrelationId, file.LifCollectionMetaInformation.Creator.ToGuid()));
 
         if (response.Is(out Response<Failed>? _))
         {

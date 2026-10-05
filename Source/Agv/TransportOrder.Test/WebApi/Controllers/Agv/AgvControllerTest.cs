@@ -102,7 +102,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetSingleAgv_UnknownCorrelationId_ReturnsNotFound()
     {
-        AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler> fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgv, GetAgvsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -156,7 +156,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvGraph_UnknownCorrelationId_ReturnsNotFound()
     {
-        AgvControllerTestFixture<GetAgvGraph, GetGraphRequestHandler> fixture = new AgvControllerTestFixture<GetAgvGraph, GetGraphRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvGraph, GetGraphRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -170,7 +170,7 @@ public class AgvControllerTest
     [DataRow(1)]
     public async Task GetAgvData_ValidData_ReturnsAgvDataDto(int index)
     {
-        AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var correlationId = fixture.AgvSerialNumbers[index].ToGuid();
@@ -187,7 +187,7 @@ public class AgvControllerTest
     [DataRow(1)]
     public async Task GetAgvBattery_ValidData_ReturnsAgvBatteryStatusDto(int index)
     {
-        AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler> fixture = new AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var correlationId = fixture.AgvSerialNumbers[index].ToGuid();
@@ -205,7 +205,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvBattery_UnknownCorrelationId_ThrowsException()
     {
-        AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler> fixture = new AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvBattery, GetAgvBatteryRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -215,7 +215,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvSettings_ValidData_ReturnsAgvSettingsDto()
     {
-        AgvControllerTestFixture<GetAgvSettings, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<GetAgvSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var correlationId = fixture.AgvSerialNumbers[0].ToGuid();
@@ -232,7 +232,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvData_UnknownCorrelationId_ReturnsNotFound()
     {
-        AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler> fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvData, GetAgvDataRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -251,7 +251,7 @@ public class AgvControllerTest
         var response2 = new AcceptAgvRejected(correlationId);
         var response3 = new AgvNotFoundResult(correlationId);
         const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.First;
-        IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
+        var requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
             .SetupAgvDbWithDefaultData()
@@ -271,7 +271,7 @@ public class AgvControllerTest
         var response2 = new AcceptAgvRejected(correlationId);
         var response3 = new AgvNotFoundResult(correlationId);
         const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Second;
-        IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
+        var requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
             .SetupAgvDbWithDefaultData()
@@ -291,7 +291,7 @@ public class AgvControllerTest
         var response2 = new AcceptAgvRejected(correlationId);
         var response3 = new AgvNotFoundResult(correlationId);
         const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Third;
-        IRequestClient<AcceptAgv> requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
+        var requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
 
         fixture.AddService(sc => sc.AddTransient(_ => requestClient))
             .SetupAgvDbWithDefaultData()
@@ -304,7 +304,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task LockAgv_Ok()
     {
-        AgvControllerTestFixture<LockAgv, AgvCommandHandler> fixture = new AgvControllerTestFixture<LockAgv, AgvCommandHandler>()
+        var fixture = new AgvControllerTestFixture<LockAgv, AgvCommandHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -321,7 +321,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvData_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler>()
+        var fixture = new AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -333,7 +333,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvData_Ok()
     {
-        AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler>()
+        var fixture = new AgvControllerTestFixture<RequestAgvData, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -350,7 +350,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvZones_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler>()
+        var fixture = new AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -362,7 +362,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvZones_Ok()
     {
-        AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler>()
+        var fixture = new AgvControllerTestFixture<RequestAgvZones, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -379,7 +379,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvGraph_NotFound()
     {
-        AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler>()
+        var fixture = new AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -391,7 +391,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task EmitRequestAgvGraph_Ok()
     {
-        AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler> fixture = new AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler>()
+        var fixture = new AgvControllerTestFixture<RequestAgvGraph, EmitAgvRequestsHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -409,7 +409,7 @@ public class AgvControllerTest
     public async Task MoveAgv_Ok()
     {
         var targetNode = NodeGenerator.GenerateNode(nodeName: "target");
-        AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler>()
+        var fixture = new AgvControllerTestFixture<MoveAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
             .Build();
@@ -422,7 +422,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task MoveAgvToCoordinate_Ok()
     {
-        AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
+        var fixture = new AgvControllerTestFixture<MoveAgvToCoordinate, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData(setUserMode: true)
             .Build();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid();
@@ -435,7 +435,7 @@ public class AgvControllerTest
     public async Task ChargeAgvAtCharger_Ok()
     {
         var targetNode = NodeGenerator.GenerateNode(nodeName: "target", nodeType: AgvGraph.NodeType.Charge);
-        AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler> fixture = new AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
+        var fixture = new AgvControllerTestFixture<ChargeAgv, MoveAgvRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .SetupAgvDbWitNode(targetNode)
             .Build();
@@ -448,7 +448,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task GetAgvs_WhenAgvHasCargo_ReturnsAgvWithCargo()
     {
-        AgvControllerTestFixture<GetAgvHasCargo, CargoRequestHandler> fixture = new AgvControllerTestFixture<GetAgvHasCargo, CargoRequestHandler>()
+        var fixture = new AgvControllerTestFixture<GetAgvHasCargo, CargoRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -462,7 +462,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task SendAgvToCharger_Ok()
     {
-        AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler> fixture = new AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler>()
+        var fixture = new AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var controller = fixture.Controller;
@@ -476,7 +476,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task SendAgvToCharger_UnknownAgv_NotFoundResult()
     {
-        AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler> fixture = new AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler>()
+        var fixture = new AgvControllerTestFixture<SendAgvToCharger, SendAgvToChargerRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var correlationId = Guid.Empty;
@@ -488,7 +488,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task UpdateAgvSettings_ValidData_Ok()
     {
-        AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
+        var fixture = new AgvControllerTestFixture<UpdateAgvSettings, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var actionResult = await fixture.Controller.UpdateAgvSettings(fixture.AgvSerialNumbers[2].ToGuid(), new AgvSettingsDto(false, batteryLevelCritical: 13));
@@ -499,7 +499,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task ResetAgvSettingToDefault_ValidData_Ok()
     {
-        AgvControllerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler> fixture = new AgvControllerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
+        var fixture = new AgvControllerTestFixture<ResetAgvSettingToDefault, AgvSettingsRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
         var actionResult = await fixture.Controller.ResetAgvSettingToDefault(fixture.AgvSerialNumbers[2].ToGuid(), "BatterLevelCritical");
@@ -510,7 +510,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task SetUserMode_ValidData_Ok()
     {
-        AgvControllerTestFixture<SetUserMode, AgvModeRequestHandler> fixture = new AgvControllerTestFixture<SetUserMode, AgvModeRequestHandler>()
+        var fixture = new AgvControllerTestFixture<SetUserMode, AgvModeRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -523,7 +523,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task SetNormalMode_ValidData_Ok()
     {
-        AgvControllerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvControllerTestFixture<SetNormalMode, AgvModeRequestHandler>()
+        var fixture = new AgvControllerTestFixture<SetNormalMode, AgvModeRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -536,7 +536,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task SetMaintenanceMode_ValidData_Ok()
     {
-        AgvControllerTestFixture<SetMaintenanceMode, AgvModeRequestHandler> fixture = new AgvControllerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
+        var fixture = new AgvControllerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -549,7 +549,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task ResendAction_ValidData_Ok()
     {
-        AgvControllerTestFixture<ResendAction, ResendActionRequestHandler> fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
+        var fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -561,7 +561,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task ResendAction_NoAgv_RaisesAgvNotFoundException()
     {
-        AgvControllerTestFixture<ResendAction, ResendActionRequestHandler> fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
+        var fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
             .Build();
 
         await Should.ThrowAsync<RequestException>(fixture.Controller.ResendAction(Guid.Empty));
@@ -570,7 +570,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task ResendAction_NoAction_RespondsWithConflict()
     {
-        AgvControllerTestFixture<ResendAction, ResendActionRequestHandler> fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
+        var fixture = new AgvControllerTestFixture<ResendAction, ResendActionRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -582,7 +582,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task RemoveFromStation_ValidData_RemoveAgvFromStation()
     {
-        AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
+        var fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -595,7 +595,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task RemoveFromStation_NoAgv_ThrowsAgvNotFound()
     {
-        AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
+        var fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
             .SetupAgvDbWithDefaultData()
             .Build();
 
@@ -605,7 +605,7 @@ public class AgvControllerTest
     [TestMethod]
     public async Task RemoveFromStation_NoOnlineAgv_ThrowsAllAgvOfflineException()
     {
-        AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler> fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
+        var fixture = new AgvControllerTestFixture<TransportOrder.Messages.Requests.Stations.RemoveAgvFromStation, AgvStationRequestHandler>()
             .SetupAgvDbWithDefaultData(allAgvsOffline: true)
             .Build();
 

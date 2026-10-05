@@ -234,7 +234,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
     private static void CreateProjection(IParsedFilterable filterable)
     {
-        Type[] treeTypes = filterable.GetType().GetGenericArguments();
+        var treeTypes = filterable.GetType().GetGenericArguments();
 
         if (treeTypes is not [.., { } domModel, { } readModel] || domModel == readModel || TypeMappings.ContainsKey(new Tuple<Type, Type>(domModel, readModel)))
         {
@@ -287,11 +287,11 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
         {
             try
             {
-                Dictionary<string, IFilter> collectionProjectionFilters = filterBase.SeparateCollectionRestrictions(new Dictionary<string, IFilter>());
+                var collectionProjectionFilters = filterBase.SeparateCollectionRestrictions(new Dictionary<string, IFilter>());
 
-                Dictionary<int, IFilter> batches = filterBase.SplitFilter(_totalLayers, _domainPropertyAccessors);
+                var batches = filterBase.SplitFilter(_totalLayers, _domainPropertyAccessors);
 
-                IQueryable<TDomainObject> query = context.Set<TDomainObject>()
+                var query = context.Set<TDomainObject>()
                     .AsNoTracking();
 
                 if (batches.TryGetValue(0, out var baseLevelFilter) && baseLevelFilter.ToExpressionTree(_domainPropertyAccessors) is {} domainBaseFilterExpression)
@@ -316,7 +316,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
                     throw new FilterExecutionException($"Could not find projection for type {typeof(TDomainObject).FullName}");
                 }
 
-                IQueryable<TFilterable> projectedQuery = query.ApplyProjection<TFilterable, TDomainObject>(projection);
+                var projectedQuery = query.ApplyProjection<TFilterable, TDomainObject>(projection);
 
                 if (batches.TryGetValue(_includeLayers.Count, out var readModelBase) && readModelBase.ToExpressionTree(PropertyAccessors) is {} projectedBaseFilterExpression)
                 {
@@ -397,7 +397,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See base class).")]
     public static FilterBy CreateFilter<TDbContext>(IDbContextFactory<TDbContext> contextFactory) where TDbContext : DbContext
     {
-        ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
+        var filterer = CreateFilterApplier<TDbContext>();
 
         return async delegate (IFilter filter)
         {
@@ -416,7 +416,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
     [RequiresUnreferencedCode("Requires attributes on the TReadModel type definition that describe how the read model projects the entity (See base class).")]
     public static FilterByPaginatedWithOrdering CreateFilterWithPagination<TDbContext>(IDbContextFactory<TDbContext> contextFactory) where TDbContext : DbContext
     {
-        ApplyFiltering<TDbContext> filterer = CreateFilterApplier<TDbContext>();
+        var filterer = CreateFilterApplier<TDbContext>();
 
         return async delegate (IFilter filter, int pageNr, int pageSize, SortDirection ordering, ICollection<string> orderByProperties, CancellationToken cancellationToken)
         {
@@ -425,14 +425,14 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
             try
             {
-                IQueryable<TFilterable> projectedQuery = filterer(itemsContext, filter);
+                var projectedQuery = filterer(itemsContext, filter);
                 IOrderedQueryable<TFilterable>? orderedQuery = null;
 
-                List<string> incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
+                var incomingKeys = orderByProperties.Where(s => _keyProperties.Contains(s)).ToList();
 
-                IEnumerable<string> incomingProps = orderByProperties.Where(s => !_keyProperties.Contains(s));
+                var incomingProps = orderByProperties.Where(s => !_keyProperties.Contains(s));
 
-                IEnumerable<string> remainingKeys = _keyProperties.Except(incomingKeys);
+                var remainingKeys = _keyProperties.Except(incomingKeys);
 
                 foreach (string prop in incomingProps)
                 {
@@ -484,10 +484,10 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
                     projectedQuery = projectedQuery.Take(pageNr > 0 ? pageSize + 1 : pageSize);
                 }
 
-                Task<List<TFilterable>> itemsTask = projectedQuery.ToListAsync(cancellationToken);
-                IQueryable<TFilterable> countQuery = filterer(countContext, filter);
+                var itemsTask = projectedQuery.ToListAsync(cancellationToken);
+                var countQuery = filterer(countContext, filter);
 
-                List<TFilterable> items = await itemsTask;
+                var items = await itemsTask;
                 bool hasNextPage = pageNr > 0 && pageSize > 0 && items.Count > pageSize;
                 if (hasNextPage)
                 {
@@ -536,8 +536,8 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
     private static List<Tuple<PropertyInfo, PropertyInfo>> GetShadowingProperties()
     {
-        PropertyInfo[] shadowing = typeof(TFilterable).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-        PropertyInfo[] originals = typeof(TDomainObject).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var shadowing = typeof(TFilterable).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        var originals = typeof(TDomainObject).GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
         List<Tuple<PropertyInfo, PropertyInfo>> result = [];
 
@@ -687,7 +687,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
         private void ExtractConvertedProperties()
         {
-            List<Tuple<PropertyInfo, PropertyInfo>> conversionProperties = FilterableBinder<T, TF>.GetPropertiesWithConversion();
+            var conversionProperties = FilterableBinder<T, TF>.GetPropertiesWithConversion();
 
             foreach (var (originalProp , newProp) in conversionProperties)
             {
@@ -706,7 +706,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
         private void ExtractSubTrees(bool isJoin)
         {
-            List<Tuple<PropertyInfo, PropertyInfo>> subProperties = FilterableBinder<T,TF>.GetSubTreeProperties();
+            var subProperties = FilterableBinder<T,TF>.GetSubTreeProperties();
 
             foreach (var (originalProp, newProperty) in subProperties)
             {
@@ -763,7 +763,7 @@ public sealed class FilterableBinder<TDomainObject, TFilterable> : FilterableBin
 
         private void ExtractLeaves(bool isJoin)
         {
-            List<Tuple<PropertyInfo, PropertyInfo>> filterProperties = FilterableBinder<T, TF>.GetLeafProperties();
+            var filterProperties = FilterableBinder<T, TF>.GetLeafProperties();
 
             foreach (var (oldProperty, newProperty) in filterProperties)
             {

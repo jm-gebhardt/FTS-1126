@@ -64,7 +64,7 @@ public class TrafficManager(
             return;
         }
 
-        Guid? lastNodeId = await agvRepository.GetLastNodeIdAsync(agvCorrelationId);
+        var lastNodeId = await agvRepository.GetLastNodeIdAsync(agvCorrelationId);
         if (lastNodeId.GetValueOrDefault() == Guid.Empty)
         {
             logger.LogWarning("AGV {AgvCorrelationId} has no last node; Last node requirement cannot be verified", agvCorrelationId);

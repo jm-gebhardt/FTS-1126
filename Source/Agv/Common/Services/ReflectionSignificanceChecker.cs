@@ -1,4 +1,3 @@
-using System.Reflection;
 using Gebhardt.Acc.Common.Services.Filters;
 
 namespace Gebhardt.Acc.Common.Services;
@@ -26,9 +25,9 @@ public abstract class ReflectionSignificanceChecker<T> : ISignificanceChecker<T>
             return true;
         }
 
-        Dictionary<string, Func<T, T, bool>> actionByPropertyName = GetSignificantChangeByPropertyName();
+        var actionByPropertyName = GetSignificantChangeByPropertyName();
 
-        PropertyInfo[] properties = typeof(T).GetProperties();
+        var properties = typeof(T).GetProperties();
         foreach (var property in properties)
         {
             object? currentValue = property.GetValue(obj1);
@@ -36,7 +35,7 @@ public abstract class ReflectionSignificanceChecker<T> : ISignificanceChecker<T>
 
             if (currentValue != null &&
                 previousValue != null &&
-                actionByPropertyName.TryGetValue(property.Name, out Func<T, T, bool>? action))
+                actionByPropertyName.TryGetValue(property.Name, out var action))
             {
                 bool hasSignificantChanges = action(obj1, obj2);
                 if (hasSignificantChanges)

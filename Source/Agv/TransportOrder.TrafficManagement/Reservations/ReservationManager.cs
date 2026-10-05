@@ -56,7 +56,7 @@ public class ReservationManager(ILogger<ReservationManager> logger)
     {
         bool wasRemoved = false;
 
-        if (_reservations.TryGetValue(ticket.RoutingResource.Id, out List<ReservationTicket>? tickets))
+        if (_reservations.TryGetValue(ticket.RoutingResource.Id, out var tickets))
         {
             wasRemoved = tickets.Remove(ticket);
 
@@ -78,7 +78,7 @@ public class ReservationManager(ILogger<ReservationManager> logger)
 
         foreach (var relevantResource in relevantResources)
         {
-            if (_reservations.TryGetValue(relevantResource.Id, out List<ReservationTicket>? tickets))
+            if (_reservations.TryGetValue(relevantResource.Id, out var tickets))
             {
                 if (tickets.Any(t => t.AgvCorrelationId != agvCorrelationId))
                 {
@@ -94,7 +94,7 @@ public class ReservationManager(ILogger<ReservationManager> logger)
     {
         var ticket = new ReservationTicket(Guid.NewGuid(), routingResource, agvCorrelationId);
 
-        if (_reservations.TryGetValue(routingResource.Id, out List<ReservationTicket>? tickets))
+        if (_reservations.TryGetValue(routingResource.Id, out var tickets))
         {
             tickets.Add(ticket);
         }

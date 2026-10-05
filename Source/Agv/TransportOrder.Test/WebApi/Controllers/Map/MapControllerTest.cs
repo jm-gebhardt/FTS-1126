@@ -25,7 +25,7 @@ public class MapControllerTest
         var mapBackground = MapBackgroundGenerator.Generate();
         Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
-        MapControllerTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapControllerTestFixture<GetBackgroundImage, MapRequestHandler>()
+        var fixture = new MapControllerTestFixture<GetBackgroundImage, MapRequestHandler>()
             .AddMapRepositoryMock(mapBackground)
             .Build();
 
@@ -53,7 +53,7 @@ public class MapControllerTest
         var mapBackground = MapBackgroundGenerator.Generate();
         Guid correlationId = new("7FE9372B-4219-4D09-8885-966EE125A350");
 
-        MapControllerTestFixture<GetBackgroundImage, MapRequestHandler> fixture = new MapControllerTestFixture<GetBackgroundImage, MapRequestHandler>()
+        var fixture = new MapControllerTestFixture<GetBackgroundImage, MapRequestHandler>()
             .AddMapRepositoryMock(mapBackground)
             .Build();
 
@@ -83,10 +83,10 @@ public class MapControllerTest
             (new NodeLock("nodeId".ToGraphNode(), NodeLockState.Free, false, null, DateTime.UtcNow), Guid.NewGuid(), null, null, null, "nodeId")
         };
 
-        MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler> fixture = new MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler>(nodeStates)
+        var fixture = new MapControllerTestFixture<GetMapNodeStates, NodeStateRequestHandler>(nodeStates)
             .Build();
 
-        List<NodeStateDto> mappedNodeStates = nodeStates.Select(x =>
+        var mappedNodeStates = nodeStates.Select(x =>
             {
                 var dto = fixture.Mapper.Map<NodeStateDto>(x.NodeLock);
                 dto = dto with
@@ -102,7 +102,7 @@ public class MapControllerTest
             })
             .ToList();
 
-        ICollection<NodeStateDto> actualNodeStates = fixture.GetControllerResultAsync(c => c.GetNodeStatesForMap(Guid.NewGuid())).Result;
+        var actualNodeStates = fixture.GetControllerResultAsync(c => c.GetNodeStatesForMap(Guid.NewGuid())).Result;
         actualNodeStates.ShouldNotBeNull();
         actualNodeStates.Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState })
             .ShouldBe(mappedNodeStates.Select(a => new { a.AgvCorrelationId, a.IsLocked, a.NodeId, a.NodeState }));
@@ -115,11 +115,11 @@ public class MapControllerTest
     public async Task GetMap_ShouldReturn_Metadata_WhenBackgroundExists()
     {
         var background = MapBackgroundGenerator.Generate();
-        MapControllerTestFixture<GetMap, MapRequestHandler> fixture = new MapControllerTestFixture<GetMap, MapRequestHandler>()
+        var fixture = new MapControllerTestFixture<GetMap, MapRequestHandler>()
             .AddMapRepositoryMock(background)
             .Build();
         var controller = fixture.Controller;
-        ActionResult<MapDto> result = await controller.GetMap(background.CorrelationId);
+        var result = await controller.GetMap(background.CorrelationId);
         var ok = result.Result as OkObjectResult;
         var dto = ok!.Value as MapDto;
         dto.ShouldNotBeNull();
@@ -134,7 +134,7 @@ public class MapControllerTest
     [TestMethod]
     public async Task GetMap_ShouldThrow_RequestException_WhenBackgroundMissing()
     {
-        MapControllerTestFixture<GetMap, MapRequestHandler> fixture = new MapControllerTestFixture<GetMap, MapRequestHandler>()
+        var fixture = new MapControllerTestFixture<GetMap, MapRequestHandler>()
             .AddMapRepositoryMock(null)
             .Build();
         var controller = fixture.Controller;
@@ -144,7 +144,7 @@ public class MapControllerTest
     [TestMethod]
     public async Task SetBackground_ShouldReturn_Ok_WhenValidImage()
     {
-        MapControllerTestFixture<SetBackground, MapCommandHandler> fixture = new MapControllerTestFixture<SetBackground, MapCommandHandler>()
+        var fixture = new MapControllerTestFixture<SetBackground, MapCommandHandler>()
             .AddMapRepositoryMock(MapBackgroundGenerator.Generate())
             .Build();
         var controller = fixture.Controller;
@@ -169,7 +169,7 @@ public class MapControllerTest
     public async Task DeleteBackground_ShouldReturn_NoContent_WhenSuccessful()
     {
         var correlationId = Guid.NewGuid();
-        MapControllerTestFixture<DeleteBackground, MapCommandHandler> fixture = new MapControllerTestFixture<DeleteBackground, MapCommandHandler>()
+        var fixture = new MapControllerTestFixture<DeleteBackground, MapCommandHandler>()
             .AddMapRepositoryMock(MapBackgroundGenerator.Generate())
             .Build();
         fixture.MapRepositoryMock.Setup(r => r.DeleteCustomBackgroundAsync(correlationId)).ReturnsAsync(true);
@@ -187,7 +187,7 @@ public class MapControllerTest
     public async Task DeleteBackground_ShouldReturn_NoContent_WhenNoCustomBackgroundWasExisting()
     {
         var correlationId = Guid.NewGuid();
-        MapControllerTestFixture<DeleteBackground, MapCommandHandler> fixture = new MapControllerTestFixture<DeleteBackground, MapCommandHandler>()
+        var fixture = new MapControllerTestFixture<DeleteBackground, MapCommandHandler>()
             .AddMapRepositoryMock(null)
             .Build();
         fixture.MapRepositoryMock.Setup(r => r.DeleteCustomBackgroundAsync(correlationId)).ReturnsAsync(false);

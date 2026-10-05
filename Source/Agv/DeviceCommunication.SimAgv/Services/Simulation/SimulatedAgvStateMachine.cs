@@ -679,7 +679,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
     private async Task PublishPositionAsync(BehaviorContext<SimulatedAgvSaga> context, bool forcePublish)
     {
         var saga = context.Saga;
-        Guid? previousNode = saga.LastNodeId;
+        var previousNode = saga.LastNodeId;
         saga.UpdatePosition();
         var position = saga.Position;
         if (position != null)

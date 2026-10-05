@@ -87,8 +87,8 @@ public class Layout
     /// <returns>VehicleTypeIds included in the layouts.</returns>
     public ICollection<string> GetSupportedVehicleTypes()
     {
-        List<string> nodeVehicles = Nodes.SelectMany(n => n.GetSupportedVehicleTypes()).ToList();
-        List<string> edgeVehicles = Edges.SelectMany(e => e.GetSupportedVehicleTypes()).ToList();
+        var nodeVehicles = Nodes.SelectMany(n => n.GetSupportedVehicleTypes()).ToList();
+        var edgeVehicles = Edges.SelectMany(e => e.GetSupportedVehicleTypes()).ToList();
         List<string> vehicles = [.. nodeVehicles, .. edgeVehicles];
         return vehicles.Distinct().ToList();
     }

@@ -24,7 +24,7 @@ public class LogEntryCommandHandler(ILogger<LogEntryCommandHandler> logger, ILog
             return;
         }
 
-        Dictionary<string, object?> variables = entry.Variables.ToDictionary(kv => kv.Key, object? (kv) => kv.Value);
+        var variables = entry.Variables.ToDictionary(kv => kv.Key, object? (kv) => kv.Value);
 
         switch (entry.Category)
         {

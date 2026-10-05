@@ -21,13 +21,13 @@ internal static class GraphMapper
 {
     public static (IReadOnlyCollection<Node> nodes, IReadOnlyCollection<Edge> edges, IReadOnlyCollection<Station> stations) Convert(CommonGraph graph, IReadOnlyDictionary<Guid, AgvType> agvTypes)
     {
-        Dictionary<Guid, LoadState> loadStates = agvTypes.Values.SelectMany(a => a.LoadStates).ToDictionary(ls => ls.Id);
+        var loadStates = agvTypes.Values.SelectMany(a => a.LoadStates).ToDictionary(ls => ls.Id);
 
-        Dictionary<Guid, Node> nodes = MapNodes(graph.Nodes);
-        Dictionary<Guid, Edge> edges = MapEdges(graph.Edges, nodes);
-        List<Station> stations = MapStations(graph.Stations, nodes);
+        var nodes = MapNodes(graph.Nodes);
+        var edges = MapEdges(graph.Edges, nodes);
+        var stations = MapStations(graph.Stations, nodes);
         
-        Dictionary<Guid, RoutingNode> routingNodes = MapRoutingNodes(graph.Nodes, agvTypes, loadStates, nodes);
+        var routingNodes = MapRoutingNodes(graph.Nodes, agvTypes, loadStates, nodes);
         MapRoutingEdgesFromNodes(graph.Nodes, agvTypes, nodes, routingNodes);
         MapRoutingEdgesFromEdges(graph.Edges, agvTypes, edges, routingNodes);
 
@@ -69,7 +69,7 @@ internal static class GraphMapper
 
         foreach (var commonStation in commonStations)
         {
-            List<Node> interactionNode = commonStation.InteractionNodeIds.Select(i => nodes[i]).ToList();
+            var interactionNode = commonStation.InteractionNodeIds.Select(i => nodes[i]).ToList();
 
             var station = new Station(commonStation.Id, commonStation.Name, commonStation.ShortName, commonStation.StationHeight, commonStation.X, commonStation.Y, commonStation.Theta, interactionNode);
 

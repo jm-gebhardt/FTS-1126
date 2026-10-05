@@ -75,7 +75,7 @@ public class Order
     /// <returns>The current node.</returns>
     public OrderNode GetLastNode(string? lastNodeId, DateTime now)
     {
-        List<OrderNode> sortedNodes = Base.Nodes.OrderBy(n => n.SequenceId).ToList();
+        var sortedNodes = Base.Nodes.OrderBy(n => n.SequenceId).ToList();
         if (lastNodeId == null || StartTime == null)
         {
             return sortedNodes.First();

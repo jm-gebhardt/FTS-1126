@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.TransportOrder.Domain;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.ActionGroup;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
@@ -107,7 +106,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     public async Task Consume(ConsumeContext<ActionAbortionCompletedByAgv> context)
     {
         var actionCorrelationId = context.Message.CorrelationId;
-        Guid? assignedAgv = await actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
+        var assignedAgv = await actionGroupRepository.GetAgvAssignedToAction(actionCorrelationId);
         if (assignedAgv == null)
         {
             logger.LogError("Could not complete action abortion for action {Action}, no assigned agv", actionCorrelationId);
@@ -127,7 +126,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
         var actionCorrelationId = context.Message.CorrelationId;
         var actionGroup = await actionGroupRepository.GetRequiredActionGroupByActionIdAsync(actionCorrelationId);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
-        Guid? agv = actionGroup.AssignedAgv;
+        var agv = actionGroup.AssignedAgv;
         if (action.State is ActionState.Completed or ActionState.Canceled)
         {
             logger.LogInformation("Could not complete action cancellation for action {Action}, it is already in state {State}", actionCorrelationId, action.State);
@@ -154,7 +153,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<AutomaticActionWithdrawn> context)
     {
-        (Guid? agvCorrelationId, var targetNode, bool reservedOnly) = context.Message;
+        (var agvCorrelationId, var targetNode, bool reservedOnly) = context.Message;
         if (agvCorrelationId != null)
         {
             var agv = await agvDb.Agvs.GetAgvAsync(agvCorrelationId.Value);
@@ -177,11 +176,11 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupCreated> context)
     {
-        (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
+        var (actionGroup, actionGroupCorrelationId, agvCorrelationId) = context.Message;
 
         if (agvCorrelationId != null)
         {
-            ICollection<Agv> infiniteChargingAgvs = await agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel([agvCorrelationId.Value]);
+            var infiniteChargingAgvs = await agvDb.Agvs.SelectInfinitelyChargingAgvsWithAboveMinChargeUpBatteryLevel([agvCorrelationId.Value]);
             if (infiniteChargingAgvs.Count > 0 && actionGroup.IsQueued)
             {
                 logger.LogInformation("New queued action group {ActionGroupCorrelationId} was created for infinitely charging agv {AgvCorrelationId} with battery level above minimum charge up level, aborting charge action", actionGroup.CorrelationId, actionGroup.AssignedAgv);
@@ -204,7 +203,7 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<ActionGroupQueued> context)
     {
-        (var actionGroup, var actionGroupCorrelationId, Guid? agvCorrelationId) = context.Message;
+        var (actionGroup, actionGroupCorrelationId, agvCorrelationId) = context.Message;
         if (agvCorrelationId != null)
         {
             await context.Publish(new AgvBecameIdle(agvCorrelationId.Value));

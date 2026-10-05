@@ -309,7 +309,7 @@ public class EfTriggerRepositoryTest
         await fixture.AddTriggerAsync(triggers[2]);
         await fixture.AddTriggerAsync(triggers[3]);
 
-        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
+        var triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
         triggerLocations.Count.ShouldBe(2);
     }
 
@@ -337,7 +337,7 @@ public class EfTriggerRepositoryTest
         await repo.AddOrUpdate(triggers[2]);
         await repo.AddOrUpdate(triggers[3]);
 
-        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdNotAvailable);
+        var triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdNotAvailable);
         triggerLocations.Count.ShouldBe(0);
     }
 
@@ -364,7 +364,7 @@ public class EfTriggerRepositoryTest
         await fixture.AddTriggerAsync(triggers[2]);
         await fixture.AddTriggerAsync(triggers[3]);
 
-        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
+        var triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeIdToUse);
         triggerLocations.Count.ShouldBe(0);
     }
 
@@ -394,7 +394,7 @@ public class EfTriggerRepositoryTest
         await fixture.AddTriggerAsync(triggers[3]);
         await fixture.Repository.LoadTriggerToLocationDictionary();
 
-        ICollection<Location> triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
+        var triggerLocations = fixture.Repository.GetNodeTriggerLocations(nodeToUse.Id);
         triggerLocations.Count.ShouldBe(2);
     }
 
@@ -421,7 +421,7 @@ public class EfTriggerRepositoryTest
         updatedTrigger.ConfigurationParameters.First().Value = updatedValue;
         await repo.AddOrUpdate(updatedTrigger);
 
-        ICollection<Trigger> updatedTriggers = await repo.GetTriggers();
+        var updatedTriggers = await repo.GetTriggers();
         updatedTriggers.Count.ShouldBe(2);
         updatedTriggers.First(l => l.Id == triggers[0].Id).ConfigurationParameters.First().Value.ShouldBe(updatedValue);
     }
@@ -476,8 +476,8 @@ public class EfTriggerRepositoryTest
         var agvId = Guid.NewGuid();
         var agvPosition = new AgvPosition(true, 1.5f, 1.5f, 0, 0);
 
-        ICollection<PolygonTriggerResult> result = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
-        List<Location> locations = result.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
+        var result = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
+        var locations = result.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
         locations.Count.ShouldBe(1);
         locations.First().TriggerId.ShouldBe(triggers[2].Id);
     }
@@ -512,8 +512,8 @@ public class EfTriggerRepositoryTest
         var agvId = Guid.NewGuid();
         var agvPosition = new AgvPosition(true, 3f, 3f, 0, 0);
 
-        ICollection<PolygonTriggerResult> result = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
-        List<Location> locations = result.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
+        var result = await fixture.Repository.GetPolygonTriggerLocations(agvId, agvPosition);
+        var locations = result.Where(l => l.Action == PolygonTriggerAction.Entered).Select(l => l.Location).ToList();
         locations.Count.ShouldBe(0);
     }
 
@@ -546,7 +546,7 @@ public class EfTriggerRepositoryTest
 
         var agvPosition = new AgvPosition(true, 3f, 3f, 0, 0);
 
-        ICollection<Location> locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
+        var locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
         locations.Count.ShouldBe(0);
     }
 
@@ -579,7 +579,7 @@ public class EfTriggerRepositoryTest
 
         var agvPosition = new AgvPosition(true, 1.5f, 1.5f, 0, 0);
 
-        ICollection<Location> locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
+        var locations = fixture.Repository.GetPolygonTriggerLocations(agvPosition);
         locations.Count.ShouldBe(1);
         locations.First().TriggerId.ShouldBe(triggers[2].Id);
     }

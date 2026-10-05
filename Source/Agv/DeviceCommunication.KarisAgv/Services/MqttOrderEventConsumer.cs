@@ -37,7 +37,7 @@ public class MqttOrderEventConsumer : IConsumer<MqttOrderEvent>
         _logger.LogInformation("Received {MessageType}.{OrderEventType} for {OrderId}", nameof(MqttOrderEvent), message.OrderEventType, actionId);
 
         // Only applicable if the internal order id and the one sent to the vehicle differ.
-        Guid? internalOrderId = await _actionRepository.GetInternalOrderId(actionId);
+        var internalOrderId = await _actionRepository.GetInternalOrderId(actionId);
         if (internalOrderId != null)
         {
             _logger.LogInformation("Replacing vehicle {OrderId} by fleet management internally used {InternalOrderId}", actionId, internalOrderId);

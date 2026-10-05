@@ -76,7 +76,7 @@ public class ReservationManagerTests
         var secondResource = RoutingResourceGenerator.GenerateResource();
         var agvCorrelationId = Guid.NewGuid();
 
-        bool wasReserved = manager.TryReserve([firstResource, secondResource], agvCorrelationId, out IReadOnlyCollection<ReservationTicket> tickets);
+        bool wasReserved = manager.TryReserve([firstResource, secondResource], agvCorrelationId, out var tickets);
 
         wasReserved.ShouldBeTrue();
         tickets.Count.ShouldBe(2);
@@ -97,7 +97,7 @@ public class ReservationManagerTests
         var requestingAgvId = Guid.NewGuid();
         manager.TryReserve(blockedResource, blockingAgvId, out _).ShouldBeTrue();
 
-        bool wasReserved = manager.TryReserve([availableResource, blockedResource], requestingAgvId, out IReadOnlyCollection<ReservationTicket> tickets);
+        bool wasReserved = manager.TryReserve([availableResource, blockedResource], requestingAgvId, out var tickets);
 
         wasReserved.ShouldBeFalse();
         tickets.ShouldBeEmpty();

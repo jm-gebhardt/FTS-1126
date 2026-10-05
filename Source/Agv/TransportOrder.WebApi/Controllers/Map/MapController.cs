@@ -82,7 +82,7 @@ public class MapController : Controller
     [Produces("image/png")]
     public async Task<ActionResult> GetBackgroundImage(Guid correlationId)
     {
-        Response<GotBackgroundImage> response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId));
+        var response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId));
 
         return File(response.Message.Image, "image/png");
     }
@@ -99,7 +99,7 @@ public class MapController : Controller
     [Produces("image/png")]
     public async Task<ActionResult> GetBaseBackgroundImage(Guid correlationId)
     {
-        Response<GotBackgroundImage> response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId, GetBaseImage:true));
+        var response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId, GetBaseImage:true));
 
         return File(response.Message.Image, "image/png");
     }
@@ -160,7 +160,7 @@ public class MapController : Controller
     [Route("/map/{correlationId:guid}")]
     public async Task<ActionResult<MapDto>> GetMap(Guid correlationId)
     {
-        Response<GotMap> response = await _getMapClient.GetResponse<GotMap>(new GetMap(correlationId));
+        var response = await _getMapClient.GetResponse<GotMap>(new GetMap(correlationId));
         var map = _mapper.Map<MapDto>(response.Message.Map);
         return Ok(map);
     }
@@ -195,7 +195,7 @@ public class MapController : Controller
     [Route("/map/{correlationId:guid}/graph")]
     public async Task<ActionResult<GraphDto>> GetMapGraph(Guid correlationId)
     {
-        Response<GotMapGraph> response = await _getMapGraphClient.GetResponse<GotMapGraph>(new GetMapGraph(correlationId));
+        var response = await _getMapGraphClient.GetResponse<GotMapGraph>(new GetMapGraph(correlationId));
         var graph = _mapper.Map<GraphDto>(response.Message.Graph);
         return Ok(graph);
     }
@@ -210,9 +210,9 @@ public class MapController : Controller
     [Route("/map/{correlationId:guid}/nodeStates")]
     public async Task<ActionResult<ICollection<NodeStateDto>>> GetNodeStatesForMap(Guid correlationId)
     {
-        Response<GotMapNodeStates> response = await _getMapNodeStatesClient.GetResponse<GotMapNodeStates>(new GetMapNodeStates(correlationId));
+        var response = await _getMapNodeStatesClient.GetResponse<GotMapNodeStates>(new GetMapNodeStates(correlationId));
 
-        List<NodeStateDto> nodeStateDtos = response.Message.NodeStates.Select(x =>
+        var nodeStateDtos = response.Message.NodeStates.Select(x =>
             {
                 var dto = _mapper.Map<NodeStateDto>(x.NodeLock) with
                 {
@@ -239,7 +239,7 @@ public class MapController : Controller
     [Route("/map/{correlationId:guid}/stations")]
     public async Task<ActionResult<ICollection<StationDto>>> GetStationsForMap(Guid correlationId)
     {
-        Response<GotMapStations> response = await _getMapStationsClient.GetResponse<GotMapStations>(new GetMapStations(correlationId));
+        var response = await _getMapStationsClient.GetResponse<GotMapStations>(new GetMapStations(correlationId));
         var stationsDto = _mapper.Map<List<StationDto>>(response.Message.Stations);
         return Ok(stationsDto);
     }

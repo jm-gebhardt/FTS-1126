@@ -1,7 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Messages.Stations.Requests;
 using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TestPlanRunner.Configuration;
-using Gebhardt.Acc.TestPlanRunner.Domain.Models;
 using Gebhardt.Acc.TestPlanRunner.Domain.Parsing;
 using Gebhardt.Acc.TestPlanRunner.Domain.Providers;
 using JetBrains.Annotations;
@@ -79,9 +78,9 @@ public class TestPlanFileWatcher : IPollable
 
     private async Task ProcessDirectoryAsync(string directoryPath, CancellationToken cancellationToken)
     {
-        HashSet<string> currentFiles = GetSupportedFiles(directoryPath, _parserFactory.SupportedExtensions).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var currentFiles = GetSupportedFiles(directoryPath, _parserFactory.SupportedExtensions).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        List<string> deletedFiles = _knownFiles.Where(f => !currentFiles.Contains(f)).ToList();
+        var deletedFiles = _knownFiles.Where(f => !currentFiles.Contains(f)).ToList();
         foreach (string deletedFile in deletedFiles)
         {
             await ProcessDeletedFileAsync(deletedFile);
@@ -102,12 +101,12 @@ public class TestPlanFileWatcher : IPollable
 
     private async Task UpdateStations(CancellationToken cancellationToken)
     {
-        IRequestClient<GetStationLabels>? requestClient = _bus.CreateRequestClient<GetStationLabels>(timeout: TimeSpan.FromSeconds(30));
-        Response<GotStationLabels> response = await requestClient.GetResponse<GotStationLabels>(new GetStationLabels(), cancellationToken);
+        var requestClient = _bus.CreateRequestClient<GetStationLabels>(timeout: TimeSpan.FromSeconds(30));
+        var response = await requestClient.GetResponse<GotStationLabels>(new GetStationLabels(), cancellationToken);
         _stationProvider.Update(response.Message.Labels);
 
-        IRequestClient<GetStationTypes>? stationsClient = _bus.CreateRequestClient<GetStationTypes>(timeout: TimeSpan.FromSeconds(30));
-        Response<GotStationTypes> stationsResponse = await stationsClient.GetResponse<GotStationTypes>(new GetStationTypes(), cancellationToken);
+        var stationsClient = _bus.CreateRequestClient<GetStationTypes>(timeout: TimeSpan.FromSeconds(30));
+        var stationsResponse = await stationsClient.GetResponse<GotStationTypes>(new GetStationTypes(), cancellationToken);
         _stationProvider.UpdateStationTypes(stationsResponse.Message.Stations);
     }
 
@@ -169,7 +168,7 @@ public class TestPlanFileWatcher : IPollable
 
         string testPlanName = Path.GetFileNameWithoutExtension(filePath);
 
-        List<TestPlan> activeTestPlans = _testPlanManager.GetActiveTestPlans().ToList();
+        var activeTestPlans = _testPlanManager.GetActiveTestPlans().ToList();
         var matchingPlan = activeTestPlans.FirstOrDefault(p => p.Name == testPlanName);
 
         if (matchingPlan != null)

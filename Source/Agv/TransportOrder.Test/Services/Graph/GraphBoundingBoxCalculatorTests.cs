@@ -86,7 +86,7 @@ public class GraphBoundingBoxCalculatorTests
         var agvType = AgvTypeGenerator.GenerateAgvTypeInfo(RoutingGraphGenerator.AgvTypeIdentifier,
             length: Fixture.AgvLength, width: Fixture.AgvWidth);
 
-        IReadOnlyList<ResourceBoundingBox> boxes = new Fixture()
+        var boxes = new Fixture()
             .WithGraph(graph)
             .Calculator.CalculateAll(agvType, []);
 

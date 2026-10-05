@@ -49,7 +49,7 @@ public class LoggingService(ILogEntryRepository logEntryRepository, IBus bus, IM
 
         if (severity is LogLevel.Warning or LogLevel.Error)
         {
-            IReadOnlyList<Models.ActionGroup.ActionGroup> actionGroups = await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Started], null, null, 1, agvId, null, Models.ActionGroup.SortBy.StartedDate, false);
+            var actionGroups = await actionGroupRepository.GetActionGroupsAsync([ActionGroupState.Started], null, null, 1, agvId, null, Models.ActionGroup.SortBy.StartedDate, false);
             if (actionGroups.Count > 0)
             {
                 actionGroupCorrelationId = actionGroups.First().CorrelationId;

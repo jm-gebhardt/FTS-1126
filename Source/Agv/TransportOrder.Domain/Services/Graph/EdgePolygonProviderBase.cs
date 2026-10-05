@@ -63,8 +63,8 @@ public abstract class EdgePolygonProviderBase : IEdgePolygonProvider
         // is convex and ordered CCW, the chain from the inner to the outer vertex is the leading (front) face and
         // the chain from the outer back to the inner vertex is the trailing (rear) face. Taking the whole chain -
         // instead of only the extreme-X vertices - preserves slanted or pointed faces of an arbitrary convex shape.
-        List<Vector2> endCap = BoundaryChain(vertices, innerIndex, outerIndex);
-        List<Vector2> startCap = BoundaryChain(vertices, outerIndex, innerIndex);
+        var endCap = BoundaryChain(vertices, innerIndex, outerIndex);
+        var startCap = BoundaryChain(vertices, outerIndex, innerIndex);
 
         return (innerVertex, outerVertex, startCap, endCap);
     }

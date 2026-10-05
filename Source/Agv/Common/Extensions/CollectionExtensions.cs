@@ -35,7 +35,7 @@ public static class CollectionExtensions
     public static bool AddRange<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> kvEnumerable) where TKey: notnull
     {
         bool allAdded = true;
-        foreach (KeyValuePair<TKey, TValue> kv in kvEnumerable)
+        foreach (var kv in kvEnumerable)
         {
             if (dictionary.ContainsKey(kv.Key))
             {

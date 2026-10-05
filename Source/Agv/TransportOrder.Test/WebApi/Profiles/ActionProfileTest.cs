@@ -19,7 +19,7 @@ public class ActionProfileTest
     {
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new TransportOrder.WebApi.Profiles.ActionProfile(), new AgvErrorProfile(), new ActionProfile());
 
-        List<AgvAction> actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
+        var actions = AgvActionGenerator.GeneratePickDropActionGroup().Actions.OrderByDescending(x => x.Sequence).ToList();
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
         var actionGroupDto = mapper.Map<ActionGroupDto>(mapper.Map<ActionGroup>(actionGroup).ConvertFromActionGroupWithFakeNodeType());
         actionGroupDto.Actions.Select(a => a.Sequence).ShouldBeInOrder(SortDirection.Ascending);
@@ -40,7 +40,7 @@ public class ActionProfileTest
     {
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile(), new AgvProfile(), new TransportOrder.WebApi.Profiles.ActionProfile(), new AgvErrorProfile(), new ActionProfile());
 
-        List<AgvAction> actions = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget().Actions.OrderByDescending(x => x.Sequence).ToList();
+        var actions = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget().Actions.OrderByDescending(x => x.Sequence).ToList();
         var actionGroup = AgvActionGenerator.GenerateActionGroup(actions);
         var actionGroupDto = mapper.Map<ActionGroupDto>(mapper.Map<ActionGroup>(actionGroup).ConvertFromActionGroupWithFakeNodeType());
         actionGroupDto.Actions.Select(a => a.Sequence).ShouldBeInOrder(SortDirection.Ascending);

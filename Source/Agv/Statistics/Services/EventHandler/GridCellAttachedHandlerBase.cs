@@ -49,7 +49,7 @@ public abstract class GridCellAttachedHandlerBase<TMessage> : IConsumer<TMessage
     {
         var message = context.Message;
 
-        List<GridCell> gridCells = await _statisticsDb.GridCell.GetOrAddGridCellsForCoordinatesAsync((decimal) message.AgvPosition.X, (decimal) message.AgvPosition.Y);
+        var gridCells = await _statisticsDb.GridCell.GetOrAddGridCellsForCoordinatesAsync((decimal) message.AgvPosition.X, (decimal) message.AgvPosition.Y);
 
         Logger.LogDebug("Handling {MessageType} for AGV {SerialNumber} with position {Position} and grid cell Ids {GridIds}",
             typeof(TMessage).Name, message.SerialNumber, message.AgvPosition, gridCells.Select(g => g.CellId));

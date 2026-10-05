@@ -53,7 +53,7 @@ public class Reason
             throw new ArgumentException("The template must not be null or empty.");
         }
 
-        List<int> placeholders = Regex.Matches(template, @"\{-?\d+\}")
+        var placeholders = Regex.Matches(template, @"\{-?\d+\}")
             .Select(match => int.Parse(match.Value.Trim('{', '}')))
             .ToList();
 

@@ -15,7 +15,7 @@ public class AgvModeRequestHandlerTest
     public async Task Consume_SetMaintenanceMode_ValidData_PublishesSetMaintenanceModeRespondsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler > fixture = new AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SetMaintenanceMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
         await fixture.GetResponseAsync<Success>(new SetMaintenanceMode(agv.CorrelationId, "user", MaintenanceReason.Other, "reason description", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
@@ -27,7 +27,7 @@ public class AgvModeRequestHandlerTest
     public async Task Consume_SetUserMode_ValidData_PublishesSetUserModeRespondsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<SetUserMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetUserMode, AgvModeRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SetUserMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
         await fixture.GetResponseAsync<Success>(new SetUserMode(agv.CorrelationId, "user", AssignedActionGroupPolicy.Reset, CurrentActionGroupPolicy.Pause, false));
@@ -38,7 +38,7 @@ public class AgvModeRequestHandlerTest
     public async Task Consume_SetNormalMode_NoPausedActionGroup_PublishesSetNormalModeRespondsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
-        AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
         await fixture.GetResponseAsync<Success>(new SetNormalMode(agv.CorrelationId, "user"));
@@ -50,7 +50,7 @@ public class AgvModeRequestHandlerTest
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Paused, assignedAgv: agv.CorrelationId);
-        AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
             .WithAgv(agv, actionGroup)
             .Build();
         await fixture.GetResponseAsync<Success>(new SetNormalMode(agv.CorrelationId, "user"));
@@ -61,7 +61,7 @@ public class AgvModeRequestHandlerTest
     public async Task Consume_SetNormalMode_LockedAgv_PublishesSetNormalModeRespondsSuccess()
     {
         var agv = AgvGenerator.GenerateIdleAgv(mode: new AgvMode(ModeType.Locked));
-        AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler> fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
+        var fixture = new AgvRequestsHandlerTestFixture<SetNormalMode, AgvModeRequestHandler>()
             .WithAgv(agv)
             .Build();
         await fixture.GetResponseAsync<Success>(new SetNormalMode(agv.CorrelationId, "user"));

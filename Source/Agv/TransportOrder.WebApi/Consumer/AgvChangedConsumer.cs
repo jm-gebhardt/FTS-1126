@@ -142,7 +142,7 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// </summary>
     public async Task Consume(ConsumeContext<AgvZonesChanged> context)
     {
-        (var correlationId, ICollection<string> zones) = context.Message;
+        var (correlationId, zones) = context.Message;
         await _agvPublisher.SendAgvZonesChangedAsync(correlationId, zones);
     }
 
@@ -151,7 +151,7 @@ public class AgvChangedConsumer : IConsumer<AgvStateChanged>,
     /// </summary>
     public async Task Consume(ConsumeContext<AgvStationsChanged> context)
     {
-        (var correlationId, ICollection<string> stations) = context.Message;
+        var (correlationId, stations) = context.Message;
         await _agvPublisher.SendAgvStationsChangedAsync(correlationId, stations);
     }
 

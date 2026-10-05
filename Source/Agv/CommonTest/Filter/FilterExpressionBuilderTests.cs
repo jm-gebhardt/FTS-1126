@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Gebhardt.Acc.Common.Filter.Enums;
+﻿using Gebhardt.Acc.Common.Filter.Enums;
 using Gebhardt.Acc.Common.Filter.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -19,9 +18,9 @@ public class FilterExpressionBuilderTests
         const int testValue = 10;
         var valueHolder = new TestValueHolder<int>(testValue);
 
-        Expression<Func<TestValueHolder<int>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<int>, int>(compareTo, nameof(TestValueHolder<>.Value));
+        var expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<int>, int>(compareTo, nameof(TestValueHolder<>.Value));
 
-        Func<TestValueHolder<int>, int> compiled = expression.Compile();
+        var compiled = expression.Compile();
 
         compiled.Invoke(valueHolder).ShouldBe(compareTo.CompareTo(testValue));
     }
@@ -36,9 +35,9 @@ public class FilterExpressionBuilderTests
         const string testValue = "10";
         var valueHolder = new TestValueHolder<string>(testValue);
 
-        Expression<Func<TestValueHolder<string>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<string>, string>(compareTo, nameof(TestValueHolder<>.Value));
+        var expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<string>, string>(compareTo, nameof(TestValueHolder<>.Value));
 
-        Func<TestValueHolder<string>, int> compiled = expression.Compile();
+        var compiled = expression.Compile();
 
         // ReSharper disable once StringCompareToIsCultureSpecific
         compiled.Invoke(valueHolder).ShouldBe(compareTo.CompareTo(testValue));
@@ -55,9 +54,9 @@ public class FilterExpressionBuilderTests
         var compareToValue = new RefType(compareTo);
         var valueHolder = new TestValueHolder<RefType>(testValue);
 
-        Expression<Func<TestValueHolder<RefType>, int>> expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<RefType>, RefType>(compareToValue, nameof(TestValueHolder<>.Value));
+        var expression = FilterExpressionBuilder.CreateCompareToExpression<TestValueHolder<RefType>, RefType>(compareToValue, nameof(TestValueHolder<>.Value));
 
-        Func<TestValueHolder<RefType>, int> compiled = expression.Compile();
+        var compiled = expression.Compile();
 
         compiled.Invoke(valueHolder).ShouldBe(compareToValue.CompareTo(testValue));
     }
@@ -81,9 +80,9 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
         
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
+        var predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
 
-        List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
+        var results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
         results.Count.ShouldBe(expectedCount);
     }
@@ -108,9 +107,9 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.CreateIsOneOfPredicate<TestDbEntity, int>(values.Take(expectedValue).ToList(), nameof(TestDbEntity.IntValue));
+        var predicate = FilterExpressionBuilder.CreateIsOneOfPredicate<TestDbEntity, int>(values.Take(expectedValue).ToList(), nameof(TestDbEntity.IntValue));
 
-        List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
+        var results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
         results.Count.ShouldBe(expectedValue);
     }
@@ -134,9 +133,9 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, string>(targetValue, nameof(TestDbEntity.StringValue), variant);
+        var predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, string>(targetValue, nameof(TestDbEntity.StringValue), variant);
 
-        List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
+        var results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
         results.Count.ShouldBe(expectedCount);
     }
@@ -162,11 +161,11 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
+        var predicate = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(targetValue, nameof(TestDbEntity.IntValue), variant);
 
-        Expression<Func<TestDbEntity, bool>> inverted = FilterExpressionBuilder.NegatePredicate(predicate);
+        var inverted = FilterExpressionBuilder.NegatePredicate(predicate);
 
-        List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(inverted).ToListAsync();
+        var results = await context.Set<TestDbEntity>().Where(inverted).ToListAsync();
 
         results.Count.ShouldBe(expectedCount);
     }
@@ -186,12 +185,12 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate1 = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(1, nameof(TestDbEntity.IntValue), ComparisonVariant.Geq);
-        Expression<Func<TestDbEntity, bool>> predicate2 = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, string>("3", nameof(TestDbEntity.StringValue), ComparisonVariant.Geq);
+        var predicate1 = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, int>(1, nameof(TestDbEntity.IntValue), ComparisonVariant.Geq);
+        var predicate2 = FilterExpressionBuilder.GenerateNumericalPredicate<TestDbEntity, string>("3", nameof(TestDbEntity.StringValue), ComparisonVariant.Geq);
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.ConnectPredicates(predicate1, predicate2, op);
+        var predicate = FilterExpressionBuilder.ConnectPredicates(predicate1, predicate2, op);
         
-        List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
+        var results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
         results.Count.ShouldBe(expectedCount);
     }
@@ -215,9 +214,9 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateContainsPredicate<TestDbEntity>(targetValue, nameof(TestDbEntity.StringValue));
+        var predicate = FilterExpressionBuilder.GenerateContainsPredicate<TestDbEntity>(targetValue, nameof(TestDbEntity.StringValue));
 
-        List<TestDbEntity> results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
+        var results = await context.Set<TestDbEntity>().Where(predicate).ToListAsync();
 
         results.Count.ShouldBe(expectedCount);
     }
@@ -225,7 +224,7 @@ public class FilterExpressionBuilderTests
     [TestMethod]
     public void CreateAggregationPredicate_ValidData_GeneratesPredicate()
     {
-        Expression<Func<IEnumerable<bool>, bool>> predicate = FilterExpressionBuilder.CreateAggregationPredicate((bool a) => a, CollectionAggregateVariant.All);
+        var predicate = FilterExpressionBuilder.CreateAggregationPredicate((bool a) => a, CollectionAggregateVariant.All);
 
         predicate.Compile().Invoke([true, true, false]).ShouldBeFalse();
     }
@@ -260,15 +259,15 @@ public class FilterExpressionBuilderTests
 
         await using var context = await fixture.ContextFactory.CreateDbContextAsync();
 
-        Expression<Func<TestDbEntity, bool>> predicate = FilterExpressionBuilder.GenerateContainsPredicate<TestDbEntity>("AAA", nameof(TestDbEntity.StringValue));
+        var predicate = FilterExpressionBuilder.GenerateContainsPredicate<TestDbEntity>("AAA", nameof(TestDbEntity.StringValue));
 
-        Expression<Func<IEnumerable<TestDbEntity>, bool>> aggregatePredicate = FilterExpressionBuilder.CreateAggregationPredicate(predicate, variant);
+        var aggregatePredicate = FilterExpressionBuilder.CreateAggregationPredicate(predicate, variant);
 
-        Expression<Func<TestCollectionEntity, List<TestDbEntity>>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestCollectionEntity, List<TestDbEntity>>(nameof(TestCollectionEntity.Values));
+        var accessor = FilterExpressionBuilder.CreatePropertyAccess<TestCollectionEntity, List<TestDbEntity>>(nameof(TestCollectionEntity.Values));
 
-        Expression<Func<TestCollectionEntity, bool>> accessorAndPredicate = ExpressionHelper.Compose(accessor, aggregatePredicate);
+        var accessorAndPredicate = ExpressionHelper.Compose(accessor, aggregatePredicate);
 
-        List<TestCollectionEntity> results = await context.Set<TestCollectionEntity>().Include(a => a.Values).Where(accessorAndPredicate).ToListAsync();
+        var results = await context.Set<TestCollectionEntity>().Include(a => a.Values).Where(accessorAndPredicate).ToListAsync();
 
         results.Count.ShouldBe(expectedCount);
     }
@@ -276,7 +275,7 @@ public class FilterExpressionBuilderTests
     [TestMethod]
     public void CreateIdentityExpression_ValidData_CreatesIdentityExpression()
     {
-        Expression<Func<string, string>> identity = ExpressionHelper.CreateIdentityExpression<string>();
+        var identity = ExpressionHelper.CreateIdentityExpression<string>();
 
         const string test = "Test";
 
@@ -288,11 +287,11 @@ public class FilterExpressionBuilderTests
     {
         TestValueHolder<TestValueHolder<int>>? nullableValue = null;
 
-        Expression<Func<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>> accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>(nameof(TestValueHolder<>.Value));
+        var accessor = FilterExpressionBuilder.CreatePropertyAccess<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>(nameof(TestValueHolder<>.Value));
 
         Should.Throw<NullReferenceException>(() => accessor.Compile()(nullableValue));
 
-        Expression<Func<TestValueHolder<TestValueHolder<int>>?, TestValueHolder<int>?>> nullableAccessor = FilterExpressionBuilder.MakeNullCoalescing(accessor);
+        var nullableAccessor = FilterExpressionBuilder.MakeNullCoalescing(accessor);
 
         nullableAccessor.Compile()(nullableValue).ShouldBeNull();
     }
@@ -302,7 +301,7 @@ public class FilterExpressionBuilderTests
     {
         DateTime? nullableValue = null;
         
-        Expression<Func<DateTime?, DayOfWeek?>> nullableAccessor = FilterExpressionBuilder.CreateCoalescingStructAccessor<DateTime, DayOfWeek>(nameof(DateTime.DayOfWeek));
+        var nullableAccessor = FilterExpressionBuilder.CreateCoalescingStructAccessor<DateTime, DayOfWeek>(nameof(DateTime.DayOfWeek));
 
         nullableAccessor.Compile()(nullableValue).ShouldBeNull();
 

@@ -24,7 +24,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_ActionGroupCreated_ActionGroupsAlreadyQueued_DoesNotPublishQueueActionGroup()
     {
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup();
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var actionGroupCreated = new ActionGroupCreated(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, null);
@@ -38,7 +38,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_ActionGroupCreated_MoveActionGroup_DoesNotPublishQueueActionGroup()
     {
         var actionGroup = Helper.AgvActionGenerator.GenerateMoveActionGroup();
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var actionGroupCreated = new ActionGroupCreated(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, null);
@@ -52,7 +52,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_ActionGroupCreated_NoDoppelspielDrop_PublishesQueueActionGroup()
     {
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithDropAction(null)
             .WithStationGroupLimit(true)
             .AddActionGroup(actionGroup);
@@ -68,7 +68,7 @@ public class DoppelspielCommandHandlerTest
     public async Task Consume_ActionGroupCreated_AgvStationLimitationViolated_DoesNotPublishQueueActionGroup()
     {
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithDropAction(null)
             .WithStationGroupLimit(false)
             .AddActionGroup(actionGroup);
@@ -87,7 +87,7 @@ public class DoppelspielCommandHandlerTest
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         var dropActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true, assignedAgv: Guid.NewGuid(), canRunDoppelspiel: true);
         var doppelspielDropAction = dropActionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithDropAction(dropActionGroup)
             .WithStationGroupLimit(false)
             .AddActionGroup(actionGroup);
@@ -109,7 +109,7 @@ public class DoppelspielCommandHandlerTest
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         var dropActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: true, assignedAgv: Guid.NewGuid(), canRunDoppelspiel: true);
         var doppelspielDropAction = dropActionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithDropAction(dropActionGroup)
             .WithStationGroupLimit(true)
             .AddActionGroup(actionGroup);
@@ -131,7 +131,7 @@ public class DoppelspielCommandHandlerTest
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.OrderOrQueueHead;
         var queue = QueueGenerator.GenerateEmptyQueue();
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStationGroupLimit(true)
             .AddActionGroup(actionGroup)
             .WithRoute([Guid.NewGuid(), Guid.NewGuid()])
@@ -150,7 +150,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(isQueued: false);
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.Target.DoppelspielMode = DoppelspielMode.Always;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var actionGroupCreated = new ActionGroupCreated(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, null);
@@ -239,7 +239,7 @@ public class DoppelspielCommandHandlerTest
         var agvData = AgvDataGenerator.GenerateAgvData(Guid.NewGuid());
         var status = AgvStatusGenerator.Generate(agvCorrelationId: agvData.AgvCorrelationId);
         var actionGroup = Helper.AgvActionGenerator.GenerateChargeActionGroup();
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], "StationName");
@@ -259,7 +259,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.RegisterDoppelspiel(ActionType.Drop);
         actionGroup.SetDoppelspielpartner(Guid.NewGuid(), ActionType.Drop);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var doppelspielPartnerQueued = await fixture.PublishAndGetFirstMessageAsync<TriggerDoppelspielPartnerQueueing, DoppelspielPartnerQueued>(new TriggerDoppelspielPartnerQueueing(actionGroup.CorrelationId, actionGroup.AssignedAgv.GetValueOrDefault(), actionGroup.Actions.Single(a => a.ActionType == ActionType.Drop).Target.Node!));
@@ -273,7 +273,7 @@ public class DoppelspielCommandHandlerTest
     {
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         actionGroup.RegisterDoppelspiel(ActionType.Drop);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithNextPickForStation(null)
             .AddActionGroup(actionGroup);
 
@@ -294,7 +294,7 @@ public class DoppelspielCommandHandlerTest
         var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: station);
         var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pick.Target.DoppelspielMode = mode;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithNextPickForStation(nextPickActionGroup)
             .AddActionGroup(actionGroup);
 
@@ -314,7 +314,7 @@ public class DoppelspielCommandHandlerTest
         var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pick.Target.DoppelspielMode = DoppelspielMode.Order;
         var assignedActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: actionGroup.AssignedAgv, source: station);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithNextPickForStation(nextPickActionGroup)
             .WithCreatedAndStartedActionGroups([assignedActionGroup])
             .AddActionGroup(actionGroup);
@@ -334,7 +334,7 @@ public class DoppelspielCommandHandlerTest
         var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: station);
         var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pick.Target.DoppelspielMode = DoppelspielMode.Order;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithNextPickForStation(nextPickActionGroup)
             .WithCreatedAndStartedActionGroups([])
             .WithStationGroupLimit(false)
@@ -439,7 +439,7 @@ public class DoppelspielCommandHandlerTest
         var nextPickActionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(source: station);
         var pick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pick.Target.DoppelspielMode = DoppelspielMode.Order;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithNextPickForStation(nextPickActionGroup)
             .WithCreatedAndStartedActionGroups([])
             .WithStationGroupLimit(true)
@@ -466,7 +466,7 @@ public class DoppelspielCommandHandlerTest
             handlingUnit: "HU",
             pickActionState: ActionState.Completed, source: "APL1",
             dropActionState: actionState, destination: station);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station);
@@ -490,7 +490,7 @@ public class DoppelspielCommandHandlerTest
             handlingUnit: "HU",
             pickActionState: ActionState.Completed, source: "APL1",
             dropActionState: ActionState.Completed, destination: "PS01");
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], "PS02");
@@ -516,7 +516,7 @@ public class DoppelspielCommandHandlerTest
             isManual: true,
             pickActionState: ActionState.Completed, source: "APL1",
             dropActionState: ActionState.Completed, destination: station);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station);
@@ -544,7 +544,7 @@ public class DoppelspielCommandHandlerTest
             dropActionState: ActionState.Completed, destination: "APL1");
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
         pickAction.AdditionalInfo = "SAP:1020";
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station);
@@ -569,7 +569,7 @@ public class DoppelspielCommandHandlerTest
             handlingUnit: "HU",
             pickActionState: ActionState.Completed, source: station,
             dropActionState: ActionState.Completed, destination: "APL1");
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var agvPassedDoppelspielTriggerPoint = new AgvPassedDoppelspielTriggerPoint(agvData, status, fixture.ActionGroupAsMessage(actionGroup), [], [], station);
@@ -597,7 +597,7 @@ public class DoppelspielCommandHandlerTest
             dropActionState: ActionState.Completed, destination: station.Name, canRunDoppelspiel: true);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.None;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
@@ -631,7 +631,7 @@ public class DoppelspielCommandHandlerTest
             dropActionState: ActionState.Completed, destination: station.Name, canRunDoppelspiel: false);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .AddActionGroup(actionGroup)
             .AddAgv(agv);
@@ -666,7 +666,7 @@ public class DoppelspielCommandHandlerTest
             dropActionState: ActionState.Completed, destination: station.Name, canRunDoppelspiel: true);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.Order;
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextPickForStation(null)
             .AddActionGroup(actionGroup)
@@ -708,7 +708,7 @@ public class DoppelspielCommandHandlerTest
             handlingUnit: "HU",
             pickActionState: ActionState.Created, source: station.Name,
             dropActionState: ActionState.Created, destination: "AP01");
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextPickForStation(nextPickActionGroup)
             .WithStationGroupLimit(false)
@@ -894,7 +894,7 @@ public class DoppelspielCommandHandlerTest
             pickActionState: ActionState.Created, source: station.Name,
             dropActionState: ActionState.Created, destination: "AP01");
         unmatchPickActionGroup.RegisterDoppelspiel(ActionType.Pick);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextPickForStation(nextPickActionGroup)
             .WithUnmatchedPick(unmatchPickActionGroup)
@@ -941,7 +941,7 @@ public class DoppelspielCommandHandlerTest
             pickActionState: ActionState.Created, source: station.Name,
             dropActionState: ActionState.Created, destination: "AP01");
         var nextPick = nextPickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithAgvMustCharge(false)
             .WithNextPickForStation(nextPickActionGroup)
@@ -1000,7 +1000,7 @@ public class DoppelspielCommandHandlerTest
     {
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), canRunDoppelspiel: false);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(actionGroup.Actions.First(a => a.ActionType == ActionType.Pick))
             .AddActionGroup(actionGroup);
 
@@ -1015,7 +1015,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid(), canRunDoppelspiel: false);
         actionGroup.CanRunDoppelspiel.ShouldBeFalse();
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop))
             .AddActionGroup(actionGroup);
 
@@ -1047,7 +1047,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: agvCorrelationId);
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(pickAction)
             .AddActionGroup(actionGroup);
 
@@ -1068,7 +1068,7 @@ public class DoppelspielCommandHandlerTest
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.None;
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(dropAction)
             .AddActionGroup(actionGroup);
 
@@ -1092,7 +1092,7 @@ public class DoppelspielCommandHandlerTest
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
         dropAction.Target.DoppelspielMode = DoppelspielMode.OrderOrQueueHead;
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(dropAction)
             .WithStation(station)
             .WithNextPickForStation(null)
@@ -1123,7 +1123,7 @@ public class DoppelspielCommandHandlerTest
             assignedAgv: null,
             source: station.Name);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(dropAction)
             .WithStation(station)
             .WithNextPickForStation(pickActionGroup)
@@ -1157,7 +1157,7 @@ public class DoppelspielCommandHandlerTest
             source: station.Name);
         var pickAction = pickActionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithCurrentAgvAction(dropAction)
             .WithStation(station)
             .WithNextPickForStation(pickActionGroup)
@@ -1182,7 +1182,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(assignedAgv: Guid.NewGuid());
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new PickActionCompleted(actionGroup.CorrelationId, pickAction.CorrelationId, DateTime.Now));
@@ -1198,7 +1198,7 @@ public class DoppelspielCommandHandlerTest
             assignedAgv: Guid.NewGuid(),
             destination: station.Name);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextPickForStation(null)
             .AddActionGroup(actionGroup);
@@ -1223,7 +1223,7 @@ public class DoppelspielCommandHandlerTest
         var delayedPickAction = delayedOrder.Actions.First(a => a.ActionType == ActionType.Pick);
         delayedPickAction.Target.DoppelspielMode = DoppelspielMode.Order;
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextPickForStation(delayedOrder)
             .AddActionGroup(actionGroup);
@@ -1250,7 +1250,7 @@ public class DoppelspielCommandHandlerTest
         delayedPickAction.Target.DoppelspielMode = DoppelspielMode.Always;
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .WithNextPickForStation(delayedOrder)
             .WithStationGroupLimit(true)
@@ -1271,7 +1271,7 @@ public class DoppelspielCommandHandlerTest
     {
         var actionGroup = Helper.AgvActionGenerator.GenerateChargeActionGroup();
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
@@ -1287,7 +1287,7 @@ public class DoppelspielCommandHandlerTest
             pickActionState: ActionState.Created);
         actionGroup.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
@@ -1305,7 +1305,7 @@ public class DoppelspielCommandHandlerTest
         actionGroup.RegisterDoppelspiel(ActionType.Drop);
         actionGroup.SetDoppelspielpartner(Guid.NewGuid(), ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
@@ -1322,7 +1322,7 @@ public class DoppelspielCommandHandlerTest
             pickActionState: ActionState.Completed);
         actionGroup.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionGroupReassignedOrReset(actionGroup.CorrelationId, actionGroup.Creator));
@@ -1336,7 +1336,7 @@ public class DoppelspielCommandHandlerTest
     {
         var actionGroup = Helper.AgvActionGenerator.GenerateChargeActionGroup();
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         await fixture.PublishMessageAsync(new ActionGroupCanceled(fixture.ActionGroupAsMessage(actionGroup), actionGroup.CorrelationId, DateTime.Now));
@@ -1352,7 +1352,7 @@ public class DoppelspielCommandHandlerTest
             pickActionState: ActionState.Completed,
             dropActionState: ActionState.Started);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedPick(null)
             .AddActionGroup(actionGroup);
 
@@ -1376,7 +1376,7 @@ public class DoppelspielCommandHandlerTest
             source: "PS01");
         unmatchedPick.RegisterDoppelspiel(ActionType.Pick);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedPick(unmatchedPick)
             .AddActionGroup(actionGroup);
 
@@ -1393,7 +1393,7 @@ public class DoppelspielCommandHandlerTest
             assignedAgv: Guid.NewGuid());
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var dropActionMessage = fixture.Mapper.Map<AgvAction>(dropAction);
@@ -1418,7 +1418,7 @@ public class DoppelspielCommandHandlerTest
             source: "PS01");
         unmatchedPick.RegisterDoppelspiel(ActionType.Pick);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedPick(unmatchedPick)
             .AddActionGroup(actionGroup);
 
@@ -1447,7 +1447,7 @@ public class DoppelspielCommandHandlerTest
             destination: "PS01");
         unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedDrop(unmatchedDrop)
             .AddActionGroup(actionGroup);
 
@@ -1472,7 +1472,7 @@ public class DoppelspielCommandHandlerTest
             destination: "PS01");
         unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedDrop(unmatchedDrop)
             .AddActionGroup(actionGroup);
 
@@ -1496,7 +1496,7 @@ public class DoppelspielCommandHandlerTest
             destination: "PS01");
         unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedDrop(unmatchedDrop)
             .AddActionGroup(actionGroup);
 
@@ -1524,7 +1524,7 @@ public class DoppelspielCommandHandlerTest
             destination: "PS01");
         unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedDrop(unmatchedDrop)
             .AddActionGroup(actionGroup);
 
@@ -1548,7 +1548,7 @@ public class DoppelspielCommandHandlerTest
             destination: "PS01");
         unmatchedDrop.RegisterDoppelspiel(ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithUnmatchedDrop(unmatchedDrop)
             .AddActionGroup(actionGroup);
 
@@ -1567,7 +1567,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GeneratePickDropActionGroup(assignedAgv: Guid.NewGuid());
         var pickAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Pick);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var pickActionMessage = fixture.Mapper.Map<AgvAction>(pickAction);
@@ -1583,7 +1583,7 @@ public class DoppelspielCommandHandlerTest
         var actionGroup = Helper.AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(assignedAgv: Guid.NewGuid());
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .AddActionGroup(actionGroup);
 
         var dropActionMessage = fixture.Mapper.Map<AgvAction>(dropAction);
@@ -1602,7 +1602,7 @@ public class DoppelspielCommandHandlerTest
             destination: station.Name);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .AddActionGroup(actionGroup);
 
@@ -1622,7 +1622,7 @@ public class DoppelspielCommandHandlerTest
             destination: station.Name);
         var dropAction = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop);
 
-        ActionGroupTestFixtureBase<DoppelspielCommandHandler> fixture = new DoppelspielCommandHandlerTestFixture()
+        var fixture = new DoppelspielCommandHandlerTestFixture()
             .WithStation(station)
             .AddActionGroup(actionGroup);
 

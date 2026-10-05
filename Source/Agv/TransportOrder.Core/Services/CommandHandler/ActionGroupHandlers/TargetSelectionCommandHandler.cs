@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Messages.ActionGroups;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Triggers;
 using Gebhardt.Acc.TransportOrder.Core.Services.BackgroundServices;
@@ -24,7 +23,7 @@ public class TargetSelectionCommandHandler(ILogger<TargetSelectionCommandHandler
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AgvPassedDecisionPoint1> context)
     {
-        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _, ICollection<Guid> consideredStations, bool useJamState) = context.Message;
+        (_, var agvStatus, var actionGroup, var _, var _, var consideredStations, bool useJamState) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.Node != null))
         {
             logger.LogWarning("Skip target selection: Agv {AgvCorrelationId} passed decision point without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
@@ -45,7 +44,7 @@ public class TargetSelectionCommandHandler(ILogger<TargetSelectionCommandHandler
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AgvPassedShortLoopWaitingHandler> context)
     {
-        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _, var primaryTarget, ICollection<Guid>? secondaryTargets) = context.Message;
+        var (_, agvStatus, actionGroup, _, _, primaryTarget, secondaryTargets) = context.Message;
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick) || actionGroup.Actions.All(a => a.Target.Node != null))
         {
             logger.LogWarning("Skip waiting order selection: Agv {AgvCorrelationId} passed short loop waiting handler without incomplete pick drop action group  ({ActionGroup})", agvStatus.CorrelationId, actionGroup?.CorrelationId);
@@ -77,7 +76,7 @@ public class TargetSelectionCommandHandler(ILogger<TargetSelectionCommandHandler
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AgvLeftShortLoopWaitingHandler> context)
     {
-        (_, var agvStatus, var actionGroup, ICollection<Cargo> _, ICollection<AgvError> _) = context.Message;
+        var (_, agvStatus, actionGroup, _, _) = context.Message;
 
         if (actionGroup == null || actionGroup.Actions.All(a => a.ActionType != ActionType.Pick))
         {

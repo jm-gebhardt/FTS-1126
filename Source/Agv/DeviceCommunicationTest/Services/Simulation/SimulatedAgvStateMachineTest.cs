@@ -168,9 +168,9 @@ public class SimulatedAgvStateMachineTest
     public async Task When_StartActionCommand_ActionStartedByAgv_IsPublished_And_ActionCompletedByAgv_Is_Published()
     {
         var graph = AgvGraphGenerator.CreateDefaultGraph();
-        ICollection<GraphNode> nodes = graph.Nodes;
+        var nodes = graph.Nodes;
         var action = AgvActionGenerator.GeneratePickDropActionGroup().Actions.First();
-        (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(action.Target.Node);
+        var route = AgvGraphGenerator.CreateRoute(action.Target.Node);
         var routePlan = RoutePlanGenerator.Build(route.nodes, route.edges);
         var startNode = nodes.First(n => n.Id == route.nodes.First().Id);
         var destination = route.nodes.Last();
@@ -246,8 +246,8 @@ public class SimulatedAgvStateMachineTest
 
         // Update the in-progress move to a drop action with a new (far) target.
         (ICollection<GraphNode> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar);
-        List<GraphNode> updateNodes = dropRoute.dropNodes.Skip(1).ToList();
-        List<Guid> updateEdges = dropRoute.dropEdges.Skip(1).ToList();
+        var updateNodes = dropRoute.dropNodes.Skip(1).ToList();
+        var updateEdges = dropRoute.dropEdges.Skip(1).ToList();
         var updatedMoveAction = AgvActionGenerator.GenerateAction(
             correlationId: moveAction.CorrelationId,
             actionType: dropAction.ActionType,
@@ -277,7 +277,7 @@ public class SimulatedAgvStateMachineTest
 
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutDropTarget();
         var moveAction = actionGroup.Actions.Skip(1).FirstOrDefault();
-        (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute(moveAction!.Target.Node);
+        var route = AgvGraphGenerator.CreateRoute(moveAction!.Target.Node);
         var startRoutePlan = RoutePlanGenerator.Build(route.nodes, route.edges);
 
         var agvSaga = SimulatedAgvSagaGenerator.Generate(
@@ -295,8 +295,8 @@ public class SimulatedAgvStateMachineTest
         if (moveActionToDropAction != null)
         {
             (ICollection<GraphNode> dropNodes, ICollection<Guid> dropEdges) dropRoute = AgvGraphGenerator.CreateRoute(AgvGraphGenerator.DestinationFar);
-            List<GraphNode> updateNodes = dropRoute.dropNodes.Skip(1).ToList();
-            List<Guid> updateEdges = dropRoute.dropEdges.Skip(1).ToList();
+            var updateNodes = dropRoute.dropNodes.Skip(1).ToList();
+            var updateEdges = dropRoute.dropEdges.Skip(1).ToList();
             var updatedMoveAction = AgvActionGenerator.GenerateAction(
                 correlationId: moveAction.CorrelationId,
                 actionType: moveActionToDropAction.ActionType,

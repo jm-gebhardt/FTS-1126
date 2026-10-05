@@ -27,19 +27,19 @@ public class GraphNodeRepository(ISemaphoreProvider<INodeStateDbSemaphore> semap
     {
         await using var context = await CreateDbContextAsync();
 
-        List<GraphNode> nodes = await context.Set<Map>()
+        var nodes = await context.Set<Map>()
             .Include(g => g.Nodes)
             .Where(m => m.CorrelationId == mapCorrelationId)
             .SelectMany(x => x.Nodes)
             .ToListAsync();
 
-        List<Guid> nodeIds = nodes.Select(n => n.Id).ToList();
+        var nodeIds = nodes.Select(n => n.Id).ToList();
 
-        List<Station> stations = await context.Set<Station>()
+        var stations = await context.Set<Station>()
             .Where(x => nodeIds.Contains(x.Id))
             .ToListAsync();
 
-        List<NodeLock> nodeLocks = await context.Set<NodeLock>()
+        var nodeLocks = await context.Set<NodeLock>()
             .Where(x => nodeIds.Contains(x.NodeId))
             .ToListAsync();
 

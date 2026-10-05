@@ -19,7 +19,7 @@ public class OrderCommandHandler(ILogger<OrderCommandHandler> logger, IOrderRepo
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<ReportOrder> context)
     {
-        (var correlationId, string targetStation, string? dropTarget, string? pickTarget, string? droppedHu, Guid? pickOrder) = context.Message;
+        (var correlationId, string targetStation, string? dropTarget, string? pickTarget, string? droppedHu, var pickOrder) = context.Message;
         if (dropTarget == null && pickTarget == null)
         {
             logger.LogError("No pick or drop target for reporting order {Order} given", correlationId);

@@ -69,8 +69,8 @@ public class FactsheetRequestHandler(
 
     private async Task PublishInstantActions(Guid agvCorrelationId, ICollection<AgvAction> actions)
     {
-        List<AgvAction> instantActions = actions.Where(a => a.ActionScopes.Contains(ActionScope.Instant)).ToList();
-        IEnumerable<Task> publishTasks = instantActions.Select(i => bus.Publish(new AgvInstantActionDefinitionReceived(agvCorrelationId, mapper.Map<AgvInstantAction>(i))));
+        var instantActions = actions.Where(a => a.ActionScopes.Contains(ActionScope.Instant)).ToList();
+        var publishTasks = instantActions.Select(i => bus.Publish(new AgvInstantActionDefinitionReceived(agvCorrelationId, mapper.Map<AgvInstantAction>(i))));
         await Task.WhenAll(publishTasks);
     }
 }

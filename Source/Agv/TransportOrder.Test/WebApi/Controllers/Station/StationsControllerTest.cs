@@ -2,7 +2,6 @@ using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
-using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Station;
@@ -16,12 +15,12 @@ public class StationsControllerTests
         var map = MapGenerator.Generate();
         var station = new TransportOrder.Domain.Models.Station.Station("name", AgvGraph.NodeType.Park, []);
 
-        StationsControllerTestFixture<GetStations, StationsRequestHandler> fixture = new StationsControllerTestFixture<GetStations, StationsRequestHandler>()
+        var fixture = new StationsControllerTestFixture<GetStations, StationsRequestHandler>()
             .WithMap(map)
             .WithStation(station)
             .Build();
 
-        ICollection<StationDto> response = await fixture.GetControllerResultAsync(c => c.GetStations(CancellationToken.None));
+        var response = await fixture.GetControllerResultAsync(c => c.GetStations(CancellationToken.None));
 
         response.ShouldNotBeNull();
 

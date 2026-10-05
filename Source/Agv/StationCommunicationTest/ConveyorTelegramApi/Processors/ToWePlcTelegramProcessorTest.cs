@@ -11,7 +11,7 @@ public class ToWePlcTelegramProcessorTest
     [TestMethod]
     public void TrySendLifeTelegram_NoTelegramToSend_LifeTelegramQueued()
     {
-        TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
+        var fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
             .Build();
         fixture.Processor.HasSendDemand().ShouldBeFalse();
         fixture.Processor.TrySendLifeTelegram();
@@ -24,7 +24,7 @@ public class ToWePlcTelegramProcessorTest
     [TestMethod]
     public void ProcessReceivedTelegram_FullSendReceiveCycle_AcknowledgementHandled()
     {
-        TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
+        var fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
             .Build();
         var telegram = new Life(DateTime.UtcNow);
         fixture.Processor.EnqueueTelegram(telegram).ShouldBeTrue();
@@ -40,7 +40,7 @@ public class ToWePlcTelegramProcessorTest
     [TestMethod]
     public void GetNextTelegramToSend_NoAcknowledgementReceived_ResendUntilMaxRetryIsReached()
     {
-        TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram> fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
+        var fixture = new TelegramProcessorTestFixture<ToWePlcTelegramProcessor, ConveyorTelegram>(ServiceKeyProvider.AplWeStation, null)
             .Build();
 
         var now = DateTimeOffset.Now;

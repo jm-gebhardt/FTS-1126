@@ -35,7 +35,7 @@ public class HandlingUnitsController : Controller
     [Route("/handlingUnits")]
     public async Task<ActionResult<IEnumerable<string>>> SearchHandlingUnits([FromQuery] [Required] string query, int limit = 100)
     {
-        Response<GotHandlingUnits> response = await _getHandlingUnitsRequest.GetResponse<GotHandlingUnits>(new GetHandlingUnits(query, limit));
+        var response = await _getHandlingUnitsRequest.GetResponse<GotHandlingUnits>(new GetHandlingUnits(query, limit));
 
         return Ok(response.Message.HandlingUnits);
     }

@@ -59,7 +59,7 @@ public class AgvTypeController(ILogger<AgvTypeController> logger, ILoggingServic
     [Route("/agvType/{id:guid}")]
     public async Task<ActionResult<AgvTypeDto>> GetAgvType([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        Response<GotAgvType> response = await getOneClient.GetResponse<GotAgvType>(new GetAgvType(id), cancellationToken);
+        var response = await getOneClient.GetResponse<GotAgvType>(new GetAgvType(id), cancellationToken);
         var agvType = mapper.Map<AgvTypeDto>(response.Message.AgvType);
         return Ok(agvType);
     }
@@ -74,7 +74,7 @@ public class AgvTypeController(ILogger<AgvTypeController> logger, ILoggingServic
     [Route("/agvTypes")]
     public async Task<ActionResult<ICollection<AgvTypeDto>>> GetAllAgvTypes(CancellationToken cancellationToken)
     {
-        Response<GotAgvTypes> response = await getAllClient.GetResponse<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()), cancellationToken);
+        var response = await getAllClient.GetResponse<GotAgvTypes>(new GetAllAgvTypes(Guid.NewGuid()), cancellationToken);
         var agvTypes = mapper.Map<ICollection<AgvTypeDto>>(response.Message.AgvTypes);
         return Ok(agvTypes);
     }

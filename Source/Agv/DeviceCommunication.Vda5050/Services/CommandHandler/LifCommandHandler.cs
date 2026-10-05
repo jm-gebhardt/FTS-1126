@@ -46,7 +46,7 @@ public class LifCommandHandler(
 
         logger.LogInformation("Lif layouts stored. LayoutIds: [{LayoutIds}], VehicleTypeIds: [{VehicleTypeIds}]", string.Join(", ", layoutIds), string.Join(", ", vehicleTypeIds));
 
-        Dictionary<string, Guid> agvTypeIdentifiers = await agvTypeRepository.GetAgvTypeIdentifiersAsync();
+        var agvTypeIdentifiers = await agvTypeRepository.GetAgvTypeIdentifiersAsync();
 
         var graphSegment = LifToGraphConverter.ToGraphSegment(layoutCollection, agvTypeIdentifiers, logger);
 

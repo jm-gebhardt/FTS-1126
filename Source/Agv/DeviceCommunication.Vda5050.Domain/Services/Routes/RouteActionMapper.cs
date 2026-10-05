@@ -43,10 +43,10 @@ public class RouteActionMapper(
         string actionType = ResolveActionType(routeAction);
         var factSheetProperty = graphNode.GetPropertiesForVehicle(agv.VehicleTypeId)?.Actions?.SingleOrDefault(a => a.ActionType == actionType);
 
-        ICollection<Models.AgvActions.AgvAction> agvActions = await agvActionRepository.GetActionsForScopeAsync(agv.SerialNumber, Models.AgvActions.ActionScope.Node);
+        var agvActions = await agvActionRepository.GetActionsForScopeAsync(agv.SerialNumber, Models.AgvActions.ActionScope.Node);
         var definedAction = agvActions.SingleOrDefault(a => a.ActionType == actionType) ?? throw new RouteActionNotSupportedByAgvException(actionType, agv.CorrelationId);
 
-        List<OrderActionParameter> parameters = factSheetProperty?.ActionParameters?.Select(p => new OrderActionParameter { Key = p.Key, Value = p.Value }).ToList() ?? [];
+        var parameters = factSheetProperty?.ActionParameters?.Select(p => new OrderActionParameter { Key = p.Key, Value = p.Value }).ToList() ?? [];
         AddRouteActionParameters(parameters, routeAction);
 
         var context = new OrderActionContext(parameters, factSheetProperty?.BlockingType, true);

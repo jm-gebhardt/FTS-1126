@@ -25,7 +25,7 @@ public class IoActionExecutionService : IIoActionExecutionService
     {
         var orderId = Guid.NewGuid();
         int sequence = 0;
-        List<AgvAction> testActions = actionDefinitions.Select(a => new AgvAction(Guid.NewGuid(), a.Type, a.NodeId.ToGraphNode(), orderId) { Sequence = sequence++ }).ToList();
+        var testActions = actionDefinitions.Select(a => new AgvAction(Guid.NewGuid(), a.Type, a.NodeId.ToGraphNode(), orderId) { Sequence = sequence++ }).ToList();
 
         var actionGroup = new ActionGroup(
             orderId,
@@ -44,7 +44,7 @@ public class IoActionExecutionService : IIoActionExecutionService
         switch (actionConfig.ActionType)
         {
             case ActionTypes.PublishQueueActionGroup:
-                List<ActionDefinition> readOnlyList = actionConfig.Parameters.Cast<ActionDefinition>().ToList();
+                var readOnlyList = actionConfig.Parameters.Cast<ActionDefinition>().ToList();
                 await CreateActionGroup(readOnlyList);
                 break;
 

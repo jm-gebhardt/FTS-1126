@@ -34,7 +34,7 @@ public class LogEntriesController(IMapper mapper, IRequestClient<GetFilteredLogE
             return ValidationProblem(ModelState);
         }
 
-        Response<GotLogEntries> response = await filterLogEntriesClient.GetResponse<GotLogEntries>(new GetFilteredLogEntries(filter, pageNumber, pageSize), cancellationToken);
+        var response = await filterLogEntriesClient.GetResponse<GotLogEntries>(new GetFilteredLogEntries(filter, pageNumber, pageSize), cancellationToken);
         var dto = mapper.Map<PagedResult<LogEntryDto>>(response.Message.LogEntries);
         return Ok(dto);
     }

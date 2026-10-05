@@ -100,11 +100,11 @@ public class UnifiedTargetSelector(
         }
 
         // Find the DP1 action that would select this station
-        IOrderedEnumerable<KeyValuePair<Guid, DateTime>> relevantDp1Actions = dp1TargetSelector.PendingActions
+        var relevantDp1Actions = dp1TargetSelector.PendingActions
             .Where(kvp => !dp1TargetSelector.EvaluatedActions.Contains(kvp.Key))
             .OrderBy(kvp => kvp.Value);
 
-        foreach (KeyValuePair<Guid, DateTime> dp1Entry in relevantDp1Actions)
+        foreach (var dp1Entry in relevantDp1Actions)
         {
             bool wouldSelectStation = dp1TargetSelector.WouldSelectStation(stationId).GetAwaiter().GetResult();
             if (!wouldSelectStation)
@@ -113,7 +113,7 @@ public class UnifiedTargetSelector(
             }
 
             // Check if any non-evaluated short loop action entered earlier
-            KeyValuePair<Guid, DateTime> earliestSlwAction = slwWaitingHandler.PendingActions
+            var earliestSlwAction = slwWaitingHandler.PendingActions
                 .Where(kvp => !slwWaitingHandler.EvaluatedActions.Contains(kvp.Key))
                 .OrderBy(kvp => kvp.Value)
                 .FirstOrDefault();
@@ -148,11 +148,11 @@ public class UnifiedTargetSelector(
         }
 
         // Check if any non-evaluated DP1 action would select the short loop target and entered earlier
-        IOrderedEnumerable<KeyValuePair<Guid, DateTime>> relevantDp1Actions = dp1TargetSelector.PendingActions
+        var relevantDp1Actions = dp1TargetSelector.PendingActions
             .Where(kvp => !dp1TargetSelector.EvaluatedActions.Contains(kvp.Key))
             .OrderBy(kvp => kvp.Value);
 
-        foreach (KeyValuePair<Guid, DateTime> dp1Entry in relevantDp1Actions)
+        foreach (var dp1Entry in relevantDp1Actions)
         {
             bool targetWouldBeShortLoopTargetStation = await dp1TargetSelector.WouldSelectStation(shortLoopTarget);
 

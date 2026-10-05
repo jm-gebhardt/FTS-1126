@@ -47,7 +47,7 @@ public static class TestPlanJsonOptions
                 nameof(TestPlan.HasInfiniteIterations).ToLower()
             ];
 
-            List<JsonPropertyInfo> propertiesToRemove = typeInfo.Properties
+            var propertiesToRemove = typeInfo.Properties
                 .Where(p => propertyNamesToExclude.Contains(p.Name.ToLower()))
                 .ToList();
 

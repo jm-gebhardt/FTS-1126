@@ -18,7 +18,7 @@ public class AgvErrorEventHandlerTest
     {
         var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(), new AgvPosition(true, 1, 1, 0, 0), "agv");
         var gridCell = GridCellGenerator.GenerateGridCell();
-        GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
+        var fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
 
         await fixture.Handler.HandleTestMessageDirectly(msg, [gridCell]);
 
@@ -35,7 +35,7 @@ public class AgvErrorEventHandlerTest
     {
         var msg = new AgvErrorReceived(AgvErrorGenerator.GenerateAgvError(errorLevel: ErrorLevel.Information), new AgvPosition(true, 1, 1, 0, 0), "agv");
         var gridCell = GridCellGenerator.GenerateGridCell();
-        GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived> fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
+        var fixture = new GridPositionAttachedHandlerTestFixture<AgvErrorEventHandler, AgvErrorReceived>().Build();
 
         await fixture.Handler.HandleTestMessageDirectly(msg, [gridCell]);
 

@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Zone;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Controllers.Zone;
@@ -12,7 +11,7 @@ public class ZoneControllerTest
     {
         var fixture = new ZoneControllerTestFixture().WithZones([new TransportOrder.Domain.Models.Zone.Zone([], "zoneId", "zoneId".ToGuid(), 5)]).Build();
 
-        ICollection<ZoneDto> zones = await fixture.GetControllerResultValueAsync(c => c.GetZones(CancellationToken.None));
+        var zones = await fixture.GetControllerResultValueAsync(c => c.GetZones(CancellationToken.None));
 
         zones.Count.ShouldBe(1);
         zones.First().CorrelationId.ShouldBe("zoneId".ToGuid());

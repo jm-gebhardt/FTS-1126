@@ -5,7 +5,6 @@ using Gebhardt.Acc.DeviceCommunication.Common.Messages;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
-using MassTransit;
 using Shouldly;
 using Fixture = Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services.RequestResponseHandler.SimulatedAgvTypeConfigurationRequestHandlerTestFixture;
 using Generator = Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator.SimulatedAgvTypeConfigurationGenerator;
@@ -20,7 +19,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
     {
         var fixture = new Fixture().Build();
 
-        Response<AgvTypeConfigurationResponse> response = await fixture.GetResponseAsync<AgvTypeConfigurationResponse>(
+        var response = await fixture.GetResponseAsync<AgvTypeConfigurationResponse>(
             new RequestAddAgvTypeConfiguration(Guid.NewGuid(), Fixture.AgvTypeIdentifier, new AgvTypeSimulationSettings { NoOfAgvs = Fixture.NoOfAgvs }));
 
         response.Message.Configuration.AgvTypeIdentifier.ShouldBe(Fixture.AgvTypeIdentifier);
@@ -57,7 +56,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
     {
         var fixture = new Fixture().Build();
 
-        Response<AgvTypeConfigurationResponse> response = await fixture.GetResponseAsync<AgvTypeConfigurationResponse>(
+        var response = await fixture.GetResponseAsync<AgvTypeConfigurationResponse>(
             new RequestAddAgvTypeConfiguration(Guid.NewGuid(), Fixture.AgvTypeIdentifier, new AgvTypeSimulationSettings()));
 
         response.Message.Configuration.NoOfAgvs.ShouldBe(Fixture.NoAgvs);
@@ -111,7 +110,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
         var storedConfiguration = Generator.Generate(noOfAgvs: Fixture.NoOfAgvs);
         var fixture = new Fixture().WithStoredConfiguration(storedConfiguration).Build();
 
-        Response<AgvTypeConfigurationResponse> response = await fixture.GetResponseAsync<RequestUpdateAgvTypeConfiguration, AgvTypeConfigurationResponse>(
+        var response = await fixture.GetResponseAsync<RequestUpdateAgvTypeConfiguration, AgvTypeConfigurationResponse>(
             new RequestUpdateAgvTypeConfiguration(storedConfiguration.Id, new AgvTypeSimulationSettings { NoOfAgvs = Fixture.UpdatedNoOfAgvs }));
 
         response.Message.Configuration.NoOfAgvs.ShouldBe(Fixture.UpdatedNoOfAgvs);
@@ -176,7 +175,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
         var storedConfiguration = Generator.Generate(noOfAgvs: Fixture.NoOfAgvs);
         var fixture = new Fixture().WithStoredConfiguration(storedConfiguration).Build();
 
-        Response<Success> response = await fixture.GetResponseAsync<RequestDeleteAgvTypeConfiguration, Success>(
+        var response = await fixture.GetResponseAsync<RequestDeleteAgvTypeConfiguration, Success>(
             new RequestDeleteAgvTypeConfiguration(storedConfiguration.Id));
 
         response.Message.ShouldNotBeNull();
@@ -213,7 +212,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
         var storedConfiguration = Generator.Generate(noOfAgvs: Fixture.NoOfAgvs);
         var fixture = new Fixture().WithStoredConfiguration(storedConfiguration).Build();
 
-        Response<AgvTypeConfigurationResponse> response = await fixture.GetResponseAsync<RequestAgvTypeConfiguration, AgvTypeConfigurationResponse>(
+        var response = await fixture.GetResponseAsync<RequestAgvTypeConfiguration, AgvTypeConfigurationResponse>(
             new RequestAgvTypeConfiguration(storedConfiguration.Id));
 
         response.Message.Configuration.AgvTypeIdentifier.ShouldBe(Fixture.AgvTypeIdentifier);
@@ -237,7 +236,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
             .WithStoredConfiguration(Generator.Generate(Fixture.OtherAgvTypeIdentifier))
             .Build();
 
-        Response<AgvTypeConfigurationsResponse> response = await fixture.GetResponseAsync<RequestAgvTypeConfigurations, AgvTypeConfigurationsResponse>(
+        var response = await fixture.GetResponseAsync<RequestAgvTypeConfigurations, AgvTypeConfigurationsResponse>(
             new RequestAgvTypeConfigurations(Guid.NewGuid()));
 
         response.Message.Configurations.Select(configuration => configuration.AgvTypeIdentifier)
@@ -249,7 +248,7 @@ public class SimulatedAgvTypeConfigurationRequestHandlerTest
     {
         var fixture = new Fixture().Build();
 
-        Response<AgvTypeConfigurationsResponse> response = await fixture.GetResponseAsync<RequestAgvTypeConfigurations, AgvTypeConfigurationsResponse>(
+        var response = await fixture.GetResponseAsync<RequestAgvTypeConfigurations, AgvTypeConfigurationsResponse>(
             new RequestAgvTypeConfigurations(Guid.NewGuid()));
 
         response.Message.Configurations.ShouldBeEmpty();

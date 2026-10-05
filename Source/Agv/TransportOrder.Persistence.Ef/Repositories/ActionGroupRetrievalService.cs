@@ -54,7 +54,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     public async Task<IReadOnlyCollection<ActionGroupReadModel>> GetActionGroupsWithNodesAsync(IReadOnlyCollection<ActionGroupState> states, DateTime? fromDate, DateTime? toDate, int maxItems, ICollection<Guid>? assignedAgvIds = null, SortBy sortBy = SortBy.CreatedDate, bool sortDescending = true, CancellationToken cancellationToken = default)
     {
         await using var context = await CreateDbContextAsync(cancellationToken);
-        IQueryable<ActionGroup> query = context.Set<ActionGroup>().AsQueryable();
+        var query = context.Set<ActionGroup>().AsQueryable();
 
         if (states.Count != 0)
         {
@@ -78,17 +78,17 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
 
         query = query.OrderByProperty(sortBy.ToString(), isDescending: sortDescending).ThenByDescending(g => g.IsManual);
 
-        List<ActionGroup> actionGroups = await query
+        var actionGroups = await query
             .Take(maxItems)
             .ToListAsync(cancellationToken: cancellationToken);
 
-        List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions).Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
+        var targetNodeIds = actionGroups.SelectMany(g => g.Actions).Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
-        Dictionary<Guid, GraphNode> graphNodesById = await context.Set<GraphNode>()
+        var graphNodesById = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToDictionaryAsync(n => n.Id, n => n, cancellationToken);
 
-        List<ActionGroupReadModel> result = actionGroups.Select(g => new ActionGroupReadModel(
+        var result = actionGroups.Select(g => new ActionGroupReadModel(
             g.CorrelationId,
             g.OrderId,
             g.AssignedAgv,
@@ -161,18 +161,18 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     public async Task<IReadOnlyDictionary<Guid, ActionGroupReadModel?>> GetCurrentActionGroupsWithNodesAsync(IReadOnlyCollection<Guid> agvCorrelationIds)
     {
         await using var context = await CreateDbContextAsync();
-        List<ActionGroup> actionGroups = await context.Set<ActionGroup>()
+        var actionGroups = await context.Set<ActionGroup>()
             .Where(g => g.AssignedAgv != null && agvCorrelationIds.Contains((Guid)g.AssignedAgv) && (g.State == ActionGroupState.Started || g.State == ActionGroupState.Paused))
             .OrderByDescending(g => g.StartedDate)
             .ToListAsync();
 
-        List<Guid> targetNodeIds = actionGroups.SelectMany(g => g.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value)).Distinct().ToList();
+        var targetNodeIds = actionGroups.SelectMany(g => g.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value)).Distinct().ToList();
 
-        List<GraphNode> graphNodes = await context.Set<GraphNode>()
+        var graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
-        Dictionary<Guid, ActionGroupReadModel?> result = agvCorrelationIds.ToDictionary(
+        var result = agvCorrelationIds.ToDictionary(
             agvCorrelationId => agvCorrelationId,
             agvCorrelationId =>
             {
@@ -234,9 +234,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
     {
         await using var context = await CreateDbContextAsync();
 
-        List<Guid> targetNodeIds = actionGroup.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
+        var targetNodeIds = actionGroup.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
-        List<GraphNode> graphNodes = await context.Set<GraphNode>()
+        var graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -274,9 +274,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             return null;
         }
 
-        List<Guid> targetNodeIds = actionGroup.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
+        var targetNodeIds = actionGroup.Actions.Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
-        List<GraphNode> graphNodes = await context.Set<GraphNode>()
+        var graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -312,9 +312,9 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
             return null;
         }
 
-        List<Guid> targetNodeIds = actionGroups.Where(g => g.AssignedAgv == agvCorrelationId).SelectMany(g => g.Actions).Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
+        var targetNodeIds = actionGroups.Where(g => g.AssignedAgv == agvCorrelationId).SelectMany(g => g.Actions).Where(a => a.Target.NodeId != null).Select(a => a.Target.NodeId!.Value).Distinct().ToList();
 
-        List<GraphNode> graphNodes = await context.Set<GraphNode>()
+        var graphNodes = await context.Set<GraphNode>()
             .Where(n => targetNodeIds.Contains(n.Id))
             .ToListAsync();
 
@@ -346,7 +346,7 @@ public class ActionGroupRetrievalService : IActionGroupRetrievalService
         IQueryable<ActionGroup> actionGroups = context.Set<ActionGroup>();
         IQueryable<GraphNode> graphNodes = context.Set<GraphNode>();
 
-        List<ActionGroup> actionGroupsResult = await actionGroups
+        var actionGroupsResult = await actionGroups
             .Where(g => g.AssignedAgv == agvCorrelationId && g.State == ActionGroupState.Started)
             .Include(g => g.Actions)
             .ThenInclude(a => a.Target)

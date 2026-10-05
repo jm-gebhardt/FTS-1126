@@ -33,7 +33,7 @@ public static class FilterApiExtensions
         /// <typeparam name="TReadModel">The read model.</typeparam>
         public IFilter Translate<TDomainObject, TReadModel>() where TReadModel : class, TDomainObject, IFilterable<TDomainObject, TReadModel>, new() where TDomainObject : class
         {
-            Dictionary<string, (LambdaExpression, bool)> propertyAccessors = FilterableBinder<TDomainObject, TReadModel>.PropertyAccessors;
+            var propertyAccessors = FilterableBinder<TDomainObject, TReadModel>.PropertyAccessors;
 
             return FromDto(dto, propertyAccessors);
         }
@@ -71,7 +71,7 @@ public static class FilterApiExtensions
 
     private static CombinationFilter FromDto(CombinationFilterDto dto, Dictionary<string, (LambdaExpression, bool)> propertyAccessors)
     {
-        List<IFilter> children = dto.Children.Select(c => FromDto(c, propertyAccessors)).ToList();
+        var children = dto.Children.Select(c => FromDto(c, propertyAccessors)).ToList();
 
         return new CombinationFilter(dto.Combination, children);
     }

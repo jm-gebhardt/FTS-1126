@@ -43,7 +43,7 @@ public class TestPlanController : ControllerBase
     [Route("/testPlans")]
     public async Task<ActionResult<IEnumerable<TestPlanDto>>> GetTestPlans()
     {
-        Response<GotTestPlans> response = await _getTestPlansClient.GetResponse<GotTestPlans>(new GetTestPlans());
+        var response = await _getTestPlansClient.GetResponse<GotTestPlans>(new GetTestPlans());
         var dto = _mapper.Map<IEnumerable<TestPlanDto>>(response.Message.TestPlans);
         return Ok(dto);
     }
@@ -57,7 +57,7 @@ public class TestPlanController : ControllerBase
     [Route("/testPlan/{name}")]
     public async Task<ActionResult<TestPlanDto>> GetTestPlan(string name)
     {
-        Response<GotTestPlan> response = await _getTestPlanClient.GetResponse<GotTestPlan>(new GetTestPlan(name));
+        var response = await _getTestPlanClient.GetResponse<GotTestPlan>(new GetTestPlan(name));
         var dto = _mapper.Map<TestPlanDto>(response.Message.TestPlan);
         return Ok(dto);
     }

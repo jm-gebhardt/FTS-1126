@@ -18,7 +18,7 @@ public class StationOnlineStateCommandHandler(
     /// <inheritdoc />
     public async Task Consume(ConsumeContext<StationOnlineStatesRequested> context)
     {
-        List<(Guid stationId, bool isOnline)> states = connectionRepository.GetAllStationStates().ToList();
+        var states = connectionRepository.GetAllStationStates().ToList();
         logger.LogInformation("Republishing online state for {Count} stations", states.Count);
 
         foreach (var (stationId, isOnline) in states)

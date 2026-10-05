@@ -18,7 +18,7 @@ public class AgvCommandHandler(ILogger<AgvCommandHandler> logger, IAgvRepository
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<AddAgv> context)
     {
-        (var correlationId, var agv, Guid? agvTypeId, bool hasValidConfiguration) = context.Message;
+        (var correlationId, var agv, var agvTypeId, bool hasValidConfiguration) = context.Message;
         var existingAgv = await agvRepository.GetAgvAsync(correlationId);
         if (existingAgv?.PublishedToFleetManager ?? false)
         {

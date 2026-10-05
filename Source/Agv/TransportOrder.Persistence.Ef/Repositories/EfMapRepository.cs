@@ -44,7 +44,7 @@ public class EfMapRepository : IMapRepository
     public async Task<ICollection<Map>> GetAllMapsAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        List<Map> maps = await context.Set<Map>()
+        var maps = await context.Set<Map>()
             .Include(g => g.Nodes)
             .Include(g => g.Edges)
             .Include(g => g.MapAgvs)
@@ -150,7 +150,7 @@ public class EfMapRepository : IMapRepository
         return _semaphoreProvider.ExecuteLockedAsync(async () =>
         {
             var defaultMap = await GetMapAsync(Map.DefaultMapId);
-            (Map map, Guid agvCorrelationId)? result = await computeUpdate(defaultMap, cancellationToken);
+            var result = await computeUpdate(defaultMap, cancellationToken);
             if (result is null)
             {
                 return false;
@@ -210,7 +210,7 @@ public class EfMapRepository : IMapRepository
                     throw new AgvGraphNotDefinedException(agvId);
                 }
 
-                List<Map> maps = await context.Set<Map>()
+                var maps = await context.Set<Map>()
                     .Include(m => m.Nodes)
                     .Include(m => m.MapAgvs)
                     .Where(m => m.Nodes.Any(n => agvGraph.Nodes.Select(x => x.Id).Contains(n.Id)))
@@ -269,21 +269,21 @@ public class EfMapRepository : IMapRepository
 
             // Get all nodes and edges which are used by other AGVs.
             // Those graph elements must not be removed from an existing map update.
-            HashSet<Guid> otherAgvNodeIds = (await context.Set<AgvGraph>()
+            var otherAgvNodeIds = (await context.Set<AgvGraph>()
                 .Where(agvGraph => agvGraph.AgvCorrelationId != agvCorrelationId)
                 .SelectMany(agvGraph => agvGraph.Nodes.Select(node => node.Id))
                 .Distinct()
                 .ToListAsync())
                 .ToHashSet();
 
-            HashSet<Guid> otherAgvEdgeIds = (await context.Set<AgvGraph>()
+            var otherAgvEdgeIds = (await context.Set<AgvGraph>()
                 .Where(agvGraph => agvGraph.AgvCorrelationId != agvCorrelationId)
                 .SelectMany(agvGraph => agvGraph.Edges.Select(edge => edge.Id))
                 .Distinct()
                 .ToListAsync())
                 .ToHashSet();
 
-            HashSet<Guid> protectedAgvIds = (await context.Set<AgvGraph>()
+            var protectedAgvIds = (await context.Set<AgvGraph>()
                     .Where(agvGraph => agvGraph.AgvCorrelationId != agvCorrelationId)
                     .Select(agvGraph => agvGraph.AgvCorrelationId)
                     .Distinct()
@@ -294,16 +294,16 @@ public class EfMapRepository : IMapRepository
             // been consolidated away. Filter the map's collections to only those that still
             // exists in the global graph so that a saving the map does not re-introduce nodes
             // that were previously deliberately removed.
-            List<Guid> nodeIds = map.Nodes.Select(n => n.Id).ToList();
-            List<Guid> edgeIds = map.Edges.Select(e => e.Id).ToList();
+            var nodeIds = map.Nodes.Select(n => n.Id).ToList();
+            var edgeIds = map.Edges.Select(e => e.Id).ToList();
 
-            HashSet<Guid> existingNodeIds = (await context.Set<GraphNode>()
+            var existingNodeIds = (await context.Set<GraphNode>()
                 .Where(n => nodeIds.Contains(n.Id))
                 .Select(n => n.Id)
                 .ToListAsync())
                 .ToHashSet();
 
-            HashSet<Guid> existingEdgeIds = (await context.Set<GraphEdge>()
+            var existingEdgeIds = (await context.Set<GraphEdge>()
                 .Where(e => edgeIds.Contains(e.Id))
                 .Select(e => e.Id)
                 .ToListAsync())
@@ -402,9 +402,9 @@ public class EfMapRepository : IMapRepository
 
     private static void UpdateRelations(Map existingMap, Map map, TransportOrderDbContext context)
     {
-        (IEnumerable<GraphNode> nodesToRemove, IEnumerable<GraphNode> nodesToAdd) = SymmetricDifference(existingMap.Nodes, map.Nodes, n => n.Id);
-        (IEnumerable<GraphEdge> edgesToRemove, IEnumerable<GraphEdge> edgesToAdd) = SymmetricDifference(existingMap.Edges, map.Edges, n => n.Id);
-        (IEnumerable<MapAgv> agvsToRemove, IEnumerable<MapAgv> agvsToAdd) = SymmetricDifference(existingMap.MapAgvs, map.MapAgvs, ma => ma.AgvId);
+        var (nodesToRemove, nodesToAdd) = SymmetricDifference(existingMap.Nodes, map.Nodes, n => n.Id);
+        var (edgesToRemove, edgesToAdd) = SymmetricDifference(existingMap.Edges, map.Edges, n => n.Id);
+        var (agvsToRemove, agvsToAdd) = SymmetricDifference(existingMap.MapAgvs, map.MapAgvs, ma => ma.AgvId);
 
         foreach (var node in nodesToAdd)
         {
@@ -448,11 +448,11 @@ public class EfMapRepository : IMapRepository
     /// <returns>(LeftOnly, RightOnly)</returns>
     private static (IEnumerable<T>, IEnumerable<T>) SymmetricDifference<T, TId>(ICollection<T> leftCollection, ICollection<T> rightCollection, Func<T, TId> idProvider) where TId : IEquatable<TId>
     {
-        List<TId> leftIds = leftCollection.Select(idProvider).ToList();
-        List<TId> rightIds = rightCollection.Select(idProvider).ToList();
+        var leftIds = leftCollection.Select(idProvider).ToList();
+        var rightIds = rightCollection.Select(idProvider).ToList();
 
-        IEnumerable<TId> leftOnly = leftIds.Except(rightIds);
-        IEnumerable<TId> rightOnly = rightIds.Except(leftIds);
+        var leftOnly = leftIds.Except(rightIds);
+        var rightOnly = rightIds.Except(leftIds);
 
         return (
             leftOnly.Select(id => leftCollection.First(entry => Equals(id, idProvider(entry)))),

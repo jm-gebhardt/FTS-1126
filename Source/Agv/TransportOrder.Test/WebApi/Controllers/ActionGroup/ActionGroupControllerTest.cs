@@ -24,7 +24,7 @@ public class ActionGroupControllerTest
         var correlationId = Guid.NewGuid();
         var startedDate = DateTime.Parse("2021-01-01T00:00:54Z").ToUniversalTime();
         var actionGroup = new ActionGroupReadModel(correlationId, "OrderId", null, DateTime.UtcNow, startedDate, null, TimeSpan.FromSeconds(6), ActionGroupState.Created, ActionGroupCreator.TransportOrder, Priority.Default, "hu", new List<AgvActionReadModel>(), true, false, true, new List<Reason>(), false);
-        ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -37,7 +37,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task GetSingleActionGroup_UnknownCorrelationId_ReturnsNotFound()
     {
-        ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<GetActionGroup, ActionGroupRequestHandler>()
             .Build();
 
         var correlationId = "INVALID".ToGuid();
@@ -50,7 +50,7 @@ public class ActionGroupControllerTest
     public async Task CancelActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+        var fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -61,7 +61,7 @@ public class ActionGroupControllerTest
     public async Task CancelActionGroup_UnknownActionGroup_ReturnsNotFound()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+        var fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -73,7 +73,7 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started);
 
-        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+        var fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -90,7 +90,7 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Completed);
 
-        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+        var fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -107,7 +107,7 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Failed);
 
-        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+        var fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -124,7 +124,7 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Canceled);
 
-        ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler> fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
+        var fixture = new ActionGroupControllerTestFixture<CancelActionGroup, ActionCommandHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -140,7 +140,7 @@ public class ActionGroupControllerTest
     public async Task AbortActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started);
-        ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -154,7 +154,7 @@ public class ActionGroupControllerTest
     public async Task AbortActionGroup_WrongActionGroupState_ReturnsBadRequest()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup();
-        ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -165,7 +165,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task AbortActionGroup_UnknownCorrelationId_ReturnsNotFound()
     {
-        ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<TriggerActionGroupAbortion, ActionGroupRequestHandler>()
             .Build();
 
         var correlationId = "INVALID".ToGuid();
@@ -178,7 +178,7 @@ public class ActionGroupControllerTest
     public async Task ResetActionGroup_ValidData_ReturnsOk()
     {
         var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(actionGroupState: ActionGroupState.Started);
-        ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .Build();
 
@@ -191,7 +191,7 @@ public class ActionGroupControllerTest
     [TestMethod]
     public async Task ResetActionGroup_UnknownCorrelationId_ReturnsNotFound()
     {
-        ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<TriggerActionGroupReset, ActionGroupRequestHandler>()
             .Build();
 
         var correlationId = "Unknown".ToGuid();
@@ -205,7 +205,7 @@ public class ActionGroupControllerTest
     {
         var actionGroup = AgvActionGenerator.GenerateIncompleteActionGroupWithoutPickTarget(actionGroupState: ActionGroupState.Started);
         var targetNode = NodeGenerator.GenerateNode(AgvGraph.NodeType.PickDrop);
-        ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler> fixture = new ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
+        var fixture = new ActionGroupControllerTestFixture<TriggerSetTarget, ActionGroupRequestHandler>()
             .AddActionGroup(actionGroup)
             .WithNode([targetNode])
             .Build();

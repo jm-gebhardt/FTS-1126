@@ -32,9 +32,9 @@ public class InMemoryCacheInitializer(
     private async Task InitializeTriggers()
     {
         await triggerRepository.LoadTriggerToLocationDictionary();
-        ICollection<Trigger> triggers = await triggerRepository.GetTriggers();
+        var triggers = await triggerRepository.GetTriggers();
 
-        IEnumerable<object> triggerAssignments = triggers
+        var triggerAssignments = triggers
             .SelectMany(trigger => trigger.Locations.Select(location => new { trigger, location }))
             .Select(tl => CreateTriggerAssignment(tl.trigger, tl.location))
             .Where(assignment => assignment != null!);
@@ -58,7 +58,7 @@ public class InMemoryCacheInitializer(
 
     private async Task PublishTriggerAssignmentsBatch(IEnumerable<object> assignments)
     {
-        IEnumerable<Task> publishTasks = assignments.Select(assignment => bus.Publish(assignment));
+        var publishTasks = assignments.Select(assignment => bus.Publish(assignment));
         await Task.WhenAll(publishTasks);
     }
 }

@@ -54,7 +54,7 @@ public class QueuesSeeder : ISeeder
     /// <inheritdoc />
     public async Task SeedAsync()
     {
-        IEnumerable<Task> seedingTasks = _queueFolders.Select(f => Task.Run(async () =>
+        var seedingTasks = _queueFolders.Select(f => Task.Run(async () =>
             await new QueueSeeder(_bus, f, _queuesLogger).SeedAsync()));
         await Task.WhenAll(seedingTasks);
     }

@@ -70,7 +70,7 @@ public class AgvSettingsRequestHandler :
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<GetAgvsSettings> context)
     {
-        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
+        var selectedAgvs = context.Message.CorrelationIds;
         List<AgvSettings> settings = new();
         foreach (var correlationId in selectedAgvs)
         {
@@ -128,8 +128,8 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<UpdateAgvsSettings> context)
     {
-        (ICollection<Guid> correlationIds, var settings, string user) = context.Message;
-        List<Task> updateTasks = correlationIds
+        (var correlationIds, var settings, string user) = context.Message;
+        var updateTasks = correlationIds
             .Select(correlationId => Task.Run(() => UpdateAgvSetting(correlationId, settings))).ToList();
 
         await Task.WhenAll(updateTasks);
@@ -169,8 +169,8 @@ public class AgvSettingsRequestHandler :
     /// </summary>
     public async Task Consume(ConsumeContext<ResetAgvsSettingToDefault> context)
     {
-        (ICollection<Guid> correlationIds, string propertyName, string user) = context.Message;
-        List<Task> updateTasks = correlationIds
+        (var correlationIds, string propertyName, string user) = context.Message;
+        var updateTasks = correlationIds
             .Select(correlationId => Task.Run(() => ResetAgvSettingToDefault(correlationId, propertyName))).ToList();
 
         await Task.WhenAll(updateTasks);

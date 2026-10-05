@@ -42,7 +42,7 @@ public class Cache<TKey, TValue> : ICache<TKey, TValue>
     /// <inheritdoc />
     public void RemoveOldest(Func<KeyValuePair<TKey, TValue>, bool> predicate)
     {
-        KeyValuePair<TKey, (TValue Value, DateTime CreatedAt)> oldest = _cache
+        var oldest = _cache
             .Where(kvp => predicate(new KeyValuePair<TKey, TValue>(kvp.Key, kvp.Value.Value)))
             .OrderBy(kvp => kvp.Value.CreatedAt)
             .FirstOrDefault();

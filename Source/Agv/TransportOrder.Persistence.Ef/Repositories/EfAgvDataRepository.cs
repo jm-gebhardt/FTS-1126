@@ -38,7 +38,7 @@ public class EfAgvDataRepository : IAgvDataRepository
     public async Task AddOrUpdateAsync(AgvData agvData)
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-        DbSet<AgvData> dbSet = dbContext.Set<AgvData>();
+        var dbSet = dbContext.Set<AgvData>();
 
         if (dbSet.Any(a => a.AgvCorrelationId == agvData.AgvCorrelationId))
         {

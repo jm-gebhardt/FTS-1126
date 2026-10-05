@@ -48,7 +48,7 @@ public class GraphRepositoryTest
         const string graphNodeId = "WP-001";
         var fixture = new GraphRepositoryTestFixture();
         await fixture.FillGraphRepository();
-        ICollection<MqttNode> actualMqttNodes = await fixture.GraphRepository.GetMqttNodes([graphNodeId]);
+        var actualMqttNodes = await fixture.GraphRepository.GetMqttNodes([graphNodeId]);
 
         actualMqttNodes.Count.ShouldBe(1);
         actualMqttNodes.Single().NodeId.ShouldBe(graphNodeId);
@@ -86,7 +86,7 @@ public class GraphRepositoryTest
 
         var graphEdgeId = fixture.GetGraphEdgeId(0);
 
-        ICollection<MqttEdge> actualMqttEdges = await fixture.GraphRepository.GetMqttEdges([graphEdgeId]);
+        var actualMqttEdges = await fixture.GraphRepository.GetMqttEdges([graphEdgeId]);
 
         actualMqttEdges.Count.ShouldBe(1);
         actualMqttEdges.Single().EdgeId.ShouldBe(mqttEdgeId);

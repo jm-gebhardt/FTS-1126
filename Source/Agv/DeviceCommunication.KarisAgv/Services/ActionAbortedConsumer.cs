@@ -44,7 +44,7 @@ public class ActionAbortedConsumer : IConsumer<ActionAborted>
         string orderId = action.CorrelationId.ToString();
         _logger.LogInformation("Handle {MessageType} for {Action} of order {Order} assigned to agv {AgvId}/{AgvCorrelationId}", nameof(ActionAborted), action.CorrelationId, orderId, agvInformation.SerialNumber, assignedAgv);
 
-        Guid? vehicleOrderId = await _actionRepository.GetVehicleOrderId(action.CorrelationId);
+        var vehicleOrderId = await _actionRepository.GetVehicleOrderId(action.CorrelationId);
         if (vehicleOrderId != null)
         {
             _logger.LogInformation("Replacing fleet management service internal order id {InternalOrderId} by vehicle order id {VehicleOrderId}", orderId, vehicleOrderId);

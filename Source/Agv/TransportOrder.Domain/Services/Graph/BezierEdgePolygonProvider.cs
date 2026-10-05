@@ -27,7 +27,7 @@ public class BezierEdgePolygonProvider : EdgePolygonProviderBase
     {
         var bezier = CreateBezier(edge);
 
-        (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] frames = bezier.GetSamples(2);
+        var frames = bezier.GetSamples(2);
 
         var tangentAtEnd = frames[1].Tangent;
 
@@ -41,11 +41,11 @@ public class BezierEdgePolygonProvider : EdgePolygonProviderBase
 
         var samplePolygon = GetEdgeSamplePolygon(edge, agvType, margins, 0); //todo: get tangential orientation form graph model and assert it is constant for the whole edge
 
-        (var innerVertex, var outerVertex, List<Vector2> startCap, List<Vector2> endCap) = SplitPolygon(samplePolygon.Points.Select(p => p.ToVector2()).ToList());
+        var (innerVertex, outerVertex, startCap, endCap) = SplitPolygon(samplePolygon.Points.Select(p => p.ToVector2()).ToList());
 
         var bezier = CreateBezier(edge);
 
-        (Vector2 Point, Vector2 Tangent, Vector2 Normal)[] frames = bezier.GetSamples(steps);
+        var frames = bezier.GetSamples(steps);
 
         var ring = new List<Vector2>(steps * 2 + startCap.Count + endCap.Count);
 
@@ -70,9 +70,9 @@ public class BezierEdgePolygonProvider : EdgePolygonProviderBase
             ring.Add(Transform(frames[0], vertex));
         }
 
-        List<Vector2> outline = RemoveCollinearPoints(RemoveConsecutiveDuplicates(ring));
+        var outline = RemoveCollinearPoints(RemoveConsecutiveDuplicates(ring));
 
-        List<PolygonPoint> polygonPoints = outline.Select(p => new PolygonPoint(p.X, p.Y)).ToList();
+        var polygonPoints = outline.Select(p => new PolygonPoint(p.X, p.Y)).ToList();
 
         return new Polygon(polygonPoints);
     }

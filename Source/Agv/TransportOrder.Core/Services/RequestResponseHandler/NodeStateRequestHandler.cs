@@ -1,5 +1,4 @@
-﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
-using Gebhardt.Acc.TransportOrder.Domain.Repositories;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Map;
 using JetBrains.Annotations;
 using MassTransit;
@@ -27,7 +26,7 @@ public class NodeStateRequestHandler : IConsumer<GetMapNodeStates>
     {
         var correlationId = context.Message.CorrelationId;
 
-        ICollection<(NodeLock NodeLock, Guid? StationId, string? LockReason, string? LockDescription, string? LockedByUser, string NodeName)> nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId);
+        var nodeStates = await _nodeRepository.GetNodeStatesForMapAsync(correlationId);
 
         await context.RespondAsync(new GotMapNodeStates(nodeStates));
     }

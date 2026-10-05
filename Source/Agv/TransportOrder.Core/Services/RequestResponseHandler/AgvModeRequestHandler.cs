@@ -8,8 +8,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using MassTransit;
-using ActionGroup = Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup.ActionGroup;
-using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
@@ -42,7 +40,7 @@ public class AgvModeRequestHandler:
     /// </summary>
     public async Task Consume(ConsumeContext<SetMaintenanceMode> context)
     {
-        (var agvCorrelationId, string? initiatingUser, MaintenanceReason? maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
+        (var agvCorrelationId, string? initiatingUser, var maintenanceReason, string? reasonDescription, var assignedActionPolicy, var currentActionPolicy, bool cancelManualActions) = context.Message;
 
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
 
@@ -58,7 +56,7 @@ public class AgvModeRequestHandler:
     {
         (var agvCorrelationId, string? initiatingUser) = context.Message;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
-        IReadOnlyList<ActionGroup> pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 100);
+        var pausedActionGroups = await _actionGroupRepository.GetActionGroupsAsync(actionGroupState: ActionGroupState.Paused, assignedAgvCorrelationId: agvCorrelationId, maxItems: 100);
 
         if (pausedActionGroups.Count == 0)
         {

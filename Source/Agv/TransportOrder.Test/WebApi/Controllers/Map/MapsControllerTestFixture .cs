@@ -42,7 +42,7 @@ public class MapsControllerTestFixture<TRequest, TRequestHandler> : ControllerTe
 
     protected override MapsController GetController()
     {
-        IRequestClient<GetMapList> getMapListRequestClient = GetRequestClient<GetMapList>();
+        var getMapListRequestClient = GetRequestClient<GetMapList>();
 
         var controller = new MapsController(getMapListRequestClient);
 

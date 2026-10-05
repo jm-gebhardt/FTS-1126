@@ -62,7 +62,7 @@ public class EfCommandMetricsInterceptorTestFixture
 
         var errorConstructor = typeof(SqlError).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic)
             .First(c => c.GetParameters().Length >= 7 && c.GetParameters()[0].ParameterType == typeof(int));
-        ParameterInfo[] parameters = errorConstructor.GetParameters();
+        var parameters = errorConstructor.GetParameters();
         object?[] arguments = new object?[parameters.Length];
         arguments[0] = number;
         arguments[1] = (byte)0;

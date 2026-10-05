@@ -1,9 +1,7 @@
-using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 using Gebhardt.Acc.TransportOrder.Domain.ReadModels;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
-using MassTransit;
 using Shouldly;
 
 namespace Gebhardt.Acc.TransportOrder.Test.Services.RequestHandler.Agv;
@@ -15,13 +13,13 @@ public class GetCurrentAgvRouteRequestHandlerTest
     public async Task Consume_GetAgvRouteRequest_ReturnsAgvRoute()
     {
         var agvCorrelationId = Guid.NewGuid();
-        (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        var route = AgvGraphGenerator.CreateRoute();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, route.nodes, route.edges);
-        GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler>()
+        var fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoute, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoute(agvCorrelationId, agvRoute)
             .Build();
 
-        Response<GotCurrentAgvRoute> response = await fixture.GetResponseAsync<GotCurrentAgvRoute>(new GetCurrentAgvRoute(agvCorrelationId));
+        var response = await fixture.GetResponseAsync<GotCurrentAgvRoute>(new GetCurrentAgvRoute(agvCorrelationId));
 
         response.Message.AgvRoute.ShouldBe(agvRoute);
     }
@@ -30,15 +28,15 @@ public class GetCurrentAgvRouteRequestHandlerTest
     public async Task Consume_GetAgvRoutesRequest_ReturnsAgvRoutes()
     {
         var agvCorrelationId = Guid.NewGuid();
-        (GraphNode[] nodes, Guid[] edges) route = AgvGraphGenerator.CreateRoute();
+        var route = AgvGraphGenerator.CreateRoute();
         var agvRoute = new CurrentAgvRouteReadModel(agvCorrelationId, route.nodes, route.edges);
         Guid[] agvCorrelationIds = { agvCorrelationId };
 
-        GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler> fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler>()
+        var fixture = new GetCurrentAgvRouteRequestHandlerTestFixture<GetCurrentAgvRoutes, GetCurrentAgvRouteRequestHandler>()
             .WithAgvRoutes(agvCorrelationIds, [agvRoute])
             .Build();
 
-        Response<GotCurrentAgvRoutes> response = await fixture.GetResponseAsync<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(agvCorrelationIds));
+        var response = await fixture.GetResponseAsync<GotCurrentAgvRoutes>(new GetCurrentAgvRoutes(agvCorrelationIds));
 
         response.Message.AgvRoutes.Count.ShouldBe(agvCorrelationIds.Length);
         response.Message.AgvRoutes.First().RemainingNodes.ShouldBe(agvRoute.RemainingNodes);

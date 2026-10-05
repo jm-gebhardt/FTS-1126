@@ -6,7 +6,6 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agvs.Queries;
 using JetBrains.Annotations;
 using MassTransit;
-using AgvError = Gebhardt.Acc.Common.Domain.Models.AgvError;
 
 namespace Gebhardt.Acc.TransportOrder.Core.Services.RequestResponseHandler;
 
@@ -40,8 +39,8 @@ public class GetAgvErrorsRequestHandler :
         var cancellationToken = context.CancellationToken;
 
         await _agvDb.Agvs.GetAgvAsync(correlationId, cancellationToken);
-        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(correlationId, context.Message.DateFrom, context.Message.DateTo, cancellationToken);
-        List<Messages.Requests.Agv.Queries.AgvError> agvErrorHistoryMessageContent = agvErrorHistory.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
+        var agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(correlationId, context.Message.DateFrom, context.Message.DateTo, cancellationToken);
+        var agvErrorHistoryMessageContent = agvErrorHistory.Select(e => _mapper.Map<AgvError>(e)).ToList();
         await context.RespondAsync(new GotAgvErrors(agvErrorHistoryMessageContent));
     }
 
@@ -54,8 +53,8 @@ public class GetAgvErrorsRequestHandler :
         var correlationId = context.Message.CorrelationId;
         await _agvDb.Agvs.GetAgvAsync(correlationId);
 
-        IReadOnlyList<AgvError> agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
-        List<Messages.Requests.Agv.Queries.AgvError> agvErrorsMessageContent = agvErrors.Select(e => _mapper.Map<Messages.Requests.Agv.Queries.AgvError>(e)).ToList();
+        var agvErrors = await _agvDb.Errors.GetActiveErrorsAsync(correlationId);
+        var agvErrorsMessageContent = agvErrors.Select(e => _mapper.Map<AgvError>(e)).ToList();
         await context.RespondAsync(new GotActiveAgvErrors(agvErrorsMessageContent));
     }
 
@@ -65,16 +64,16 @@ public class GetAgvErrorsRequestHandler :
     /// <exception cref="AgvsNotFoundException"></exception>
     public async Task Consume(ConsumeContext<GetErrorHistoryForAgvs> context)
     {
-        (ICollection<Guid> selectedAgvs, var fromDate, var toDate) = context.Message;
+        var (selectedAgvs, fromDate, toDate) = context.Message;
         var cancellationToken = context.CancellationToken;
         
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(selectedAgvs);
-        IReadOnlyList<AgvError> agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate, cancellationToken);
-        List<AgvErrors> agvErrors = agvErrorHistory
+        var agvErrorHistory = await _agvDb.Errors.GetErrorsAsync(selectedAgvs.ToList(), fromDate, toDate, cancellationToken);
+        var agvErrors = agvErrorHistory
             .GroupBy(e => e.AgvCorrelationId)
             .Select(g => new AgvErrors(
                     g.Key,
-                    _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
+                    _mapper.Map<List<AgvError>>(
                         g.OrderByDescending(e => e.ErrorReceived).ToList())
                 )
             )
@@ -89,15 +88,15 @@ public class GetAgvErrorsRequestHandler :
     /// <exception cref="AgvsNotFoundException"></exception>
     public async Task Consume(ConsumeContext<GetActiveErrorsForAgvs> context)
     {
-        ICollection<Guid> selectedAgvs = context.Message.CorrelationIds;
+        var selectedAgvs = context.Message.CorrelationIds;
         await _agvDb.Agvs.ThrowIfAgvsNotExistAsync(selectedAgvs);
 
-        IReadOnlyList<AgvError> fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync([.. selectedAgvs]);
-        List<AgvErrors> errors = fetchedErrors
+        var fetchedErrors = await _agvDb.Errors.GetActiveErrorsAsync([.. selectedAgvs]);
+        var errors = fetchedErrors
             .GroupBy(e => e.AgvCorrelationId)
             .Select(g => new AgvErrors(
                     g.Key,
-                    _mapper.Map<List<Messages.Requests.Agv.Queries.AgvError>>(
+                    _mapper.Map<List<AgvError>>(
                         g.OrderByDescending(e => e.ErrorReceived).ToList())
                 )
             )

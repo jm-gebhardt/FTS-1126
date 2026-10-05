@@ -1,5 +1,4 @@
 using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
-using Gebhardt.Acc.TransportOrder.Domain.Models.BackgroundEditor;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 
@@ -30,7 +29,7 @@ public class EfBackgroundEditorRepositoryTest
 
         await fixture.Repository.AddOrUpdateBackgroundAsync(updatedBackground);
 
-        ICollection<Background> backgrounds = await fixture.Repository.GetBackgroundsAsync([]);
+        var backgrounds = await fixture.Repository.GetBackgroundsAsync([]);
         backgrounds.Count.ShouldBe(1);
         backgrounds.Single().Id.ShouldBe(updatedBackground.Id);
     }
@@ -95,7 +94,7 @@ public class EfBackgroundEditorRepositoryTest
         await using var fixture = new EfBackgroundEditorRepositoryTestFixture();
         await fixture.AddAsync(background);
 
-        ICollection<Background> result = await fixture.Repository.GetBackgroundsAsync([BackgroundGenerator.DefaultMapId]);
+        var result = await fixture.Repository.GetBackgroundsAsync([BackgroundGenerator.DefaultMapId]);
 
         result.First().Id.ShouldBe(background.Id);
     }
@@ -107,7 +106,7 @@ public class EfBackgroundEditorRepositoryTest
         await using var fixture = new EfBackgroundEditorRepositoryTestFixture();
         await fixture.AddAsync(background);
 
-        ICollection<Background> result = await fixture.Repository.GetBackgroundsAsync([Guid.NewGuid()]);
+        var result = await fixture.Repository.GetBackgroundsAsync([Guid.NewGuid()]);
 
         result.ShouldBeEmpty();
     }
@@ -119,7 +118,7 @@ public class EfBackgroundEditorRepositoryTest
         await using var fixture = new EfBackgroundEditorRepositoryTestFixture();
         await fixture.AddAsync(background);
 
-        ICollection<Background> result = await fixture.Repository.GetBackgroundsAsync([]);
+        var result = await fixture.Repository.GetBackgroundsAsync([]);
 
         result.First().Id.ShouldBe(background.Id);
     }
@@ -133,7 +132,7 @@ public class EfBackgroundEditorRepositoryTest
         await fixture.AddAsync(background1);
         await fixture.AddAsync(background2);
 
-        ICollection<Background> result = await fixture.Repository.GetBackgroundsAsync([], maxCount: 1);
+        var result = await fixture.Repository.GetBackgroundsAsync([], maxCount: 1);
 
         result.Count.ShouldBe(1);
     }

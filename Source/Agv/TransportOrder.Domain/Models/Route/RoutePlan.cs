@@ -44,9 +44,9 @@ public class RoutePlan
             return new RoutePlan(action, [], []);
         }
 
-        List<GraphNode> graphNodes = action.Nodes.ToList();
-        List<RouteNode> nodes = graphNodes.Select(n => new RouteNode(n, released: true)).ToList();
-        List<RouteEdge> edges = Enumerable.Range(0, graphNodes.Count - 1)
+        var graphNodes = action.Nodes.ToList();
+        var nodes = graphNodes.Select(n => new RouteNode(n, released: true)).ToList();
+        var edges = Enumerable.Range(0, graphNodes.Count - 1)
             .Select(i => new RouteEdge(
                 new GraphEdge(graphNodes[i].Id, graphNodes[i + 1].Id, 1f, action.Edges.ElementAt(i)),
                 released: true))
