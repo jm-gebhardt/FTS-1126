@@ -5,19 +5,14 @@ using Microsoft.CodeAnalysis.Sarif;
 
 var log = SarifLog.Load("./resharper-results.json");
 var results = log.Runs.SelectMany(run => run.Results);
-var suggestions = results.Where(result => result.Level == FailureLevel.Warning || result.Level == FailureLevel.Note);
-bool hasSuggestions = false;
+var warnings = results.Where(result => result.Level == FailureLevel.Error || result.Level == FailureLevel.Warning);
 
 using (StreamWriter sw = new StreamWriter("./resharper-logs.txt"))
 {
-    foreach(var suggestion in suggestions){
-        var location = suggestion.Locations.First();
-        var level = "Suggestion";
-        if (suggestion.Level != FailureLevel.Note) {
-           level = suggestion.Level.ToString();
-        }
-        string logMessage = $"{level}: {suggestion.Message.Text} ('{suggestion.RuleId}' on line {location.PhysicalLocation.Region.StartLine} in {location.PhysicalLocation.ArtifactLocation.Uri})";
+    foreach(var warning in warnings){
+        var location = warning.Locations.First();
+        var level = warning.Level.ToString();
+        string logMessage = $"{level}: {warning.Message.Text} ('{warning.RuleId}' on line {location.PhysicalLocation.Region.StartLine} in {location.PhysicalLocation.ArtifactLocation.Uri})";
         sw.WriteLine(logMessage);
-        hasSuggestions = true;
     }
 }

@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.TestPlanRunner</AssemblyName>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <Import Project="..\SharedProjectSettings.csproj" />
     <ItemGroup>

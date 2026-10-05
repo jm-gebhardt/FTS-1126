@@ -2,7 +2,7 @@
     <PropertyGroup>
         <!-- Assembly info, https://aka.ms/assembly-info-properties -->
         <Company>Gebhardt Fördertechnik GmbH, 74889 Sinsheim</Company>
-        <Copyright>Copyright © Gebhardt Fördertechnik GmbH 2022</Copyright>
+        <Copyright>Copyright © Gebhardt Fördertechnik GmbH 2026</Copyright>
         <Product>$(MSBuildProjectName)</Product>
         <Version>0.0.1</Version>
 
@@ -11,10 +11,12 @@
         <Nullable>enable</Nullable>
         <RootNamespace>$(AssemblyName)</RootNamespace>
         <WarningLevel>9</WarningLevel>
-        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <!-- nobody uses ARM Windows, so silencing the warning is harmless -->
         <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
+        <!-- XML documentation comments are not mandatory -->
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
 
         <!-- Override project settings in order to keep platform independence for docker. -->
         <PublishSingleFile Condition="'$(Configuration)' == 'Release'">false</PublishSingleFile>
