@@ -19,6 +19,7 @@ public static class Vda5050Specifications
         public const string StartCharging = "startCharging";
         public const string StopCharging = "stopCharging";
         public const string CancelOrder = "cancelOrder";
+        public const string RequestFactsheet = "factsheetRequest";
     }
 
     public static class Parameters
@@ -36,6 +37,12 @@ public static class Vda5050Specifications
         public const string State = "state";
         public const string Connection = "connection";
         public const string Visualization = "visualization";
+        public const string Factsheet = "factsheet";
+    }
+
+    public static class Errors
+    {
+        public const string FactsheetNotExisting = "factsheetNotExisting";
     }
 
     public static class OrderErrors

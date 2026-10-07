@@ -5,6 +5,8 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.StateMachines;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator;
 using Shouldly;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
@@ -494,13 +496,13 @@ public class SimulatedAgvStateMachineTest
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Manual));
         var position = new Vda5050.Simulator.Domain.Models.AgvPosition { X = 0, Y = 0, Z = 0, Theta = 0, PositionInitialized = true };
         await fixture.PublishMessageAsync(new UpdatePosition(config.CorrelationId, position));
-        fixture.GetSaga(config).Error.ShouldNotBeNull().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+        fixture.GetSaga(config).ActualErrors.ShouldContain(e => e.ErrorType == Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
 
         await fixture.PublishMessageAsync(new SwitchOperatingMode(config.CorrelationId, AgvOperatingMode.Automatic));
         await fixture.GetFirstPublishedMessageAsync<MqttState>(3);
 
         var saga = fixture.GetSaga(config);
-        saga.Error.ShouldBeNull();
+        saga.ActualErrors.ShouldNotContain(e => e.ErrorType == Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
     }
 
     [TestMethod]
@@ -660,5 +662,116 @@ public class SimulatedAgvStateMachineTest
 
         var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
         state.SerialNumber.ShouldBe(config.SerialNumber);
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateAgv_FactsheetMissing_PublishesStateWithFatalFactsheetError()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>();
+        var error = state.Errors.ShouldHaveSingleItem();
+        error.ErrorType.ShouldBe(Vda5050Specifications.Errors.FactsheetNotExisting);
+        error.ErrorLevel.ShouldBe(MqttErrorLevel.Fatal);
+        error.ErrorDescription.ShouldBe(SimulatedAgvStateMachineTestFixture.FactsheetNotExistingDescription);
+    }
+
+    [TestMethod]
+    public async Task Consume_CreateAgv_FactsheetCached_PublishesStateWithoutErrors()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).WithFactsheet(config.AgvTypeId).Build();
+
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>();
+        state.Errors.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestFactsheet_FactsheetCached_PublishesMqttFactsheetWithAgvHeader()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).WithFactsheet(config.AgvTypeId).Build();
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        await fixture.PublishMessageAsync(new RequestFactsheet(config.CorrelationId, MqttInstantActionsGenerator.FactsheetRequestActionId));
+
+        var factsheet = await fixture.GetFirstPublishedMessageAsync<MqttFactsheet>();
+        factsheet.SerialNumber.ShouldBe(config.SerialNumber);
+        factsheet.Manufacturer.ShouldBe(config.Manufacturer);
+        factsheet.Version.ShouldBe(Vda5050Specifications.Version);
+        factsheet.HeaderId.ShouldBe(1);
+        factsheet.TypeSpecification.SeriesName.ShouldBe(FactsheetJsonGenerator.SeriesName);
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestFactsheet_FactsheetCached_PublishesFinishedRequestOnceAndRemovesIt()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).WithFactsheet(config.AgvTypeId).Build();
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        await fixture.PublishMessageAsync(new RequestFactsheet(config.CorrelationId, MqttInstantActionsGenerator.FactsheetRequestActionId));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
+        var actionState = state.ActionStates.ShouldHaveSingleItem();
+        actionState.ActionId.ShouldBe(MqttInstantActionsGenerator.FactsheetRequestActionId);
+        actionState.ActionStatus.ShouldBe(MqttActionStatus.Finished);
+        fixture.GetSaga(config).InstantActionStates.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestFactsheet_FactsheetMissing_KeepsRequestWaitingAndPublishesFetchFactsheet()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        await fixture.PublishMessageAsync(new RequestFactsheet(config.CorrelationId, MqttInstantActionsGenerator.FactsheetRequestActionId));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
+        state.ActionStates.ShouldHaveSingleItem().ActionStatus.ShouldBe(MqttActionStatus.Waiting);
+        state.Errors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.Errors.FactsheetNotExisting);
+        var fetch = await fixture.GetFirstPublishedMessageAsync<FetchFactsheet>();
+        fetch.CorrelationId.ShouldBe(config.AgvTypeId);
+        await fixture.ShouldNotHavePublishedAsync<MqttFactsheet>();
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestFactsheet_FactsheetCachedAfterFirstRequest_FinishesBothRequestsAndClearsError()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2)).Build();
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+        await fixture.PublishMessageAsync(new RequestFactsheet(config.CorrelationId, MqttInstantActionsGenerator.FactsheetRequestActionId));
+        await fixture.CacheFactsheetAsync(config.AgvTypeId);
+
+        await fixture.PublishMessageAsync(new RequestFactsheet(config.CorrelationId, MqttInstantActionsGenerator.SecondFactsheetRequestActionId));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(3);
+        state.ActionStates.ShouldAllBe(a => a.ActionStatus == MqttActionStatus.Finished);
+        state.ActionStates.Count.ShouldBe(2);
+        state.Errors.ShouldBeEmpty();
+        fixture.GetPublishedMessages<MqttFactsheet>().ShouldHaveSingleItem();
+    }
+
+    [TestMethod]
+    public async Task Consume_RequestFactsheet_InvalidFactsheetJson_KeepsRequestWaitingAndDoesNotPublishMqttFactsheet()
+    {
+        var config = CreateConfiguration();
+        var fixture = new SimulatedAgvStateMachineTestFixture(TimeSpan.FromSeconds(2))
+            .WithFactsheet(config.AgvTypeId, FactsheetJsonGenerator.InvalidFactsheetJson)
+            .Build();
+        await fixture.PublishMessageAsync(new CreateAgv(config));
+
+        await fixture.PublishMessageAsync(new RequestFactsheet(config.CorrelationId, MqttInstantActionsGenerator.FactsheetRequestActionId));
+
+        var state = await fixture.GetFirstPublishedMessageAsync<MqttState>(2);
+        state.ActionStates.ShouldHaveSingleItem().ActionStatus.ShouldBe(MqttActionStatus.Waiting);
+        await fixture.ShouldNotHavePublishedAsync<MqttFactsheet>();
     }
 }

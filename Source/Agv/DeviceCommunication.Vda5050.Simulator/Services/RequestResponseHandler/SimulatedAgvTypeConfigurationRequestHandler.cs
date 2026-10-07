@@ -5,6 +5,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Extensions;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Requests;
 using JetBrains.Annotations;
 using MassTransit;
@@ -38,11 +39,12 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
         }
     }
 
-    private async Task AddConfigurationAsync(SimulatedAgvTypeConfiguration configuration, CancellationToken cancellationToken)
+    private async Task AddConfigurationAsync(SimulatedAgvTypeConfiguration configuration, ConsumeContext context)
     {
         logger.LogInformation("Adding the simulation configuration of agv type {AgvTypeIdentifier} with {NoOfAgvs} agvs", configuration.AgvTypeIdentifier, configuration.NoOfAgvs);
         await repository.AddAsync(configuration);
-        await spawner.ApplyAsync(null, configuration, cancellationToken);
+        await context.Publish(new FetchFactsheet(configuration.Id, configuration.AgvTypeIdentifier), context.CancellationToken);
+        await spawner.ApplyAsync(null, configuration, context.CancellationToken);
     }
 
     /// <inheritdoc/>
@@ -56,7 +58,7 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
             throw new AgvTypeConfigurationAlreadyExistsException(agvTypeIdentifier);
         }
 
-        await AddConfigurationAsync(configuration, context.CancellationToken);
+        await AddConfigurationAsync(configuration, context);
         await context.RespondAsync(new AgvTypeConfigurationResponse(configuration));
     }
 
@@ -73,7 +75,7 @@ public class SimulatedAgvTypeConfigurationRequestHandler(
         }
 
         await ValidateAsync(configuration, context.CancellationToken);
-        await AddConfigurationAsync(configuration, context.CancellationToken);
+        await AddConfigurationAsync(configuration, context);
         await context.RespondAsync(new Success());
     }
 

@@ -39,6 +39,7 @@ public static class SimulatedAgvTypeConfigurationExtensions
             return new AgvConfiguration(serialNumber, mapId, configuration.Manufacturer)
             {
                 AgvTypeId = configuration.Id,
+                AgvTypeIdentifier = configuration.AgvTypeIdentifier,
                 StateUpdateIntervalMs = configuration.StateUpdateIntervalMs,
                 VisualizationUpdateIntervalMs = configuration.VisualizationUpdateIntervalMs,
                 BatteryDischargeRate = configuration.BatteryDischargeRate,

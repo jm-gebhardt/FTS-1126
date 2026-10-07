@@ -29,6 +29,7 @@ public class MqttInstantActionsConsumer(ILogger<MqttInstantActionsConsumer> logg
         await ExtractInitPosition(context);
         await ExtractChargingActions(context);
         await ExtractOrderCancellation(context);
+        await ExtractFactsheetRequests(context);
     }
 
     private async Task ExtractInitPosition(ConsumeContext<MqttInstantActions> context)
@@ -72,6 +73,15 @@ public class MqttInstantActionsConsumer(ILogger<MqttInstantActionsConsumer> logg
         {
             logger.LogInformation("Instant action cancelOrder received for agv {Manufacturer}/{SerialNumber}", context.Message.Manufacturer, context.Message.SerialNumber);
             await context.Publish(new AbortOrder(context.Message.SerialNumber.ToGuid(), cancelOrderAction.ActionId));
+        }
+    }
+
+    private async Task ExtractFactsheetRequests(ConsumeContext<MqttInstantActions> context)
+    {
+        foreach (var factsheetRequestAction in context.Message.Actions.Where(a => a.ActionType == Vda5050Specifications.ActionTypes.RequestFactsheet))
+        {
+            logger.LogInformation("Instant action factsheetRequest received for agv {Manufacturer}/{SerialNumber}", context.Message.Manufacturer, context.Message.SerialNumber);
+            await context.Publish(new RequestFactsheet(context.Message.SerialNumber.ToGuid(), factsheetRequestAction.ActionId));
         }
     }
 }

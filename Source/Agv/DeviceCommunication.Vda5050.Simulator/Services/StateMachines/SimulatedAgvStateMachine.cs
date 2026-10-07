@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Text.Json;
+using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models.Sequence;
 using Gebhardt.Acc.Common.Domain.Services;
 using Gebhardt.Acc.Common.Extensions;
@@ -13,6 +14,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using JetBrains.Annotations;
 using MassTransit;
+using MassTransit.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.StateMachines;
@@ -105,6 +107,11 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     /// </summary>
     public Event<UpdateAgvConfiguration> UpdateAgvConfigurationEvent { get; private set; } = null!;
 
+    /// <summary>
+    /// <see cref="RequestFactsheet"/> received.
+    /// </summary>
+    public Event<RequestFactsheet> RequestFactsheetEvent { get; private set; } = null!;
+
     #region Schedules
     /// <summary>
     /// Internal message to schedule sending status update
@@ -135,6 +142,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
     private readonly INurbsEdgeBuilder _edgeBuilder;
     private readonly IAgvStateCache _stateCache;
     private readonly IAgvOperatingModeCache _operatingModeCache;
+    private readonly IFactsheetCache _factsheetCache;
+    private readonly ISequenceCounter<IFactsheetHeaderId> _factsheetHeaderId;
 
     /// <inheritdoc/>
     public SimulatedAgvStateMachine(ILogger<SimulatedAgvStateMachine> logger,
@@ -142,8 +151,12 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         ISequenceCounter<IStateHeaderId> stateHeaderId,
         ISequenceCounter<IVisualizationHeaderId> visualizationHeaderId,
         ISequenceCounter<IConnectionHeaderId> connectionHeaderId,
+        ISequenceCounter<IFactsheetHeaderId> factsheetHeaderId,
         IAgvOperatingModeCache operatingModeCache,
-        IMapper mapper, INurbsEdgeBuilder edgeBuilder, IAgvStateCache stateCache)
+        IMapper mapper,
+        INurbsEdgeBuilder edgeBuilder,
+        IAgvStateCache stateCache,
+        IFactsheetCache factsheetCache)
     {
         _logger = logger;
         _timeProvider = timeProvider;
@@ -151,6 +164,8 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         _edgeBuilder = edgeBuilder;
         _stateCache = stateCache;
         _operatingModeCache = operatingModeCache;
+        _factsheetCache = factsheetCache;
+        _factsheetHeaderId = factsheetHeaderId;
 
         SetSagaFactory(stateHeaderId, visualizationHeaderId, connectionHeaderId);
         SetMissingInstanceHandling();
@@ -174,6 +189,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         DuringAny(RemoveLoadHandler());
         DuringAny(RemoveAgvHandler());
         DuringAny(UpdateAgvConfigurationHandler());
+        DuringAny(RequestFactsheetHandler());
         SetCompletedWhenFinalized(); // Delete when finalized
     }
 
@@ -209,6 +225,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         Event(() => StopChargingEvent, e => e.OnMissingInstance(m => m.Discard()));
         Event(() => AbortOrderEvent, e => e.OnMissingInstance(m => m.Discard()));
         Event(() => GraphUpdatedEvent, e => e.OnMissingInstance(m => m.Discard()));
+        Event(() => RequestFactsheetEvent, e => e.OnMissingInstance(m => m.Discard()));
     }
 
     private void SetScheduler()
@@ -472,6 +489,60 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
             .If(c => c.Saga.CurrentOrder == null && c.Saga.CurrentState == nameof(BusyMoving), t => t.TransitionTo(Idle));
     }
 
+    private EventActivityBinder<SimulatedAgv, RequestFactsheet> RequestFactsheetHandler()
+    {
+        return When(RequestFactsheetEvent)
+            .ThenAsync(async c =>
+            {
+                _logger.LogInformation("{MessageType} {AgvId} / {CorrelationId} received", nameof(RequestFactsheet), c.Saga.Configuration.SerialNumber, c.Saga.CorrelationId);
+                c.Saga.RequestFactsheet(c.Message.ActionId);
+                if (await _factsheetCache.TryGetAsync(c.Saga.Configuration.AgvTypeId) == null)
+                {
+                    await c.Publish(new FetchFactsheet(c.Saga.Configuration.AgvTypeId, c.Saga.Configuration.AgvTypeIdentifier), c.CancellationToken);
+                }
+            })
+            .ThenAsync(PublishState);
+    }
+
+    private async Task<bool> PublishFactsheet(BehaviorContext<SimulatedAgv> context, string factsheetJson)
+    {
+        MqttFactsheet? factsheet;
+        try
+        {
+            factsheet = JsonSerializer.Deserialize<MqttFactsheet>(factsheetJson, SystemTextJsonMessageSerializer.Options);
+        }
+        catch (JsonException exception)
+        {
+            _logger.LogError(exception, "The factsheet of agv type {AgvTypeIdentifier} is not valid JSON", context.Saga.Configuration.AgvTypeIdentifier);
+            return false;
+        }
+
+        if (factsheet == null)
+        {
+            _logger.LogError("The factsheet of agv type {AgvTypeIdentifier} is empty", context.Saga.Configuration.AgvTypeIdentifier);
+            return false;
+        }
+
+        _factsheetHeaderId.Increase();
+        factsheet.HeaderId = (int)_factsheetHeaderId.Current;
+        factsheet.Timestamp = _timeProvider.GetUtcNow();
+        factsheet.Version = Vda5050Specifications.Version;
+        factsheet.Manufacturer = context.Saga.Configuration.Manufacturer;
+        factsheet.SerialNumber = context.Saga.Configuration.SerialNumber;
+        await context.PublishMqtt(factsheet, context.Saga.Configuration.GetRoutingKey(Vda5050Specifications.Subtopics.Factsheet), context.CancellationToken);
+        return true;
+    }
+
+    private async Task ResolveFactsheetRequests(BehaviorContext<SimulatedAgv> context)
+    {
+        string? factsheetJson = await _factsheetCache.TryGetAsync(context.Saga.Configuration.AgvTypeId);
+        context.Saga.SetFactsheetAvailable(factsheetJson != null);
+        if (factsheetJson != null && context.Saga.HasWaitingFactsheetRequests && await PublishFactsheet(context, factsheetJson))
+        {
+            context.Saga.FinishFactsheetRequests();
+        }
+    }
+
     private async Task PublishConnection(BehaviorContext<SimulatedAgv> context)
     {
         context.Saga.ConnectionHeaderId.Increase();
@@ -489,6 +560,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
 
     private async Task PublishState(BehaviorContext<SimulatedAgv> context)
     {
+        await ResolveFactsheetRequests(context);
         context.Saga.StateHeaderId.Increase();
         context.Saga.UpdateStatus(GetStatusUpdateInterval(context).TotalSeconds, _logger);
         string actionStatesSummary = context.Saga.CurrentOrder == null ? "(no order)" :
@@ -527,14 +599,14 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
                 Y = context.Saga.CurrentPosition.Y
             },
             Loads = context.Saga.Loads.Select(l => new MqttLoad { LoadId = l.Id, LoadType = l.LoadType, LoadPosition = l.LoadPosition }).ToList(),
-            ActionStates = context.Saga.CurrentOrder != null ? _mapper.Map<IList<MqttActionState>>(context.Saga.CurrentOrder!.PendingActionStates.ToList()) : [],
+            ActionStates = _mapper.Map<IList<MqttActionState>>((context.Saga.CurrentOrder?.PendingActionStates ?? []).Concat(context.Saga.InstantActionStates).ToList()),
             BatteryState = new MqttBatteryState
             {
                 BatteryCharge = context.Saga.SimulatedBatteryCharge,
                 Charging = context.Saga.Charging,
                 BatteryVoltage = 58
             },
-            Errors = context.Saga.Error != null ? [_mapper.Map<MqttError>(context.Saga.Error)] : [],
+            Errors = _mapper.Map<IList<MqttError>>(context.Saga.Errors.ToList()),
             SafetyState = new MqttSafetyState
             {
                 EStop = MqttEStop.None, FieldViolation = false
@@ -543,6 +615,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         await context.PublishMqtt(state, context.Saga.Configuration.GetRoutingKey(Vda5050Specifications.Subtopics.State), context.CancellationToken);
         await _stateCache.AddOrUpdateAsync(context.Saga.CorrelationId, state);
         await context.Publish(new SimulatedAgvStateChanged(context.Saga.CorrelationId, state), context.CancellationToken);
+        context.Saga.RemoveFinishedInstantActionStates();
         context.Saga.CurrentOrder?.State?.NewBaseRequest = null;
         context.Saga.FinishOrder(_logger);
     }

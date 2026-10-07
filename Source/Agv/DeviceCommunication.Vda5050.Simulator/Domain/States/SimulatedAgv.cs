@@ -145,9 +145,29 @@ public class SimulatedAgv : SagaStateMachineInstance
     public bool IsInAutomaticMode => OperatingMode == AgvOperatingMode.Automatic;
 
     /// <summary>
-    /// Current error.
+    /// Randomly generated fake error.
     /// </summary>
-    public AgvError? Error { get; private set; }
+    public AgvError? RandomError { get; private set; }
+
+    /// <summary>
+    /// Errors caused by the actual condition of the agv.
+    /// </summary>
+    public List<AgvError> ActualErrors { get; } = [];
+
+    /// <summary>
+    /// All current errors.
+    /// </summary>
+    public IEnumerable<AgvError> Errors => RandomError == null ? ActualErrors : ActualErrors.Append(RandomError);
+
+    /// <summary>
+    /// The states of instant actions not belonging to an order.
+    /// </summary>
+    public List<OrderActionState> InstantActionStates { get; } = [];
+
+    /// <summary>
+    /// True if a factsheet request is waiting for the factsheet.
+    /// </summary>
+    public bool HasWaitingFactsheetRequests => InstantActionStates.Any(IsWaitingFactsheetRequest);
 
     private readonly INurbsEdgeBuilder _edgeBuilder;
     private readonly bool _generateError;
@@ -184,6 +204,11 @@ public class SimulatedAgv : SagaStateMachineInstance
         OperatingMode = AgvOperatingMode.Automatic;
     }
 
+    private void RemoveActualError(string errorType)
+    {
+        ActualErrors.RemoveAll(e => e.ErrorType == errorType);
+    }
+    
     /// <summary>
     /// Initialize the agv to the given position.
     /// </summary>
@@ -263,10 +288,7 @@ public class SimulatedAgv : SagaStateMachineInstance
             LastNodeSequenceId = 0;
             return;
         }
-        if (string.Equals(Error?.ErrorType, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable))
-        {
-            Error = null;
-        }
+        RemoveActualError(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
     }
 
     /// <summary>
@@ -341,7 +363,8 @@ public class SimulatedAgv : SagaStateMachineInstance
 
     private void GenerateAvailabilityError()
     {
-        Error = new AgvError(CorrelationId, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, "Receival of an order while not in ‘AUTOMATIC’", null, ErrorLevel.Warning, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, ErrorCategory.General, null, _timeProvider.GetUtcNow().DateTime, ErrorFlag.Agv, AgvErrorSource.Agv);
+        RemoveActualError(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+        ActualErrors.Add(new AgvError(CorrelationId, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, "Receival of an order while not in ‘AUTOMATIC’", null, ErrorLevel.Warning, Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, ErrorCategory.General, null, _timeProvider.GetUtcNow().DateTime, ErrorFlag.Agv, AgvErrorSource.Agv));
     }
 
     /// <summary>
@@ -551,6 +574,62 @@ public class SimulatedAgv : SagaStateMachineInstance
         FinishOrder();
     }
 
+    private static bool IsWaitingFactsheetRequest(OrderActionState actionState)
+    {
+        return actionState is { ActionType: Vda5050Specifications.ActionTypes.RequestFactsheet, ActionStatus: VehicleActionStatus.Waiting };
+    }
+
+    /// <summary>
+    /// Register a waiting factsheet request.
+    /// </summary>
+    /// <param name="actionId">The id of the factsheetRequest action.</param>
+    public void RequestFactsheet(string actionId)
+    {
+        InstantActionStates.Add(new OrderActionState
+        {
+            ActionId = actionId,
+            ActionType = Vda5050Specifications.ActionTypes.RequestFactsheet,
+            ActionStatus = VehicleActionStatus.Waiting
+        });
+    }
+
+    /// <summary>
+    /// Finish all waiting factsheet requests.
+    /// </summary>
+    public void FinishFactsheetRequests()
+    {
+        foreach (var actionState in InstantActionStates.Where(IsWaitingFactsheetRequest))
+        {
+            actionState.ActionStatus = VehicleActionStatus.Finished;
+        }
+    }
+
+    /// <summary>
+    /// Remove all finished instant action states.
+    /// </summary>
+    public void RemoveFinishedInstantActionStates()
+    {
+        InstantActionStates.RemoveAll(a => a.ActionStatus == VehicleActionStatus.Finished);
+    }
+
+    /// <summary>
+    /// Raise or clear the fatal error for a missing factsheet.
+    /// </summary>
+    /// <param name="factsheetAvailable">True if the factsheet of the agv type exists.</param>
+    public void SetFactsheetAvailable(bool factsheetAvailable)
+    {
+        if (factsheetAvailable)
+        {
+            RemoveActualError(Vda5050Specifications.Errors.FactsheetNotExisting);
+            return;
+        }
+        if (ActualErrors.Any(e => e.ErrorType == Vda5050Specifications.Errors.FactsheetNotExisting))
+        {
+            return;
+        }
+        ActualErrors.Add(new AgvError(CorrelationId, "Factsheet not existing", "Factsheet not existing", null, ErrorLevel.Fatal, Vda5050Specifications.Errors.FactsheetNotExisting, ErrorCategory.General, null, _timeProvider.GetUtcNow().UtcDateTime, ErrorFlag.Agv, AgvErrorSource.Agv));
+    }
+
     private static readonly Random _random = Random.Shared;
 
     /// <summary>
@@ -559,13 +638,13 @@ public class SimulatedAgv : SagaStateMachineInstance
     public void GenerateError()
     {
         bool act = _random.Next(2) == 1;
-        if (Error != null && act)
+        if (RandomError != null && act)
         {
-            Error = null;
+            RandomError = null;
             return;
         }
         act = act && _timeProvider.GetUtcNow().Minute % 5 == 0;
-        Error = act ? ErrorGenerator.CreateError(CorrelationId) : null;
+        RandomError = act ? ErrorGenerator.CreateError(CorrelationId) : null;
     }
 
     /// <summary>

@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
 
 public class MqttInstantActionsConsumerTestFixture : MqttConsumerTestFixture<MqttInstantActionsConsumer>
 {
-    private const string SimulatedSerialNumber = "simagv0";
+    public const string SimulatedSerialNumber = "simagv0";
 
     public MqttInstantActionsConsumerTestFixture()
     {

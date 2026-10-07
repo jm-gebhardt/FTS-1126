@@ -22,6 +22,11 @@ public record AgvConfiguration(string SerialNumber, string MapId, string Manufac
     public Guid AgvTypeId { get; init; }
 
     /// <summary>
+    /// The identifier of the agv type the agv belongs to.
+    /// </summary>
+    public string AgvTypeIdentifier { get; init; } = string.Empty;
+
+    /// <summary>
     /// The interval in milliseconds between two state publications.
     /// </summary>
     public int StateUpdateIntervalMs { get; init; } = SimulatedAgvTypeConfiguration.DefaultStateUpdateIntervalMs;

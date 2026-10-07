@@ -1,7 +1,9 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Testing.Fixtures;
 using Gebhardt.Acc.Common.Testing.Helpers;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages.Factsheets;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Factsheets;
@@ -145,6 +147,30 @@ public class FactsheetRequestHandlerTest
         fixture.AddedAgvType.Width.ShouldBe(FactsheetRequestHandlerTestFixture.Width);
         fixture.AddedAgvType.RawData.ShouldBe(rawJson);
         fixture.AddedAgvType.Acknowledged.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public async Task Consume_Factsheet_PublishesFactsheetUploadedWithRawJson()
+    {
+        const string rawJson = """{"manufacturer":"TestManufacturer","physicalParameters":{"length":1.5}}""";
+        var fixture = new FactsheetRequestHandlerTestFixture();
+
+        await fixture.GetResponseAsync<Success>(BuildMessage(rawJson: rawJson));
+
+        var published = await fixture.GetFirstPublishedMessageAsync<FactsheetUploaded>();
+        published.CorrelationId.ShouldBe(FactsheetRequestHandlerTestFixture.AgvTypeIdentifier.ToGuid());
+        published.AgvTypeIdentifier.ShouldBe(FactsheetRequestHandlerTestFixture.AgvTypeIdentifier);
+        published.FactsheetJson.ShouldBe(rawJson);
+    }
+
+    [TestMethod]
+    public async Task Consume_AgvTypeAlreadyExists_DoesNotPublishFactsheetUploaded()
+    {
+        var fixture = FactsheetRequestHandlerTestFixture.WithExistingAgvType();
+
+        await MediatorShould.ThrowRequestExceptionAsync<AgvTypeAlreadyExistsException>(async () => await fixture.GetResponseAsync<Success>(BuildMessage()));
+
+        await fixture.ShouldNotHavePublishedAsync<FactsheetUploaded>();
     }
 
     [TestMethod]

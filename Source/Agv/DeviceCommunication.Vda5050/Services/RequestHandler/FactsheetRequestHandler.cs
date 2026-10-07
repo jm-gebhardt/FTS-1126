@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
+using Gebhardt.Acc.DeviceCommunication.Common.Messages.Factsheets;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvActions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.AgvTypes;
@@ -41,6 +42,7 @@ public class FactsheetRequestHandler(
 
         await agvTypeRepository.AddAsync(agvType);
         await bus.Publish(new AgvTypeCreated(agvType.Id, agvTypeInfo));
+        await bus.Publish(new FactsheetUploaded(agvType.Id, agvType.AgvTypeIdentifier, factsheetRawJson));
 
         try
         {

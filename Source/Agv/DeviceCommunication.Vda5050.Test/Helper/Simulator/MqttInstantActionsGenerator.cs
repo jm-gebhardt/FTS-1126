@@ -5,6 +5,9 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator;
 
 public static class MqttInstantActionsGenerator
 {
+    public const string FactsheetRequestActionId = "factsheetRequest1";
+    public const string SecondFactsheetRequestActionId = "factsheetRequest2";
+
     public static MqttInstantActions Generate(
         string manufacturer = "gebhardt",
         string serialNumber = "simagv0",
@@ -68,6 +71,15 @@ public static class MqttInstantActionsGenerator
         return new MqttInstantAction
         {
             ActionType = Vda5050Specifications.ActionTypes.CancelOrder,
+            ActionId = actionId
+        };
+    }
+
+    public static MqttInstantAction GenerateFactsheetRequestAction(string actionId = FactsheetRequestActionId)
+    {
+        return new MqttInstantAction
+        {
+            ActionType = Vda5050Specifications.ActionTypes.RequestFactsheet,
             ActionId = actionId
         };
     }

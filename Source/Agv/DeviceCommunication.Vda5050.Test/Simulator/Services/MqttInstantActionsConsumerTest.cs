@@ -1,8 +1,10 @@
+using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Mqtt;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator;
 using Shouldly;
+using Fixture = Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services.MqttInstantActionsConsumerTestFixture;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Simulator.Services;
 
@@ -14,9 +16,9 @@ public class MqttInstantActionsConsumerTest
     {
         var fixture = new MqttInstantActionsConsumerTestFixture();
         var message = MqttInstantActionsGenerator.Generate(
-            manufacturer: "other",
-            serialNumber: "other0",
-            actions: [MqttInstantActionsGenerator.GenerateCancelOrderAction()]);
+            "other",
+            "other0",
+            [MqttInstantActionsGenerator.GenerateCancelOrderAction()]);
 
         await fixture.PublishMqttMessageAsync(message);
 
@@ -28,7 +30,7 @@ public class MqttInstantActionsConsumerTest
     {
         var fixture = new MqttInstantActionsConsumerTestFixture();
         var message = MqttInstantActionsGenerator.Generate(
-            actions: [MqttInstantActionsGenerator.GenerateInitPositionAction(x: 1.0f, y: 2.0f, theta: 0.5f)]);
+            actions: [MqttInstantActionsGenerator.GenerateInitPositionAction(1.0f, 2.0f, 0.5f)]);
 
         await fixture.PublishMqttMessageAsync(message);
 
@@ -133,5 +135,37 @@ public class MqttInstantActionsConsumerTest
         await fixture.ShouldHavePublishedAsync<AbortOrder>();
         var published = await fixture.GetFirstPublishedMessageAsync<AbortOrder>();
         published.ActionId.ShouldBe(actionId);
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttInstantActions_FactsheetRequest_PublishesRequestFactsheet()
+    {
+        var fixture = new MqttInstantActionsConsumerTestFixture();
+        var message = MqttInstantActionsGenerator.Generate(
+            actions: [MqttInstantActionsGenerator.GenerateFactsheetRequestAction()]);
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        var published = await fixture.GetFirstPublishedMessageAsync<RequestFactsheet>();
+        published.CorrelationId.ShouldBe(Fixture.SimulatedSerialNumber.ToGuid());
+        published.ActionId.ShouldBe(MqttInstantActionsGenerator.FactsheetRequestActionId);
+    }
+
+    [TestMethod]
+    public async Task Consume_MqttInstantActions_TwoFactsheetRequests_PublishesRequestFactsheetForEach()
+    {
+        var fixture = new MqttInstantActionsConsumerTestFixture();
+        var message = MqttInstantActionsGenerator.Generate(
+            actions:
+            [
+                MqttInstantActionsGenerator.GenerateFactsheetRequestAction(),
+                MqttInstantActionsGenerator.GenerateFactsheetRequestAction(MqttInstantActionsGenerator.SecondFactsheetRequestActionId)
+            ]);
+
+        await fixture.PublishMqttMessageAsync(message);
+
+        (await fixture.GetFirstPublishedMessageAsync<RequestFactsheet>(2)).ShouldNotBeNull();
+        fixture.GetPublishedMessages<RequestFactsheet>().Select(r => r.ActionId)
+            .ShouldBe([MqttInstantActionsGenerator.FactsheetRequestActionId, MqttInstantActionsGenerator.SecondFactsheetRequestActionId], true);
     }
 }

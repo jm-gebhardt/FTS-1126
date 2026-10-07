@@ -6,6 +6,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Caches;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.StateMachines;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shouldly;
@@ -27,11 +28,13 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
     public const int ChangedVisualizationUpdateIntervalMs = 45_000;
     public const double ChangedBatteryChargeRate = 5.0;
     public const double ChangedBatteryDischargeRate = 0.5;
+    public const string FactsheetNotExistingDescription = "Factsheet not existing";
 
     private const int SagaRemovalTimeoutSeconds = 1;
 
     private readonly Mock<IAgvOperatingModeCache> _operatingModeCache = new();
     private readonly Mock<IAgvStateCache> _stateCache = new();
+    private readonly FactsheetCache _factsheetCache = new();
 
     protected override void AddAutoMapper(IServiceCollection serviceCollection)
     {
@@ -46,9 +49,21 @@ public class SimulatedAgvStateMachineTestFixture(TimeSpan? inactivityTimeout = n
             sc.AddTransient<INurbsEdgeBuilder>(_ => new Mock<INurbsEdgeBuilder>().Object);
             sc.AddTransient<IAgvOperatingModeCache>(_ => _operatingModeCache.Object);
             sc.AddTransient<IAgvStateCache>(_ => _stateCache.Object);
+            sc.AddSingleton<IFactsheetCache>(_factsheetCache);
         });
         base.Build();
         return this;
+    }
+
+    public SimulatedAgvStateMachineTestFixture WithFactsheet(Guid agvTypeId, string factsheetJson = FactsheetJsonGenerator.FactsheetJson)
+    {
+        _factsheetCache.AddOrUpdateAsync(agvTypeId, factsheetJson).GetAwaiter().GetResult();
+        return this;
+    }
+
+    public Task CacheFactsheetAsync(Guid agvTypeId)
+    {
+        return _factsheetCache.AddOrUpdateAsync(agvTypeId, FactsheetJsonGenerator.FactsheetJson);
     }
 
     public SimulatedAgv GetSaga(AgvConfiguration configuration)

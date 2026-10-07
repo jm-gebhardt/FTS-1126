@@ -69,6 +69,7 @@ public static class BusRegistrationExtension
             configurator.AddConsumer<LifCommandHandler>();
             configurator.AddConsumer<LifRequestHandler>();
             configurator.AddConsumer<FactsheetRequestHandler>();
+            configurator.AddConsumer<FactsheetQueryHandler>();
             configurator.AddConsumer<AgvEventHandler>();
             configurator.AddConsumer<GraphMerger>();
 

@@ -1,5 +1,7 @@
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Repositories;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.Commands;
+using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -11,12 +13,14 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.Background
 public class AgvProvider(
     ILogger<AgvProvider> logger,
     ISimulatedAgvTypeConfigurationRepository configurationRepository,
-    ISimulatedAgvSpawner spawner) : BackgroundService
+    ISimulatedAgvSpawner spawner,
+    IBus bus) : BackgroundService
 {
     private async Task SpawnAsync(SimulatedAgvTypeConfiguration configuration, CancellationToken stoppingToken)
     {
         try
         {
+            await bus.Publish(new FetchFactsheet(configuration.Id, configuration.AgvTypeIdentifier), stoppingToken);
             await spawner.ApplyAsync(null, configuration, stoppingToken);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

@@ -7,6 +7,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.Orders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.States;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Messages.HeaderIds;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Simulator;
 using Moq;
 using Shouldly;
 using AgvPosition = Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Domain.Models.AgvPosition;
@@ -630,11 +631,12 @@ public class SimulatedAgvTest
         var agv = CreateAgv();
         agv.SwitchOperatingMode(AgvOperatingMode.Manual);
         agv.StartOrder(CreateOrder(["A", "B"]));
-        agv.Error.ShouldNotBeNull();
+        agv.StartOrder(CreateOrder(["A", "B"]));
+        agv.ActualErrors.ShouldContain(e => e.ErrorType == Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
 
         agv.SwitchOperatingMode(AgvOperatingMode.Automatic);
 
-        agv.Error.ShouldBeNull();
+        agv.ActualErrors.ShouldNotContain(e => e.ErrorType == Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
     }
 
     [TestMethod]
@@ -668,8 +670,7 @@ public class SimulatedAgvTest
 
         agv.InitPosition(new AgvPosition { X = 5, Y = 10, Z = 0, Theta = 0, PositionInitialized = true });
 
-        agv.Error.ShouldNotBeNull();
-        agv.Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
     }
 
     [TestMethod]
@@ -691,8 +692,7 @@ public class SimulatedAgvTest
 
         agv.StartOrder(CreateOrder(["A", "B"]));
 
-        agv.Error.ShouldNotBeNull();
-        agv.Error!.ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
     }
 
     [TestMethod]
@@ -714,7 +714,143 @@ public class SimulatedAgvTest
 
         agv.UpdateOrder(CreateOrder(["A", "B"]));
 
-        agv.Error.ShouldNotBeNull().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+    }
+
+    [TestMethod]
+    public void StartOrder_TwiceWhenNotInAutomaticMode_KeepsSingleAvailabilityError()
+    {
+        var agv = CreateAgv();
+        agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+
+        agv.StartOrder(CreateOrder(["A", "B"]));
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+    }
+
+    [TestMethod]
+    public void SetFactsheetAvailable_False_AddsFatalFactsheetError()
+    {
+        var agv = CreateAgv();
+
+        agv.SetFactsheetAvailable(false);
+
+        var error = agv.ActualErrors.ShouldHaveSingleItem();
+        error.ErrorType.ShouldBe(Vda5050Specifications.Errors.FactsheetNotExisting);
+        error.ErrorLevel.ShouldBe(ErrorLevel.Fatal);
+        error.ErrorDescription.ShouldBe(Fixture.FactsheetNotExistingDescription);
+    }
+
+    [TestMethod]
+    public void SetFactsheetAvailable_FalseTwice_KeepsFirstFactsheetError()
+    {
+        var timeProvider = new FakeTimeProvider(_baseTime);
+        var agv = CreateAgv(timeProvider: timeProvider);
+        agv.SetFactsheetAvailable(false);
+        timeProvider.Advance(TimeSpan.FromMinutes(1));
+
+        agv.SetFactsheetAvailable(false);
+
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorReceived.ShouldBe(_baseTime.UtcDateTime);
+    }
+
+    [TestMethod]
+    public void SetFactsheetAvailable_TrueAfterMissing_RemovesFactsheetError()
+    {
+        var agv = CreateAgv();
+        agv.SetFactsheetAvailable(false);
+
+        agv.SetFactsheetAvailable(true);
+
+        agv.ActualErrors.ShouldBeEmpty();
+    }
+
+    [TestMethod]
+    public void SetFactsheetAvailable_True_KeepsAvailabilityError()
+    {
+        var agv = CreateAgv();
+        agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+        agv.StartOrder(CreateOrder(["A", "B"]));
+        agv.SetFactsheetAvailable(false);
+
+        agv.SetFactsheetAvailable(true);
+
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable);
+    }
+
+    [TestMethod]
+    public void SwitchOperatingMode_BackToAutomatic_KeepsFactsheetError()
+    {
+        var agv = CreateAgv();
+        agv.SetFactsheetAvailable(false);
+        agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.SwitchOperatingMode(AgvOperatingMode.Automatic);
+
+        agv.ActualErrors.ShouldHaveSingleItem().ErrorType.ShouldBe(Vda5050Specifications.Errors.FactsheetNotExisting);
+    }
+
+    [TestMethod]
+    public void Errors_AvailabilityAndFactsheetError_ContainsBoth()
+    {
+        var agv = CreateAgv();
+        agv.SwitchOperatingMode(AgvOperatingMode.Manual);
+        agv.StartOrder(CreateOrder(["A", "B"]));
+
+        agv.SetFactsheetAvailable(false);
+
+        agv.Errors.Select(e => e.ErrorType).ShouldBe(
+            [Vda5050Specifications.OrderWarnings.MobileRobotNotAvailable, Vda5050Specifications.Errors.FactsheetNotExisting],
+            true);
+        agv.RandomError.ShouldBeNull();
+    }
+
+    [TestMethod]
+    public void RequestFactsheet_ValidData_AddsWaitingInstantActionState()
+    {
+        var agv = CreateAgv();
+
+        agv.RequestFactsheet(MqttInstantActionsGenerator.FactsheetRequestActionId);
+
+        var actionState = agv.InstantActionStates.ShouldHaveSingleItem();
+        actionState.ActionId.ShouldBe(MqttInstantActionsGenerator.FactsheetRequestActionId);
+        actionState.ActionType.ShouldBe(Vda5050Specifications.ActionTypes.RequestFactsheet);
+        actionState.ActionStatus.ShouldBe(VehicleActionStatus.Waiting);
+        agv.HasWaitingFactsheetRequests.ShouldBeTrue();
+    }
+
+    [TestMethod]
+    public void HasWaitingFactsheetRequests_NoRequest_ReturnsFalse()
+    {
+        CreateAgv().HasWaitingFactsheetRequests.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void FinishFactsheetRequests_TwoWaitingRequests_FinishesBoth()
+    {
+        var agv = CreateAgv();
+        agv.RequestFactsheet(MqttInstantActionsGenerator.FactsheetRequestActionId);
+        agv.RequestFactsheet(MqttInstantActionsGenerator.SecondFactsheetRequestActionId);
+
+        agv.FinishFactsheetRequests();
+
+        agv.InstantActionStates.ShouldAllBe(s => s.ActionStatus == VehicleActionStatus.Finished);
+        agv.HasWaitingFactsheetRequests.ShouldBeFalse();
+    }
+
+    [TestMethod]
+    public void RemoveFinishedInstantActionStates_FinishedAndWaitingRequest_KeepsOnlyWaiting()
+    {
+        var agv = CreateAgv();
+        agv.RequestFactsheet(MqttInstantActionsGenerator.FactsheetRequestActionId);
+        agv.FinishFactsheetRequests();
+        agv.RequestFactsheet(MqttInstantActionsGenerator.SecondFactsheetRequestActionId);
+
+        agv.RemoveFinishedInstantActionStates();
+
+        agv.InstantActionStates.ShouldHaveSingleItem().ActionId.ShouldBe(MqttInstantActionsGenerator.SecondFactsheetRequestActionId);
     }
 
     [TestMethod]

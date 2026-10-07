@@ -133,6 +133,7 @@ public static class HostBuilderExtension
                 });
                 services.AddSingleton<IAgvOperatingModeCache, AgvOperatingModeCache>();
                 services.AddSingleton<IAgvStateCache, AgvStateCache>();
+                services.AddSingleton<IFactsheetCache, FactsheetCache>();
                 services.AddTransient<INurbsEdgeBuilder, TinySplineEdgeBuilder>();
                 // Sequence counters for topics wise header id incrementation for messages sent by the agv.
                 services.AddSingleton(typeof(ISequenceCounter<>), typeof(SequenceCounter<>));
