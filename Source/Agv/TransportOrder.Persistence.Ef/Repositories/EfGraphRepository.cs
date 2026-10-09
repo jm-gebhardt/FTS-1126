@@ -273,6 +273,11 @@ public class EfGraphRepository : IGraphRepository
     /// <inheritdoc />
     public async Task RemoveAsync(Guid agvCorrelationId)
     {
+        await _semaphoreProvider.ExecuteLockedAsync(() => RemoveCoreAsync(agvCorrelationId));
+    }
+
+    private async Task RemoveCoreAsync(Guid agvCorrelationId)
+    {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var graph = await context.Set<AgvGraph>()
@@ -499,6 +504,11 @@ public class EfGraphRepository : IGraphRepository
     /// <inheritdoc />
     public async Task<bool> ConsolidateGraphAsync()
     {
+        return await _semaphoreProvider.ExecuteLockedAsync(ConsolidateGraphCoreAsync);
+    }
+
+    private async Task<bool> ConsolidateGraphCoreAsync()
+    {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
         try
@@ -619,6 +629,11 @@ public class EfGraphRepository : IGraphRepository
     /// <inheritdoc />
     public async Task<bool> UpdateAgvTypeGraphsAsync(ICollection<Graph> graphs)
     {
+        return await _semaphoreProvider.ExecuteLockedAsync(() => UpdateAgvTypeGraphsCoreAsync(graphs));
+    }
+
+    private async Task<bool> UpdateAgvTypeGraphsCoreAsync(ICollection<Graph> graphs)
+    {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
         try
@@ -679,6 +694,11 @@ public class EfGraphRepository : IGraphRepository
 
     /// <inheritdoc />
     public async Task<bool> DeleteAgvTypeGraphsAsync(ICollection<Graph> graphs)
+    {
+        return await _semaphoreProvider.ExecuteLockedAsync(() => DeleteAgvTypeGraphsCoreAsync(graphs));
+    }
+
+    private async Task<bool> DeleteAgvTypeGraphsCoreAsync(ICollection<Graph> graphs)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();

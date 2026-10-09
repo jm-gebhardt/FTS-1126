@@ -20,6 +20,48 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 public class EfGraphRepositoryTest
 {
     [TestMethod]
+    [DataRow(nameof(EfGraphRepository.ConsolidateGraphAsync))]
+    [DataRow(nameof(EfGraphRepository.UpdateAgvTypeGraphsAsync))]
+    [DataRow(nameof(EfGraphRepository.DeleteAgvTypeGraphsAsync))]
+    [DataRow(nameof(EfGraphRepository.RemoveAsync))]
+    public async Task GraphMutation_GraphSemaphoreHeld_WaitsBeforeCreatingDbContext(string methodName)
+    {
+        var factoryMock = new Mock<IDbContextFactory<TransportOrderDbContext>>();
+        factoryMock.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("simulated context creation failure"));
+
+        var semaphore = new SemaphoreProvider<IGraphRepositorySemaphore>(
+            Mock.Of<ILogger<SemaphoreProvider<IGraphRepositorySemaphore>>>());
+        var repository = new EfGraphRepository(
+            factoryMock.Object,
+            Mock.Of<IMapper>(),
+            semaphore,
+            Mock.Of<ILogger<EfGraphRepository>>(),
+            Mock.Of<ILoggingService>());
+
+        var operation = Task.CompletedTask;
+        await semaphore.ExecuteLockedAsync(() =>
+        {
+            operation = methodName switch
+            {
+                nameof(EfGraphRepository.ConsolidateGraphAsync) => repository.ConsolidateGraphAsync(),
+                nameof(EfGraphRepository.UpdateAgvTypeGraphsAsync) => repository.UpdateAgvTypeGraphsAsync([]),
+                nameof(EfGraphRepository.DeleteAgvTypeGraphsAsync) => repository.DeleteAgvTypeGraphsAsync([]),
+                nameof(EfGraphRepository.RemoveAsync) => repository.RemoveAsync(Guid.NewGuid()),
+                _ => throw new ArgumentOutOfRangeException(nameof(methodName))
+            };
+
+            operation.IsCompleted.ShouldBeFalse();
+            factoryMock.Verify(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()), Times.Never);
+            return true;
+        });
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => operation.WaitAsync(TimeSpan.FromSeconds(5)));
+        factoryMock.Verify(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
     public async Task ConsolidateGraphAsync_ActiveActionHasStalePathNode_ActionIsAbortedAndNodesCleared()
     {
         var fixture = new EfGraphRepositoryTestFixture();
