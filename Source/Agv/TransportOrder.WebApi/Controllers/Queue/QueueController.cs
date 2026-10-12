@@ -76,6 +76,7 @@ public class QueueController : Controller
     /// <param name="nodes">The queue nodes.</param>
     /// <response code="200">Ok</response>
     /// <response code="400">Queue node position or id duplicated in the nodes list.</response>
+    /// <response code="409">Queue name already exists with different nodes or positions.</response>
     [Authorize(Policy = AuthorizationPolicies.QueueFullAccess)]
     [HttpPatch]
     [Route("/queue/")]

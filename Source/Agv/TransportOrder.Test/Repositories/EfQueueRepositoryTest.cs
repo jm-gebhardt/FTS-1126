@@ -1,4 +1,6 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.Graphs;
+using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Queue;
 using Gebhardt.Acc.TransportOrder.Test.Helper;
 using Shouldly;
 
@@ -171,5 +173,58 @@ public class EfQueueRepositoryTest
         var queues = await fixture.Repository.GetQueuesOnRoute(queueOnRoute.NonEntryNodes);
         queues.Count.ShouldBe(1);
         queues.First().Id.ShouldBe(queueOnRoute.Id);
+    }
+    
+    [TestMethod]
+    public async Task AddQueue_SameDefinition_ReturnsExistingAndPreservesOccupancyAndReservations()
+    {
+        var queue = QueueGenerator.GenerateQueueWithCapacity(name: "durable", lockStates: [NodeLockState.Occupied, NodeLockState.Reserved]);
+        await using var fixture = new EfQueueRepositoryTestFixture();
+        await fixture.AddRangeAsync(queue);
+        var requested = new Queue(queue.Name);
+        foreach (var node in queue.Nodes.Reverse())
+        {
+            requested.AddNode(node.NodeId, node.Position);
+        }
+
+        var existing = await fixture.Repository.AddQueue(requested);
+
+        existing.Id.ShouldBe(queue.Id);
+        existing.AgvFillQuantity.ShouldBe(queue.AgvFillQuantity);
+        foreach (var node in queue.Nodes)
+        {
+            var returned = existing.Nodes.Single(n => n.NodeId == node.NodeId);
+            returned.OccupiedAgv.ShouldBe(node.OccupiedAgv);
+            returned.ReservedAgv.ShouldBe(node.ReservedAgv);
+        }
+        (await fixture.Repository.GetQueues()).Count.ShouldBe(1);
+    }
+
+    [TestMethod]
+    public async Task AddQueue_DifferentDefinition_ThrowsConflict()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue(name: "durable", nodes: 1);
+        await using var fixture = new EfQueueRepositoryTestFixture();
+        await fixture.AddRangeAsync(queue);
+        var requested = new Queue(queue.Name);
+        requested.AddNode(queue.Nodes.Single().NodeId, 5);
+
+        await Should.ThrowAsync<QueueDefinitionConflictException>(() => fixture.Repository.AddQueue(requested));
+        (await fixture.Repository.GetQueues()).Single().Id.ShouldBe(queue.Id);
+    }
+
+    [TestMethod]
+    public async Task AddQueue_MissingGraphNodes_ThrowsSpecificDependencyFailureWithoutInserting()
+    {
+        var queue = QueueGenerator.GenerateEmptyQueue(nodes: 2);
+        await using var fixture = new EfQueueRepositoryTestFixture();
+
+        var exception = await Should.ThrowAsync<QueueNodesNotReadyException>(() => fixture.Repository.AddQueue(queue));
+
+        foreach (var node in queue.Nodes)
+        {
+            exception.Message.ShouldContain(node.NodeId.ToString());
+        }
+        (await fixture.Repository.GetQueues()).ShouldBeEmpty();
     }
 }

@@ -14,12 +14,23 @@ public class EfQueueRepository(
     ILogger<EfQueueRepository> logger) : IQueueRepository
 {
     /// <inheritdoc cref="IQueueRepository"/>>
-    public async Task AddQueue(Queue queue)
+    public async Task<Queue> AddQueue(Queue queue)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-
+        
+        var existing = await context.Set<Queue>().SingleOrDefaultAsync(q => q.Name == queue.Name);
+        if (existing != null)
+        {
+            return MatchDefinition(existing, queue);
+        }
+        
         var nodeIds = queue.Nodes.Select(n => n.NodeId).ToList();
         var efNodes = await context.Set<GraphNode>().Where(n => nodeIds.Contains(n.Id)).ToDictionaryAsync(n => n.Id);
+        var missingNodes = nodeIds.Where(id => !efNodes.ContainsKey(id)).Distinct().ToList();
+        if (missingNodes.Count != 0)
+        {
+            throw new QueueNodesNotReadyException(queue.Name, missingNodes);
+        }
 
         foreach (var node in queue.Nodes)
         {
@@ -31,6 +42,18 @@ public class EfQueueRepository(
 
         await context.AddAsync(queue);
         await context.SaveChangesAsync();
+        return queue;
+    }
+
+    private static Queue MatchDefinition(Queue existing, Queue requested)
+    {
+        if (existing.Nodes.Count != requested.Nodes.Count ||
+            !existing.Nodes.Select(n => (n.NodeId, n.Position)).ToHashSet()
+                .SetEquals(requested.Nodes.Select(n => (n.NodeId, n.Position))))
+        {
+            throw new QueueDefinitionConflictException(requested.Name);
+        }
+        return existing;
     }
 
     /// <inheritdoc cref="IQueueRepository"/>>
