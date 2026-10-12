@@ -59,9 +59,9 @@ public class QueueCommandHandler(
             logger.LogInformation("Adding node {NodeId} to queue {QueueName} at position {QueuePosition}", name, node.Node.Name, node.Position);
         }
 
-        await queueRepository.AddQueue(queue);
+        var storedQueue = await queueRepository.AddQueue(queue);
 
-        await context.RespondAsync(new GotQueue(queue));
+        await context.RespondAsync(new GotQueue(storedQueue));
     }
 
     /// <summary>

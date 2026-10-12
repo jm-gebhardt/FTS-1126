@@ -54,6 +54,7 @@ public class ExceptionHandlerMiddlewareTest
         yield return [() => new NoChargeStationAvailableException(), HttpStatusCode.Conflict];
         yield return [() => new NodeNotAvailableException(null!), HttpStatusCode.Conflict];
         yield return [() => new NoNodesAvailableException(null!), HttpStatusCode.Conflict];
+        yield return [() => new QueueDefinitionConflictException("queue"), HttpStatusCode.Conflict];
 
         // InternalServerError
         yield return [() => new ResetAgvErrorFailedException(null!, null!), HttpStatusCode.InternalServerError];

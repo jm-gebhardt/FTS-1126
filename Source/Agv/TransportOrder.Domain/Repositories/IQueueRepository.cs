@@ -12,7 +12,10 @@ public interface IQueueRepository
     /// Add a queue.
     /// </summary>
     /// <param name="queue">The queue</param>
-    Task AddQueue(Queue queue);
+    /// <returns>The persisted queue, or the existing queue with an identical definition.</returns>
+    /// <exception cref="QueueDefinitionConflictException">The name exists with different nodes or positions.</exception>
+    /// <exception cref="QueueNodesNotReadyException">Referenced graph nodes have not been persisted.</exception>
+    Task<Queue> AddQueue(Queue queue);
 
     /// <summary>
     /// Update a queue.

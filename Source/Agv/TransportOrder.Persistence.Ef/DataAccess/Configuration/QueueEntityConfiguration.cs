@@ -13,6 +13,7 @@ public class QueueEntityConfiguration : IEntityTypeConfiguration<Queue>
     public void Configure(EntityTypeBuilder<Queue> builder)
     {
         builder.HasKey(q => q.Id);
+        builder.HasIndex(q => q.Name).IsUnique();
 
         builder.Property(q => q.Name)
             .IsRequired()

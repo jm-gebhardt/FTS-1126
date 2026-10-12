@@ -237,7 +237,7 @@ public static class CoreBusRegistrationExtensions
 
                 x.UseMessageRetry(r =>
                 {
-                    r.Interval(6, TimeSpan.FromSeconds(5));
+                    r.Interval(15, TimeSpan.FromSeconds(5));
                     r.Handle<NodeNotFoundException>();
                 });
             });
@@ -262,7 +262,7 @@ public static class CoreBusRegistrationExtensions
 
                 x.UseMessageRetry(r =>
                 {
-                    r.Interval(6, TimeSpan.FromSeconds(7));
+                    r.Interval(15, TimeSpan.FromSeconds(7));
                     r.Handle<NodeNotFoundException>();
                 });
             });
@@ -287,7 +287,8 @@ public static class CoreBusRegistrationExtensions
             {
                 x.UseMessageRetry(r =>
                 {
-                    r.Interval(6, TimeSpan.FromSeconds(5));
+                    r.Interval(15, TimeSpan.FromSeconds(5));
+                    r.Handle<QueueNodesNotReadyException>();
                     r.Handle<DbUpdateException>();
                 });
             });
