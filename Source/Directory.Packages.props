@@ -13,8 +13,8 @@
     <PackageVersion Include="AutoMapper.Extensions" Version="2.1.0" />
     <!-- ====================================== -->
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
-    <PackageVersion Include="FluentValidation" Version="12.1.1" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation" Version="12.2.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
     <!-- Only update together, check which opentelemetry version corresponds to the Gebhardt.Core.Observability packages -->
     <PackageVersion Include="Gebhardt.Core.Observability" Version="10.7.2" />
     <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.7.2" />
