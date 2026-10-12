@@ -107,7 +107,7 @@ public class MqttFactsheetConsumerTest
     }
 
     [TestMethod]
-    public async Task Consume_MqttFactsheet_ExistingAgvNotPublishedToFleetManager_PublishesAgvTypeChangedWithValidConfiguration()
+    public async Task Consume_MqttFactsheet_ExistingAgvNotPublishedToFleetManager_PublishesAgvDiscoveredWithValidConfiguration()
     {
         var fixture = new MqttFactsheetConsumerTestFixture()
             .WithExistingAgv(publishedToFleetManager: false)
@@ -116,13 +116,15 @@ public class MqttFactsheetConsumerTest
 
         await fixture.PublishMqttMessageAsync(message);
 
-        var typeChanged = await fixture.GetFirstPublishedMessageAsync<AgvTypeChanged>();
-        typeChanged.HasValidConfiguration.ShouldBeTrue();
-        typeChanged.NeedsConfirmation.ShouldBeFalse();
+        var discovered = await fixture.GetFirstPublishedMessageAsync<AgvDiscovered>();
+        discovered.HasValidConfiguration.ShouldBeTrue();
+        await fixture.ShouldHavePublishedAsync<AgvDataReceived>();
+        fixture.VerifyDataUpdated();
+        await fixture.ShouldNotHavePublishedAsync<AgvTypeChanged>();
     }
 
     [TestMethod]
-    public async Task Consume_MqttFactsheet_ExistingAgvNotPublishedToFleetManager_IncompatibleExistingType_PublishesAgvTypeChangedWithInvalidConfiguration()
+    public async Task Consume_MqttFactsheet_ExistingAgvNotPublishedToFleetManager_IncompatibleExistingType_PublishesAgvDiscoveredWithInvalidConfiguration()
     {
         var fixture = new MqttFactsheetConsumerTestFixture()
             .WithExistingAgv(publishedToFleetManager: false)
@@ -131,12 +133,13 @@ public class MqttFactsheetConsumerTest
 
         await fixture.PublishMqttMessageAsync(message);
 
-        var typeChanged = await fixture.GetFirstPublishedMessageAsync<AgvTypeChanged>();
-        typeChanged.HasValidConfiguration.ShouldBeFalse();
+        var discovered = await fixture.GetFirstPublishedMessageAsync<AgvDiscovered>();
+        discovered.HasValidConfiguration.ShouldBeFalse();
+        await fixture.ShouldNotHavePublishedAsync<AgvTypeChanged>();
     }
 
     [TestMethod]
-    public async Task Consume_MqttFactsheet_NoTypeChange_CompatibleType_PublishesNothing()
+    public async Task Consume_MqttFactsheet_NoTypeChange_CompatibleType_PublishesAgvDataReceived()
     {
         var fixture = new MqttFactsheetConsumerTestFixture()
             .WithExistingAgv()
@@ -145,10 +148,12 @@ public class MqttFactsheetConsumerTest
 
         await fixture.PublishMqttMessageAsync(message);
 
+        var dataReceived = await fixture.GetFirstPublishedMessageAsync<AgvDataReceived>();
+        dataReceived.SerialNumber.ShouldBe(message.SerialNumber);
+        fixture.VerifyDataUpdated();
         await fixture.ShouldNotHavePublishedAsync<AgvTypeChanged>();
         await fixture.ShouldNotHavePublishedAsync<AgvDiscovered>();
         await fixture.ShouldNotHavePublishedAsync<InvalidAgvConfigurationReceived>();
-        await fixture.ShouldNotHavePublishedAsync<AgvDataReceived>();
     }
 
     [TestMethod]

@@ -67,23 +67,29 @@ public class MqttFactsheetConsumer :
         {
             await AddAgvType(context, incomingAgvType);
         }
+
         bool incomingTypeIsCompatible = !incomingTypeExists || incomingAgvType.IsCompatibleWith(existingAgvType);
-        if (!agvExists)
+        if (!agvExists || !agv!.PublishedToFleetManager)
         {
-            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to factsheet parsing, agv discovered with compatible type {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), incomingTypeIsCompatible);
+            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} not yet published to fleet manager (existed prior to factsheet parsing: {AgvExists}), agv discovered with compatible type {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), agvExists, incomingTypeIsCompatible);
             agv = _parser.Agv;
+
             await context.Publish(new AgvDiscovered(agv!.CorrelationId, agv, incomingAgvType.Id, incomingTypeIsCompatible));
-            return;
-        }
-        if (agvExists && !(agv?.PublishedToFleetManager ?? false))
-        {
-            _logger.LogInformation("Agv {SerialNumber}/{AgvCorrelationId} did not exist prior to factsheet parsing, agv type is compatible {IsTypeCompatible}", context.Message.SerialNumber, context.Message.SerialNumber.ToGuid(), incomingTypeIsCompatible);
-            agv = _parser.Agv;
-            await context.Publish(new AgvTypeChanged(agv!.CorrelationId, incomingAgvType.Id, agv, incomingTypeIsCompatible));
+
+            await _agvDataRepository.AddOrUpdateAsync(_parser.AgvData);
+            
+            await context.Publish(new AgvDataReceived(_parser.CorrelationId, _parser.SerialNumber, _parser.AgvData));
+
+            if (_parser.Actions.Count > 0)
+            {
+                await _agvActionRepository.AddOrUpdateActionsAsync(_parser.Actions, _parser.SerialNumber);
+                await PublishInstantActions(context);
+            }
+
             return;
         }
 
-        bool agvTypeChanged = !string.Equals(agv!.VehicleTypeId, incomingAgvType.AgvTypeIdentifier, StringComparison.InvariantCultureIgnoreCase);
+        bool agvTypeChanged = !string.Equals(agv.VehicleTypeId, incomingAgvType.AgvTypeIdentifier, StringComparison.InvariantCultureIgnoreCase);
         if (!agvTypeChanged && !incomingTypeIsCompatible)
         {
             _logger.LogWarning("Received factsheet for agv {SerialNumber}/{AgvCorrelationId} that is incompatible with the existing agv type definition (no type change for agv)", agv.CorrelationId, agv.SerialNumber);
@@ -94,6 +100,10 @@ public class MqttFactsheetConsumer :
         if (!agvTypeChanged && incomingTypeIsCompatible)
         {
             _logger.LogDebug("Received factsheet without change in type of agv {SerialNumber}/{AgvCorrelationId}", agv.CorrelationId, agv.SerialNumber);
+            
+            await _agvDataRepository.AddOrUpdateAsync(_parser.AgvData);
+
+            await context.Publish(new AgvDataReceived(_parser.CorrelationId, _parser.SerialNumber, _parser.AgvData));
             return;
         }
         var priorAgvType = await _agvTypeRepository.GetAgvTypeAsync(agv.VehicleTypeId);
@@ -116,14 +126,6 @@ public class MqttFactsheetConsumer :
 
     private async Task AddAgvType(ConsumeContext<MqttFactsheet> context, AgvType incomingAgvType)
     {
-        await _agvDataRepository.AddOrUpdateAsync(_parser.AgvData);
-        if (_parser.Actions.Count > 0)
-        {
-            await _agvActionRepository.AddOrUpdateActionsAsync(_parser.Actions, _parser.SerialNumber);
-            await PublishInstantActions(context);
-        }
-        await context.Publish(new AgvDataReceived(_parser.CorrelationId, _parser.SerialNumber, _parser.AgvData));
-
         await _agvTypeRepository.AddAsync(incomingAgvType);
         await context.Publish(new AgvTypeCreated(incomingAgvType.Id, _mapper.Map<AgvTypeInfo>(incomingAgvType)));
     }

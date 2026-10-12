@@ -1497,7 +1497,7 @@ public class AgvCommandHandler :
     private async Task TryAutoAccept(IPublishEndpoint context, Agv agv, CancellationToken cancellationToken)
     {
         _logger.LogDebug("AutoAccept {CorrelationId}", agv.CorrelationId);
-        if (_systemOptions.AutoAccept && agv is { GraphExists: true, DataExist: true, CurrentAgvState: AgvState.Discovered })
+        if (_systemOptions.AutoAccept && agv is { DataExist: true, CurrentAgvState: AgvState.Discovered })
         {
             _logger.LogDebug("AutoAccept {AgvCorrelationId}, Graph: {GraphExists}, Data: {DataExists}", agv.CorrelationId, agv.GraphExists, agv.DataExist);
             await TransitionToIdleAsync(context, agv, cancellationToken);

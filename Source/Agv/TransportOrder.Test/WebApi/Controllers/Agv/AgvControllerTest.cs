@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Domain.Models.Graphs;
 using Gebhardt.Acc.Common.Domain.Utilities;
 using Gebhardt.Acc.Common.Extensions;
-using Gebhardt.Acc.Common.Messages.AgvManagement.Commands;
 using Gebhardt.Acc.Common.Messages.Stations.Commands;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler;
@@ -11,15 +10,12 @@ using Gebhardt.Acc.TransportOrder.Domain.Exceptions;
 using Gebhardt.Acc.TransportOrder.Domain.Models.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Commands.Settings;
-using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
-using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Commands;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Agv.Queries;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shouldly;
 using LockAgv = Gebhardt.Acc.TransportOrder.Messages.Commands.Agv.LockAgv;
@@ -247,14 +243,7 @@ public class AgvControllerTest
         var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AgvCommandHandler>();
         var correlationId = fixture.AgvSerialNumbers[2].ToGuid(); // AGV in state 'Discovered'
 
-        var response1 = new AcceptAgvSucceeded(correlationId);
-        var response2 = new AcceptAgvRejected(correlationId);
-        var response3 = new AgvNotFoundResult(correlationId);
-        const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.First;
-        var requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
-
-        fixture.AddService(sc => sc.AddTransient(_ => requestClient))
-            .SetupAgvDbWithDefaultData()
+        fixture.SetupAgvDbWithDefaultData()
             .Build();
 
         var result = await fixture.Controller.AcceptAgv(correlationId);
@@ -267,14 +256,7 @@ public class AgvControllerTest
         var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AgvCommandHandler>();
         var correlationId = fixture.AgvSerialNumbers[1].ToGuid(); // AGV in state 'Busy'
 
-        var response1 = new AcceptAgvSucceeded(correlationId);
-        var response2 = new AcceptAgvRejected(correlationId);
-        var response3 = new AgvNotFoundResult(correlationId);
-        const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Second;
-        var requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
-
-        fixture.AddService(sc => sc.AddTransient(_ => requestClient))
-            .SetupAgvDbWithDefaultData()
+        fixture.SetupAgvDbWithDefaultData()
             .Build();
 
         var result = await fixture.Controller.AcceptAgv(correlationId);
@@ -287,14 +269,7 @@ public class AgvControllerTest
         var fixture = new AgvControllerTestFixture<AcceptAgvCommand, AgvCommandHandler>();
         var correlationId = Guid.Empty; // Invalid AGV correlationId
 
-        var response1 = new AcceptAgvSucceeded(correlationId);
-        var response2 = new AcceptAgvRejected(correlationId);
-        var response3 = new AgvNotFoundResult(correlationId);
-        const RequestClientGenerator<AcceptAgv>.ResponseToUse responseToUse = RequestClientGenerator<AcceptAgv>.ResponseToUse.Third;
-        var requestClient = RequestClientGenerator<AcceptAgv>.CreateDummyRequestClient(response1, response2, response3, responseToUse);
-
-        fixture.AddService(sc => sc.AddTransient(_ => requestClient))
-            .SetupAgvDbWithDefaultData()
+        fixture.SetupAgvDbWithDefaultData()
             .Build();
 
         var result = await fixture.Controller.AcceptAgv(correlationId);
