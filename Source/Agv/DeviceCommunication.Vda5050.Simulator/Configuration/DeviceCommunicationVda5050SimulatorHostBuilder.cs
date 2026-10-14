@@ -5,6 +5,7 @@ using Gebhardt.Core.Hosting.Configuration;
 using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
@@ -29,6 +30,8 @@ public static class DeviceCommunicationVda5050SimulatorHostBuilder
             .AddSimulator(args, initialLogger)
             .ConfigureWebHost(host =>
             {
+                host.ConfigureServices(services => services.AddRouting());
+                
                 host.UseKestrel().ConfigureAppConfiguration((_, config) =>
                     {
                         ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
