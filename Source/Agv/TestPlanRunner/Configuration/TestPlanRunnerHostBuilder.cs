@@ -26,6 +26,9 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using MassTransit;
 using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Core.EntityFrameworkCore;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 
@@ -44,6 +47,10 @@ public static class TestPlanRunnerHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
@@ -57,7 +64,9 @@ public static class TestPlanRunnerHostBuilder
                 // Database
                 services.AddDbContextFactory<TransportOrderDbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(TransportOrderDbContext
+                                                   .ConfigSectionName);
                     builder.UseSqlServer(connectionString,
                         options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
                     builder.AddInterceptors(new EfCommandMetricsInterceptor());
@@ -122,7 +131,10 @@ public static class TestPlanRunnerHostBuilder
                     initialLogger.LogError(e, "MassTransit could not be started");
                     throw;
                 }
-                services.ConfigureTracing(context.Configuration);
+                if (!context.HostingEnvironment.IsEnvironment("SwaggerCli"))
+                {
+                    services.ConfigureTracing(context.Configuration);
+                }
 
                 // Swagger
                 services.AddSwaggerGen(options =>
@@ -154,7 +166,11 @@ public static class TestPlanRunnerHostBuilder
                     app.UseSwagger();
                     app.UseSwaggerUI(options => { options.SwaggerEndpoint(new TestPlanRunnerApiGroup()); });
 
-                    app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                    app.UseEndpoints(endpoints =>
+                    {
+                        endpoints.MapControllers();
+                        endpoints.MapHealthProbes();
+                    });
                 });
         });
 

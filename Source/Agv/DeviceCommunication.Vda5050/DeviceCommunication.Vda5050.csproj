@@ -6,6 +6,8 @@
   </PropertyGroup>
   <Import Project="..\SharedProjectSettings.csproj" />
   <ItemGroup>
+      <PackageReference Include="Gebhardt.Core.Hosting" />
+      <PackageReference Include="Gebhardt.Core.EntityFrameworkCore" />
       <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
       <PackageReference Include="MassTransit.Prometheus" />
       <PackageReference Include="MassTransit.EntityFrameworkCore" />

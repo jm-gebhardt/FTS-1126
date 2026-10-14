@@ -1,0 +1,258 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - master
+
+parameters:
+  - name: forcePush
+    displayName: Push images from this non-main branch
+    type: boolean
+    default: false
+
+  - name: services
+    displayName: Services to package and push
+    type: object
+    default:
+      - serviceName: 'Statistics'
+        stagePrefix: 'Statistics'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/Statistics/Statistics.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.Statistics'
+        dockerImageName: 'gebhardt/fleet-manager/statistics'
+        artifactName: 'docker-image-statistics'
+        migratorArtifactName: 'migrator-image-statistics'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/Statistics.Persistence.Ef/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/statistics'
+        migrationsArtifactName: 'migrations-statistics'
+        publishMigrator: true
+      - serviceName: 'DeviceCommunication.Vda5050'
+        stagePrefix: 'DeviceCommunication_Vda5050'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.Vda5050/DeviceCommunication.Vda5050.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.DeviceCommunication.Vda5050'
+        dockerImageName: 'gebhardt/fleet-manager/devicecommunication.vda5050'
+        artifactName: 'docker-image-devicecommunication-vda5050'
+        migratorArtifactName: 'migrator-image-devicecommunication-vda5050'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/DeviceCommunication.Vda5050.Persistence.Ef/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/devicecommunication-vda5050'
+        migrationsArtifactName: 'migrations-devicecommunication-vda5050'
+        publishMigrator: true
+      - serviceName: 'DeviceCommunication.Vda5050.Simulator'
+        stagePrefix: 'DeviceCommunication_Vda5050_Simulator'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.Vda5050.Simulator/DeviceCommunication.Vda5050.Simulator.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator'
+        dockerImageName: 'gebhardt/fleet-manager/devicecommunication.vda5050.simulator'
+        artifactName: 'docker-image-devicecommunication-vda5050-simulator'
+        publishMigrator: false
+      - serviceName: 'DeviceCommunication.SimAgv'
+        stagePrefix: 'DeviceCommunication_SimAgv'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.SimAgv/DeviceCommunication.SimAgv.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.DeviceCommunication.SimAgv'
+        dockerImageName: 'gebhardt/fleet-manager/devicecommunication.simagv'
+        artifactName: 'docker-image-devicecommunication-simagv'
+        publishMigrator: false
+      - serviceName: 'DeviceCommunication.KarisAgv'
+        stagePrefix: 'DeviceCommunication_KarisAgv'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/DeviceCommunication.KarisAgv/DeviceCommunication.KarisAgv.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.DeviceCommunication.KarisAgv'
+        dockerImageName: 'gebhardt/fleet-manager/devicecommunication.karisagv'
+        artifactName: 'docker-image-devicecommunication-karisagv'
+        migratorArtifactName: 'migrator-image-devicecommunication-karisagv'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/DeviceCommunication.KarisAgv/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/devicecommunication-karisagv'
+        migrationsArtifactName: 'migrations-devicecommunication-karisagv'
+        publishMigrator: true
+      - serviceName: 'OrderTranslator'
+        stagePrefix: 'OrderTranslator'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator/OrderTranslator.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.OrderTranslator'
+        dockerImageName: 'gebhardt/fleet-manager/order-translator'
+        artifactName: 'docker-image-order-translator'
+        migratorArtifactName: 'migrator-image-order-translator'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/OrderTranslator.Persistence.Ef/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/order-translator'
+        migrationsArtifactName: 'migrations-order-translator'
+        publishMigrator: true
+      - serviceName: 'PrismatCommunication'
+        stagePrefix: 'PrismatCommunication'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/PrismatCommunication/PrismatCommunication.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.PrismatCommunication'
+        dockerImageName: 'gebhardt/fleet-manager/prismat-communication'
+        artifactName: 'docker-image-prismat-communication'
+        migratorArtifactName: 'migrator-image-prismat-communication'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/PrismatCommunication/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/prismat-communication'
+        publishMigrator: true
+        migrationsArtifactName: 'migrations-prismat-communication'
+      - serviceName: 'Provisioning'
+        stagePrefix: 'Provisioning'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/Provisioning/Provisioning.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.Provisioning'
+        dockerImageName: 'gebhardt/fleet-manager/provisioning'
+        artifactName: 'docker-image-provisioning'
+        migratorArtifactName: 'migrator-image-provisioning'
+        generateMigrationsScript: ''
+        publishMigrator: false
+      - serviceName: 'SmartLinkCommunication'
+        stagePrefix: 'SmartLinkCommunication'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/SmartLinkCommunication/SmartLinkCommunication.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.SmartLinkCommunication'
+        dockerImageName: 'gebhardt/fleet-manager/smart-link-communication'
+        artifactName: 'docker-image-smart-link-communication'
+        migratorArtifactName: 'migrator-image-smart-link-communication'
+        generateMigrationsScript: ''
+        publishMigrator: false
+      - serviceName: 'StationCommunication'
+        stagePrefix: 'StationCommunication'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/StationCommunication/StationCommunication.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.StationCommunication'
+        dockerImageName: 'gebhardt/fleet-manager/station-communication'
+        artifactName: 'docker-image-station-communication'
+        migratorArtifactName: 'migrator-image-station-communication'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/StationCommunication.Persistence.Ef/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/station-communication'
+        migrationsArtifactName: 'migrations-station-communication'
+        publishMigrator: true
+      - serviceName: 'TestPlanRunner'
+        stagePrefix: 'TestPlanRunner'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/TestPlanRunner/TestPlanRunner.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.TestPlanRunner'
+        dockerImageName: 'gebhardt/fleet-manager/test-plan-runner'
+        artifactName: 'docker-image-test-plan-runner'
+        migratorArtifactName: 'migrator-image-test-plan-runner'
+        generateMigrationsScript: ''
+        publishMigrator: false 
+      - serviceName: 'TransportOrder'
+        stagePrefix: 'TransportOrder'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/TransportOrder/TransportOrder.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.TransportOrder'
+        dockerImageName: 'gebhardt/fleet-manager/transport-order'
+        artifactName: 'docker-image-transport-order'
+        migratorArtifactName: 'migrator-image-transport-order'        
+        migrationsArtifactName: 'migrations-transport-order'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/TransportOrder.Persistence.Ef/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/transport-order'
+        publishMigrator: true
+      - serviceName: 'WCSCommunication'
+        stagePrefix: 'WCSCommunication'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/WCSCommunication/WCSCommunication.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.WCSCommunication'
+        dockerImageName: 'gebhardt/fleet-manager/wcs-communication'
+        artifactName: 'docker-image-wcs-communication'
+        migratorArtifactName: 'migrator-image-wcs-communication'
+        migrationsArtifactName: 'migrations-wcs-communication'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/WCSCommunication/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/wcs-communication'
+        publishMigrator: true
+      - serviceName: 'TriggerService'
+        stagePrefix: 'TriggerService'
+        servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/TriggerService/TriggerService.csproj'
+        entryPointProjectName: ''
+        rootNamespace: 'Gebhardt.Acc.TriggerService'
+        dockerImageName: 'gebhardt/fleet-manager/trigger-service'
+        artifactName: 'docker-image-trigger-service'
+        migratorArtifactName: 'migrator-image-trigger-service'
+        migrationsArtifactName: 'migrations-trigger-service'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/TriggerService/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/trigger-service'
+        publishMigrator: true
+        
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: Architecture/Gebhardt.Platform.CI
+      ref: refs/heads/main
+
+variables:
+- group: 'Architecture - CI'
+
+stages:
+  # Shared path: restore/build the large solution once, publish every selected app with --no-build,
+  # then run tests and static analysis once for the whole solution. Disabling the package toggles
+  # prevents backend-template-2 from adding its single-service Package and Push stages.
+  - template: backend-template-2.yml@templates
+    parameters:
+      serviceName: 'monorepo'
+      buildTarget: '$(Build.Repository.LocalPath)/Source/Agv/CompileAgv.sln'
+      testTarget: '$(Build.Repository.LocalPath)/Source/Agv/**/*Test/*.csproj'
+      workingDirectory: '$(Build.Repository.LocalPath)/Source'
+      buildOutputPath: 'Source/artifacts'
+      servicePublishProjects: ${{ parameters.services }}
+      serviceMigrations: ${{ parameters.services }}
+      publishApp: true
+      publishDocker: false
+      publishNuget: false
+      # Produce isolated service migration artifacts in Build, but leave the single-service
+      # automatic migrator stages disabled; the fan-out owns packaging and pushing per service.
+      generateMigrations: true
+      skipResharper: true
+      skipVulnerabilityCheck: true
+      publishMigrator: false
+      openApiEnabled: false
+      runContractPromotion: false
+      forcePush: false
+      nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
+  
+  # Fan out after the shared validation. Each stage consumes its service directory from the common
+  # publish/migrations artifacts and writes uniquely named runtime and migrator image artifacts.
+  # No source is compiled here.
+  - ${{ if or(ne(variables['Build.Reason'], 'PullRequest'), parameters.forcePush) }}:
+      - ${{ each service in parameters.services }}:
+          - template: templates-2/stages/package.yml@templates
+            parameters:
+              stagePrefix: ${{ service.stagePrefix }}
+              dependsOn:
+                - Validate
+              publishDocker: true
+              publishNuget: false
+              publishMigrator: ${{ service.publishMigrator }}
+              serviceName: ${{ service.serviceName }}
+              entryPointProjectName: ${{ service.entryPointProjectName }}
+              nugetConfigPath: '$(Build.Repository.LocalPath)/Source/Agv/NuGet.Config'
+              rootNamespace: ${{ service.rootNamespace }}
+              dockerImageName: ${{ service.dockerImageName }}
+              dockerImageArtifactName: ${{ service.artifactName }}
+              migrationsArtifactName: ${{ service.migrationsArtifactName }}
+              migratorImageArtifactName: ${{ service.migratorArtifactName }}
+              platformCiResourceAlias: 'templates'
+  
+  # Push only from main, unless forcePush is deliberately selected at queue time. Forced non-main
+  # pushes keep the unique version tag but never move the floating latest tag.
+  - ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), parameters.forcePush) }}:
+      - ${{ each service in parameters.services }}:
+          - template: templates-2/stages/push.yml@templates
+            parameters:
+              stagePrefix: ${{ service.stagePrefix }}
+              dependsOn:
+                - ${{ service.stagePrefix }}Package
+              publishDocker: true
+              publishNuget: false
+              publishMigrator: ${{ service.publishMigrator }}
+              dockerImageArtifactName: ${{ service.artifactName }}
+              migratorImageArtifactName: ${{ service.migratorArtifactName }}
+              acrServiceConnection: $(acrServiceConnection)
+              containerRegistryUrl: 'crffcpocarch.azurecr.io'
+              updateLatestTag: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}

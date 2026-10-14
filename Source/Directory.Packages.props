@@ -4,6 +4,22 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Gebhardt.Core.Application" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Application.Abstractions" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Application.Testing" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Architecture.Testing" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Domain" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.EditorConfig" Version="1.2.14" />
+    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.PostgreSql" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.SqlServer" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Hosting" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Logging" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.MassTransit" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Testing" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Testcontainers" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.WebApi" Version="10.2.2" />
+    <!-- ====================================== -->
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
@@ -85,6 +101,7 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="Vdma.Lif" Version="1.0.0.6" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.9.50" />
     <!-- Packages specific to Resharper scripts -->
     <PackageVersion Include="Sarif.Sdk" Version="4.6.0" />
     <!-- ====================================== -->
@@ -96,5 +113,8 @@
     <PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
     <PackageVersion Include="Polly" Version="8.8.0" />
     <!-- ====================================== -->
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" IncludeAssets="Build" />
   </ItemGroup>
 </Project>

@@ -3,6 +3,8 @@ using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.StationCommunication.CmdOptions;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,10 @@ public static class StationCommunicationHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SimulateOptions? simulateOptions, ILogger initialLogger)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddStationCommandHandler(simulateOptions)
             .ConfigureWebHost(h =>
@@ -42,11 +48,18 @@ public static class StationCommunicationHostBuilder
                             app.UseDeveloperExceptionPage();
                         }
                         app.UseMetricServer();
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapHealthProbes();
+                        });
                     }));
 
         hostBuilder.ConfigureServices(s =>
-            s.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies())
-        );
+        {
+            s.AddRouting();
+            s.AddAutoMapper(cfg => cfg.Internal().ForAllMaps((_, map) => map.MaxDepth(10)), AppDomain.CurrentDomain.GetAssemblies());
+        });
         return hostBuilder;
     }
 }

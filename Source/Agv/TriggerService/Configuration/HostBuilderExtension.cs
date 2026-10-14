@@ -6,6 +6,7 @@ using Gebhardt.Acc.TriggerService.Domain.Services;
 using Gebhardt.Acc.TriggerService.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.TriggerService.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TriggerService.Services;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -69,7 +70,8 @@ public static class HostBuilderExtension
                 // -  database
                 services.AddDbContextFactory<TriggerServiceDbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(TriggerServiceDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(TriggerServiceDbContext.ConfigSectionName);
 
                     builder.UseSqlServer(connectionString, m =>
                     {
