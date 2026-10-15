@@ -43,7 +43,7 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
     {
         var message = new MqttState
         {
-            HeaderId = (int)snapshot.HeaderId,
+            HeaderId = (uint)snapshot.HeaderId,
             Timestamp = snapshot.Timestamp,
             Version = _mqtt.ProtocolVersion,
             Manufacturer = id.Manufacturer,

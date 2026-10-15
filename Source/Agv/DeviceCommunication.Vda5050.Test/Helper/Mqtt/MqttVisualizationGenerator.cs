@@ -17,7 +17,7 @@ public static class MqttVisualizationGenerator
         return new MqttAgvPosition() { MapId = mapId, X = 1, Y = 1, PositionInitialized = true, Theta = 0.5 };
     }
 
-    public static MqttVisualization Generate(string? serialNumber="agv01")
+    public static MqttVisualization Generate(string serialNumber="agv01")
     {
         return new MqttVisualization() { SerialNumber = serialNumber, AgvPosition = GeneratePosition()};
     }

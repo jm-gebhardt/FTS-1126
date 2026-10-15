@@ -23,7 +23,7 @@ public class MqttStateSignificanceChecker : ISignificanceChecker<MqttState>
         if (a.Driving != b.Driving) return true;
         if (!AreListsEqual(a.EdgeStates, b.EdgeStates, EdgeStateEqual)) return true;
         if (!AreListsEqual(a.Errors, b.Errors, ErrorEqual)) return true;
-        if (!AreIntsEqual(a.HeaderId, b.HeaderId)) return true;
+        if (!AreUIntsEqual(a.HeaderId, b.HeaderId)) return true;
         if (!AreListsEqual(a.Information, b.Information, InformationEqual)) return true;
         if (!EqualsIgnoreCase(a.LastNodeId, b.LastNodeId)) return true;
          if (a.LastNodeSequenceId != b.LastNodeSequenceId) return true;
@@ -45,6 +45,8 @@ public class MqttStateSignificanceChecker : ISignificanceChecker<MqttState>
     private static bool EqualsIgnoreCase(string? x, string? y) => string.Equals(x, y, StringComparison.InvariantCultureIgnoreCase);
 
     private static bool AreIntsEqual(int? x, int? y) => x.GetValueOrDefault() == y.GetValueOrDefault();
+    
+    private static bool AreUIntsEqual(uint x, uint y) => x == y;
 
     private static bool AreFloatsEqual(float? x, float? y) => Math.Abs(x.GetValueOrDefault() - y.GetValueOrDefault()) < Mathematics.FloatComparator;
 
