@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
 
@@ -249,7 +250,7 @@ public static class Vda5050Mapper
         _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
     };
 
-    private static NurbsTrajectory? MapTrajectory(MqttTrajectory? trajectory, string edgeId, List<string> errors)
+    private static Trajectory? MapTrajectory(MqttTrajectory? trajectory, string edgeId, List<string> errors)
     {
         if (trajectory == null)
         {
@@ -286,10 +287,10 @@ public static class Vda5050Mapper
         }
 
         return valid
-            ? new NurbsTrajectory(
-                trajectory.Degree,
-                knots.Select(k => (double)k).ToList(),
-                points.Select(p => new ControlPoint(p.X, p.Y, p.Weight ?? 1.0f)).ToList())
+            ? new Trajectory(
+                [.. points.Select(p => new ControlPoint(p.X, p.Y, p.Weight ?? 1.0f))],
+                [.. knots.Select(k => (double)k)],
+                trajectory.Degree)
             : null;
     }
 }

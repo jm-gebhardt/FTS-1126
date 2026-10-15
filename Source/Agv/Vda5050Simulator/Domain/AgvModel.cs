@@ -1,3 +1,6 @@
+using Gebhardt.Acc.Common.Domain.Models;
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+
 namespace Gebhardt.Acc.Vda5050Simulator.Domain;
 
 public enum OrderDecision
@@ -36,7 +39,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     private bool _positionInitialized;
 
     private int _activeEdgeSequenceId = -1;
-    private List<(double X, double Y)> _geometry = [];
+    private List<PolygonPoint> _geometry = [];
     private double[] _cumulativeLength = [];
     private double _progress;
     private double _edgeSpeed;
@@ -372,20 +375,20 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
     private void BuildGeometry(OrderEdge edge)
     {
-        var points = new List<(double X, double Y)>();
+        var points = new List<PolygonPoint>();
         var endNode = _nodeDefs.Values.First(n => n.SequenceId == edge.SequenceId + 1);
 
         if (edge.Trajectory is { } trajectory)
         {
-            points.AddRange(SampleNurbs(trajectory));
+            points = trajectory.Sample(NurbsSamples).ToList();
         }
         else
         {
             if (_positionInitialized)
             {
-                points.Add((_x, _y));
+                points.Add(new PolygonPoint(_x, _y));
             }
-            points.Add((endNode.Position.X, endNode.Position.Y));
+            points.Add(new PolygonPoint(endNode.Position.X, endNode.Position.Y));
         }
 
         _geometry = points;
@@ -421,60 +424,6 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
         _y = a.Y + (b.Y - a.Y) * t;
         _theta = Math.Atan2(b.Y - a.Y, b.X - a.X);
         _positionInitialized = true;
-    }
-
-    private static List<(double X, double Y)> SampleNurbs(NurbsTrajectory curve)
-    {
-        int degree = curve.Degree;
-        int count = curve.ControlPoints.Count;
-        double start = curve.KnotVector[degree];
-        double end = curve.KnotVector[count];
-        var result = new List<(double X, double Y)>(NurbsSamples + 1);
-
-        for (int s = 0; s <= NurbsSamples; s++)
-        {
-            double u = start + (end - start) * s / NurbsSamples;
-            if (s == NurbsSamples)
-            {
-                var last = curve.ControlPoints[^1];
-                result.Add((last.X, last.Y));
-                continue;
-            }
-
-            double x = 0;
-            double y = 0;
-            double weightSum = 0;
-            for (int i = 0; i < count; i++)
-            {
-                double basis = Basis(curve.KnotVector, i, degree, u) * curve.ControlPoints[i].Weight;
-                x += basis * curve.ControlPoints[i].X;
-                y += basis * curve.ControlPoints[i].Y;
-                weightSum += basis;
-            }
-            result.Add(weightSum > 0 ? (x / weightSum, y / weightSum) : (curve.ControlPoints[0].X, curve.ControlPoints[0].Y));
-        }
-        return result;
-    }
-
-    private static double Basis(IReadOnlyList<double> knots, int i, int degree, double u)
-    {
-        if (degree == 0)
-        {
-            return knots[i] <= u && u < knots[i + 1] ? 1 : 0;
-        }
-
-        double result = 0;
-        double leftSpan = knots[i + degree] - knots[i];
-        if (leftSpan > 0)
-        {
-            result += (u - knots[i]) / leftSpan * Basis(knots, i, degree - 1, u);
-        }
-        double rightSpan = knots[i + degree + 1] - knots[i + 1];
-        if (rightSpan > 0)
-        {
-            result += (knots[i + degree + 1] - u) / rightSpan * Basis(knots, i + 1, degree - 1, u);
-        }
-        return result;
     }
 
     private void SetPosition(double x, double y, double theta, string mapId)
