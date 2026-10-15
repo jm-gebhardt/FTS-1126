@@ -1,9 +1,8 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Channels;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
-using Gebhardt.Acc.Vda5050Simulator.Messaging.Dtos;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Microsoft.Extensions.Options;
 
@@ -19,11 +18,6 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
 {
     private const int Capacity = 10_000;
 
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
     private readonly MqttOptions _mqtt = options.Value;
 
     private readonly Channel<MqttSendMessage> _channel = Channel.CreateBounded<MqttSendMessage>(
@@ -33,24 +27,24 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
 
     public void PublishConnection(AgvId id, ConnectionState state, long headerId, DateTimeOffset timestamp)
     {
-        var dto = new ConnectionMessageDto
+        var message = new MqttConnection
         {
-            HeaderId = headerId,
-            Timestamp = FormatTimestamp(timestamp),
+            HeaderId = (int)headerId,
+            Timestamp = timestamp,
             Version = _mqtt.ProtocolVersion,
             Manufacturer = id.Manufacturer,
             SerialNumber = id.SerialNumber,
-            ConnectionState = state.ToString().ToUpperInvariant()
+            ConnectionState = Enum.Parse<MqttConnectionState>(state.ToString())
         };
-        Enqueue(id, "connection", dto, retain: true, qualityOfService: 1);
+        Enqueue(id, "connection", message, retain: true, qualityOfService: 1);
     }
 
     public void PublishState(AgvId id, AgvStateSnapshot snapshot)
     {
-        var dto = new StateMessageDto
+        var message = new MqttState
         {
-            HeaderId = snapshot.HeaderId,
-            Timestamp = FormatTimestamp(snapshot.Timestamp),
+            HeaderId = (int)snapshot.HeaderId,
+            Timestamp = snapshot.Timestamp,
             Version = _mqtt.ProtocolVersion,
             Manufacturer = id.Manufacturer,
             SerialNumber = id.SerialNumber,
@@ -59,31 +53,45 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
             LastNodeId = snapshot.LastNodeId,
             LastNodeSequenceId = snapshot.LastNodeSequenceId,
             Driving = snapshot.Driving,
-            AgvPosition = snapshot.Position is { } p ? new AgvPositionDto(p.X, p.Y, p.Theta, p.MapId, p.PositionInitialized) : null,
+            OperatingMode = MqttOperatingMode.Automatic,
+            AgvPosition = snapshot.Position is { } p
+                ? new MqttAgvPosition { X = p.X, Y = p.Y, Theta = p.Theta, MapId = p.MapId, PositionInitialized = p.PositionInitialized }
+                : null,
             ActionStates = snapshot.ActionStates
-                .Select(a => new ActionStateDto(a.ActionId, a.ActionType, a.Status.ToString().ToUpperInvariant()))
+                .Select(a => new MqttActionState
+                {
+                    ActionId = a.ActionId,
+                    ActionType = a.ActionType,
+                    ActionStatus = Enum.Parse<MqttActionStatus>(a.Status.ToString())
+                })
                 .ToList(),
-            BatteryState = new BatteryStateDto(snapshot.BatteryCharge, snapshot.Charging),
+            BatteryState = new MqttBatteryState { BatteryCharge = snapshot.BatteryCharge, Charging = snapshot.Charging },
             Errors = snapshot.Errors
-                .Select(e => new ErrorDto(
-                    e.ErrorType,
-                    e.Level.ToString().ToUpperInvariant(),
-                    e.Description,
-                    e.References.Select(r => new ErrorReferenceDto(r.Key, r.Value)).ToList()))
+                .Select(e => new MqttError
+                {
+                    ErrorType = e.ErrorType,
+                    ErrorLevel = Enum.Parse<MqttErrorLevel>(e.Level.ToString()),
+                    ErrorDescription = e.Description,
+                    ErrorReferences = e.References
+                        .Select(r => new MqttErrorReference { ReferenceKey = r.Key, ReferenceValue = r.Value })
+                        .ToList()
+                })
                 .ToList(),
-            NodeStates = snapshot.NodeStates.Select(n => new NodeStateDto(n.NodeId, n.SequenceId, n.Released)).ToList(),
-            EdgeStates = snapshot.EdgeStates.Select(e => new EdgeStateDto(e.EdgeId, e.SequenceId, e.Released)).ToList()
+            NodeStates = snapshot.NodeStates
+                .Select(n => new MqttNodeState { NodeId = n.NodeId, SequenceId = n.SequenceId, Released = n.Released })
+                .ToList(),
+            EdgeStates = snapshot.EdgeStates
+                .Select(e => new MqttEdgeState { EdgeId = e.EdgeId, SequenceId = e.SequenceId, Released = e.Released })
+                .ToList(),
+            SafetyState = new MqttSafetyState { EStop = MqttEStop.None, FieldViolation = false }
         };
-        Enqueue(id, "state", dto, retain: false, qualityOfService: 0);
+        Enqueue(id, "state", message, retain: false, qualityOfService: 0);
     }
 
     private void Enqueue<T>(AgvId id, string subtopic, T dto, bool retain, int qualityOfService)
     {
         string topic = TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, subtopic);
-        string payload = JsonSerializer.Serialize(dto, _jsonOptions);
+        string payload = JsonSerializer.Serialize(dto, Vda5050Json.Options);
         _channel.Writer.TryWrite(new MqttSendMessage(topic, payload, retain, qualityOfService));
     }
-
-    private static string FormatTimestamp(DateTimeOffset timestamp)
-        => timestamp.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", System.Globalization.CultureInfo.InvariantCulture);
 }

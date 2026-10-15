@@ -1,6 +1,7 @@
+using System.Globalization;
 using System.Text.Json;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
-using Gebhardt.Acc.Vda5050Simulator.Messaging.Dtos;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 
@@ -10,29 +11,29 @@ public sealed record MappingResult<T>(T? Value, IReadOnlyList<string> Errors) wh
 }
 
 /// <summary>
-/// Maps VDA5050 wire DTOs to domain types and validates structure (not state-dependent rules).
+/// Maps VDA5050 wire messages to domain types and validates structure (not state-dependent rules).
 /// </summary>
 public static class Vda5050Mapper
 {
-    public static MappingResult<Order> MapOrder(OrderDto dto)
+    public static MappingResult<Order> MapOrder(MqttOrder message)
     {
         var errors = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(dto.OrderId))
+        if (string.IsNullOrWhiteSpace(message.OrderId))
         {
             errors.Add("orderId is missing");
         }
-        if (dto.OrderUpdateId is null or < 0)
+        if (message.OrderUpdateId < 0)
         {
-            errors.Add("orderUpdateId is missing or negative");
+            errors.Add("orderUpdateId is negative");
         }
-        if (dto.Nodes is not { Count: > 0 })
+        if (message.Nodes.Count == 0)
         {
             errors.Add("order contains no nodes");
         }
 
         var nodes = new List<OrderNode>();
-        foreach (var node in dto.Nodes ?? [])
+        foreach (var node in message.Nodes)
         {
             if (string.IsNullOrWhiteSpace(node.NodeId))
             {
@@ -58,7 +59,7 @@ public static class Vda5050Mapper
 
         var nodeIds = nodes.Select(n => n.NodeId).ToHashSet(StringComparer.Ordinal);
         var edges = new List<OrderEdge>();
-        foreach (var edge in dto.Edges ?? [])
+        foreach (var edge in message.Edges)
         {
             if (string.IsNullOrWhiteSpace(edge.EdgeId))
             {
@@ -106,18 +107,27 @@ public static class Vda5050Mapper
             return new MappingResult<Order>(null, errors);
         }
 
-        var order = new Order(dto.OrderId!, dto.OrderUpdateId!.Value, orderedNodes, orderedEdges);
+        var order = new Order(message.OrderId, message.OrderUpdateId, orderedNodes, orderedEdges);
         return new MappingResult<Order>(order, errors);
     }
 
-    public static MappingResult<IReadOnlyList<InstantAction>> MapInstantActions(InstantActionsDto dto)
+    public static MappingResult<IReadOnlyList<InstantAction>> MapInstantActions(MqttInstantActions message)
     {
         var errors = new List<string>();
-        if (dto.Actions is not { Count: > 0 })
+        if (message.Actions.Count == 0)
         {
             errors.Add("instantActions contains no actions");
         }
-        var actions = MapActions(dto.Actions, "instantAction", errors);
+
+        var orderActions = message.Actions.Select(a => new MqttOrderAction
+        {
+            ActionId = a.ActionId,
+            ActionType = a.ActionType,
+            ActionDescription = a.ActionDescription,
+            BlockingType = a.BlockingType,
+            ActionParameters = a.ActionParameters
+        });
+        var actions = MapActions(orderActions, "instantAction", errors);
         if (errors.Count > 0)
         {
             return new MappingResult<IReadOnlyList<InstantAction>>(null, errors);
@@ -189,75 +199,79 @@ public static class Vda5050Mapper
         }
     }
 
-    private static NodePosition? MapPosition(NodePositionDto? dto, string nodeId, List<string> errors)
+    private static NodePosition? MapPosition(MqttOrderNodePosition? position, string nodeId, List<string> errors)
     {
-        if (dto == null)
+        if (position == null)
         {
             errors.Add($"node {nodeId}: nodePosition is missing");
             return null;
         }
-        if (string.IsNullOrWhiteSpace(dto.MapId))
+        if (string.IsNullOrWhiteSpace(position.MapId))
         {
             errors.Add($"node {nodeId}: nodePosition.mapId is missing");
             return null;
         }
-        return new NodePosition(dto.X, dto.Y, dto.Theta, dto.AllowedDeviationXy, dto.MapId);
+        return new NodePosition(position.X, position.Y, position.Theta, position.AllowedDeviationXy, position.MapId);
     }
 
-    private static List<AgvAction> MapActions(List<ActionDto>? dtos, string owner, List<string> errors)
+    private static List<AgvAction> MapActions(IEnumerable<MqttOrderAction> messages, string owner, List<string> errors)
     {
         var result = new List<AgvAction>();
-        foreach (var dto in dtos ?? [])
+        foreach (var message in messages)
         {
-            if (string.IsNullOrWhiteSpace(dto.ActionId) || string.IsNullOrWhiteSpace(dto.ActionType))
+            if (string.IsNullOrWhiteSpace(message.ActionId) || string.IsNullOrWhiteSpace(message.ActionType))
             {
                 errors.Add($"{owner}: action without actionId or actionType");
                 continue;
             }
-            if (!Enum.TryParse(dto.BlockingType, ignoreCase: true, out BlockingType blocking))
+            var blocking = message.BlockingType switch
             {
-                errors.Add($"{owner}: action {dto.ActionId} has invalid blockingType '{dto.BlockingType}'");
-                continue;
-            }
-            var parameters = (dto.ActionParameters ?? [])
+                Common.Domain.Models.BlockingType.SOFT => BlockingType.Soft,
+                Common.Domain.Models.BlockingType.HARD => BlockingType.Hard,
+                _ => BlockingType.None
+            };
+            var parameters = (message.ActionParameters ?? [])
                 .Where(p => !string.IsNullOrWhiteSpace(p.Key))
-                .Select(p => new ActionParameter(p.Key!, ValueToString(p.Value)))
+                .Select(p => new ActionParameter(p.Key, ValueToString(p.Value)))
                 .ToList();
-            result.Add(new AgvAction(dto.ActionId, dto.ActionType, blocking, dto.ActionDescription, parameters));
+            result.Add(new AgvAction(message.ActionId, message.ActionType, blocking, message.ActionDescription, parameters));
         }
         return result;
     }
 
-    private static string ValueToString(JsonElement value) => value.ValueKind switch
+    private static string ValueToString(object? value) => value switch
     {
-        JsonValueKind.String => value.GetString() ?? string.Empty,
-        JsonValueKind.Undefined or JsonValueKind.Null => string.Empty,
-        _ => value.GetRawText()
+        null => string.Empty,
+        string text => text,
+        JsonElement { ValueKind: JsonValueKind.String } element => element.GetString() ?? string.Empty,
+        JsonElement { ValueKind: JsonValueKind.Undefined or JsonValueKind.Null } => string.Empty,
+        JsonElement element => element.GetRawText(),
+        _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
     };
 
-    private static NurbsTrajectory? MapTrajectory(TrajectoryDto? dto, string edgeId, List<string> errors)
+    private static NurbsTrajectory? MapTrajectory(MqttTrajectory? trajectory, string edgeId, List<string> errors)
     {
-        if (dto == null)
+        if (trajectory == null)
         {
             return null;
         }
-        var knots = dto.KnotVector ?? [];
-        var points = dto.ControlPoints ?? [];
+        var knots = trajectory.KnotVector;
+        var points = trajectory.ControlPoints;
         bool valid = true;
 
-        if (dto.Degree < 1)
+        if (trajectory.Degree < 1)
         {
             errors.Add($"edge {edgeId}: trajectory degree must be >= 1");
             valid = false;
         }
-        if (points.Count <= dto.Degree)
+        if (points.Count <= trajectory.Degree)
         {
-            errors.Add($"edge {edgeId}: trajectory needs more than {dto.Degree} control points");
+            errors.Add($"edge {edgeId}: trajectory needs more than {trajectory.Degree} control points");
             valid = false;
         }
-        if (valid && knots.Count != points.Count + dto.Degree + 1)
+        if (valid && knots.Count != points.Count + trajectory.Degree + 1)
         {
-            errors.Add($"edge {edgeId}: knotVector must contain {points.Count + dto.Degree + 1} values but has {knots.Count}");
+            errors.Add($"edge {edgeId}: knotVector must contain {points.Count + trajectory.Degree + 1} values but has {knots.Count}");
             valid = false;
         }
         if (valid && knots.Zip(knots.Skip(1), (a, b) => b < a).Any(decreasing => decreasing))
@@ -272,7 +286,10 @@ public static class Vda5050Mapper
         }
 
         return valid
-            ? new NurbsTrajectory(dto.Degree, knots, points.Select(p => new ControlPoint(p.X, p.Y, p.Weight ?? 1.0)).ToList())
+            ? new NurbsTrajectory(
+                trajectory.Degree,
+                knots.Select(k => (double)k).ToList(),
+                points.Select(p => new ControlPoint(p.X, p.Y, p.Weight ?? 1.0f)).ToList())
             : null;
     }
 }

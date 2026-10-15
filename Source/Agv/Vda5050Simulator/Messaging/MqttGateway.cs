@@ -1,7 +1,7 @@
 using System.Text.Json;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
-using Gebhardt.Acc.Vda5050Simulator.Messaging.Dtos;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -15,14 +15,9 @@ namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 /// Single MQTT connection. Translates incoming order/instantAction messages into commands for the fleet host
 /// and sends the queued outgoing messages.
 /// </summary>
-public sealed class MqttGateway(
-    IOptions<MqttOptions> options,
-    FleetHost fleet,
-    MqttSendQueue outbound,
-    ILogger<MqttGateway> logger) : BackgroundService
+public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, MqttSendQueue mqttSendQueue, ILogger<MqttGateway> logger) : BackgroundService
 {
     private static readonly TimeSpan _reconnectDelay = TimeSpan.FromSeconds(5);
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
     private readonly MqttOptions _mqtt = options.Value;
 
     public override async Task StopAsync(CancellationToken cancellationToken)
@@ -46,7 +41,7 @@ public sealed class MqttGateway(
 
         client.ApplicationMessageReceivedAsync += e =>
         {
-            OnMessage(e.ApplicationMessage.Topic, e.ApplicationMessage.ConvertPayloadToString() ?? string.Empty);
+            OnMessageReceived(e.ApplicationMessage.Topic, e.ApplicationMessage.ConvertPayloadToString() ?? string.Empty);
             return Task.CompletedTask;
         };
 
@@ -93,7 +88,7 @@ public sealed class MqttGateway(
 
     private async Task PublishLoopAsync(IMqttClient client, CancellationToken stoppingToken)
     {
-        var reader = outbound.Reader;
+        var reader = mqttSendQueue.Reader;
         try
         {
             while (await reader.WaitToReadAsync(stoppingToken))
@@ -119,7 +114,7 @@ public sealed class MqttGateway(
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         try
         {
-            while (client.IsConnected && outbound.Reader.TryRead(out var message))
+            while (client.IsConnected && mqttSendQueue.Reader.TryRead(out var message))
             {
                 await PublishAsync(client, message, timeout.Token);
             }
@@ -159,7 +154,7 @@ public sealed class MqttGateway(
         await client.SubscribeAsync(builder.Build(), cancellationToken);
     }
 
-    private void OnMessage(string topic, string payload)
+    private void OnMessageReceived(string topic, string payload)
     {
         if (!TopicParser.TryParse(topic, out var id, out string subtopic))
         {
@@ -184,10 +179,10 @@ public sealed class MqttGateway(
 
     private static AgvCommand CreateOrderCommand(AgvId id, string payload)
     {
-        OrderDto? dto;
+        MqttOrder? dto;
         try
         {
-            dto = JsonSerializer.Deserialize<OrderDto>(payload, _jsonOptions);
+            dto = JsonSerializer.Deserialize<MqttOrder>(payload, Vda5050Json.Options);
         }
         catch (JsonException ex)
         {
@@ -205,10 +200,10 @@ public sealed class MqttGateway(
 
     private static AgvCommand CreateInstantActionsCommand(AgvId id, string payload)
     {
-        InstantActionsDto? dto;
+        MqttInstantActions? dto;
         try
         {
-            dto = JsonSerializer.Deserialize<InstantActionsDto>(payload, _jsonOptions);
+            dto = JsonSerializer.Deserialize<MqttInstantActions>(payload, Vda5050Json.Options);
         }
         catch (JsonException ex)
         {
