@@ -216,10 +216,12 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
             .Select(a => a.ActionId)
             .ToHashSet(StringComparer.Ordinal);
         _actionStates.RemoveAll(a => a.Status == ActionStatus.Waiting && removedActionIds.Contains(a.ActionId));
+        
         foreach (var key in _nodeDefs.Keys.Where(k => k > baseEnd.SequenceId).ToList())
         {
             _nodeDefs.Remove(key);
         }
+
         foreach (var key in _edgeDefs.Keys.Where(k => k > baseEnd.SequenceId).ToList())
         {
             _edgeDefs.Remove(key);

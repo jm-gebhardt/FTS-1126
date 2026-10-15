@@ -3,10 +3,15 @@ namespace Gebhardt.Acc.Vda5050Simulator.Messaging.Dtos;
 public sealed record ConnectionMessageDto
 {
     public long HeaderId { get; init; }
+    
     public string Timestamp { get; init; } = string.Empty;
+    
     public string Version { get; init; } = string.Empty;
+    
     public string Manufacturer { get; init; } = string.Empty;
+    
     public string SerialNumber { get; init; } = string.Empty;
+    
     public string ConnectionState { get; init; } = string.Empty;
 }
 
@@ -29,21 +34,38 @@ public sealed record AgvPositionDto(double X, double Y, double Theta, string Map
 public sealed record StateMessageDto
 {
     public long HeaderId { get; init; }
+    
     public string Timestamp { get; init; } = string.Empty;
+    
     public string Version { get; init; } = string.Empty;
+    
     public string Manufacturer { get; init; } = string.Empty;
+    
     public string SerialNumber { get; init; } = string.Empty;
+    
     public string OrderId { get; init; } = string.Empty;
+    
     public int OrderUpdateId { get; init; }
+    
     public string LastNodeId { get; init; } = string.Empty;
+    
     public int LastNodeSequenceId { get; init; }
+    
     public bool Driving { get; init; }
+    
     public AgvPositionDto? AgvPosition { get; init; }
+    
     public List<ActionStateDto> ActionStates { get; init; } = [];
+    
     public BatteryStateDto BatteryState { get; init; } = new(0, false);
+    
     public string OperatingMode { get; init; } = "AUTOMATIC";
+    
     public List<ErrorDto> Errors { get; init; } = [];
+    
     public List<NodeStateDto> NodeStates { get; init; } = [];
+    
     public List<EdgeStateDto> EdgeStates { get; init; } = [];
+    
     public SafetyStateDto SafetyState { get; init; } = new("NONE", false);
 }

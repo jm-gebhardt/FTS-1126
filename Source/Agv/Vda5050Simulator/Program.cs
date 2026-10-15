@@ -17,8 +17,8 @@ builder.Services.AddSingleton<ISimulationClock>(sp =>
     var simulation = builder.Configuration.GetSection("Simulation").Get<SimulationOptions>() ?? new SimulationOptions();
     return new SimulationClock(sp.GetRequiredService<TimeProvider>().GetUtcNow(), simulation.Speedup);
 });
-builder.Services.AddSingleton<OutboundQueue>();
-builder.Services.AddSingleton<IAgvPublisher>(sp => sp.GetRequiredService<OutboundQueue>());
+builder.Services.AddSingleton<MqttSendQueue>();
+builder.Services.AddSingleton<IAgvPublisher>(sp => sp.GetRequiredService<MqttSendQueue>());
 builder.Services.AddSingleton<FleetHost>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<FleetHost>());
 builder.Services.AddHostedService<SimulationLoop>();

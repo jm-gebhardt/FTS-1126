@@ -11,9 +11,13 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 public sealed class AgvActor
 {
     private abstract record Message;
+    
     private sealed record StartMessage : Message;
+    
     private sealed record ShutdownMessage : Message;
+    
     private sealed record CommandMessage(AgvCommand Command) : Message;
+    
     private sealed record TickMessage(TimeSpan Dt, TaskCompletionSource Done) : Message;
 
     private readonly Channel<Message> _mailbox = Channel.CreateUnbounded<Message>(new UnboundedChannelOptions { SingleReader = true });
@@ -81,12 +85,15 @@ public sealed class AgvActor
                             PublishConnection(ConnectionState.Online);
                             PublishState();
                             break;
+                        
                         case ShutdownMessage:
                             PublishConnection(ConnectionState.Offline);
                             break;
+                        
                         case CommandMessage m:
                             Handle(m.Command);
                             break;
+                        
                         case TickMessage t:
                             Advance(t.Dt);
                             t.Done.TrySetResult();

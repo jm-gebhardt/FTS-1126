@@ -201,7 +201,7 @@ public static class Vda5050Mapper
             errors.Add($"node {nodeId}: nodePosition.mapId is missing");
             return null;
         }
-        return new NodePosition(dto.X, dto.Y, dto.Theta, dto.AllowedDeviationXY, dto.MapId);
+        return new NodePosition(dto.X, dto.Y, dto.Theta, dto.AllowedDeviationXy, dto.MapId);
     }
 
     private static List<AgvAction> MapActions(List<ActionDto>? dtos, string owner, List<string> errors)

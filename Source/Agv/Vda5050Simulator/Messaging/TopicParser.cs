@@ -14,7 +14,7 @@ public static class TopicParser
 
     public static bool TryParse(string topic, out AgvId id, out string subtopic)
     {
-        var parts = topic.Split('/');
+        string[] parts = topic.Split('/');
         if (parts.Length == 5)
         {
             id = new AgvId(parts[2], parts[3]);

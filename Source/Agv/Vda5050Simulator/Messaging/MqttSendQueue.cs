@@ -9,29 +9,27 @@ using Microsoft.Extensions.Options;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 
-public sealed record OutboundMessage(string Topic, string Payload, bool Retain, int QualityOfService);
+public sealed record MqttSendMessage(string Topic, string Payload, bool Retain, int QualityOfService);
 
 /// <summary>
 /// Maps domain snapshots to VDA5050 messages and queues them for the single publisher task of the gateway.
 /// When the queue is full (e.g. broker unreachable), the oldest message is dropped.
 /// </summary>
-public sealed class OutboundQueue(IOptions<MqttOptions> options) : IAgvPublisher
+public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
 {
     private const int Capacity = 10_000;
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     private readonly MqttOptions _mqtt = options.Value;
 
-    private readonly Channel<OutboundMessage> _channel = Channel.CreateBounded<OutboundMessage>(
+    private readonly Channel<MqttSendMessage> _channel = Channel.CreateBounded<MqttSendMessage>(
         new BoundedChannelOptions(Capacity) { FullMode = BoundedChannelFullMode.DropOldest, SingleReader = true });
 
-    public ChannelReader<OutboundMessage> Reader => _channel.Reader;
-
-    public void Complete() => _channel.Writer.TryComplete();
+    public ChannelReader<MqttSendMessage> Reader => _channel.Reader;
 
     public void PublishConnection(AgvId id, ConnectionState state, long headerId, DateTimeOffset timestamp)
     {
@@ -82,8 +80,8 @@ public sealed class OutboundQueue(IOptions<MqttOptions> options) : IAgvPublisher
     private void Enqueue<T>(AgvId id, string subtopic, T dto, bool retain, int qualityOfService)
     {
         string topic = TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, subtopic);
-        string payload = JsonSerializer.Serialize(dto, JsonOptions);
-        _channel.Writer.TryWrite(new OutboundMessage(topic, payload, retain, qualityOfService));
+        string payload = JsonSerializer.Serialize(dto, _jsonOptions);
+        _channel.Writer.TryWrite(new MqttSendMessage(topic, payload, retain, qualityOfService));
     }
 
     private static string FormatTimestamp(DateTimeOffset timestamp)

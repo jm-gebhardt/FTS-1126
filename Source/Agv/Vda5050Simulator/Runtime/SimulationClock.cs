@@ -3,7 +3,9 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 public interface ISimulationClock
 {
     DateTimeOffset Now { get; }
+    
     double Speedup { get; set; }
+    
     void Advance(TimeSpan dt);
 }
 

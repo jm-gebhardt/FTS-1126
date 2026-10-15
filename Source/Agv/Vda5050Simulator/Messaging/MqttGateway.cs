@@ -18,11 +18,11 @@ namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 public sealed class MqttGateway(
     IOptions<MqttOptions> options,
     FleetHost fleet,
-    OutboundQueue outbound,
+    MqttSendQueue outbound,
     ILogger<MqttGateway> logger) : BackgroundService
 {
-    private static readonly TimeSpan ReconnectDelay = TimeSpan.FromSeconds(5);
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly TimeSpan _reconnectDelay = TimeSpan.FromSeconds(5);
+    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
     private readonly MqttOptions _mqtt = options.Value;
 
     public override async Task StopAsync(CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ public sealed class MqttGateway(
                     await SubscribeAsync(factory, client, stoppingToken);
                     logger.LogInformation("Connected to {Host}:{Port}", _mqtt.Host, _mqtt.Port);
                 }
-                await Task.Delay(ReconnectDelay, stoppingToken);
+                await Task.Delay(_reconnectDelay, stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -70,10 +70,10 @@ public sealed class MqttGateway(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "MQTT connection failed, retrying in {Delay}", ReconnectDelay);
+                logger.LogError(ex, "MQTT connection failed, retrying in {Delay}", _reconnectDelay);
                 try
                 {
-                    await Task.Delay(ReconnectDelay, stoppingToken);
+                    await Task.Delay(_reconnectDelay, stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -130,7 +130,7 @@ public sealed class MqttGateway(
         }
     }
 
-    private async Task PublishAsync(IMqttClient client, OutboundMessage message, CancellationToken cancellationToken)
+    private async Task PublishAsync(IMqttClient client, MqttSendMessage message, CancellationToken cancellationToken)
     {
         var mqttMessage = new MqttApplicationMessageBuilder()
             .WithTopic(message.Topic)
@@ -161,7 +161,7 @@ public sealed class MqttGateway(
 
     private void OnMessage(string topic, string payload)
     {
-        if (!TopicParser.TryParse(topic, out var id, out var subtopic))
+        if (!TopicParser.TryParse(topic, out var id, out string subtopic))
         {
             logger.LogWarning("Ignoring message on unexpected topic {Topic}", topic);
             return;
@@ -187,7 +187,7 @@ public sealed class MqttGateway(
         OrderDto? dto;
         try
         {
-            dto = JsonSerializer.Deserialize<OrderDto>(payload, JsonOptions);
+            dto = JsonSerializer.Deserialize<OrderDto>(payload, _jsonOptions);
         }
         catch (JsonException ex)
         {
@@ -208,7 +208,7 @@ public sealed class MqttGateway(
         InstantActionsDto? dto;
         try
         {
-            dto = JsonSerializer.Deserialize<InstantActionsDto>(payload, JsonOptions);
+            dto = JsonSerializer.Deserialize<InstantActionsDto>(payload, _jsonOptions);
         }
         catch (JsonException ex)
         {

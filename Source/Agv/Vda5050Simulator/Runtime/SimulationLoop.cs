@@ -16,7 +16,7 @@ public sealed class SimulationLoop(
     ILogger<SimulationLoop> logger) : BackgroundService
 {
     private const int MaxStepsPerIteration = 100;
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(10);
+    private static readonly TimeSpan _interval = TimeSpan.FromMilliseconds(10);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -29,7 +29,7 @@ public sealed class SimulationLoop(
         {
             try
             {
-                await Task.Delay(PollInterval, timeProvider, stoppingToken);
+                await Task.Delay(_interval, timeProvider, stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -37,9 +37,9 @@ public sealed class SimulationLoop(
             }
 
             long now = timeProvider.GetTimestamp();
-            var wallElapsed = timeProvider.GetElapsedTime(last, now);
+            var elapsed = timeProvider.GetElapsedTime(last, now);
             last = now;
-            accumulator += wallElapsed * clock.Speedup;
+            accumulator += elapsed * clock.Speedup;
 
             int steps = 0;
             while (accumulator >= step && steps < MaxStepsPerIteration && !stoppingToken.IsCancellationRequested)

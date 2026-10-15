@@ -16,7 +16,7 @@ public sealed record AgvAction(
     string? Description,
     IReadOnlyList<ActionParameter> Parameters);
 
-public sealed record NodePosition(double X, double Y, double? Theta, double? AllowedDeviationXY, string MapId);
+public sealed record NodePosition(double X, double Y, double? Theta, double? AllowedDeviationXy, string MapId);
 
 public sealed record ControlPoint(double X, double Y, double Weight);
 
