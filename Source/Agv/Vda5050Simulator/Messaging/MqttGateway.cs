@@ -1,4 +1,4 @@
-using System.Text.Json;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTnet;
 using MQTTnet.Protocol;
+using System.Text.Json;
+using static Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants.Vda5050Specifications;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 
@@ -148,8 +150,8 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
         var builder = factory.CreateSubscribeOptionsBuilder();
         foreach (var id in fleet.AgvIds)
         {
-            builder.WithTopicFilter(TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, TopicParser.Order));
-            builder.WithTopicFilter(TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, TopicParser.InstantAction));
+            builder.WithTopicFilter(TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, Subtopics.Order));
+            builder.WithTopicFilter(TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, Subtopics.InstantActions));
         }
         await client.SubscribeAsync(builder.Build(), cancellationToken);
     }
@@ -164,8 +166,8 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
 
         var command = subtopic switch
         {
-            TopicParser.Order => CreateOrderCommand(id, payload),
-            TopicParser.InstantAction => CreateInstantActionsCommand(id, payload),
+            Vda5050Specifications.Subtopics.Order => CreateOrderCommand(id, payload),
+            Vda5050Specifications.Subtopics.InstantActions => CreateInstantActionsCommand(id, payload),
             _ => null
         };
 

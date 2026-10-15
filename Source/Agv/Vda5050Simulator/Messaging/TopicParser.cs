@@ -4,11 +4,6 @@ namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 
 public static class TopicParser
 {
-    public const string Order = "order";
-    public const string InstantAction = "instantAction";
-    public const string State = "state";
-    public const string Connection = "connection";
-
     public static string BuildTopic(string interfaceName, string version, AgvId id, string subtopic)
         => $"{interfaceName}/{version}/{id.Manufacturer}/{id.SerialNumber}/{subtopic}";
 
