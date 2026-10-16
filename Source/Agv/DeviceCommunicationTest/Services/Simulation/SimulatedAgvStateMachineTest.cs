@@ -304,14 +304,15 @@ public class SimulatedAgvStateMachineTest
                 parentId: moveActionToDropAction.ParentId,
                 infoToAgv: moveActionToDropAction.InfoToAgv,
                 nodes: updateNodes.ToArray(),
-                edges: updateEdges.ToArray());
+                edges: updateEdges.ToArray()) with { Revision = 1 };
             var updateRoutePlan = RoutePlanGenerator.Build(updateNodes, updateEdges);
 
             // Start move action
             await fixture.PublishAndGetFirstMessageAsync<DispatchRouteCommand, ActionStartedByAgv>(
                 new DispatchRouteCommand(agvSaga.CorrelationId, agvSaga.SerialNumber, startRoutePlan, moveAction));
 
-            await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
+            var moveCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
+            moveCompleted.Revision.ShouldBe(0);
 
             // Update move action to drop action with new target
             var actionUpdated = await fixture.PublishAndGetFirstMessageAsync<UpdateDispatchedRouteCommand, ActionUpdatedByAgv>(
@@ -341,7 +342,7 @@ public class SimulatedAgvStateMachineTest
                     s.LastNodeId.ShouldBe(updatedMoveAction.Target.Node?.Id);
                 }, timeoutInMs: 10000);
 
-            await fixture.ShouldHavePublishedAsync<ActionCompletedByAgv>();
+            (await fixture.TestHarness.Published.Any<ActionCompletedByAgv>(c => c.Context.Message.Revision == 1)).ShouldBeTrue();
         }
     }
 

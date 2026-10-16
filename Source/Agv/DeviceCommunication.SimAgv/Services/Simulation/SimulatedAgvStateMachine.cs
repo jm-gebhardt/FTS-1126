@@ -803,7 +803,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgvSaga
                 context.Saga.ShouldFail = false;
                 return;
             }
-            await context.Publish(new ActionCompletedByAgv(action.CorrelationId, agvCorrelationId));
+            await context.Publish(new ActionCompletedByAgv(action.CorrelationId, agvCorrelationId, action.Revision));
         }
 
         // update position last time before the ActionStart time is gone

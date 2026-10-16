@@ -147,6 +147,12 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     public bool ShouldSkip { get; private set; }
 
     /// <summary>
+    /// Incremented each time the action is updated on the agv while it runs.
+    /// Allows to detect completions the agv reports for an outdated version of the action.
+    /// </summary>
+    public int Revision { get; private set; }
+
+    /// <summary>
     /// Action is the first action of a group.
     /// </summary>
     public bool IsFirstAction => Sequence == 0;
@@ -384,6 +390,14 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
     }
 
     /// <summary>
+    /// Marks the action as updated on the agv.
+    /// </summary>
+    public void IncrementRevision()
+    {
+        Revision++;
+    }
+
+    /// <summary>
     /// Change the type of the action.
     /// </summary>
     /// <param name="newType">The new type of the action.</param>
@@ -538,6 +552,10 @@ public class AgvAction : IParentedBy<Guid>, IEquatable<AgvAction>
             return false;
         }
         if (ShouldSkip != other.ShouldSkip)
+        {
+            return false;
+        }
+        if (Revision != other.Revision)
         {
             return false;
         }

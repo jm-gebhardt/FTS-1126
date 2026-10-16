@@ -1492,6 +1492,11 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId);
         if (isQueueing.HasValue)
         {
+            if (agv.IsQueueing != isQueueing.Value)
+            {
+                _logger.LogInformation("Setting IsQueueing for agv {AgvCorrelationId} from {OldIsQueueing} to {NewIsQueueing} during transition to idle from action completion", 
+                    agv.CorrelationId, agv.IsQueueing, isQueueing.Value);
+            }
             agv.IsQueueing = isQueueing.Value;
         }
         await TransitionToIdleAsync(publishEndpoint, agv, cancellationToken);

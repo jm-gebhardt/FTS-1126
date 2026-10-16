@@ -18,8 +18,11 @@ public record ActionUpdatedByAgv(Guid CorrelationId, Guid AgvCorrelationId) : IA
 /// <summary>
 /// Signals that an action has been completed by an agv.
 /// </summary>
+/// <param name="CorrelationId">The action correlation id.</param>
+/// <param name="AgvCorrelationId">The agv correlation id.</param>
+/// <param name="Revision">The revision of the action the agv completed, null if the device communication does not track it.</param>
 [PublicAPI]
-public record ActionCompletedByAgv(Guid CorrelationId, Guid AgvCorrelationId) : IActionEventParent;
+public record ActionCompletedByAgv(Guid CorrelationId, Guid AgvCorrelationId, int? Revision = null) : IActionEventParent;
 
 /// <summary>
 /// Signals that an action has failed by an agv.

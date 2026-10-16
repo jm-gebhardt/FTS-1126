@@ -43,7 +43,7 @@ public class ActionEventHandler(ILogger<ActionEventHandler> logger, IAgvReposito
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<ActionCompletedByAgv> context)
     {
-        var (currentOrder, agvCorrelationId) = context.Message;
+        (var currentOrder, var agvCorrelationId, int? _) = context.Message;
         logger.LogInformation("Order {ActionCorrelationId} completed by agv {AgvCorrelationId}, clearing current order reference", currentOrder, agvCorrelationId);
         await context.Publish(new ClearAgvCurrentOrder(agvCorrelationId));
     }
