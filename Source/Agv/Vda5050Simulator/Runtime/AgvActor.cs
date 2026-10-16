@@ -42,6 +42,7 @@ public sealed class AgvActor
         _publisher = publisher;
         _stateInterval = stateInterval;
         _logger = logger;
+        _logger.LogInformation("{AgvId} - {CorrelationId}", model.Id, model.Id.CorrelationId);
     }
 
     public AgvId Id => _model.Id;
