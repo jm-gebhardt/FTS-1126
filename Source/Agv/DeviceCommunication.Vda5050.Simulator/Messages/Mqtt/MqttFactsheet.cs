@@ -18,7 +18,7 @@ public record MqttFactsheet
     /// HeaderId of the message.
     /// The headerId is defined per topic and incremented by 1 with each sent (but not necessarily received) message.
     /// </summary>
-    public int HeaderId { get; set; }
+    public uint HeaderId { get; set; }
 
     /// <summary>
     /// Timestamp in ISO8601 format (YYYY-MM-DDTHH:mm:ss.ffZ).

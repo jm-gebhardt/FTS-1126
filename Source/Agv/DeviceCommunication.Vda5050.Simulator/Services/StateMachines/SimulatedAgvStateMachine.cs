@@ -524,7 +524,7 @@ public class SimulatedAgvStateMachine : MassTransitStateMachine<SimulatedAgv>
         }
 
         _factsheetHeaderId.Increase();
-        factsheet.HeaderId = (int)_factsheetHeaderId.Current;
+        factsheet.HeaderId = _factsheetHeaderId.Current;
         factsheet.Timestamp = _timeProvider.GetUtcNow();
         factsheet.Version = Vda5050Specifications.Version;
         factsheet.Manufacturer = context.Saga.Configuration.Manufacturer;

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Threading.Channels;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
@@ -25,18 +26,18 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
 
     public ChannelReader<MqttSendMessage> Reader => _channel.Reader;
 
-    public void PublishConnection(AgvId id, ConnectionState state, long headerId, DateTimeOffset timestamp)
+    public void PublishConnection(AgvId id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
     {
         var message = new MqttConnection
         {
-            HeaderId = (int)headerId,
+            HeaderId = headerId,
             Timestamp = timestamp,
             Version = _mqtt.ProtocolVersion,
             Manufacturer = id.Manufacturer,
             SerialNumber = id.SerialNumber,
             ConnectionState = Enum.Parse<MqttConnectionState>(state.ToString())
         };
-        Enqueue(id, "connection", message, retain: true, qualityOfService: 1);
+        Enqueue(id, Vda5050Specifications.Subtopics.Connection , message, retain: true, qualityOfService: 1);
     }
 
     public void PublishState(AgvId id, AgvStateSnapshot snapshot)
@@ -72,7 +73,7 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
                     ErrorType = e.ErrorType,
                     ErrorLevel = Enum.Parse<MqttErrorLevel>(e.Level.ToString()),
                     ErrorDescription = e.Description,
-                    ErrorReferences = e.References
+                    ErrorReferences = e.ErrorReferences?
                         .Select(r => new MqttErrorReference { ReferenceKey = r.Key, ReferenceValue = r.Value })
                         .ToList()
                 })
@@ -85,7 +86,20 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
                 .ToList(),
             SafetyState = new MqttSafetyState { EStop = MqttEStop.None, FieldViolation = false }
         };
-        Enqueue(id, "state", message, retain: false, qualityOfService: 0);
+        Enqueue(id, Vda5050Specifications.Subtopics.State, message, retain: false, qualityOfService: 0);
+    }
+
+    public void PublishFactsheet(AgvId id, uint headerId, DateTimeOffset timestamp)
+    {
+        var message = new MqttFactsheet
+        {
+            HeaderId = headerId,
+            Timestamp = timestamp,
+            Version = _mqtt.ProtocolVersion,
+            Manufacturer = id.Manufacturer,
+            SerialNumber = id.SerialNumber
+        };
+        Enqueue(id, Vda5050Specifications.Subtopics.Factsheet, message, retain: false, qualityOfService: 0);
     }
 
     private void Enqueue<T>(AgvId id, string subtopic, T dto, bool retain, int qualityOfService)

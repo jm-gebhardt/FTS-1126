@@ -1,5 +1,6 @@
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using static Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants.Vda5050Specifications;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Domain;
 
@@ -11,7 +12,7 @@ public enum OrderDecision
     Rejected
 }
 
-public sealed record OrderResult(OrderDecision Decision, AgvError? Error = null);
+public sealed record OrderResult(OrderDecision Decision, Error? Error = null);
 
 /// <summary>
 /// Mutable state and behavior of one simulated AGV. Pure domain code without I/O, mailbox or logging;
@@ -25,7 +26,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     private readonly List<ActionState> _actionStates = [];
     private readonly List<NodeState> _nodeStates = [];
     private readonly List<EdgeState> _edgeStates = [];
-    private readonly List<AgvError> _errors = [];
+    private readonly List<Error> _errors = [];
 
     private readonly SortedDictionary<int, OrderNode> _nodeDefs = [];
     private readonly SortedDictionary<int, OrderEdge> _edgeDefs = [];
@@ -80,7 +81,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
         {
             if (order.OrderUpdateId < OrderUpdateId)
             {
-                return Reject("orderUpdateError", order,
+                return Reject(ErrorTypes.OrderUpdateError, order,
                     $"orderUpdateId {order.OrderUpdateId} is lower than the current orderUpdateId {OrderUpdateId}");
             }
             if (order.OrderUpdateId == OrderUpdateId)
@@ -94,24 +95,35 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
         }
         else if (HasActiveOrder)
         {
-            return Reject("orderError", order,
+            return Reject(ErrorTypes.OrderError, order,
                 $"order {OrderId} is still active; a new order requires a finished order or a cancelOrder");
         }
 
         return TryStartOrder(order);
     }
 
-    public void AddValidationError(string messageKind, string? referenceId, IReadOnlyList<string> errors)
+    public void AddValidationError(string topic, string? id, params string[] errors)
     {
-        var references = new List<ErrorReference> { new("topic", messageKind) };
-        if (!string.IsNullOrEmpty(referenceId))
+        var references = new List<ErrorReference> { new("topic", topic) };
+        if (!string.IsNullOrEmpty(id))
         {
-            references.Add(new ErrorReference("orderId", referenceId));
+            references.Add(new ErrorReference("Id", id));
         }
 
-        AddError(new AgvError("validationError", ErrorLevel.Warning, string.Join("; ", errors), references));
+        AddError(new Error("validationError", ErrorLevel.Warning, string.Join("; ", errors), references));
     }
 
+    public void AddValidationError(string topic, string? id, IReadOnlyList<string> errors)
+    {
+        var references = new List<ErrorReference> { new("topic", topic) };
+        if (!string.IsNullOrEmpty(id))
+        {
+            references.Add(new ErrorReference("Id", id));
+        }
+
+        AddError(new Error("validationError", ErrorLevel.Warning, string.Join("; ", errors), references));
+    }
+    
     /// <summary>
     /// Advances the simulation. Returns true if the published state changed (driving flag, reached node, action status).
     /// Position changes alone do not count as change.
@@ -468,7 +480,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
     private OrderResult Reject(string errorType, Order order, string description)
     {
-        var error = new AgvError(errorType, ErrorLevel.Warning, description,
+        var error = new Error(errorType, ErrorLevel.Warning, description,
         [
             new ErrorReference("orderId", order.OrderId),
             new ErrorReference("orderUpdateId", order.OrderUpdateId.ToString())
@@ -477,7 +489,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
         return new OrderResult(OrderDecision.Rejected, error);
     }
 
-    private void AddError(AgvError error)
+    private void AddError(Error error)
     {
         _errors.Add(error);
         if (_errors.Count > MaxErrors)

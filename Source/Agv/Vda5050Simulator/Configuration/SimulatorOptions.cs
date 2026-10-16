@@ -16,7 +16,7 @@ public sealed class MqttOptions
     
     public string Version { get; init; } = "v2";
     
-    public string ProtocolVersion { get; init; } = "2.0.0";
+    public string ProtocolVersion { get; init; } = "2.1.0";
 }
 
 public sealed class SimulationOptions

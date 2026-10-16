@@ -56,15 +56,15 @@ public class OrderState
     /// <summary>
     /// Validation error.
     /// </summary>
-    public AgvError? ValidationError => Errors.FirstOrDefault(e => e.ErrorType == Vda5050Specifications.OrderErrors.ValidationError);
+    public AgvError? ValidationError => Errors.FirstOrDefault(e => e.ErrorType == Vda5050Specifications.ErrorTypes.ValidationError);
 
     /// <summary>
     /// Update error.
     /// </summary>
-    public AgvError? UpdateError => Errors.FirstOrDefault(e => e.ErrorType == Vda5050Specifications.OrderErrors.OrderUpdateError);
+    public AgvError? UpdateError => Errors.FirstOrDefault(e => e.ErrorType == Vda5050Specifications.ErrorTypes.OrderUpdateError);
 
     /// <summary>
     /// Order error.
     /// </summary>
-    public AgvError? OrderError => Errors.FirstOrDefault(e => e.ErrorType == Vda5050Specifications.OrderErrors.OrderError);
+    public AgvError? OrderError => Errors.FirstOrDefault(e => e.ErrorType == Vda5050Specifications.ErrorTypes.OrderError);
 }

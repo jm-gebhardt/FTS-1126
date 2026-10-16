@@ -7,7 +7,9 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 /// </summary>
 public interface IAgvPublisher
 {
-    void PublishConnection(AgvId id, ConnectionState state, long headerId, DateTimeOffset timestamp);
+    void PublishConnection(AgvId id, ConnectionState state, uint headerId, DateTimeOffset timestamp);
 
     void PublishState(AgvId id, AgvStateSnapshot snapshot);
+
+    void PublishFactsheet(AgvId id, uint headerId, DateTimeOffset timestamp);
 }

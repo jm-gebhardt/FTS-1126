@@ -112,7 +112,7 @@ public static class Vda5050Mapper
         return new MappingResult<Order>(order, errors);
     }
 
-    public static MappingResult<IReadOnlyList<InstantAction>> MapInstantActions(MqttInstantActions message)
+    public static MappingResult<IReadOnlyList<AgvAction>> MapInstantActions(MqttInstantActions message)
     {
         var errors = new List<string>();
         if (message.Actions.Count == 0)
@@ -128,13 +128,12 @@ public static class Vda5050Mapper
             BlockingType = a.BlockingType,
             ActionParameters = a.ActionParameters
         });
+        
         var actions = MapActions(orderActions, "instantAction", errors);
-        if (errors.Count > 0)
-        {
-            return new MappingResult<IReadOnlyList<InstantAction>>(null, errors);
-        }
-        IReadOnlyList<InstantAction> result = actions.Select(a => new InstantAction(a)).ToList();
-        return new MappingResult<IReadOnlyList<InstantAction>>(result, errors);
+        
+        return errors.Count > 0 
+            ? new MappingResult<IReadOnlyList<AgvAction>>(null, errors) 
+            : new MappingResult<IReadOnlyList<AgvAction>>(actions, errors);
     }
 
     /// <summary>

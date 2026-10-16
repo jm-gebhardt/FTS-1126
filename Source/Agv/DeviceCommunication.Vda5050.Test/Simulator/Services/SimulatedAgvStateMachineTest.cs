@@ -704,7 +704,7 @@ public class SimulatedAgvStateMachineTest
         factsheet.SerialNumber.ShouldBe(config.SerialNumber);
         factsheet.Manufacturer.ShouldBe(config.Manufacturer);
         factsheet.Version.ShouldBe(Vda5050Specifications.Version);
-        factsheet.HeaderId.ShouldBe(1);
+        factsheet.HeaderId.ShouldBe((uint)1);
         factsheet.TypeSpecification.SeriesName.ShouldBe(FactsheetJsonGenerator.SeriesName);
     }
 

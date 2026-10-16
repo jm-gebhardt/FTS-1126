@@ -10,7 +10,7 @@ public class MqttFactsheetSerializationTestFixture
     public const string Manufacturer = "gebhardt";
     private const string SeriesName = "simagv";
     public const string TypeSpecificationPropertyName = "typeSpecification";
-    public const int HeaderId = 7;
+    public const uint HeaderId = 7;
 
     public DeviceCommunicationFactsheet UploadedFactsheet { get; } = MqttFactsheetGenerator.Generate(
         UploadedSerialNumber,

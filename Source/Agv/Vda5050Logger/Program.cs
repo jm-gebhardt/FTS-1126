@@ -162,6 +162,6 @@ internal static class Program
         var invalid = Path.GetInvalidFileNameChars();
         var chars = topic.Select(c => c == '/' || invalid.Contains(c) ? '_' : c).ToArray();
         string name = new string(chars).Trim('.', ' ');
-        return (name.Length == 0 ? "_" : name) + ".txt";
+        return (name.Length == 0 ? "_" : name) + ".json";
     }
 }

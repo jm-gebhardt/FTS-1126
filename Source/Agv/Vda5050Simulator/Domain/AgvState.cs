@@ -31,7 +31,7 @@ public sealed record EdgeState(string EdgeId, int SequenceId, bool Released);
 
 public sealed record ErrorReference(string Key, string Value);
 
-public sealed record AgvError(string ErrorType, ErrorLevel Level, string Description, IReadOnlyList<ErrorReference> References);
+public sealed record Error(string ErrorType, ErrorLevel Level, string? Description, IReadOnlyList<ErrorReference>? ErrorReferences);
 
 public sealed record AgvPositionSnapshot(double X, double Y, double Theta, string MapId, bool PositionInitialized);
 
@@ -51,5 +51,5 @@ public sealed record AgvStateSnapshot(
     IReadOnlyList<ActionState> ActionStates,
     IReadOnlyList<NodeState> NodeStates,
     IReadOnlyList<EdgeState> EdgeStates,
-    IReadOnlyList<AgvError> Errors,
+    IReadOnlyList<Error> Errors,
     AgvPositionSnapshot? Position);

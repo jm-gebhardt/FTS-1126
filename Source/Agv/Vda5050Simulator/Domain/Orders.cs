@@ -9,5 +9,3 @@ public sealed record OrderNode(string NodeId, int SequenceId, bool Released, Nod
 public sealed record OrderEdge(string EdgeId, int SequenceId, bool Released, string StartNodeId, string EndNodeId, double? MaxSpeed, Trajectory? Trajectory, IReadOnlyList<AgvAction> Actions);
 
 public sealed record Order(string OrderId, int OrderUpdateId, IReadOnlyList<OrderNode> Nodes, IReadOnlyList<OrderEdge> Edges);
-
-public sealed record InstantAction(AgvAction Action);

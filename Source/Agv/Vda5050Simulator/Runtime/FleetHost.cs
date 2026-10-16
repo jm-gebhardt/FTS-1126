@@ -17,7 +17,7 @@ public sealed class FleetHost : IHostedService
     private readonly IAgvPublisher _publisher;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<FleetHost> _logger;
-    private readonly IReadOnlyList<AgvOptions> _configuredAgvs;
+    private readonly IReadOnlyList<AgvOptions> _agvOptions;
     private readonly TimeSpan _stateInterval;
     private readonly TimeSpan _actionDuration;
     private CancellationTokenSource? _cts;
@@ -25,17 +25,17 @@ public sealed class FleetHost : IHostedService
     public FleetHost(
         ISimulationClock clock,
         IAgvPublisher publisher,
-        IOptions<List<AgvOptions>> agvs,
-        IOptions<SimulationOptions> simulation,
+        IOptions<List<AgvOptions>> agvOptions,
+        IOptions<SimulationOptions> simulationOptions,
         ILoggerFactory loggerFactory)
     {
         _clock = clock;
         _publisher = publisher;
         _loggerFactory = loggerFactory;
         _logger = loggerFactory.CreateLogger<FleetHost>();
-        _configuredAgvs = agvs.Value;
-        _stateInterval = TimeSpan.FromSeconds(Math.Max(1, simulation.Value.StateIntervalSeconds));
-        _actionDuration = TimeSpan.FromSeconds(Math.Max(0.1, simulation.Value.ActionDurationSeconds));
+        _agvOptions = agvOptions.Value;
+        _stateInterval = TimeSpan.FromSeconds(Math.Max(1, simulationOptions.Value.StateIntervalSeconds));
+        _actionDuration = TimeSpan.FromSeconds(Math.Max(0.1, simulationOptions.Value.ActionDurationSeconds));
     }
 
     public IReadOnlyCollection<AgvId> AgvIds => _actors.Keys.ToList();
@@ -43,7 +43,7 @@ public sealed class FleetHost : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _cts = new CancellationTokenSource();
-        foreach (var agv in _configuredAgvs)
+        foreach (var agv in _agvOptions)
         {
             AddAgv(new AgvId(agv.Manufacturer, agv.SerialNumber), agv.MaxSpeed);
         }

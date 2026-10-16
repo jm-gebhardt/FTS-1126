@@ -21,7 +21,7 @@ public class ResendCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<MqttInstantActions>();
         var context = fixture.TestHarness.Published.Select<MqttInstantActions>().First().Context;
         context.Message.Actions.ShouldHaveSingleItem();
-        context.Message.Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.RequestFactsheet);
+        context.Message.Actions.Single().ActionType.ShouldBe(Vda5050Specifications.ActionTypes.FactsheetRequest);
     }
 
     [TestMethod]

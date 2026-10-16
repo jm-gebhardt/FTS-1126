@@ -1,6 +1,8 @@
-using System.Threading.Channels;
+using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
 using Microsoft.Extensions.Logging;
+using System.Threading.Channels;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 
@@ -28,8 +30,9 @@ public sealed class AgvActor
     private readonly ILogger<AgvActor> _logger;
     private Task? _loop;
 
-    private long _stateHeaderId;
-    private long _connectionHeaderId;
+    private uint _stateHeaderId;
+    private uint _connectionHeaderId;
+    private uint _factsheetHeaderId;
     private DateTimeOffset _lastStatePublish;
 
     public AgvActor(AgvModel model, ISimulationClock clock, IAgvPublisher publisher, TimeSpan stateInterval, ILogger<AgvActor> logger)
@@ -135,18 +138,35 @@ public sealed class AgvActor
                 }
                 break;
 
-            case InstantActionsReceived received:
-                _logger.LogInformation("AGV {AgvId}: {Count} instantAction(s) received: {Types}",
-                    Id, received.Actions.Count, string.Join(", ", received.Actions.Select(a => a.Action.ActionType)));
+            case InstantActionsCommand received:
+                HandleInstantActions(received);
                 break;
 
             case MessageRejected rejected:
-                _logger.LogWarning("AGV {AgvId}: {Kind} {Reference} rejected: {Errors}",
-                    Id, rejected.MessageKind, rejected.ReferenceId, string.Join("; ", rejected.Errors));
-                _model.AddValidationError(rejected.MessageKind, rejected.ReferenceId, rejected.Errors);
+                _logger.LogWarning("AGV {AgvId}: {Kind} {Reference} rejected: {Errors}", Id, rejected.Topic, rejected.ReferenceId, string.Join("; ", rejected.Errors));
+                
+                _model.AddValidationError(rejected.Topic, rejected.ReferenceId, rejected.Errors);
                 break;
         }
         PublishState();
+    }
+
+    private void HandleInstantActions(InstantActionsCommand instantActionsCommand)
+    {
+        _logger.LogInformation("AGV {AgvId}: {Count} instantAction(s) received: {Types}", Id, instantActionsCommand.Actions.Count, string.Join(", ", instantActionsCommand.Actions.Select(a => a.ActionType)));
+
+        foreach (var instantAction in instantActionsCommand.Actions)
+        {
+            if (instantAction.ActionType == Vda5050Specifications.ActionTypes.FactsheetRequest)
+            {
+                PublishFactsheet();
+                continue;
+            }
+
+            _model.AddValidationError(Vda5050Specifications.Subtopics.InstantActions, instantAction.ActionId, $"Cannot handle actionType {instantAction.ActionType}");
+
+            _logger.LogWarning("AGV {AgvId}: Cannot handle instant action {actionId} of type {instantActionType}", Id, instantAction.ActionId, instantAction.ActionType);
+        }
     }
 
     private void Advance(TimeSpan dt)
@@ -162,6 +182,12 @@ public sealed class AgvActor
     {
         _connectionHeaderId++;
         _publisher.PublishConnection(Id, state, _connectionHeaderId, _clock.Now);
+    }
+
+    private void PublishFactsheet()
+    {
+        _factsheetHeaderId++;
+        _publisher.PublishFactsheet(Id, _factsheetHeaderId, _clock.Now);
     }
 
     private void PublishState()
