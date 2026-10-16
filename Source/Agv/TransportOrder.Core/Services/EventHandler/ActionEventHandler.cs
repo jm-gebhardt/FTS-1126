@@ -54,6 +54,13 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
             return;
         }
 
+        if (context.Message.Revision < action.Revision)
+        {
+            logger.LogWarning("Action {Action} of group {ActionGroupCorrelationId} was completed by agv {Agv} in outdated revision {Revision}, current revision is {CurrentRevision}, not triggering completion",
+                actionCorrelationId, actionGroup.CorrelationId, context.Message.AgvCorrelationId, context.Message.Revision, action.Revision);
+            return;
+        }
+
         if (actionGroup.AssignedAgv != context.Message.AgvCorrelationId)
         {
             logger.LogWarning("Action group {ActionGroupCorrelationId} was reassigned to agv {AgvCorrelationId}, not triggering completion of action {Action} requested by {Agv}", actionGroup.CorrelationId, actionGroup.AssignedAgv, actionCorrelationId, context.Message.AgvCorrelationId);

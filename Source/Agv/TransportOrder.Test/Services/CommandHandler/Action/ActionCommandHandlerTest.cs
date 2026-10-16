@@ -8,6 +8,7 @@ using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Requests;
 using Gebhardt.Acc.Common.Messages.HostOrder.Events;
+using Gebhardt.Acc.Common.Testing.Extensions;
 using Gebhardt.Acc.Common.Testing.Helpers;
 using Gebhardt.Acc.TransportOrder.Core.Services.CommandHandler.ActionGroupHandlers;
 using Gebhardt.Acc.TransportOrder.Domain.Models.ActionGroup;
@@ -730,6 +731,70 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<TriggerDoppelspielPartnerQueueing>();
     }
 
+    [DataRow(ActionState.Completed, ActionState.Created, true)]
+    [DataRow(ActionState.Completed, ActionState.Completed, false)]
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_AlreadyCompleted_DoesNotPublishCompletionSideEffects(
+        ActionState pickState, ActionState dropState, bool hasCargo)
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        agv.IsQueueing = true;
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: pickState, dropActionState: dropState, assignedAgv: agv.CorrelationId);
+        var fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(hasCargo)
+            .AddActionGroup(actionGroup);
+        var action = hasCargo ? actionGroup.Actions.First() : actionGroup.Actions.Last();
+        var completedDate = action.CompletedDate;
+        var command = new CompleteActionOfActionGroup(action.CorrelationId, actionGroup.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Never);
+        action.CompletedDate.ShouldBe(completedDate);
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupChanged>();
+        await fixture.ShouldNotHavePublishedAsync<CheckAgvLoad>();
+        await fixture.ShouldNotHavePublishedAsync<PickActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<DropActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<NonChargingActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<TryEnqueueAgv>();
+        await fixture.ShouldNotHavePublishedAsync<TriggerDoppelspielPartnerQueueing>();
+    }
+
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_RepeatedCommand_PublishesCompletionSideEffectsOnce()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: agv.CorrelationId);
+        var fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(false)
+            .AddActionGroup(actionGroup);
+        var action = actionGroup.Actions.Last();
+        var command = new CompleteActionOfActionGroup(action.CorrelationId, actionGroup.CorrelationId);
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
+        var completedDate = action.CompletedDate;
+
+        await fixture.TestHarness.Bus.Publish(command);
+        await fixture.ConsumerHarness.Consumed.ShouldHaveConsumedCountAsync<CompleteActionOfActionGroup>(2);
+
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Once);
+        action.CompletedDate.ShouldBe(completedDate);
+        fixture.TestHarness.Published.Select<ActionGroupChanged>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<CheckAgvLoad>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<DropActionCompleted>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<NonChargingActionCompleted>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<ActionGroupCompleted>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<TriggerDoppelspielPartnerQueueing>().Count().ShouldBe(1);
+    }
+
     [DataRow(CurrentActionGroupPolicy.Pause, false)]
     [DataRow(CurrentActionGroupPolicy.FinishActionGroup, false)]
     [DataRow(CurrentActionGroupPolicy.FinishAction, true)]
@@ -760,13 +825,13 @@ public class ActionCommandHandlerTest
         var mode = new AgvMode(ModeType.Normal);
         mode.PrepareSwitch(ModeType.Maintenance, currentActionPolicy: policy);
         var agv = AgvGenerator.GenerateBusyAgv(mode: mode);
-        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Completed, assignedAgv: agv.CorrelationId);
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(pickActionState: ActionState.Completed, dropActionState: ActionState.Started, assignedAgv: agv.CorrelationId);
         var fixture = new ActionCommandHandlerTestFixture()
             .AddAgv(agv)
-            .WithHasCargo(true)
+            .WithHasCargo(false)
             .AddActionGroup(actionGroup)
             .WithCurrentActionGroupsToTarget([]);
-        var command = new CompleteActionOfActionGroup(actionGroup.Actions.First().CorrelationId, actionGroup.CorrelationId);
+        var command = new CompleteActionOfActionGroup(actionGroup.Actions.Last().CorrelationId, actionGroup.CorrelationId);
         await fixture.TestHarness.Bus.Publish(command);
         await fixture.ShouldHaveConsumedAsync<CompleteActionOfActionGroup>();
         (await fixture.TestHarness.Published.Any<SwitchMode>()).ShouldBe(shouldPublish);
@@ -2062,7 +2127,7 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task Consume_SetTargetForAction_Update_StartFromCharger_DockfrontSet()
+    public async Task Consume_SetTargetForAction_Update_StartFromCharger_DockFrontSet()
     {
         var agv = AgvGenerator.GenerateIdleAgv();
         var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutPickTarget(
@@ -2264,8 +2329,12 @@ public class ActionCommandHandlerTest
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
             ag.Actions[1].Target.NodeId == _parkNode.Id &&
-            ag.Actions[2].ShouldSkip
+            ag.Actions[1].Revision == 1 &&
+            ag.Actions[2].ShouldSkip &&
+            ag.Actions[2].Revision == 0
         )), Times.Once);
+        var updateActionCommand = fixture.TestHarness.Published.Select<UpdateActionCommand>().First().Context.Message;
+        updateActionCommand.Action.Revision.ShouldBe(1);
     }
 
     [TestMethod]
@@ -2288,7 +2357,8 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[1].Target.NodeId == _stationNode.Id
+            ag.Actions[1].Target.NodeId == _stationNode.Id &&
+            ag.Actions[1].Revision == 0
         )), Times.Once);
     }
 
@@ -2313,7 +2383,8 @@ public class ActionCommandHandlerTest
         await fixture.ShouldHavePublishedAsync<ActionGroupChanged>();
         fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(It.Is<ActionGroup>(ag =>
             ag.CorrelationId == actionGroup.CorrelationId &&
-            ag.Actions[1].Target.NodeId == _stationNode.Id
+            ag.Actions[1].Target.NodeId == _stationNode.Id &&
+            ag.Actions[1].Revision == 1
         )), Times.Once);
     }
 

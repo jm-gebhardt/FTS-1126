@@ -752,6 +752,7 @@ public class ActionCommandHandler :
 
     /// <summary>
     /// Handles the <see cref="CompleteActionOfActionGroup"/> command.
+    /// Ignores already completed actions without publishing completion side effects.
     /// </summary>
     public async Task Consume(ConsumeContext<CompleteActionOfActionGroup> context)
     {
@@ -759,9 +760,16 @@ public class ActionCommandHandler :
         var cancellationToken = context.CancellationToken;
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(correlationId);
+        var action = actionGroup.Actions.Single(a => a.CorrelationId == correlationId);
+        if (action.State == ActionState.Completed || action.CompletedDate != null)
+        {
+            _logger.LogInformation("Ignoring duplicate completion of action {ActionCorrelationId} in action group {ActionGroupCorrelationId}, completed at {CompletedDate}",
+                action.CorrelationId, actionGroup.CorrelationId, action.CompletedDate);
+            return;
+        }
+        
         var agvCorrelationId = actionGroup.AssignedAgv!.Value;
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
-        var action = actionGroup.Actions.Single(a => a.CorrelationId == correlationId);
         if (action.ActionType is ActionType.Pick or ActionType.Drop && context.Message.Creator == ActionGroupCreator.TransportOrder)
         {
             // Avoid completion of a pick or drop message due to 'completed' event race conditions during order update,
@@ -1140,6 +1148,7 @@ public class ActionCommandHandler :
             {
                 actionToUpdate = actionGroup.SetTargetForActionWithUpdate(actionId, targetNode, route);
             }
+            actionToUpdate.IncrementRevision();
 
             bool? previousActionGroupDockFront = null;
             if (actionToUpdate.IsFirstAction)

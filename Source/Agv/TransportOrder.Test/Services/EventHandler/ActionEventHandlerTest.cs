@@ -75,6 +75,31 @@ public class ActionEventHandlerTest
         await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
     }
 
+    [DataRow(null, true)]
+    [DataRow(0, false)]
+    [DataRow(1, true)]
+    [TestMethod]
+    public async Task Consume_ActionCompletedByAgv_ActionUpdated_PublishesCompleteActionOfActionGroupOnlyForCurrentRevision(int? completedRevision, bool shouldComplete)
+    {
+        var agv = Guid.NewGuid();
+        var actionGroup = AgvActionGenerator.GenerateChargeActionGroup(assignedAgv: agv);
+        var action = actionGroup.Actions.First();
+        action.IncrementRevision();
+        var fixture = new ActionEventHandlerTestFixture()
+            .AddActionGroup(actionGroup);
+        var actionCompletedEvent = new ActionCompletedByAgv(action.CorrelationId, agv, completedRevision);
+        await fixture.PublishMessageAsync(actionCompletedEvent);
+
+        if (shouldComplete)
+        {
+            await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
+        }
+        else
+        {
+            await fixture.ShouldNotHavePublishedAsync<CompleteActionOfActionGroup>();
+        }
+    }
+
     [TestMethod]
     public async Task Consume_StartingActionForAgvFailed_ValidData_PublishesHandleAgvActionStartFailure()
     {
