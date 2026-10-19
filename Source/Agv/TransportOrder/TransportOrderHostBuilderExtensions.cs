@@ -39,6 +39,7 @@ using Gebhardt.Acc.TransportOrder.Persistence.Ef.Repositories;
 using Gebhardt.Acc.TransportOrder.Routing.Base;
 using Gebhardt.Acc.TransportOrder.Routing.Implementations;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Configurations;
+using Gebhardt.Core.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -100,7 +101,8 @@ public static class TransportOrderHostBuilderExtensions
         // -  database
         services.AddDbContextFactory<TransportOrderDbContext>((sp, builder) =>
         {
-            string? connectionString = context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
+            string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                       ?? context.Configuration.GetConnectionString(TransportOrderDbContext.ConfigSectionName);
 
             builder.UseSqlServer(connectionString, m =>
             {

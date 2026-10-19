@@ -38,6 +38,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Gebhardt.Core.WebApi.Extensions;
 using AgvPositionSignificanceChecker = Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers.AgvPositionSignificanceChecker;
 
 namespace Gebhardt.Acc.TransportOrder.WebApi.Extensions;
@@ -242,6 +243,7 @@ public static class WebHostBuilderExtensions
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHealthProbes();
             endpoints.MapHub<SystemHub>(SystemHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<AgvHub>(AgvHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<ActionGroupHub>(ActionGroupHub.UrlPath, o => { o.AllowStatefulReconnects = true; });

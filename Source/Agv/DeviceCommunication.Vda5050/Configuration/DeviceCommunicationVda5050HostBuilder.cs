@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Configuration;
+using Gebhardt.Core.Hosting.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -23,6 +24,10 @@ public static class DeviceCommunicationVda5050HostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddDeviceCommunicationVda5050()
             .ConfigureWebHost(host =>

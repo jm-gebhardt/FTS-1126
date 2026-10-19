@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <ExcludeByFile>**/Migrations/**/*.cs</ExcludeByFile>
+          <!-- Exclude test assemblies from coverage measurement -->
+          <Exclude>[*.Test]*,[*.Testing]*,[*TestClient]*</Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+   <MSTest>
+    <Parallelize>
+      <Workers>0</Workers> <!-- 0 = one per core -->
+      <Scope>MethodLevel</Scope>
+    </Parallelize>
+  </MSTest>
+</RunSettings>

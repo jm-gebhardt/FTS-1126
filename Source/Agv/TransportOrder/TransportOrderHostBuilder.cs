@@ -4,6 +4,7 @@ using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Configurations;
 using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
+using Gebhardt.Core.Hosting.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +32,10 @@ public static class TransportOrderHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SystemOptions options, ILogger initialLogger, bool isSimulation)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((_, services) => services.AddTrafficManagementGraphInitializer())
             .AddMassTransit(initialLogger)
             .AddTransportOrderCore(options)

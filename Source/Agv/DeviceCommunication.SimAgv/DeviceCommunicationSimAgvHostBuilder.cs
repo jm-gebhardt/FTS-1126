@@ -13,6 +13,7 @@ using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Graphs;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Maps;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.Services.Simulation.Speed;
 using Gebhardt.Acc.DeviceCommunication.SimAgv.States;
+using Gebhardt.Core.Hosting.Configuration;
 using MassTransit;
 using MassTransit.Serialization;
 using Prometheus;
@@ -46,6 +47,10 @@ public static class DeviceCommunicationSimAgvHostBuilder
         }
 
         var hostBuilder1 = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .ConfigureServices((context, services) =>
             {
                 services.AddSingleton(_ => simulationOptions);

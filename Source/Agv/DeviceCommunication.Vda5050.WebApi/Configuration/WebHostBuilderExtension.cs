@@ -16,6 +16,8 @@ using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
 using Gebhardt.Acc.Common.Utilities;
+using System.Text.Json.Serialization;
+using Gebhardt.Core.WebApi.Extensions;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.WebApi.Configuration;
 
@@ -158,6 +160,7 @@ public static class WebHostBuilderExtension
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthProbes(); 
                 endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions()
                 {
                     Predicate = _ => true
