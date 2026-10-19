@@ -4,7 +4,10 @@ using Gebhardt.Acc.Common.WebApi.Swagger;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Controllers;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Hubs;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.Filters;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Configuration;
@@ -18,7 +21,18 @@ public static class SwaggerExtensions
         {
             options.SwaggerDoc(new RestApiGroup());
             options.SwaggerDoc(new HubApiGroup());
-            options.AddSignalRSwaggerGen(opt => opt.ScanAssemblies(executingAssembly));
+            options.AddSignalRSwaggerGen(opt =>
+            {
+                opt.ScanAssemblies(executingAssembly);
+                opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                        []
+                    }
+                });
+                opt.AddOperationFilter(new SecurityRequirementsOperationFilter(true, JwtBearerDefaults.AuthenticationScheme));
+            });
             options.SchemaFilter<RequireNonNullablePropertiesSchemaFilter>();
             options.SchemaFilter<RequireNonNullableEnumPropertiesSchemaFilter>();
             options.SchemaFilter<EnumDictionaryOptionalSchemaFilter>();
@@ -26,6 +40,23 @@ public static class SwaggerExtensions
             options.UseAllOfToExtendReferenceSchemas();
             options.UseAllOfForInheritance();
             options.CustomSchemaIds(Gebhardt.Acc.Vda5050Simulator.WebApi.Swagger.CustomSchemaSelector.GetSchemaId);
+            options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter a valid token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = JwtBearerDefaults.AuthenticationScheme
+            });
+            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme),
+                    []
+                }
+            });
+            options.OperationFilter<SecurityRequirementsOperationFilter>(JwtBearerDefaults.AuthenticationScheme);
             options.IncludeXmlComments();
         });
         return services;

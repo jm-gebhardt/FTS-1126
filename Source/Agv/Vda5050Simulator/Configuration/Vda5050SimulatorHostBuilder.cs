@@ -1,5 +1,11 @@
 using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.WebApi.Constants;
+using Gebhardt.Acc.Vda5050Simulator.WebApi.Middleware;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Logging;
 using Gebhardt.Acc.Vda5050Simulator.Messaging;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Hubs;
@@ -14,7 +20,9 @@ namespace Gebhardt.Acc.Vda5050Simulator.Configuration;
 /// </summary>
 public static class Vda5050SimulatorHostBuilder
 {
+    private const string AccessToken = "access_token";
     private const string HealthEndpoint = "/health";
+    private const string HealthDetailedEndpoint = "/healthz";
 
     /// <summary>
     /// Creates the host builder.
@@ -25,8 +33,37 @@ public static class Vda5050SimulatorHostBuilder
         return GebhardtStartup.CreateHostBuilder(args)
             .ConfigureServices((context, services) =>
             {
+                services.AddScoped<ExceptionHandlerMiddleware>();
                 services.AddControllers();
                 services.AddHealthChecks();
+
+                var keycloak = context.Configuration.GetSection("KEYCLOAK");
+                services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
+                    {
+                        o.MetadataAddress = $"{keycloak["URL"]!}/realms/{keycloak["REALM"]!}/.well-known/openid-configuration";
+                        o.RequireHttpsMetadata = false;
+                        o.Authority = $"{keycloak["URL"]!}/auth/realms/{keycloak["REALM"]!}";
+                        o.TokenValidationParameters.ValidateIssuer = false;
+                        o.TokenValidationParameters.ValidateAudience = false;
+                        o.TokenValidationParameters.ValidateIssuerSigningKey = false;
+                        o.TokenValidationParameters.SignatureValidator = (token, _) => new JsonWebToken(token);
+                        o.Events = new JwtBearerEvents
+                        {
+                            OnMessageReceived = ctx =>
+                            {
+                                var accessToken = ctx.Request.Query[AccessToken];
+                                if (!string.IsNullOrEmpty(accessToken) &&
+                                    (ctx.HttpContext.WebSockets.IsWebSocketRequest || ctx.Request.Headers.Accept == "text/event-stream"))
+                                {
+                                    ctx.Token = accessToken;
+                                }
+                                return Task.CompletedTask;
+                            }
+                        };
+                    });
+                services.AddAuthorization();
+                IdentityModelEventSource.ShowPII = true;
                 services.AddSignalR(options =>
                     {
                         options.ClientTimeoutInterval = TimeSpan.FromSeconds(WebApiConstants.ClientTimeoutSeconds);
@@ -64,13 +101,24 @@ public static class Vda5050SimulatorHostBuilder
                     .Configure(app =>
                     {
                         app.UseMetricServer();
+                        app.UseDefaultFiles();
+                        app.UseStaticFiles();
                         app.UseRouting();
+                        app.UseMiddleware<ExceptionHandlerMiddleware>();
+                        app.UseCors();
                         app.UseWebSockets();
+                        app.UseAuthentication();
+                        app.UseAuthorization();
                         app.UseEndpoints(endpoints =>
                         {
                             endpoints.MapControllers();
                             endpoints.MapHub<SimulatedAgvStateHub>(SimulatedAgvStateHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
-                            endpoints.MapHealthChecks(HealthEndpoint);
+                            endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions { Predicate = _ => true });
+                            endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions
+                            {
+                                Predicate = _ => true,
+                                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                            });
                         });
                         app.UseSimulatorSwagger();
                         app.UseDeveloperExceptionPage();

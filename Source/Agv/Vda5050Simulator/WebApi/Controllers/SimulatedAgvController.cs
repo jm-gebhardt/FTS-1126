@@ -1,6 +1,7 @@
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -9,6 +10,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.WebApi.Controllers;
 /// <summary>
 /// Controller for managing simulated agvs.
 /// </summary>
+[Authorize]
 [ApiController]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
 public class SimulatedAgvController(IAgvStateCache stateCache, IOptions<MqttOptions> mqttOptions) : ControllerBase
