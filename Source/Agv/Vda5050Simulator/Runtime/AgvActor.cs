@@ -1,7 +1,5 @@
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
-using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
@@ -28,6 +26,9 @@ public sealed class AgvActor
     private readonly IAgvPublisher _publisher;
     private readonly TimeSpan _stateInterval;
     private readonly ILogger<AgvActor> _logger;
+    private readonly IFactsheetProvider _factsheetProvider;
+    private readonly string _agvTypeIdentifier;
+    private CancellationToken _cancellationToken;
     private Task? _loop;
 
     private uint _stateHeaderId;
@@ -35,8 +36,10 @@ public sealed class AgvActor
     private uint _factsheetHeaderId;
     private DateTimeOffset _lastStatePublish;
 
-    public AgvActor(AgvModel model, ISimulationClock clock, IAgvPublisher publisher, TimeSpan stateInterval, ILogger<AgvActor> logger)
+    public AgvActor(AgvModel model, ISimulationClock clock, IAgvPublisher publisher, TimeSpan stateInterval, IFactsheetProvider factsheetProvider, ILogger<AgvActor> logger)
     {
+        _factsheetProvider = factsheetProvider;
+        _agvTypeIdentifier = model.Id.AgvTypeIdentifier;
         _model = model;
         _clock = clock;
         _publisher = publisher;
@@ -45,10 +48,11 @@ public sealed class AgvActor
         _logger.LogInformation("{AgvId} - {CorrelationId}", model.Id, model.Id.CorrelationId);
     }
 
-    public AgvId Id => _model.Id;
+    public AgvIdentity Id => _model.Id;
 
     public void Start(CancellationToken cancellationToken)
     {
+        _cancellationToken = cancellationToken;
         _loop = Task.Run(() => RunAsync(cancellationToken), CancellationToken.None);
         _mailbox.Writer.TryWrite(new StartMessage());
     }
@@ -143,6 +147,18 @@ public sealed class AgvActor
                 HandleInstantActions(received);
                 break;
 
+            case FactsheetResolved resolved:
+                _model.SetInstantActionState(resolved.ActionId, Vda5050Specifications.ActionTypes.FactsheetRequest, resolved.FactsheetJson == null ? ActionStatus.Failed : ActionStatus.Finished);
+                if (resolved.FactsheetJson == null)
+                {
+                    _logger.LogWarning("AGV {AgvId}: no factsheet available for agv type '{AgvTypeIdentifier}'", Id, _agvTypeIdentifier);
+                }
+                else
+                {
+                    PublishFactsheet(resolved.FactsheetJson);
+                }
+                break;
+
             case MessageRejected rejected:
                 _logger.LogWarning("AGV {AgvId}: {Kind} {Reference} rejected: {Errors}", Id, rejected.Topic, rejected.ReferenceId, string.Join("; ", rejected.Errors));
                 
@@ -160,7 +176,8 @@ public sealed class AgvActor
         {
             if (instantAction.ActionType == Vda5050Specifications.ActionTypes.FactsheetRequest)
             {
-                PublishFactsheet();
+                _model.SetInstantActionState(instantAction.ActionId, instantAction.ActionType, ActionStatus.Running);
+                _ = ResolveFactsheetAsync(instantAction.ActionId);
                 continue;
             }
 
@@ -185,10 +202,30 @@ public sealed class AgvActor
         _publisher.PublishConnection(Id, state, _connectionHeaderId, _clock.Now);
     }
 
-    private void PublishFactsheet()
+    private async Task ResolveFactsheetAsync(string actionId)
+    {
+        string? json = null;
+        try
+        {
+            json = await _factsheetProvider.GetAsync(_model.Id, _cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "AGV {AgvId}: failed to fetch factsheet of agv type '{AgvTypeIdentifier}'", Id, _agvTypeIdentifier);
+        }
+        
+        Post(new FactsheetResolved(Id, actionId, json));
+    }
+
+    private void PublishFactsheet(string factsheetJson)
     {
         _factsheetHeaderId++;
-        _publisher.PublishFactsheet(Id, _factsheetHeaderId, _clock.Now);
+        
+        _publisher.PublishFactsheet(Id, _factsheetHeaderId, _clock.Now, factsheetJson);
     }
 
     private void PublishState()

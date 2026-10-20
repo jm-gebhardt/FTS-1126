@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Domain.Models;
+﻿using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using static Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants.Vda5050Specifications;
 
@@ -18,19 +18,19 @@ public sealed record OrderResult(OrderDecision Decision, Error? Error = null);
 /// Mutable state and behavior of one simulated AGV. Pure domain code without I/O, mailbox or logging;
 /// not thread-safe, the owning actor guarantees sequential access.
 /// </summary>
-public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
+public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDuration)
 {
     private const int MaxErrors = 20;
     private const int NurbsSamples = 50;
 
-    private readonly List<ActionState> _actionStates = [];
+    private readonly OrderedDictionary<string, ActionState> _actionStates = new(StringComparer.Ordinal);
     private readonly List<NodeState> _nodeStates = [];
     private readonly List<EdgeState> _edgeStates = [];
     private readonly List<Error> _errors = [];
 
-    private readonly SortedDictionary<int, OrderNode> _nodeDefs = [];
-    private readonly SortedDictionary<int, OrderEdge> _edgeDefs = [];
-    private readonly Dictionary<string, AgvAction> _actionDefs = [];
+    private readonly SortedDictionary<int, OrderNode> _orderNodes = [];
+    private readonly SortedDictionary<int, OrderEdge> _orderEdges = [];
+    private readonly Dictionary<string, AgvAction> _orderActions = [];
     private readonly Dictionary<string, TimeSpan> _running = [];
 
     private double _x;
@@ -45,7 +45,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     private double _progress;
     private double _edgeSpeed;
 
-    public AgvId Id { get; } = id;
+    public AgvIdentity Id { get; } = id;
 
     public string OrderId { get; private set; } = string.Empty;
 
@@ -64,10 +64,25 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     /// <summary>
     /// True while the AGV still has nodes or edges to traverse or actions that are not finished or failed.
     /// </summary>
-    public bool HasActiveOrder =>
+    private bool HasActiveOrder =>
         _nodeStates.Count > 0
         || _edgeStates.Count > 0
-        || _actionStates.Any(a => a.Status is not (ActionStatus.Finished or ActionStatus.Failed));
+        || _actionStates.Values.Any(a => _orderActions.ContainsKey(a.ActionId) && a.Status is not (ActionStatus.Finished or ActionStatus.Failed));
+
+    /// <summary>
+    /// Adds or updates the state of an instant action in the actionStates of the VDA5050 state.
+    /// </summary>
+    public void SetInstantActionState(string actionId, string actionType, ActionStatus status)
+    {
+        if (_actionStates.TryGetValue(actionId, out var existing))
+        {
+            _actionStates[actionId] = existing with { Status = status };
+        }
+        else
+        {
+            _actionStates.Add(actionId, new ActionState(actionId, actionType, status));
+        }
+    }
 
     /// <summary>
     /// Validates an order against the current state (VDA5050 order acceptance rules) and applies it if valid.
@@ -132,7 +147,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     {
         bool changed = AdvanceRunningActions(dt);
 
-        if (!_nodeDefs.TryGetValue(LastNodeSequenceId, out var currentNode))
+        if (!_orderNodes.TryGetValue(LastNodeSequenceId, out var currentNode))
         {
             return SetDriving(false) || changed;
         }
@@ -141,7 +156,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
         bool blockedByNodeActions = currentNode.Actions.Any(a => a.BlockingType != BlockingType.None && StatusOf(a.ActionId) is ActionStatus.Waiting or ActionStatus.Running);
 
-        var nextEdge = _edgeDefs.Values.FirstOrDefault(e => e.SequenceId > LastNodeSequenceId);
+        var nextEdge = _orderEdges.Values.FirstOrDefault(e => e.SequenceId > LastNodeSequenceId);
         if (blockedByNodeActions || nextEdge is not { Released: true })
         {
             return SetDriving(false) || changed;
@@ -178,7 +193,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
             Driving,
             BatteryCharge,
             Charging,
-            _actionStates.ToList(),
+            _actionStates.Values.ToList(),
             _nodeStates.ToList(),
             _edgeStates.ToList(),
             _errors.ToList(),
@@ -199,15 +214,21 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
         LastNodeId = first.NodeId;
         LastNodeSequenceId = first.SequenceId;
         _errors.Clear();
-        _actionStates.Clear();
-        _nodeDefs.Clear();
-        _edgeDefs.Clear();
-        _actionDefs.Clear();
+        foreach (string key in _actionStates.Keys.Where(k => _orderActions.ContainsKey(k)).ToList())
+        {
+            _actionStates.Remove(key);
+        }
+        _orderNodes.Clear();
+        _orderEdges.Clear();
+        _orderActions.Clear();
         _running.Clear();
         _activeEdgeSequenceId = -1;
 
         AddDefinitions(order);
-        _actionStates.AddRange(CreateActionStates(order));
+        foreach (var action in CreateActionStates(order))
+        {
+            _actionStates[action.ActionId] = action;
+        }
         RebuildNodeAndEdgeStates();
 
         var p = first.Position;
@@ -217,7 +238,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
     private OrderResult TryUpdateOrder(Order order)
     {
-        var baseEnd = _nodeDefs.Values.LastOrDefault(n => n.Released);
+        var baseEnd = _orderNodes.Values.LastOrDefault(n => n.Released);
         var first = order.Nodes[0];
         if (baseEnd == null || first.NodeId != baseEnd.NodeId || first.SequenceId != baseEnd.SequenceId)
         {
@@ -226,30 +247,33 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
                 + $"({baseEnd?.NodeId} / {baseEnd?.SequenceId})");
         }
 
-        var removedActionIds = _nodeDefs.Values.Where(n => n.SequenceId > baseEnd.SequenceId).SelectMany(n => n.Actions)
-            .Concat(_edgeDefs.Values.Where(e => e.SequenceId > baseEnd.SequenceId).SelectMany(e => e.Actions))
+        var removedActionIds = _orderNodes.Values.Where(n => n.SequenceId > baseEnd.SequenceId).SelectMany(n => n.Actions)
+            .Concat(_orderEdges.Values.Where(e => e.SequenceId > baseEnd.SequenceId).SelectMany(e => e.Actions))
             .Select(a => a.ActionId)
             .ToHashSet(StringComparer.Ordinal);
-        _actionStates.RemoveAll(a => a.Status == ActionStatus.Waiting && removedActionIds.Contains(a.ActionId));
-        
-        foreach (var key in _nodeDefs.Keys.Where(k => k > baseEnd.SequenceId).ToList())
+        foreach (string actionId in removedActionIds)
         {
-            _nodeDefs.Remove(key);
+            if (_actionStates.TryGetValue(actionId, out var removed) && removed.Status == ActionStatus.Waiting)
+            {
+                _actionStates.Remove(actionId);
+            }
+        }
+        
+        foreach (int key in _orderNodes.Keys.Where(k => k > baseEnd.SequenceId).ToList())
+        {
+            _orderNodes.Remove(key);
         }
 
-        foreach (var key in _edgeDefs.Keys.Where(k => k > baseEnd.SequenceId).ToList())
+        foreach (int key in _orderEdges.Keys.Where(k => k > baseEnd.SequenceId).ToList())
         {
-            _edgeDefs.Remove(key);
+            _orderEdges.Remove(key);
         }
 
         OrderUpdateId = order.OrderUpdateId;
         AddDefinitions(order);
         foreach (var action in CreateActionStates(order))
         {
-            if (_actionStates.All(a => a.ActionId != action.ActionId))
-            {
-                _actionStates.Add(action);
-            }
+            _actionStates.TryAdd(action.ActionId, action);
         }
         RebuildNodeAndEdgeStates();
         return new OrderResult(OrderDecision.Updated);
@@ -259,18 +283,18 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     {
         foreach (var node in order.Nodes)
         {
-            _nodeDefs[node.SequenceId] = node;
+            _orderNodes[node.SequenceId] = node;
             foreach (var action in node.Actions)
             {
-                _actionDefs[action.ActionId] = action;
+                _orderActions[action.ActionId] = action;
             }
         }
         foreach (var edge in order.Edges)
         {
-            _edgeDefs[edge.SequenceId] = edge;
+            _orderEdges[edge.SequenceId] = edge;
             foreach (var action in edge.Actions)
             {
-                _actionDefs[action.ActionId] = action;
+                _orderActions[action.ActionId] = action;
             }
         }
     }
@@ -278,11 +302,11 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     private void RebuildNodeAndEdgeStates()
     {
         _nodeStates.Clear();
-        _nodeStates.AddRange(_nodeDefs.Values
+        _nodeStates.AddRange(_orderNodes.Values
             .Where(n => n.SequenceId > LastNodeSequenceId)
             .Select(n => new NodeState(n.NodeId, n.SequenceId, n.Released)));
         _edgeStates.Clear();
-        _edgeStates.AddRange(_edgeDefs.Values
+        _edgeStates.AddRange(_orderEdges.Values
             .Where(e => e.SequenceId > LastNodeSequenceId)
             .Select(e => new EdgeState(e.EdgeId, e.SequenceId, e.Released)));
     }
@@ -297,7 +321,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     private bool AdvanceRunningActions(TimeSpan dt)
     {
         bool changed = false;
-        foreach (var actionId in _running.Keys.ToList())
+        foreach (string actionId in _running.Keys.ToList())
         {
             var remaining = _running[actionId] - dt;
             if (remaining <= TimeSpan.Zero)
@@ -335,7 +359,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
     private bool CanStart(AgvAction action)
     {
-        bool hardRunning = _running.Keys.Any(id => _actionDefs.TryGetValue(id, out var d) && d.BlockingType == BlockingType.Hard);
+        bool hardRunning = _running.Keys.Any(id => _orderActions.TryGetValue(id, out var d) && d.BlockingType == BlockingType.Hard);
         if (hardRunning)
         {
             return false;
@@ -370,7 +394,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
     private bool ArriveAtEndNode(OrderEdge edge)
     {
-        var endNode = _nodeDefs.Values.First(n => n.SequenceId == edge.SequenceId + 1);
+        var endNode = _orderNodes.Values.First(n => n.SequenceId == edge.SequenceId + 1);
 
         LastNodeId = endNode.NodeId;
         LastNodeSequenceId = endNode.SequenceId;
@@ -388,7 +412,7 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
     private void BuildGeometry(OrderEdge edge)
     {
         var points = new List<PolygonPoint>();
-        var endNode = _nodeDefs.Values.First(n => n.SequenceId == edge.SequenceId + 1);
+        var endNode = _orderNodes.Values.First(n => n.SequenceId == edge.SequenceId + 1);
 
         if (edge.Trajectory is { } trajectory)
         {
@@ -459,22 +483,14 @@ public sealed class AgvModel(AgvId id, double maxSpeed, TimeSpan actionDuration)
 
     private ActionStatus? StatusOf(string actionId)
     {
-        foreach (var state in _actionStates)
-        {
-            if (state.ActionId == actionId)
-            {
-                return state.Status;
-            }
-        }
-        return null;
+        return _actionStates.TryGetValue(actionId, out var state) ? state.Status : null;
     }
 
     private void SetActionStatus(string actionId, ActionStatus status)
     {
-        int index = _actionStates.FindIndex(a => a.ActionId == actionId);
-        if (index >= 0)
+        if (_actionStates.TryGetValue(actionId, out var state))
         {
-            _actionStates[index] = _actionStates[index] with { Status = status };
+            _actionStates[actionId] = state with { Status = status };
         }
     }
 

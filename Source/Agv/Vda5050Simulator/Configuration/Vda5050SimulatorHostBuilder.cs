@@ -1,4 +1,7 @@
 using Gebhardt.Acc.Common;
+using Gebhardt.Acc.Common.Configurations;
+using Gebhardt.Acc.Common.Configurations.Extensions;
+using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.WebApi.Constants;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Middleware;
 using HealthChecks.UI.Client;
@@ -89,6 +92,8 @@ public static class Vda5050SimulatorHostBuilder
                     return new SimulationClock(sp.GetRequiredService<TimeProvider>().GetUtcNow(), simulation.Speedup);
                 });
                 services.AddAgvPublishing();
+                services.ConfigureServicesMassTransit(context.Configuration);
+                services.AddSingleton<IFactsheetProvider, MassTransitFactsheetProvider>();
 
                 services.AddSingleton<FleetHost>();
                 services.AddHostedService(sp => sp.GetRequiredService<FleetHost>());
@@ -98,6 +103,11 @@ public static class Vda5050SimulatorHostBuilder
             .ConfigureWebHost(host =>
             {
                 host.UseKestrel()
+                    .ConfigureAppConfiguration((_, config) =>
+                    {
+                        ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
+                        config.Sources.Insert(0, new DefaultConfigurationSource(ConfigurationTypeManager.Instance));
+                    })
                     .Configure(app =>
                     {
                         app.UseMetricServer();

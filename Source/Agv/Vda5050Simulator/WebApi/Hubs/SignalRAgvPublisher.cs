@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Vda5050Simulator.Configuration;
+﻿using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Dtos;
@@ -16,19 +16,19 @@ public sealed class SignalRAgvPublisher(
     IOptions<MqttOptions> mqttOptions,
     ILogger<SignalRAgvPublisher> logger) : IAgvPublisher
 {
-    public void PublishConnection(AgvId id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
+    public void PublishConnection(AgvIdentity id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
         => inner.PublishConnection(id, state, headerId, timestamp);
 
-    public void PublishState(AgvId id, AgvStateSnapshot snapshot)
+    public void PublishState(AgvIdentity id, AgvStateSnapshot snapshot)
     {
         inner.PublishState(id, snapshot);
         _ = SendAsync(id, snapshot);
     }
 
-    public void PublishFactsheet(AgvId id, uint headerId, DateTimeOffset timestamp)
-        => inner.PublishFactsheet(id, headerId, timestamp);
+    public void PublishFactsheet(AgvIdentity id, uint headerId, DateTimeOffset timestamp, string factsheetJson)
+        => inner.PublishFactsheet(id, headerId, timestamp, factsheetJson);
 
-    private async Task SendAsync(AgvId id, AgvStateSnapshot snapshot)
+    private async Task SendAsync(AgvIdentity id, AgvStateSnapshot snapshot)
     {
         try
         {

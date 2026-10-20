@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Common.WebApi\Common.WebApi.csproj" />
+    <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj" />
     <ProjectReference Include="..\DeviceCommunication.Vda5050.Messages\DeviceCommunication.Vda5050.Messages.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Vda5050Simulator.Domain;
+﻿using Gebhardt.Acc.Vda5050Simulator.Domain;
 
 namespace Gebhardt.Acc.Vda5050Simulator.WebApi.Dtos;
 
@@ -7,7 +7,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.WebApi.Dtos;
 /// </summary>
 public static class Vda5050StateDtoMapper
 {
-    public static Vda5050StateDto Map(AgvId id, AgvStateSnapshot snapshot, string version)
+    public static Vda5050StateDto Map(AgvIdentity id, AgvStateSnapshot snapshot, string version)
     {
         return new Vda5050StateDto
         {

@@ -1,11 +1,12 @@
-using System.Text.Json;
-using System.Threading.Channels;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
+using MassTransit.Serialization;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
+using System.Threading.Channels;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 
@@ -26,7 +27,7 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
 
     public ChannelReader<MqttSendMessage> Reader => _channel.Reader;
 
-    public void PublishConnection(AgvId id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
+    public void PublishConnection(AgvIdentity id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
     {
         var message = new MqttConnection
         {
@@ -40,7 +41,7 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
         Enqueue(id, Vda5050Specifications.Subtopics.Connection , message, retain: true, qualityOfService: 1);
     }
 
-    public void PublishState(AgvId id, AgvStateSnapshot snapshot)
+    public void PublishState(AgvIdentity id, AgvStateSnapshot snapshot)
     {
         var message = new MqttState
         {
@@ -89,20 +90,30 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
         Enqueue(id, Vda5050Specifications.Subtopics.State, message, retain: false, qualityOfService: 0);
     }
 
-    public void PublishFactsheet(AgvId id, uint headerId, DateTimeOffset timestamp)
+    public void PublishFactsheet(AgvIdentity id, uint headerId, DateTimeOffset timestamp, string factsheetJson)
     {
-        var message = new MqttFactsheet
+        MqttFactsheet? mqttFactsheet;
+        try
         {
-            HeaderId = headerId,
-            Timestamp = timestamp,
-            Version = _mqtt.ProtocolVersion,
-            Manufacturer = id.Manufacturer,
-            SerialNumber = id.SerialNumber
-        };
-        Enqueue(id, Vda5050Specifications.Subtopics.Factsheet, message, retain: false, qualityOfService: 0);
-    }
+            mqttFactsheet = JsonSerializer.Deserialize<MqttFactsheet>(factsheetJson, SystemTextJsonMessageSerializer.Options);
+        }
+        catch (JsonException exception)
+        {
+            return;
+        }
 
-    private void Enqueue<T>(AgvId id, string subtopic, T dto, bool retain, int qualityOfService)
+        if (mqttFactsheet == null)
+        {
+            return;
+        }
+
+        mqttFactsheet.HeaderId = headerId;
+        mqttFactsheet.Timestamp = timestamp;
+        mqttFactsheet.SerialNumber = id.SerialNumber;
+        Enqueue(id, Vda5050Specifications.Subtopics.Factsheet, mqttFactsheet, retain: false, qualityOfService: 0);
+    }
+    
+    private void Enqueue<T>(AgvIdentity id, string subtopic, T dto, bool retain, int qualityOfService)
     {
         string topic = TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, subtopic);
         string payload = JsonSerializer.Serialize(dto, Vda5050Json.Options);

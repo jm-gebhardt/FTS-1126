@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Vda5050Simulator.Domain;
+﻿using Gebhardt.Acc.Vda5050Simulator.Domain;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 
@@ -10,10 +10,10 @@ public interface IAgvStateCache
     /// <summary>
     /// Stores the state if it is newer than the cached one.
     /// </summary>
-    void Set(AgvId id, AgvStateSnapshot snapshot);
+    void Set(AgvIdentity id, AgvStateSnapshot snapshot);
 
     /// <summary>
     /// Gets the latest state of the AGV with the given correlation id.
     /// </summary>
-    bool TryGet(Guid correlationId, out AgvId id, out AgvStateSnapshot snapshot);
+    bool TryGet(Guid correlationId, out AgvIdentity id, out AgvStateSnapshot snapshot);
 }

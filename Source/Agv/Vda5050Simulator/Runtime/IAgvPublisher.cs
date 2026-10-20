@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Vda5050Simulator.Domain;
+﻿using Gebhardt.Acc.Vda5050Simulator.Domain;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 
@@ -7,9 +7,9 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 /// </summary>
 public interface IAgvPublisher
 {
-    void PublishConnection(AgvId id, ConnectionState state, uint headerId, DateTimeOffset timestamp);
+    void PublishConnection(AgvIdentity id, ConnectionState state, uint headerId, DateTimeOffset timestamp);
 
-    void PublishState(AgvId id, AgvStateSnapshot snapshot);
+    void PublishState(AgvIdentity id, AgvStateSnapshot snapshot);
 
-    void PublishFactsheet(AgvId id, uint headerId, DateTimeOffset timestamp);
+    void PublishFactsheet(AgvIdentity id, uint headerId, DateTimeOffset timestamp, string factsheetJson);
 }

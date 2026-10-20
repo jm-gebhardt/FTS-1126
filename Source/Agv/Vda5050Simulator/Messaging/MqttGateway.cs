@@ -1,4 +1,4 @@
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
@@ -179,7 +179,7 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
         fleet.Dispatch(command);
     }
 
-    private static AgvCommand CreateOrderCommand(AgvId id, string payload)
+    private static AgvCommand CreateOrderCommand(AgvIdentity id, string payload)
     {
         MqttOrder? dto;
         try
@@ -200,7 +200,7 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
             : new MessageRejected(id, Subtopics.Order, dto.OrderId, result.Errors);
     }
 
-    private static AgvCommand CreateInstantActionsCommand(AgvId agvId, string payload)
+    private static AgvCommand CreateInstantActionsCommand(AgvIdentity id, string payload)
     {
         MqttInstantActions? dto;
         try
@@ -209,16 +209,16 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
         }
         catch (JsonException ex)
         {
-            return new MessageRejected(agvId, Subtopics.InstantActions, null, [$"invalid json: {ex.Message}"]);
+            return new MessageRejected(id, Subtopics.InstantActions, null, [$"invalid json: {ex.Message}"]);
         }
         if (dto == null)
         {
-            return new MessageRejected(agvId, Subtopics.InstantActions, null, ["empty message"]);
+            return new MessageRejected(id, Subtopics.InstantActions, null, ["empty message"]);
         }
 
         var result = Vda5050Mapper.MapInstantActions(dto);
         return result.IsValid
-            ? new InstantActionsCommand(agvId, result.Value!)
-            : new MessageRejected(agvId, Subtopics.InstantActions, null, result.Errors);
+            ? new InstantActionsCommand(id, result.Value!)
+            : new MessageRejected(id, Subtopics.InstantActions, null, result.Errors);
     }
 }

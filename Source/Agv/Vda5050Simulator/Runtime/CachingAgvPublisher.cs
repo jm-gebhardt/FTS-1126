@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Vda5050Simulator.Domain;
+﻿using Gebhardt.Acc.Vda5050Simulator.Domain;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 
@@ -7,15 +7,15 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 /// </summary>
 public sealed class CachingAgvPublisher(IAgvPublisher inner, IAgvStateCache cache) : IAgvPublisher
 {
-    public void PublishConnection(AgvId id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
+    public void PublishConnection(AgvIdentity id, ConnectionState state, uint headerId, DateTimeOffset timestamp)
         => inner.PublishConnection(id, state, headerId, timestamp);
 
-    public void PublishState(AgvId id, AgvStateSnapshot snapshot)
+    public void PublishState(AgvIdentity id, AgvStateSnapshot snapshot)
     {
         cache.Set(id, snapshot);
         inner.PublishState(id, snapshot);
     }
 
-    public void PublishFactsheet(AgvId id, uint headerId, DateTimeOffset timestamp)
-        => inner.PublishFactsheet(id, headerId, timestamp);
+    public void PublishFactsheet(AgvIdentity id, uint headerId, DateTimeOffset timestamp, string factsheetJson)
+        => inner.PublishFactsheet(id, headerId, timestamp, factsheetJson);
 }
