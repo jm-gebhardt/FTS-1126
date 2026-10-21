@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Text.Json;
+using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.Common.Extensions;
 
@@ -33,6 +34,7 @@ public static class ObjectExtension
         /// <summary>
         /// Get string value from json object.
         /// </summary>
+        [UsedImplicitly]
         public string? GetStringValue() => customObject switch
         {
             JsonElement e => e.GetString(),
@@ -44,6 +46,7 @@ public static class ObjectExtension
         /// <summary>
         /// Get float value from json object.
         /// </summary>
+        [UsedImplicitly]
         public float GetFloatValue() => customObject switch
         {
             JsonElement e => e.GetSingle(),

@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.Common.Persistence.Ef;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.Common.Persistence.Ef;
 
 /// <summary>
 /// Provides length limits for storing strings in the database
@@ -17,6 +19,7 @@ public static class DbStringLimits
     public const int State = 50;
     public const int ErrorInformation = 50;
     public const int ActionType = 50;
+    [UsedImplicitly]
     public const int AgvActionTypeMaxLength = 64;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

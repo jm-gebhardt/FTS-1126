@@ -3,7 +3,6 @@
     "path": "CompileAgv.sln",
     "projects": [
       "CommonTest\\CommonTest.csproj",
-      "DeviceCommunication.Vda5050.Test\\DeviceCommunication.Vda5050.Test.csproj",
       "DeviceCommunicationTest\\DeviceCommunicationTest.csproj",
       "OrderTranslator.Test\\OrderTranslator.Test.csproj",
       "PrismatCommunicationTest\\PrismatCommunicationTest.csproj",

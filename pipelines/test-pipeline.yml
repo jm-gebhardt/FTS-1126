@@ -152,7 +152,7 @@ stages:
         nugetConfigPath: '$(SourceDirectory)/NuGet.Config'
     - script: df -h
       displayName: 'Disk usage before tests'
-    # Tests.slnf holds only the 13 projects that actually contain [TestMethod]s; the shards
+    # Tests.slnf holds only projects that actually contain [TestMethod]s; the shards
     # partition it. The original glob matched 16 projects and ran a separate VSTest host per
     # project, three of which (Common.Testing, PrismatCommunication.TelegramApiClient,
     # TestPlanRunner) contain no tests at all.

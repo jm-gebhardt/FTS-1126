@@ -26,7 +26,6 @@ parameters:
   - TransportOrder
   - DeviceCommunication.SimAgv
   - DeviceCommunication.KarisAgv
-  - DeviceCommunication.Vda5050
   - Statistics
   - Provisioning
   - TriggerService

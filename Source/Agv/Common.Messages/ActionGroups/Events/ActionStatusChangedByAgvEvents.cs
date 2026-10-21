@@ -51,4 +51,5 @@ public record ActionAbortionCompletedByAgv(Guid CorrelationId, Guid AgvCorrelati
 /// <summary>
 /// Signals that an action the agv runs on a node/edge or as an instant action changed its status.
 /// </summary>
+[UsedImplicitly]
 public record VehicleActionStatusChanged(Guid CorrelationId, Guid AgvCorrelationId, string ActionType, VehicleActionStatus ActionStatus) : CorrelatedBy<Guid>;

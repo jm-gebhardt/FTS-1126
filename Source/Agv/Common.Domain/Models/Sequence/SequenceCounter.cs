@@ -21,6 +21,7 @@ public class SequenceCounter : ISequenceCounter
 }
 
 /// <inheritdoc/>
+[UsedImplicitly]
 public class SequenceCounter<T> : ISequenceCounter<T> where T : class
 {
     private uint _current;

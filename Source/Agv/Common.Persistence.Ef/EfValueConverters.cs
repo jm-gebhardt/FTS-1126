@@ -73,6 +73,7 @@ public static class EfValueConverters
     /// </summary>
     /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <returns>A ValueComparer that can compare two nullable arrays of type T for equality and compute hash codes.</returns>
+    [UsedImplicitly]
     public static ValueComparer<T[]?> CreateArrayComparer<T>()
     {
         return new ValueComparer<T[]?>(
@@ -88,6 +89,7 @@ public static class EfValueConverters
     /// <typeparam name="T">The type of the object to convert to/from JSON.</typeparam>
     /// <param name="options">Optional JsonSerializerOptions to customize serialization/deserialization.</param>
     /// <returns>A ValueConverter that converts between T and its JSON string representation.</returns>
+    [UsedImplicitly]
     public static ValueConverter<T?, string?> CreateNullableJsonConverter<T>(JsonSerializerOptions? options = null)
     {
         return new ValueConverter<T?, string?>(

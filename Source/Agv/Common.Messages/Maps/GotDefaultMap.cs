@@ -1,4 +1,6 @@
-﻿namespace Gebhardt.Acc.Common.Messages.Maps;
+﻿using JetBrains.Annotations;
+
+namespace Gebhardt.Acc.Common.Messages.Maps;
 
 /// <summary>
 /// Provides a response to the <see cref="GetDefaultMap"/> request.
@@ -8,6 +10,7 @@
 /// <param name="MaxX">The maximum x of the map</param>
 /// <param name="MinY">The minimum y of the map</param>
 /// <param name="MaxY">The maximum y of the map</param>
+[UsedImplicitly] 
 public record GotDefaultMap(string MapName, float MinY, float MaxY, float MinX, float MaxX);
 
 /// <summary>
