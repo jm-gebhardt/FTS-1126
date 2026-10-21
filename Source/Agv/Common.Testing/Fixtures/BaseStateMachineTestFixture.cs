@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using MassTransit;
 using MassTransit.Saga;
 using MassTransit.Testing;
@@ -17,7 +18,7 @@ public abstract class BaseStateMachineTestFixture<TStateMachine, TInstance> : Ma
     /// <summary>
     /// A registered Saga AgvState Machine
     /// </summary>
-    protected TStateMachine Machine { get; private set; } = null!;
+    protected TStateMachine Machine { [UsedImplicitly] get; private set; } = null!;
 
     /// <summary>
     /// Saga AgvState Machine test harness

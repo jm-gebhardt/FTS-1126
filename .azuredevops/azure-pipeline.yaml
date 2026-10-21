@@ -24,9 +24,8 @@ parameters:
   - PrismatCommunication
   - SmartLinkCommunication
   - TransportOrder
-  - DeviceCommunication.SimAgv
-  - DeviceCommunication.KarisAgv
   - DeviceCommunication.Vda5050
+  - DeviceCommunication.Vda5050.Simulator
   - Statistics
   - Provisioning
   - TriggerService

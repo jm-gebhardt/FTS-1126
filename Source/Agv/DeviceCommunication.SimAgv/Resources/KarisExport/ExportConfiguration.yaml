@@ -1,6 +1,0 @@
-WayPointRegexPattern: "/"
-ChargeRegexPattern: "^(charge|or)(?!.*/).*$"
-ParkRegexPattern: "^(park)(?!.*/).*$"
-PickRegexPattern: "^(pick)(?!.*/).*$"
-DropRegexPattern: "^(drop)(?!.*/).*$"
-RenameWaypoints: true
