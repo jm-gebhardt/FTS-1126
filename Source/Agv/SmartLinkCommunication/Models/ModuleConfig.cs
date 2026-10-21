@@ -25,7 +25,7 @@ public class ModuleConfig
         get;
         [UsedImplicitly]
         init;
-    } = 5000;
+    } = 5;
 
     /// <summary>
     /// A list of IO configurations. Here it is specified what IO will do what action under defined circumstances
