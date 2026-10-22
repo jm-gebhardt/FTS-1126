@@ -164,6 +164,21 @@ public sealed class AgvActor
                 _model.SwitchOperatingMode(switchMode.OperatingMode);
                 break;
 
+            case SetPositionCommand setPosition:
+                _logger.LogInformation("AGV {AgvId}: setting position to ({X}, {Y})", Id, setPosition.X, setPosition.Y);
+                _model.SetPositionManually(setPosition.X, setPosition.Y, setPosition.Theta, setPosition.MapId);
+                break;
+
+            case AddLoadCommand addLoad:
+                _logger.LogInformation("AGV {AgvId}: adding load {LoadId}", Id, addLoad.LoadId);
+                _model.AddLoad(addLoad.LoadId, addLoad.LoadType, addLoad.LoadPosition);
+                break;
+
+            case RemoveLoadCommand removeLoad:
+                _logger.LogInformation("AGV {AgvId}: removing load {LoadId}", Id, removeLoad.LoadId);
+                _model.RemoveLoad(removeLoad.LoadId);
+                break;
+
             case MessageRejected rejected:
                 _logger.LogWarning("AGV {AgvId}: {Kind} {Reference} rejected: {Errors}", Id, rejected.Topic, rejected.ReferenceId, string.Join("; ", rejected.Errors));
                 

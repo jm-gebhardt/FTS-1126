@@ -59,6 +59,9 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
             AgvPosition = snapshot.Position is { } p
                 ? new MqttAgvPosition { X = p.X, Y = p.Y, Theta = p.Theta, MapId = p.MapId, PositionInitialized = p.PositionInitialized }
                 : null,
+            Loads = snapshot.Loads
+                .Select(l => new MqttLoad { LoadId = l.LoadId, LoadType = l.LoadType, LoadPosition = l.LoadPosition })
+                .ToList(),
             ActionStates = snapshot.ActionStates
                 .Select(a => new MqttActionState
                 {

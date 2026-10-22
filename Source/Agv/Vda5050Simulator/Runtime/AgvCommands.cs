@@ -22,3 +22,18 @@ public sealed record MessageRejected(AgvIdentity AgvId, string Topic, string? Re
 /// Switches the operating mode of the AGV.
 /// </summary>
 public sealed record SwitchOperatingModeCommand(AgvIdentity AgvId, Gebhardt.Acc.Common.Domain.Models.AgvOperatingMode OperatingMode) : AgvCommand(AgvId);
+
+/// <summary>
+/// Sets the AGV to the given position (only outside of automatic mode).
+/// </summary>
+public sealed record SetPositionCommand(AgvIdentity AgvId, double X, double Y, double Theta, string MapId) : AgvCommand(AgvId);
+
+/// <summary>
+/// Adds a load to the AGV.
+/// </summary>
+public sealed record AddLoadCommand(AgvIdentity AgvId, string LoadId, string? LoadType, string? LoadPosition) : AgvCommand(AgvId);
+
+/// <summary>
+/// Removes a load from the AGV.
+/// </summary>
+public sealed record RemoveLoadCommand(AgvIdentity AgvId, string LoadId) : AgvCommand(AgvId);

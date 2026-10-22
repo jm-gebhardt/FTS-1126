@@ -40,6 +40,9 @@ public static class Vda5050StateDtoMapper
                     MapId = snapshot.Position.MapId,
                     PositionInitialized = snapshot.Position.PositionInitialized
                 },
+            Loads = snapshot.Loads
+                .Select(l => new LoadDto { LoadId = l.LoadId, LoadType = l.LoadType, LoadPosition = l.LoadPosition })
+                .ToList(),
             ActionStates = snapshot.ActionStates
                 .Select(a => new ActionStateDto
                 {

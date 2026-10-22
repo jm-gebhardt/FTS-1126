@@ -31,6 +31,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     private readonly SortedDictionary<int, OrderEdge> _orderEdges = [];
     private readonly Dictionary<string, AgvAction> _orderActions = [];
     private readonly Dictionary<string, TimeSpan> _running = [];
+    private readonly List<Load> _loads = [new Load("LoadId1", "LoadType1", "LoadPosition1")];
 
     private double _x;
     private double _y;
@@ -156,6 +157,49 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
         SetDriving(false);
     }
 
+    /// <summary>
+    /// Sets the AGV to the given position. Only allowed outside of automatic mode; otherwise an error is added to the state.
+    /// </summary>
+    public void SetPositionManually(double x, double y, double theta, string mapId)
+    {
+        if (OperatingMode == AgvOperatingMode.Automatic)
+        {
+            GenerateAvailabilityError();
+            return;
+        }
+
+        SetPosition(x, y, theta, mapId);
+        LastNodeId = string.Empty;
+        LastNodeSequenceId = 0;
+    }
+
+    /// <summary>
+    /// Adds a load to the AGV. Ignored if the load position is already occupied.
+    /// </summary>
+    public void AddLoad(string loadId, string? loadType, string? loadPosition)
+    {
+        if (_loads.Any(l => l.LoadPosition == loadPosition))
+        {
+            return;
+        }
+
+        _loads.Add(new Load(loadId, loadType, loadPosition));
+    }
+
+    /// <summary>
+    /// Removes the load with the given id from the AGV.
+    /// </summary>
+    public void RemoveLoad(string loadId)
+    {
+        _loads.RemoveAll(l => l.LoadId == loadId);
+    }
+
+    private void GenerateAvailabilityError()
+    {
+        _errors.RemoveAll(e => e.ErrorType == Errors.MobileRobotNotAutomatic);
+        AddError(new Error(Errors.MobileRobotNotAutomatic, ErrorLevel.Warning, "Receival of an order while not in 'AUTOMATIC'", null));
+    }
+
     public void AddValidationError(string topic, string? id, params string[] errors)
     {
         var references = new List<ErrorReference> { new("topic", topic) };
@@ -236,8 +280,9 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
             _nodeStates.ToList(),
             _edgeStates.ToList(),
             _errors.ToList(),
-            new AgvPositionSnapshot(_x, _y, _theta, _mapId, _positionInitialized),
-            OperatingMode);
+            new AgvPosition(_x, _y, _theta, _mapId, _positionInitialized),
+            OperatingMode,
+            _loads.ToList());
     }
 
     private OrderResult TryStartOrder(Order order)
