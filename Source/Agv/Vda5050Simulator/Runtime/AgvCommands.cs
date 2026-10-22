@@ -17,3 +17,8 @@ public sealed record FactsheetResolved(AgvIdentity AgvId, string ActionId, strin
 /// A received message failed structural validation; the actor reports it as validation error.
 /// </summary>
 public sealed record MessageRejected(AgvIdentity AgvId, string Topic, string? ReferenceId, IReadOnlyList<string> Errors) : AgvCommand(AgvId);
+
+/// <summary>
+/// Switches the operating mode of the AGV.
+/// </summary>
+public sealed record SwitchOperatingModeCommand(AgvIdentity AgvId, Gebhardt.Acc.Common.Domain.Models.AgvOperatingMode OperatingMode) : AgvCommand(AgvId);

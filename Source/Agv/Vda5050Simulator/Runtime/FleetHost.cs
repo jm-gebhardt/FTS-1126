@@ -83,6 +83,20 @@ public sealed class FleetHost : IHostedService
         return false;
     }
 
+    public bool TryGetAgv(Guid correlationId, out AgvIdentity id)
+    {
+        foreach (var actor in _actors.Values)
+        {
+            if (actor.Id.CorrelationId == correlationId)
+            {
+                id = actor.Id;
+                return true;
+            }
+        }
+        id = default;
+        return false;
+    }
+
     public Task AdvanceAsync(TimeSpan dt)
     {
         return Task.WhenAll(_actors.Values.Select(a => a.AdvanceAsync(dt)));

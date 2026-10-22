@@ -23,7 +23,7 @@ public static class Vda5050StateDtoMapper
             LastNodeId = snapshot.LastNodeId,
             LastNodeSequenceId = snapshot.LastNodeSequenceId,
             Driving = snapshot.Driving,
-            OperatingMode = OperatingModeDto.Automatic,
+            OperatingMode = Enum.Parse<OperatingModeDto>(snapshot.OperatingMode.ToString()),
             NodeStates = snapshot.NodeStates
                 .Select(n => new NodeStateDto { NodeId = n.NodeId, SequenceId = n.SequenceId, Released = n.Released })
                 .ToList(),

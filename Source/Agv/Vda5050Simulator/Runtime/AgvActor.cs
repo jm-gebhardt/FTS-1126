@@ -159,6 +159,11 @@ public sealed class AgvActor
                 }
                 break;
 
+            case SwitchOperatingModeCommand switchMode:
+                _logger.LogInformation("AGV {AgvId}: switching operating mode to {OperatingMode}", Id, switchMode.OperatingMode);
+                _model.SwitchOperatingMode(switchMode.OperatingMode);
+                break;
+
             case MessageRejected rejected:
                 _logger.LogWarning("AGV {AgvId}: {Kind} {Reference} rejected: {Errors}", Id, rejected.Topic, rejected.ReferenceId, string.Join("; ", rejected.Errors));
                 

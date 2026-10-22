@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Dtos;
@@ -13,8 +14,28 @@ namespace Gebhardt.Acc.Vda5050Simulator.WebApi.Controllers;
 [Authorize]
 [ApiController]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
-public class SimulatedAgvController(IAgvStateCache stateCache, IOptions<MqttOptions> mqttOptions) : ControllerBase
+public class SimulatedAgvController(IAgvStateCache stateCache, IOptions<MqttOptions> mqttOptions, FleetHost fleet) : ControllerBase
 {
+    /// <summary>
+    /// Switch the operating mode of an agv.
+    /// </summary>
+    /// <param name="correlationId">The correlation id of the agv.</param>
+    /// <param name="operatingMode">The new operating mode.</param>
+    /// <response code="200">Success.</response>
+    /// <response code="404">Agv not found.</response>
+    [HttpPatch]
+    [Route("agv/{correlationId:guid}/switchOperatingMode")]
+    public IActionResult SwitchOperatingMode([FromRoute] Guid correlationId, [FromQuery] AgvOperatingMode operatingMode)
+    {
+        if (!fleet.TryGetAgv(correlationId, out var id))
+        {
+            return NotFound();
+        }
+
+        fleet.Dispatch(new SwitchOperatingModeCommand(id, operatingMode));
+        return Ok();
+    }
+
     /// <summary>
     /// Get the latest state of an agv.
     /// </summary>

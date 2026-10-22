@@ -22,7 +22,6 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
 {
     private const int MaxErrors = 20;
     private const int NurbsSamples = 50;
-
     private readonly OrderedDictionary<string, ActionState> _actionStates = new(StringComparer.Ordinal);
     private readonly List<NodeState> _nodeStates = [];
     private readonly List<EdgeState> _edgeStates = [];
@@ -61,6 +60,8 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
 
     public bool Charging { get; private set; }
 
+    public AgvOperatingMode OperatingMode { get; private set; } = AgvOperatingMode.Automatic;
+
     /// <summary>
     /// True while the AGV still has nodes or edges to traverse or actions that are not finished or failed.
     /// </summary>
@@ -90,6 +91,11 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     /// </summary>
     public OrderResult TryAcceptOrder(Order order)
     {
+        if (OperatingMode != AgvOperatingMode.Automatic)
+        {
+            return Reject(Errors.MobileRobotNotAutomatic, order, "Receival of an order while not in 'AUTOMATIC'");
+        }
+
         bool sameOrderId = OrderId.Length > 0 && order.OrderId == OrderId;
 
         if (sameOrderId)
@@ -115,6 +121,39 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
         }
 
         return TryStartOrder(order);
+    }
+
+    /// <summary>
+    /// Switches the operating mode. Leaving automatic mode aborts the current order.
+    /// </summary>
+    public void SwitchOperatingMode(AgvOperatingMode operatingMode)
+    {
+        OperatingMode = operatingMode;
+        if (operatingMode == AgvOperatingMode.Automatic)
+        {
+            _errors.RemoveAll(e => e.ErrorType == Errors.MobileRobotNotAutomatic);
+            return;
+        }
+
+        foreach (string actionId in _running.Keys.ToList())
+        {
+            SetActionStatus(actionId, ActionStatus.Failed);
+        }
+        _running.Clear();
+        _actionStates.Clear();
+        _nodeStates.Clear();
+        _edgeStates.Clear();
+        _orderNodes.Clear();
+        _orderEdges.Clear();
+        _orderActions.Clear();
+        _activeEdgeSequenceId = -1;
+        _geometry = [];
+        _cumulativeLength = [];
+        OrderId = string.Empty;
+        OrderUpdateId = 0;
+        LastNodeId = string.Empty;
+        LastNodeSequenceId = 0;
+        SetDriving(false);
     }
 
     public void AddValidationError(string topic, string? id, params string[] errors)
@@ -197,7 +236,8 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
             _nodeStates.ToList(),
             _edgeStates.ToList(),
             _errors.ToList(),
-            _positionInitialized ? new AgvPositionSnapshot(_x, _y, _theta, _mapId, true) : null);
+            _positionInitialized ? new AgvPositionSnapshot(_x, _y, _theta, _mapId, true) : null,
+            OperatingMode);
     }
 
     private OrderResult TryStartOrder(Order order)

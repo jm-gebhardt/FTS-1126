@@ -2,6 +2,7 @@ using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
+using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.Common.WebApi.Constants;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Middleware;
 using HealthChecks.UI.Client;
@@ -37,7 +38,8 @@ public static class Vda5050SimulatorHostBuilder
             .ConfigureServices((context, services) =>
             {
                 services.AddScoped<ExceptionHandlerMiddleware>();
-                services.AddControllers();
+                services.AddControllers()
+                    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Insert(0, new AnnotatedEnumConverterFactory()); });
                 services.AddHealthChecks();
 
                 var keycloak = context.Configuration.GetSection("KEYCLOAK");

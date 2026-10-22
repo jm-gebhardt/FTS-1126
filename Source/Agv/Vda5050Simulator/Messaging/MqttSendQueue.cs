@@ -55,7 +55,7 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
             LastNodeId = snapshot.LastNodeId,
             LastNodeSequenceId = snapshot.LastNodeSequenceId,
             Driving = snapshot.Driving,
-            OperatingMode = MqttOperatingMode.Automatic,
+            OperatingMode = Enum.Parse<MqttOperatingMode>(snapshot.OperatingMode.ToString()),
             AgvPosition = snapshot.Position is { } p
                 ? new MqttAgvPosition { X = p.X, Y = p.Y, Theta = p.Theta, MapId = p.MapId, PositionInitialized = p.PositionInitialized }
                 : null,
