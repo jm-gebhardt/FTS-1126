@@ -35,8 +35,8 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     private double _x;
     private double _y;
     private double _theta;
-    private string _mapId = string.Empty;
-    private bool _positionInitialized;
+    private string _mapId = "HARDCODED MAP ID";
+    private bool _positionInitialized = true;
 
     private int _activeEdgeSequenceId = -1;
     private List<PolygonPoint> _geometry = [];
@@ -236,7 +236,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
             _nodeStates.ToList(),
             _edgeStates.ToList(),
             _errors.ToList(),
-            _positionInitialized ? new AgvPositionSnapshot(_x, _y, _theta, _mapId, true) : null,
+            new AgvPositionSnapshot(_x, _y, _theta, _mapId, _positionInitialized),
             OperatingMode);
     }
 
