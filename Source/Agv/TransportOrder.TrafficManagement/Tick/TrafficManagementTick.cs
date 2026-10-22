@@ -1,4 +1,6 @@
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
+
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Tick;
 
 /// <summary>
 /// Internal message used to trigger periodic, cyclic tasks within the <see cref="TrafficManagementEventHandler"/>.

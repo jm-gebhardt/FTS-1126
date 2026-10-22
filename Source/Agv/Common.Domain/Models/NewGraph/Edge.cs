@@ -9,6 +9,11 @@ namespace Gebhardt.Acc.Common.Domain.Models.NewGraph;
 public record Edge : GraphResource
 {
     /// <summary>
+    /// EdgeId in the LIF.
+    /// </summary>
+    public string LifEdgeId { get; init; }
+    
+    /// <summary>
     /// Start node of the edge.
     /// </summary>
     public Guid StartNodeId { get; init; }
@@ -24,8 +29,9 @@ public record Edge : GraphResource
     public List<RoutingEdge> RoutingEdges { get; init; } = [];
 
     /// <inheritdoc cref="Edge"/>
-    public Edge(Guid id, string name, string shortName, Guid startNodeId, Guid endNodeId) : base(id, name, shortName)
+    public Edge(Guid id, string name, string shortName, string lifEdgeId, Guid startNodeId, Guid endNodeId) : base(id, name, shortName)
     {
+        LifEdgeId = lifEdgeId;
         StartNodeId = startNodeId;
         EndNodeId = endNodeId;
     }
@@ -35,5 +41,6 @@ public record Edge : GraphResource
     /// </summary>
     public Edge()
     {
+        LifEdgeId = null!;
     }
 }

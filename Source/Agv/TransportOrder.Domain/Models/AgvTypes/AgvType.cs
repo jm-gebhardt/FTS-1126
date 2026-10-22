@@ -20,25 +20,25 @@ public record AgvType : IAgvType
     public string AgvTypeIdentifier { get; init; }
 
     /// <inheritdoc/>
-    public string Manufacturer { get; init; }
+    public string Manufacturer { get; set; }
 
     /// <inheritdoc/>
-    public string SeriesName { get; init; }
+    public string SeriesName { get; set; }
 
     /// <inheritdoc/>
-    public double Length { get; init; }
+    public double Length { get; set; }
 
     /// <inheritdoc/>
-    public double Width { get; init; }
+    public double Width { get; set; }
 
     /// <inheritdoc/>
     public bool Acknowledged { get; set; }
 
     /// <inheritdoc/>
-    public bool ReportedByAgv { get; init; }
+    public bool ReportedByAgv { get; set; }
 
     /// <inheritdoc/>
-    public string RawData { get; init; }
+    public string RawData { get; set; }
 
     /// <summary>
     /// Collection of load states supported by this AGV type. Hardcoded to two states: loaded and unloaded. This is a temporary solution until the load states are derived from factsheet/loadSpecification.

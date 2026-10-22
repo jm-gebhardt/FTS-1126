@@ -28,4 +28,9 @@ public record LoadState
         Id = id;
         IsLoaded = isLoaded;
     }
+
+    /// <summary>
+    /// Provides a human-readable description of the load state, which can be used for logging.
+    /// </summary>
+    public string Description => IsLoaded ? "loaded" : "unloaded";
 }

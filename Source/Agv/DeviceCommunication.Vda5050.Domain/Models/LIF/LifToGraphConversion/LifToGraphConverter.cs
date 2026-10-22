@@ -45,7 +45,7 @@ public static class LifToGraphConverter
         {
             var nodeId = InternalIdGenerator.GetNodeId(container.LifId, node.NodeId, out string name);
 
-            container.Add(node, new CommonNode(nodeId, name, node.NodeId, node.NodePosition.X, node.NodePosition.Y, layout.LayoutLevelId));
+            container.Add(node, new CommonNode(nodeId, name, node.NodeId, node.NodeId, node.NodePosition.X, node.NodePosition.Y, layout.LayoutLevelId, node.MapId));
         }
     }
 
@@ -57,7 +57,7 @@ public static class LifToGraphConverter
             var startNodeId = InternalIdGenerator.GetNodeId(container.LifId, edge.StartNodeId, out _);
             var endNodeId = InternalIdGenerator.GetNodeId(container.LifId, edge.EndNodeId, out _);
 
-            container.Add(edge, new CommonEdge(edgeId, name, edge.EdgeId, startNodeId, endNodeId));
+            container.Add(edge, new CommonEdge(edgeId, name, edge.EdgeId, edge.EdgeId, startNodeId, endNodeId));
         }
     }
 
@@ -73,7 +73,7 @@ public static class LifToGraphConverter
                 throw new ArgumentException($"Station {layout.LayoutId} - {station.StationName} has no position");
             }
 
-            var commonStation = new CommonStation(stationId, name, station.StationId, stationPosition.X, stationPosition.Y, stationPosition.Theta, station.StationHeight, interactionNodeIds);
+            var commonStation = new CommonStation(stationId, name, station.StationId, station.StationId, stationPosition.X, stationPosition.Y, stationPosition.Theta, station.StationHeight, interactionNodeIds);
 
             container.Add(commonStation);
         }

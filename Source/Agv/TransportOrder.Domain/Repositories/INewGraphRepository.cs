@@ -12,8 +12,9 @@ public interface INewGraphRepository
     /// <summary>
     /// Loads the graph with its nodes, edges and stations, each one's routing resources, and conflicting resources.
     /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The graph, empty if nothing is stored.</returns>
-    Task<Graph> GetGraphAsync();
+    Task<Graph> GetGraphAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Merges the given graph into the stored one, adding unknown resources and updating known ones.
@@ -25,7 +26,7 @@ public interface INewGraphRepository
     /// Deletes all nodes, edges and stations that belong to the graph segment with the given id.
     /// </summary>
     /// <param name="graphSegmentId">The id of the graph segment to delete.</param>
-    /// <returns>The deleted graph segemnt</returns>
+    /// <returns>The deleted graph segment</returns>
     Task<bool> DeleteGraphSegmentAsync(Guid graphSegmentId);
 
     /// <summary>

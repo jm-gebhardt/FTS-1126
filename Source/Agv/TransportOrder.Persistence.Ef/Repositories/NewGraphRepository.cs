@@ -85,13 +85,13 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
     }
 
     /// <inheritdoc/>
-    public async Task<Graph> GetGraphAsync()
+    public async Task<Graph> GetGraphAsync(CancellationToken cancellationToken = default)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync();
-        var edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync();
-        var stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync();
+        var nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync(cancellationToken);
+        var edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync(cancellationToken);
+        var stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync(cancellationToken);
 
         var graph = new Graph(nodes, edges, stations);
 
