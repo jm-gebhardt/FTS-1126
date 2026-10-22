@@ -19,6 +19,8 @@
         <PackageReference Include="prometheus-net.AspNetCore" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+        <PackageReference Include="Serilog.Extensions.Logging" />
+        <PackageReference Include="Serilog.Sinks.File" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />

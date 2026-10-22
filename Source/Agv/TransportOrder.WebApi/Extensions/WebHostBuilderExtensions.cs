@@ -11,6 +11,7 @@ using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Common.WebApi.Constants;
 using Gebhardt.Acc.Common.WebApi.Swagger;
 using Gebhardt.Acc.TransportOrder.WebApi.Controllers;
+using Gebhardt.Acc.TransportOrder.WebApi.Converters;
 using Gebhardt.Acc.Common.WebApi.Hubs;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs;
@@ -113,7 +114,11 @@ public static class WebHostBuilderExtensions
                 })
                 .AddApplicationPart(typeof(SimulationController).Assembly)
                 .AddFilterSerializer()
-                .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    options.JsonSerializerOptions.Converters.Add(new TimeZoneInfoJsonConverter());
+                });
 
             var config = context.Configuration.GetSection("KEYCLOAK");
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
