@@ -83,6 +83,16 @@ public sealed class FleetHost : IHostedService
         return false;
     }
 
+    public async Task<CommandResult?> SendAsync(AgvCommand command, CancellationToken cancellationToken = default)
+    {
+        if (_actors.TryGetValue((command.AgvId.Manufacturer, command.AgvId.SerialNumber), out var actor))
+        {
+            return await actor.SendAsync(command).WaitAsync(cancellationToken);
+        }
+        _logger.LogWarning("Command {Command} for unknown AGV {AgvId} dropped", command.GetType().Name, command.AgvId);
+        return null;
+    }
+
     public bool TryGetAgv(Guid correlationId, out AgvIdentity id)
     {
         foreach (var actor in _actors.Values)

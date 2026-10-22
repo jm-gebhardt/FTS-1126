@@ -16,7 +16,7 @@ public sealed class AgvActor
     
     private sealed record ShutdownMessage : Message;
     
-    private sealed record CommandMessage(AgvCommand Command) : Message;
+    private sealed record CommandMessage(AgvCommand Command, TaskCompletionSource<CommandResult>? Reply = null) : Message;
     
     private sealed record TickMessage(TimeSpan Dt, TaskCompletionSource Done) : Message;
 
@@ -59,6 +59,19 @@ public sealed class AgvActor
 
     public void Post(AgvCommand command) => _mailbox.Writer.TryWrite(new CommandMessage(command));
 
+    /// <summary>
+    /// Sends a command and completes when the actor has handled it.
+    /// </summary>
+    public Task<CommandResult> SendAsync(AgvCommand command)
+    {
+        var reply = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!_mailbox.Writer.TryWrite(new CommandMessage(command, reply)))
+        {
+            reply.SetResult(CommandResult.Fail("Agv is stopped."));
+        }
+        return reply.Task;
+    }
+
     public Task AdvanceAsync(TimeSpan dt)
     {
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -99,7 +112,7 @@ public sealed class AgvActor
                             break;
                         
                         case CommandMessage m:
-                            Handle(m.Command);
+                            m.Reply?.TrySetResult(Handle(m.Command));
                             break;
                         
                         case TickMessage t:
@@ -115,6 +128,10 @@ public sealed class AgvActor
                     {
                         tick.Done.TrySetException(ex);
                     }
+                    else if (message is CommandMessage { Reply: { } reply })
+                    {
+                        reply.TrySetException(ex);
+                    }
                 }
             }
         }
@@ -123,23 +140,24 @@ public sealed class AgvActor
         }
     }
 
-    private void Handle(AgvCommand command)
+    private CommandResult Handle(AgvCommand command)
     {
+        var result = CommandResult.Ok;
         switch (command)
         {
             case OrderReceived received:
                 _logger.LogInformation("AGV {AgvId}: order {OrderId} update {UpdateId} received ({Nodes} nodes, {Edges} edges)",
                     Id, received.Order.OrderId, received.Order.OrderUpdateId, received.Order.Nodes.Count, received.Order.Edges.Count);
-                var result = _model.TryAcceptOrder(received.Order);
-                if (result.Decision == OrderDecision.Rejected)
+                var orderResult = _model.TryAcceptOrder(received.Order);
+                if (orderResult.Decision == OrderDecision.Rejected)
                 {
                     _logger.LogWarning("AGV {AgvId}: order {OrderId} update {UpdateId} rejected ({ErrorType}): {Description}",
-                        Id, received.Order.OrderId, received.Order.OrderUpdateId, result.Error?.ErrorType, result.Error?.Description);
+                        Id, received.Order.OrderId, received.Order.OrderUpdateId, orderResult.Error?.ErrorType, orderResult.Error?.Description);
                 }
                 else
                 {
                     _logger.LogInformation("AGV {AgvId}: order {OrderId} update {UpdateId}: {Decision}",
-                        Id, received.Order.OrderId, received.Order.OrderUpdateId, result.Decision);
+                        Id, received.Order.OrderId, received.Order.OrderUpdateId, orderResult.Decision);
                 }
                 break;
 
@@ -166,17 +184,17 @@ public sealed class AgvActor
 
             case SetPositionCommand setPosition:
                 _logger.LogInformation("AGV {AgvId}: setting position to ({X}, {Y})", Id, setPosition.X, setPosition.Y);
-                _model.SetPositionManually(setPosition.X, setPosition.Y, setPosition.Theta, setPosition.MapId);
+                result = _model.SetPositionManually(setPosition.X, setPosition.Y, setPosition.Theta, setPosition.MapId);
                 break;
 
             case AddLoadCommand addLoad:
                 _logger.LogInformation("AGV {AgvId}: adding load {LoadId}", Id, addLoad.LoadId);
-                _model.AddLoad(addLoad.LoadId, addLoad.LoadType, addLoad.LoadPosition);
+                result = _model.AddLoad(addLoad.LoadId, addLoad.LoadType, addLoad.LoadPosition);
                 break;
 
             case RemoveLoadCommand removeLoad:
                 _logger.LogInformation("AGV {AgvId}: removing load {LoadId}", Id, removeLoad.LoadId);
-                _model.RemoveLoad(removeLoad.LoadId);
+                result = _model.RemoveLoad(removeLoad.LoadId);
                 break;
 
             case MessageRejected rejected:
@@ -186,6 +204,7 @@ public sealed class AgvActor
                 break;
         }
         PublishState();
+        return result;
     }
 
     private void HandleInstantActions(InstantActionsCommand instantActionsCommand)

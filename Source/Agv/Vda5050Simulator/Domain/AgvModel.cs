@@ -160,44 +160,48 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     /// <summary>
     /// Sets the AGV to the given position. Only allowed outside of automatic mode; otherwise an error is added to the state.
     /// </summary>
-    public void SetPositionManually(double x, double y, double theta, string mapId)
+    public CommandResult SetPositionManually(double x, double y, double theta, string mapId)
     {
-        if (OperatingMode == AgvOperatingMode.Automatic)
+        if (OperatingMode != AgvOperatingMode.Manual)
         {
-            GenerateAvailabilityError();
-            return;
+            AddNotManualError();    
+            return CommandResult.Fail("Agv not in manual mode and can not be moved.");
         }
 
         SetPosition(x, y, theta, mapId);
         LastNodeId = string.Empty;
         LastNodeSequenceId = 0;
+        return CommandResult.Ok;
     }
 
     /// <summary>
-    /// Adds a load to the AGV. Ignored if the load position is already occupied.
+    /// Adds a load to the AGV. Fails if the load position is already occupied.
     /// </summary>
-    public void AddLoad(string loadId, string? loadType, string? loadPosition)
+    public CommandResult AddLoad(string loadId, string? loadType, string? loadPosition)
     {
         if (_loads.Any(l => l.LoadPosition == loadPosition))
         {
-            return;
+            return CommandResult.Fail($"Load position '{loadPosition}' is already occupied.");
         }
 
         _loads.Add(new Load(loadId, loadType, loadPosition));
+        return CommandResult.Ok;
     }
 
     /// <summary>
-    /// Removes the load with the given id from the AGV.
+    /// Removes the load with the given id from the AGV. Fails if the load does not exist.
     /// </summary>
-    public void RemoveLoad(string loadId)
+    public CommandResult RemoveLoad(string loadId)
     {
-        _loads.RemoveAll(l => l.LoadId == loadId);
+        return _loads.RemoveAll(l => l.LoadId == loadId) > 0
+            ? CommandResult.Ok
+            : CommandResult.Fail($"Load '{loadId}' does not exist.");
     }
 
-    private void GenerateAvailabilityError()
+    private void AddNotManualError()
     {
-        _errors.RemoveAll(e => e.ErrorType == Errors.MobileRobotNotAutomatic);
-        AddError(new Error(Errors.MobileRobotNotAutomatic, ErrorLevel.Warning, "Receival of an order while not in 'AUTOMATIC'", null));
+        _errors.RemoveAll(e => e.ErrorType == Errors.MobileRobotNotManual);
+        AddError(new Error(Errors.MobileRobotNotManual, ErrorLevel.Warning, "Manual update of state while not in 'MANUAL'", null));
     }
 
     public void AddValidationError(string topic, string? id, params string[] errors)
