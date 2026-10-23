@@ -29,14 +29,3 @@ public sealed class SimulationOptions
     
     public double ActionDurationSeconds { get; init; } = 2.0;
 }
-
-public sealed class AgvOptions
-{
-    public string Manufacturer { get; init; } = string.Empty;
-    
-    public string SerialNumber { get; init; } = string.Empty;
-
-    public string SeriesName { get; init; } = string.Empty;
-    
-    public double MaxSpeed { get; init; } = 1.0;
-}

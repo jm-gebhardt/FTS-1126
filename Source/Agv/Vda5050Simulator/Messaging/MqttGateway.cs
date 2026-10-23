@@ -148,11 +148,9 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
     private async Task SubscribeAsync(MqttClientFactory factory, IMqttClient client, CancellationToken cancellationToken)
     {
         var builder = factory.CreateSubscribeOptionsBuilder();
-        foreach (var id in fleet.AgvIds)
-        {
-            builder.WithTopicFilter(TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, Subtopics.Order));
-            builder.WithTopicFilter(TopicParser.BuildTopic(_mqtt.InterfaceName, _mqtt.Version, id, Subtopics.InstantActions));
-        }
+        // Wildcards for manufacturer and serial number, so AGVs that are added at runtime are covered as well.
+        builder.WithTopicFilter($"{_mqtt.InterfaceName}/{_mqtt.Version}/+/+/{Subtopics.Order}");
+        builder.WithTopicFilter($"{_mqtt.InterfaceName}/{_mqtt.Version}/+/+/{Subtopics.InstantActions}");
         await client.SubscribeAsync(builder.Build(), cancellationToken);
     }
 
@@ -166,8 +164,8 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
 
         var command = subtopic switch
         {
-            Vda5050Specifications.Subtopics.Order => CreateOrderCommand(id, payload),
-            Vda5050Specifications.Subtopics.InstantActions => CreateInstantActionsCommand(id, payload),
+            Subtopics.Order => CreateOrderCommand(id, payload),
+            Subtopics.InstantActions => CreateInstantActionsCommand(id, payload),
             _ => null
         };
 

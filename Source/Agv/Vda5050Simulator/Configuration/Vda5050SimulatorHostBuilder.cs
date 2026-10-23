@@ -1,3 +1,7 @@
+using Gebhardt.Acc.Common.Persistence.Ef;
+using Gebhardt.Acc.Vda5050Simulator.DataAccess;
+using Gebhardt.Acc.Vda5050Simulator.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Gebhardt.Acc.Common;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Common.Configurations.Extensions;
@@ -85,7 +89,6 @@ public static class Vda5050SimulatorHostBuilder
 
                 services.Configure<MqttOptions>(context.Configuration.GetSection("Mqtt"));
                 services.Configure<SimulationOptions>(context.Configuration.GetSection("Simulation"));
-                services.Configure<List<AgvOptions>>(context.Configuration.GetSection("Agvs"));
 
                 services.AddSingleton(TimeProvider.System);
                 services.AddSingleton<ISimulationClock>(sp =>
@@ -94,11 +97,25 @@ public static class Vda5050SimulatorHostBuilder
                     return new SimulationClock(sp.GetRequiredService<TimeProvider>().GetUtcNow(), simulation.Speedup);
                 });
                 services.AddAgvPublishing();
-                services.ConfigureServicesMassTransit(context.Configuration);
+                services.ConfigureServicesMassTransit(context.Configuration,
+                    x => x.AddConsumer<EnsureSimulatedAgvTypeConfigurationConsumer>());
                 services.AddSingleton<IFactsheetProvider, MassTransitFactsheetProvider>();
 
                 services.AddSingleton<FleetHost>();
                 services.AddHostedService(sp => sp.GetRequiredService<FleetHost>());
+                services.AddDbContextFactory<Vda5050SimulatorDbContext>(builder =>
+                {
+                    string? connectionString = context.Configuration.GetConnectionString(Vda5050SimulatorDbContext.ConfigSectionName);
+                    builder.UseSqlServer(connectionString, m =>
+                    {
+                        m.MigrationsHistoryTable(IDbContext<Vda5050SimulatorDbContext>.MigrationTableName);
+                        m.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    });
+                    builder.AddInterceptors(new EfCommandMetricsInterceptor());
+                });
+                services.AddTransient<ISimulatedAgvTypeConfigurationRepository, EfSimulatedAgvTypeConfigurationRepository>();
+                services.AddSingleton<SimulatedAgvTypeConfigurationService>();
+                services.AddHostedService<AgvTypeConfigurationLoader>();
                 services.AddHostedService<SimulationLoop>();
                 services.AddHostedService<MqttGateway>();
             })

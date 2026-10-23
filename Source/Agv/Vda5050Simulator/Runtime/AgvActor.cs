@@ -112,7 +112,8 @@ public sealed class AgvActor
                             break;
                         
                         case CommandMessage m:
-                            m.Reply?.TrySetResult(Handle(m.Command));
+                            var commandResult = Handle(m.Command);
+                            m.Reply?.TrySetResult(commandResult);
                             break;
                         
                         case TickMessage t:

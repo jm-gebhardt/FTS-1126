@@ -18,10 +18,17 @@
     <PackageReference Include="SignalRSwaggerGen" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />
+    <ProjectReference Include="..\Common.Persistence.Ef\Common.Persistence.Ef.csproj" />
     <ProjectReference Include="..\Common.WebApi\Common.WebApi.csproj" />
     <ProjectReference Include="..\DeviceCommunication.Common\DeviceCommunication.Common.csproj" />
     <ProjectReference Include="..\DeviceCommunication.Vda5050.Messages\DeviceCommunication.Vda5050.Messages.csproj" />
