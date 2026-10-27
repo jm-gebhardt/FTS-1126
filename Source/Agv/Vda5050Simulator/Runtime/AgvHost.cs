@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 /// Processes commands and simulation ticks of one AGV sequentially via a mailbox.
 /// Owns the <see cref="AgvModel"/> and decides when its state is published.
 /// </summary>
-public sealed class AgvActor
+public sealed class AgvHost
 {
     private abstract record Message;
     
@@ -25,7 +25,7 @@ public sealed class AgvActor
     private readonly ISimulationClock _clock;
     private readonly IAgvPublisher _publisher;
     private readonly TimeSpan _stateInterval;
-    private readonly ILogger<AgvActor> _logger;
+    private readonly ILogger<AgvHost> _logger;
     private readonly IFactsheetProvider _factsheetProvider;
     private CancellationToken _cancellationToken;
     private Task? _loop;
@@ -35,7 +35,7 @@ public sealed class AgvActor
     private uint _factsheetHeaderId;
     private DateTimeOffset _lastStatePublish;
 
-    public AgvActor(AgvModel model, ISimulationClock clock, IAgvPublisher publisher, TimeSpan stateInterval, IFactsheetProvider factsheetProvider, ILogger<AgvActor> logger)
+    public AgvHost(AgvModel model, ISimulationClock clock, IAgvPublisher publisher, TimeSpan stateInterval, IFactsheetProvider factsheetProvider, ILogger<AgvHost> logger)
     {
         _factsheetProvider = factsheetProvider;
         _model = model;

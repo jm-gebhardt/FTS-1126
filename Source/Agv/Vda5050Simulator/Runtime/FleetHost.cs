@@ -11,7 +11,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 public sealed class FleetHost(ISimulationClock clock, IAgvPublisher publisher, IFactsheetProvider factsheetProvider, IOptions<SimulationOptions> simulationOptions, ILoggerFactory loggerFactory)
     : IHostedService
 {
-    private readonly ConcurrentDictionary<(string Manufacturer, string SerialNumber), AgvActor> _actors = new();
+    private readonly ConcurrentDictionary<(string Manufacturer, string SerialNumber), AgvHost> _actors = new();
     private readonly ILogger<FleetHost> _logger = loggerFactory.CreateLogger<FleetHost>();
     private readonly TimeSpan _stateInterval = TimeSpan.FromSeconds(Math.Max(1, simulationOptions.Value.StateIntervalSeconds));
     private readonly TimeSpan _actionDuration = TimeSpan.FromSeconds(Math.Max(0.1, simulationOptions.Value.ActionDurationSeconds));
@@ -34,7 +34,7 @@ public sealed class FleetHost(ISimulationClock clock, IAgvPublisher publisher, I
     public bool AddAgv(AgvConfiguration configuration)
     {
         var model = new AgvModel(configuration, _actionDuration);
-        var actor = new AgvActor(model, clock, publisher, _stateInterval, factsheetProvider, loggerFactory.CreateLogger<AgvActor>());
+        var actor = new AgvHost(model, clock, publisher, _stateInterval, factsheetProvider, loggerFactory.CreateLogger<AgvHost>());
         if (!_actors.TryAdd((configuration.Manufacturer, configuration.SerialNumber), actor))
         {
             return false;

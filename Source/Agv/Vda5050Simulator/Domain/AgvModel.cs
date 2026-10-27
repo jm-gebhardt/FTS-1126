@@ -30,12 +30,12 @@ public sealed class AgvModel
     private readonly SortedDictionary<int, OrderEdge> _orderEdges = [];
     private readonly Dictionary<string, AgvAction> _orderActions = [];
     private readonly Dictionary<string, TimeSpan> _running = [];
-    private readonly List<Load> _loads = [new Load("LoadId1", "LoadType1", "LoadPosition1")];
+    private readonly List<Load> _loads = [new("LoadId", "LoadType", "LoadPosition")];
 
     private double _x;
     private double _y;
     private double _theta;
-    private string _mapId = "HARDCODED MAP ID";
+    private string _mapId = "mapId (to be derivded from LIF)";
     private bool _positionInitialized = true;
 
     private int _activeEdgeSequenceId = -1;
@@ -51,10 +51,6 @@ public sealed class AgvModel
     
     private readonly TimeSpan _actionDuration;
 
-    /// <summary>
-    /// Mutable state and behavior of one simulated AGV. Pure domain code without I/O, mailbox or logging;
-    /// not thread-safe, the owning actor guarantees sequential access.
-    /// </summary>
     public AgvModel(AgvConfiguration configuration, TimeSpan actionDuration)
     {
         ApplyConfiguration(configuration); 
@@ -335,7 +331,7 @@ public sealed class AgvModel
         _running.Clear();
         _activeEdgeSequenceId = -1;
 
-        AddDefinitions(order);
+        AddOrderData(order);
         foreach (var action in CreateActionStates(order))
         {
             _actionStates[action.ActionId] = action;
@@ -381,7 +377,7 @@ public sealed class AgvModel
         }
 
         OrderUpdateId = order.OrderUpdateId;
-        AddDefinitions(order);
+        AddOrderData(order);
         foreach (var action in CreateActionStates(order))
         {
             _actionStates.TryAdd(action.ActionId, action);
@@ -390,7 +386,7 @@ public sealed class AgvModel
         return new OrderResult(OrderDecision.Updated);
     }
 
-    private void AddDefinitions(Order order)
+    private void AddOrderData(Order order)
     {
         foreach (var node in order.Nodes)
         {
