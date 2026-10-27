@@ -10,7 +10,7 @@ public sealed class AgvStateCache : IAgvStateCache
     public void Set(AgvIdentity id, AgvStateSnapshot snapshot)
     {
         _states.AddOrUpdate(
-            id.CorrelationId,
+            id.Id,
             _ => (id, snapshot),
             (_, existing) => snapshot.HeaderId >= existing.Snapshot.HeaderId ? (id, snapshot) : existing);
     }

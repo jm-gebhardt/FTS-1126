@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models;
-using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using static Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants.Vda5050Specifications;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Domain;
@@ -18,7 +17,7 @@ public sealed record OrderResult(OrderDecision Decision, Error? Error = null);
 /// Mutable state and behavior of one simulated AGV. Pure domain code without I/O, mailbox or logging;
 /// not thread-safe, the owning actor guarantees sequential access.
 /// </summary>
-public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDuration)
+public sealed class AgvModel
 {
     private const int MaxErrors = 20;
     private const int NurbsSamples = 50;
@@ -44,9 +43,27 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     private double[] _cumulativeLength = [];
     private double _progress;
     private double _edgeSpeed;
+    private double _batteryChargeRate;
+    private double _batteryDischargeRate;
+    private double _maxSpeed;
 
-    public AgvIdentity Id { get; } = id;
+    private AgvOperatingMode _operatingMode = AgvOperatingMode.Automatic;
+    
+    private readonly TimeSpan _actionDuration;
 
+    /// <summary>
+    /// Mutable state and behavior of one simulated AGV. Pure domain code without I/O, mailbox or logging;
+    /// not thread-safe, the owning actor guarantees sequential access.
+    /// </summary>
+    public AgvModel(AgvConfiguration configuration, TimeSpan actionDuration)
+    {
+        ApplyConfiguration(configuration); 
+        _actionDuration = actionDuration;
+        AgvIdentity = configuration;
+    }
+    
+    public AgvIdentity AgvIdentity { get; }
+    
     public string OrderId { get; private set; } = string.Empty;
 
     public int OrderUpdateId { get; private set; }
@@ -59,10 +76,8 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
 
     public double BatteryCharge { get; private set; } = 100;
 
-    public bool Charging { get; private set; }
-
-    public AgvOperatingMode OperatingMode { get; private set; } = AgvOperatingMode.Automatic;
-
+    public bool IsCharging { get; private set; }
+    
     /// <summary>
     /// True while the AGV still has nodes or edges to traverse or actions that are not finished or failed.
     /// </summary>
@@ -70,6 +85,13 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
         _nodeStates.Count > 0
         || _edgeStates.Count > 0
         || _actionStates.Values.Any(a => _orderActions.ContainsKey(a.ActionId) && a.Status is not (ActionStatus.Finished or ActionStatus.Failed));
+    
+    public void ApplyConfiguration(AgvConfiguration configuration)
+    {
+        _batteryChargeRate = configuration.BatteryChargeRate;
+        _batteryDischargeRate = configuration.BatteryDischargeRate;
+        _maxSpeed = configuration.MaxSpeed;
+    }
 
     /// <summary>
     /// Adds or updates the state of an instant action in the actionStates of the VDA5050 state.
@@ -92,7 +114,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     /// </summary>
     public OrderResult TryAcceptOrder(Order order)
     {
-        if (OperatingMode != AgvOperatingMode.Automatic)
+        if (_operatingMode != AgvOperatingMode.Automatic)
         {
             return Reject(Errors.MobileRobotNotAutomatic, order, "Receival of an order while not in 'AUTOMATIC'");
         }
@@ -129,7 +151,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     /// </summary>
     public void SwitchOperatingMode(AgvOperatingMode operatingMode)
     {
-        OperatingMode = operatingMode;
+        _operatingMode = operatingMode;
         if (operatingMode == AgvOperatingMode.Automatic)
         {
             _errors.RemoveAll(e => e.ErrorType == Errors.MobileRobotNotAutomatic);
@@ -162,7 +184,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     /// </summary>
     public CommandResult SetPositionManually(double x, double y, double theta, string mapId)
     {
-        if (OperatingMode != AgvOperatingMode.Manual)
+        if (_operatingMode != AgvOperatingMode.Manual)
         {
             AddNotManualError();    
             return CommandResult.Fail("Agv not in manual mode and can not be moved.");
@@ -279,13 +301,13 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
             LastNodeSequenceId,
             Driving,
             BatteryCharge,
-            Charging,
+            IsCharging,
             _actionStates.Values.ToList(),
             _nodeStates.ToList(),
             _edgeStates.ToList(),
             _errors.ToList(),
             new AgvPosition(_x, _y, _theta, _mapId, _positionInitialized),
-            OperatingMode,
+            _operatingMode,
             _loads.ToList());
     }
 
@@ -458,7 +480,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
 
     private void StartAction(string actionId)
     {
-        _running[actionId] = actionDuration;
+        _running[actionId] = _actionDuration;
         SetActionStatus(actionId, ActionStatus.Running);
     }
 
@@ -466,7 +488,7 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
     {
         _activeEdgeSequenceId = edge.SequenceId;
         _progress = 0;
-        _edgeSpeed = Math.Max(0.01, Math.Min(maxSpeed, edge.MaxSpeed ?? double.MaxValue));
+        _edgeSpeed = Math.Max(0.01, Math.Min(_maxSpeed, edge.MaxSpeed ?? double.MaxValue));
         BuildGeometry(edge);
 
         bool changed = false;
@@ -549,6 +571,22 @@ public sealed class AgvModel(AgvIdentity id, double maxSpeed, TimeSpan actionDur
         _y = a.Y + (b.Y - a.Y) * t;
         _theta = Math.Atan2(b.Y - a.Y, b.X - a.X);
         _positionInitialized = true;
+    }
+
+    public void UpdateBattery(TimeSpan dt)
+    {
+        double chargeDiff;
+        double timeDiffS = dt.TotalSeconds;
+        if (IsCharging)
+        {
+            chargeDiff = timeDiffS * _batteryChargeRate;
+        }
+        else
+        {
+            chargeDiff = timeDiffS * -_batteryDischargeRate;
+        }
+
+        BatteryCharge = Math.Clamp(BatteryCharge + chargeDiff, 0, 100);
     }
 
     private void SetPosition(double x, double y, double theta, string mapId)

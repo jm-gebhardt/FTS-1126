@@ -12,11 +12,11 @@ namespace Gebhardt.Acc.Vda5050Simulator.WebApi.Controllers;
 [ApiController]
 [Authorize]
 [ApiExplorerSettings(GroupName = RestApiGroup.GroupName)]
-public class SimulatedAgvTypeConfigurationController(
-    ILogger<SimulatedAgvTypeConfigurationController> logger,
-    SimulatedAgvTypeConfigurationService service) : ControllerBase
+public class AgvTypeConfigurationController(
+    ILogger<AgvTypeConfigurationController> logger,
+    AgvTypeConfigurationService service) : ControllerBase
 {
-    private static AgvTypeConfigurationDto ToDto(SimulatedAgvTypeConfiguration configuration)
+    private static AgvTypeConfigurationDto ToDto(AgvTypeConfiguration configuration)
     {
         return new AgvTypeConfigurationDto
         {
@@ -31,7 +31,8 @@ public class SimulatedAgvTypeConfigurationController(
             BatteryDischargeRate = configuration.BatteryDischargeRate,
             BatteryChargeRate = configuration.BatteryChargeRate,
             InitialBatteryCharge = configuration.InitialBatteryCharge,
-            InitialBatteryChargeDeviation = configuration.InitialBatteryChargeDeviation
+            InitialBatteryChargeDeviation = configuration.InitialBatteryChargeDeviation,
+            MaxSpeed = configuration.MaxSpeed
         };
     }
 

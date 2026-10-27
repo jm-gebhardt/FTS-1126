@@ -5,7 +5,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.Domain;
 /// <summary>
 /// Describes how many AGVs of one AGV type are simulated and how they behave.
 /// </summary>
-public record SimulatedAgvTypeConfiguration
+public record AgvTypeConfiguration
 {
     private const char IdentifierSeparator = '.';
 
@@ -15,7 +15,7 @@ public record SimulatedAgvTypeConfiguration
     public const double DefaultBatteryChargeRate = 1.0;
     public const int DefaultInitialBatteryCharge = 75;
     public const int DefaultInitialBatteryChargeDeviation = 5;
-
+    public const double DefaultMaxSpeed = 1.0;
     public const int MaxAgvsPerType = 100;
     public const int MinUpdateIntervalMs = 10;
     public const int MaxIdentifierLength = 400;
@@ -40,24 +40,26 @@ public record SimulatedAgvTypeConfiguration
 
     public int InitialBatteryChargeDeviation { get; init; }
 
+    public double MaxSpeed { get; init; }
+
     public string Manufacturer => IdentifierPart(AgvTypeIdentifier, 0);
 
     public string SeriesName => IdentifierPart(AgvTypeIdentifier, 1);
 
-    /// <summary>For deserialization.</summary>
-    public SimulatedAgvTypeConfiguration()
+    public AgvTypeConfiguration()
     {
         AgvTypeIdentifier = null!;
     }
 
-    public SimulatedAgvTypeConfiguration(string agvTypeIdentifier,
+    public AgvTypeConfiguration(string agvTypeIdentifier,
         int noOfAgvs = 0,
         int stateUpdateIntervalMs = DefaultStateUpdateIntervalMs,
         int visualizationUpdateIntervalMs = DefaultVisualizationUpdateIntervalMs,
         double batteryDischargeRate = DefaultBatteryDischargeRate,
         double batteryChargeRate = DefaultBatteryChargeRate,
         int initialBatteryCharge = DefaultInitialBatteryCharge,
-        int initialBatteryChargeDeviation = DefaultInitialBatteryChargeDeviation)
+        int initialBatteryChargeDeviation = DefaultInitialBatteryChargeDeviation,
+        double maxSpeed = DefaultMaxSpeed)
     {
         Id = agvTypeIdentifier.ToGuid();
         AgvTypeIdentifier = agvTypeIdentifier;
@@ -68,6 +70,7 @@ public record SimulatedAgvTypeConfiguration
         BatteryChargeRate = batteryChargeRate;
         InitialBatteryCharge = initialBatteryCharge;
         InitialBatteryChargeDeviation = initialBatteryChargeDeviation;
+        MaxSpeed = maxSpeed;
     }
 
     private static string IdentifierPart(string? agvTypeIdentifier, int index)
@@ -122,6 +125,27 @@ public record SimulatedAgvTypeConfiguration
         {
             errors.Add($"The battery charge rate must be greater than 0 percent per second but was {BatteryChargeRate}.");
         }
+        if (MaxSpeed <= 0)
+        {
+            errors.Add($"The maximum speed must be greater than 0 meters per second but was {MaxSpeed}.");
+        }
         return errors;
+    }
+}
+
+public static class AgvTypeConfigurationEx
+{
+    public static AgvConfiguration ToAgvConfiguration(this AgvTypeConfiguration typeConfiguration, string serialNumber)
+    {
+        return new AgvConfiguration(typeConfiguration.Manufacturer, typeConfiguration.SeriesName, serialNumber)
+        {
+            BatteryChargeRate = typeConfiguration.BatteryChargeRate,
+            BatteryDischargeRate = typeConfiguration.BatteryDischargeRate,
+            InitialBatteryCharge = typeConfiguration.InitialBatteryCharge,
+            InitialBatteryChargeDeviation = typeConfiguration.InitialBatteryChargeDeviation,
+            StateUpdateIntervalMs = typeConfiguration.StateUpdateIntervalMs,
+            VisualizationUpdateIntervalMs = typeConfiguration.VisualizationUpdateIntervalMs,
+            MaxSpeed = typeConfiguration.MaxSpeed
+        };
     }
 }

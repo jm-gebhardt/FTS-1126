@@ -113,8 +113,8 @@ public static class Vda5050SimulatorHostBuilder
                     });
                     builder.AddInterceptors(new EfCommandMetricsInterceptor());
                 });
-                services.AddTransient<ISimulatedAgvTypeConfigurationRepository, EfSimulatedAgvTypeConfigurationRepository>();
-                services.AddSingleton<SimulatedAgvTypeConfigurationService>();
+                services.AddTransient<IAgvTypeConfigurationRepository, EfAgvTypeConfigurationRepository>();
+                services.AddSingleton<AgvTypeConfigurationService>();
                 services.AddHostedService<AgvTypeConfigurationLoader>();
                 services.AddHostedService<SimulationLoop>();
                 services.AddHostedService<MqttGateway>();

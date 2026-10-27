@@ -42,4 +42,9 @@ public record AgvTypeSimulationSettings
     /// The maximum deviation in percent applied to the initial battery charge. Applied when an agv is spawned.
     /// </summary>
     public int? InitialBatteryChargeDeviation { get; init; }
+
+    /// <summary>
+    /// The maximum speed of the agvs in meters per second.
+    /// </summary>
+    public double? MaxSpeed { get; init; }
 }

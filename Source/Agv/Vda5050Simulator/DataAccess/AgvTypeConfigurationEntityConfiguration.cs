@@ -4,17 +4,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.Vda5050Simulator.DataAccess;
 
-public class SimulatedAgvTypeConfigurationEntityConfiguration : IEntityTypeConfiguration<SimulatedAgvTypeConfiguration>
+public class AgvTypeConfigurationEntityConfiguration : IEntityTypeConfiguration<AgvTypeConfiguration>
 {
     private const string TableName = "DeviceCommunicationVda5050SimulatorAgvTypeConfiguration";
 
-    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<SimulatedAgvTypeConfiguration> builder)
+    public void Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<AgvTypeConfiguration> builder)
     {
         builder.ToTable(TableName);
         builder.ConfigureAllProperties(except:
         [
-            nameof(SimulatedAgvTypeConfiguration.Manufacturer),
-            nameof(SimulatedAgvTypeConfiguration.SeriesName)
+            nameof(AgvTypeConfiguration.Manufacturer),
+            nameof(AgvTypeConfiguration.SeriesName)
         ]);
         builder.Ignore(e => e.Manufacturer);
         builder.Ignore(e => e.SeriesName);

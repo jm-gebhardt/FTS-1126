@@ -11,7 +11,7 @@ public static class Vda5050StateDtoMapper
     {
         return new Vda5050StateDto
         {
-            CorrelationId = id.CorrelationId,
+            CorrelationId = id.Id,
             MessageCreatedDate = snapshot.Timestamp.UtcDateTime,
             HeaderId = (uint)snapshot.HeaderId,
             Timestamp = snapshot.Timestamp,

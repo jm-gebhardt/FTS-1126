@@ -8,14 +8,14 @@ namespace Gebhardt.Acc.Vda5050Simulator.Runtime;
 /// <summary>
 /// Validates and persists agv type configurations and brings the fleet in line with them.
 /// </summary>
-public class SimulatedAgvTypeConfigurationService(
-    ILogger<SimulatedAgvTypeConfigurationService> logger,
-    ISimulatedAgvTypeConfigurationRepository repository,
+public class AgvTypeConfigurationService(
+    ILogger<AgvTypeConfigurationService> logger,
+    IAgvTypeConfigurationRepository repository,
     FleetHost fleet)
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
 
-    private static void Validate(SimulatedAgvTypeConfiguration configuration)
+    private static void Validate(AgvTypeConfiguration configuration)
     {
         var errors = configuration.Validate();
         if (errors.Count > 0)
@@ -24,7 +24,7 @@ public class SimulatedAgvTypeConfigurationService(
         }
     }
 
-    private static SimulatedAgvTypeConfiguration Apply(SimulatedAgvTypeConfiguration configuration, UpdateAgvTypeConfigurationDto settings)
+    private static AgvTypeConfiguration Apply(AgvTypeConfiguration configuration, UpdateAgvTypeConfigurationDto settings)
     {
         return configuration with
         {
@@ -34,11 +34,11 @@ public class SimulatedAgvTypeConfigurationService(
             BatteryDischargeRate = settings.BatteryDischargeRate ?? configuration.BatteryDischargeRate,
             BatteryChargeRate = settings.BatteryChargeRate ?? configuration.BatteryChargeRate,
             InitialBatteryCharge = settings.InitialBatteryCharge ?? configuration.InitialBatteryCharge,
-            InitialBatteryChargeDeviation = settings.InitialBatteryChargeDeviation ?? configuration.InitialBatteryChargeDeviation
+            MaxSpeed = settings.MaxSpeed ?? configuration.MaxSpeed
         };
     }
 
-    private async Task ApplyToFleetAsync(SimulatedAgvTypeConfiguration? current, SimulatedAgvTypeConfiguration? updated)
+    private async Task ApplyToFleetAsync(AgvTypeConfiguration? current, AgvTypeConfiguration? updated)
     {
         var currentSerials = current?.SerialNumbers().ToHashSet() ?? [];
         var newSerials = updated?.SerialNumbers().ToHashSet() ?? [];
@@ -46,7 +46,7 @@ public class SimulatedAgvTypeConfigurationService(
         {
             foreach (string serial in newSerials.Except(currentSerials))
             {
-                fleet.AddAgv(new AgvIdentity(updated.Manufacturer, updated.SeriesName, serial));
+                fleet.AddAgv(updated.ToAgvConfiguration(serial));
             }
         }
         if (current is not null)
@@ -58,12 +58,12 @@ public class SimulatedAgvTypeConfigurationService(
         }
     }
 
-    public async Task<SimulatedAgvTypeConfiguration> AddAsync(AddAgvTypeConfigurationDto dto)
+    public async Task<AgvTypeConfiguration> AddAsync(AddAgvTypeConfigurationDto dto)
     {
         await _lock.WaitAsync();
         try
         {
-            var configuration = Apply(new SimulatedAgvTypeConfiguration(dto.AgvTypeIdentifier), dto);
+            var configuration = Apply(new AgvTypeConfiguration(dto.AgvTypeIdentifier), dto);
             Validate(configuration);
             if (await repository.GetAsync(configuration.Id) != null)
             {
@@ -89,7 +89,7 @@ public class SimulatedAgvTypeConfigurationService(
         await _lock.WaitAsync();
         try
         {
-            var configuration = Apply(new SimulatedAgvTypeConfiguration(agvTypeIdentifier), settings);
+            var configuration = Apply(new AgvTypeConfiguration(agvTypeIdentifier), settings);
             if (await repository.GetAsync(configuration.Id) != null)
             {
                 logger.LogInformation("The agv type {AgvTypeIdentifier} is already configured, skipping", agvTypeIdentifier);
@@ -107,7 +107,7 @@ public class SimulatedAgvTypeConfigurationService(
         }
     }
 
-    public async Task<SimulatedAgvTypeConfiguration> UpdateAsync(Guid agvTypeId, UpdateAgvTypeConfigurationDto dto)
+    public async Task<AgvTypeConfiguration> UpdateAsync(Guid agvTypeId, UpdateAgvTypeConfigurationDto dto)
     {
         await _lock.WaitAsync();
         try
@@ -142,12 +142,12 @@ public class SimulatedAgvTypeConfigurationService(
         }
     }
 
-    public async Task<SimulatedAgvTypeConfiguration> GetRequiredAsync(Guid agvTypeId)
+    public async Task<AgvTypeConfiguration> GetRequiredAsync(Guid agvTypeId)
     {
         return await repository.GetAsync(agvTypeId) ?? throw new AgvTypeConfigurationNotFoundException(agvTypeId);
     }
 
-    public Task<IReadOnlyCollection<SimulatedAgvTypeConfiguration>> GetAllAsync()
+    public Task<IReadOnlyCollection<AgvTypeConfiguration>> GetAllAsync()
     {
         return repository.GetAllAsync();
     }

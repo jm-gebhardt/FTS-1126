@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.Domain;
 /// Raised when no simulation configuration exists for an AGV type.
 /// </summary>
 public class AgvTypeConfigurationNotFoundException(Guid agvTypeId)
-    : NotFoundException(nameof(SimulatedAgvTypeConfiguration), nameof(SimulatedAgvTypeConfiguration.Id), agvTypeId);
+    : NotFoundException(nameof(AgvTypeConfiguration), nameof(AgvTypeConfiguration.Id), agvTypeId);
 
 /// <summary>
 /// Raised when a simulation configuration for the same AGV type already exists.

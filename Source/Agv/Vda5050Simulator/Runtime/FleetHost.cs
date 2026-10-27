@@ -31,11 +31,11 @@ public sealed class FleetHost(ISimulationClock clock, IAgvPublisher publisher, I
         _cts?.Cancel();
     }
 
-    public bool AddAgv(AgvIdentity id, double maxSpeed = 1.0)
+    public bool AddAgv(AgvConfiguration configuration)
     {
-        var model = new AgvModel(id, maxSpeed, _actionDuration);
+        var model = new AgvModel(configuration, _actionDuration);
         var actor = new AgvActor(model, clock, publisher, _stateInterval, factsheetProvider, loggerFactory.CreateLogger<AgvActor>());
-        if (!_actors.TryAdd((id.Manufacturer, id.SerialNumber), actor))
+        if (!_actors.TryAdd((configuration.Manufacturer, configuration.SerialNumber), actor))
         {
             return false;
         }
@@ -78,7 +78,7 @@ public sealed class FleetHost(ISimulationClock clock, IAgvPublisher publisher, I
     {
         foreach (var actor in _actors.Values)
         {
-            if (actor.Id.CorrelationId == correlationId)
+            if (actor.Id.Id == correlationId)
             {
                 id = actor.Id;
                 return true;

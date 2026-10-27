@@ -13,6 +13,6 @@ public class Vda5050SimulatorDbContext : BaseDbContext<Vda5050SimulatorDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new SimulatedAgvTypeConfigurationEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AgvTypeConfigurationEntityConfiguration());
     }
 }

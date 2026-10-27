@@ -5,41 +5,41 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Repositories;
 
-public interface ISimulatedAgvTypeConfigurationRepository
+public interface IAgvTypeConfigurationRepository
 {
-    Task<SimulatedAgvTypeConfiguration?> GetAsync(Guid agvTypeId);
+    Task<AgvTypeConfiguration?> GetAsync(Guid agvTypeId);
     
-    Task<IReadOnlyCollection<SimulatedAgvTypeConfiguration>> GetAllAsync();
+    Task<IReadOnlyCollection<AgvTypeConfiguration>> GetAllAsync();
     
-    Task AddAsync(SimulatedAgvTypeConfiguration configuration);
+    Task AddAsync(AgvTypeConfiguration configuration);
     
-    Task UpdateAsync(SimulatedAgvTypeConfiguration configuration);
+    Task UpdateAsync(AgvTypeConfiguration configuration);
     
     Task DeleteAsync(Guid agvTypeId);
 }
 
-public class EfSimulatedAgvTypeConfigurationRepository(IDbContextFactory<Vda5050SimulatorDbContext> dbContextFactory) : ISimulatedAgvTypeConfigurationRepository
+public class EfAgvTypeConfigurationRepository(IDbContextFactory<Vda5050SimulatorDbContext> dbContextFactory) : IAgvTypeConfigurationRepository
 {
-    public async Task<SimulatedAgvTypeConfiguration?> GetAsync(Guid agvTypeId)
+    public async Task<AgvTypeConfiguration?> GetAsync(Guid agvTypeId)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return await context.Set<SimulatedAgvTypeConfiguration>()
+        return await context.Set<AgvTypeConfiguration>()
             .AsNoTracking()
             .SingleOrDefaultAsync(c => c.Id == agvTypeId);
     }
 
-    public async Task<IReadOnlyCollection<SimulatedAgvTypeConfiguration>> GetAllAsync()
+    public async Task<IReadOnlyCollection<AgvTypeConfiguration>> GetAllAsync()
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        return await context.Set<SimulatedAgvTypeConfiguration>()
+        return await context.Set<AgvTypeConfiguration>()
             .AsNoTracking()
             .ToListAsync();
     }
 
-    public async Task AddAsync(SimulatedAgvTypeConfiguration configuration)
+    public async Task AddAsync(AgvTypeConfiguration configuration)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        context.Set<SimulatedAgvTypeConfiguration>().Add(configuration);
+        context.Set<AgvTypeConfiguration>().Add(configuration);
         try
         {
             await context.SaveChangesAsync();
@@ -50,10 +50,10 @@ public class EfSimulatedAgvTypeConfigurationRepository(IDbContextFactory<Vda5050
         }
     }
 
-    public async Task UpdateAsync(SimulatedAgvTypeConfiguration configuration)
+    public async Task UpdateAsync(AgvTypeConfiguration configuration)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        context.Set<SimulatedAgvTypeConfiguration>().Update(configuration);
+        context.Set<AgvTypeConfiguration>().Update(configuration);
         try
         {
             await context.SaveChangesAsync();
@@ -67,10 +67,10 @@ public class EfSimulatedAgvTypeConfigurationRepository(IDbContextFactory<Vda5050
     public async Task DeleteAsync(Guid agvTypeId)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
-        var configuration = await context.Set<SimulatedAgvTypeConfiguration>()
+        var configuration = await context.Set<AgvTypeConfiguration>()
                                 .SingleOrDefaultAsync(c => c.Id == agvTypeId)
                             ?? throw new AgvTypeConfigurationNotFoundException(agvTypeId);
-        context.Set<SimulatedAgvTypeConfiguration>().Remove(configuration);
+        context.Set<AgvTypeConfiguration>().Remove(configuration);
         await context.SaveChangesAsync();
     }
 }

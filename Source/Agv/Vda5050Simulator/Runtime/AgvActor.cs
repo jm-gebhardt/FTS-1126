@@ -27,7 +27,6 @@ public sealed class AgvActor
     private readonly TimeSpan _stateInterval;
     private readonly ILogger<AgvActor> _logger;
     private readonly IFactsheetProvider _factsheetProvider;
-    private readonly string _agvTypeIdentifier;
     private CancellationToken _cancellationToken;
     private Task? _loop;
 
@@ -39,16 +38,15 @@ public sealed class AgvActor
     public AgvActor(AgvModel model, ISimulationClock clock, IAgvPublisher publisher, TimeSpan stateInterval, IFactsheetProvider factsheetProvider, ILogger<AgvActor> logger)
     {
         _factsheetProvider = factsheetProvider;
-        _agvTypeIdentifier = model.Id.AgvTypeIdentifier;
         _model = model;
         _clock = clock;
         _publisher = publisher;
         _stateInterval = stateInterval;
         _logger = logger;
-        _logger.LogInformation("{AgvId} - {CorrelationId}", model.Id, model.Id.CorrelationId);
+        _logger.LogInformation("{AgvId} - {Id}", model.AgvIdentity.SerialNumber, model.AgvIdentity.Id);
     }
 
-    public AgvIdentity Id => _model.Id;
+    public AgvIdentity Id => _model.AgvIdentity;
 
     public void Start(CancellationToken cancellationToken)
     {
@@ -170,7 +168,7 @@ public sealed class AgvActor
                 _model.SetInstantActionState(resolved.ActionId, Vda5050Specifications.ActionTypes.FactsheetRequest, resolved.FactsheetJson == null ? ActionStatus.Failed : ActionStatus.Finished);
                 if (resolved.FactsheetJson == null)
                 {
-                    _logger.LogWarning("AGV {AgvId}: no factsheet available for agv type '{AgvTypeIdentifier}'", Id, _agvTypeIdentifier);
+                    _logger.LogWarning("AGV {AgvId}: no factsheet available for agv type '{AgvTypeIdentifier}'", Id, _model.AgvIdentity.AgvTypeIdentifier);
                 }
                 else
                 {
@@ -247,7 +245,7 @@ public sealed class AgvActor
         string? json = null;
         try
         {
-            json = await _factsheetProvider.GetAsync(_model.Id, _cancellationToken);
+            json = await _factsheetProvider.GetAsync(_model.AgvIdentity, _cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -255,7 +253,7 @@ public sealed class AgvActor
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "AGV {AgvId}: failed to fetch factsheet of agv type '{AgvTypeIdentifier}'", Id, _agvTypeIdentifier);
+            _logger.LogWarning(ex, "AGV {AgvId}: failed to fetch factsheet of agv type '{AgvTypeIdentifier}'", Id, _model.AgvIdentity.AgvTypeIdentifier);
         }
         
         Post(new FactsheetResolved(Id, actionId, json));

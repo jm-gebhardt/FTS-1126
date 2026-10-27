@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.Vda5050Simulator.Messaging;
 /// <summary>
 /// Handles <see cref="EnsureSimulatedAgvTypeConfiguration"/>: stores the simulation configuration of an agv type unless it already exists.
 /// </summary>
-public sealed class EnsureSimulatedAgvTypeConfigurationConsumer(Runtime.SimulatedAgvTypeConfigurationService service)
+public sealed class EnsureSimulatedAgvTypeConfigurationConsumer(Runtime.AgvTypeConfigurationService service)
     : IConsumer<EnsureSimulatedAgvTypeConfiguration>
 {
     public async Task Consume(ConsumeContext<EnsureSimulatedAgvTypeConfiguration> context)
@@ -23,7 +23,8 @@ public sealed class EnsureSimulatedAgvTypeConfigurationConsumer(Runtime.Simulate
             BatteryDischargeRate = settings.BatteryDischargeRate,
             BatteryChargeRate = settings.BatteryChargeRate,
             InitialBatteryCharge = settings.InitialBatteryCharge,
-            InitialBatteryChargeDeviation = settings.InitialBatteryChargeDeviation
+            InitialBatteryChargeDeviation = settings.InitialBatteryChargeDeviation,
+            MaxSpeed = settings.MaxSpeed
         };
         await service.EnsureAsync(agvTypeIdentifier, dto);
         await context.RespondAsync(new Success());

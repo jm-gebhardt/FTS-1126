@@ -6,12 +6,20 @@ namespace Gebhardt.Acc.Vda5050Simulator.WebApi.Dtos;
 public record UpdateAgvTypeConfigurationDto
 {
     public int? NoOfAgvs { get; init; }
+    
     public int? StateUpdateIntervalMs { get; init; }
+    
     public int? VisualizationUpdateIntervalMs { get; init; }
+    
     public double? BatteryDischargeRate { get; init; }
+    
     public double? BatteryChargeRate { get; init; }
+    
     public int? InitialBatteryCharge { get; init; }
+    
     public int? InitialBatteryChargeDeviation { get; init; }
+
+    public double? MaxSpeed { get; init; }
 }
 
 /// <summary>
@@ -29,15 +37,30 @@ public record AddAgvTypeConfigurationDto : UpdateAgvTypeConfigurationDto
 public record AgvTypeConfigurationDto
 {
     public Guid AgvTypeId { get; init; }
+
     public string AgvTypeIdentifier { get; init; } = string.Empty;
+    
     public string Manufacturer { get; init; } = string.Empty;
+    
     public string SeriesName { get; init; } = string.Empty;
+    
     public IReadOnlyCollection<string> SerialNumbers { get; init; } = [];
+    
     public int NoOfAgvs { get; init; }
+    
     public int StateUpdateIntervalMs { get; init; }
+    
     public int VisualizationUpdateIntervalMs { get; init; }
+    
     public double BatteryDischargeRate { get; init; }
+    
     public double BatteryChargeRate { get; init; }
+    
     public int InitialBatteryCharge { get; init; }
+    
     public int InitialBatteryChargeDeviation { get; init; }
+
+    public double MaxSpeed { get; init; }
+
+
 }
