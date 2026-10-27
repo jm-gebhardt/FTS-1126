@@ -136,4 +136,9 @@ public static class LogCodes
     public const int SystemBackgroundDeleted = 519;
     public const int SystemAgvTypeCreated = 520;
     public const int SystemAgvTypeAcknowledged = 521;
+    public const int SystemViewAdded = 522;
+    public const int SystemViewUpdated = 523;
+    public const int SystemViewDeleted = 524;
+    public const int SystemViewBackgroundImageUpdated = 525;
+    public const int SystemViewBackgroundImageDeleted = 526;
 }

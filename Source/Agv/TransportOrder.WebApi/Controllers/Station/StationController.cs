@@ -29,13 +29,13 @@ public class StationController : Controller
     /// <inheritdoc cref="StationController"/>
     public StationController(IMapper mapper,
         IRequestClient<GetStation> getStationClient, IRequestClient<TryLockStation> lockStationClient, IRequestClient<TryUnlockStation> unlockStationClient,
-        IRequestClient<UnblockStation> unblockStationClient, IRequestClient<SendJamStateRequest> sendJamStateRequestClient) 
+        IRequestClient<UnblockStation> unblockStationClient, IRequestClient<SendJamStateRequest> sendJamStateRequestClient)
     {
         _getStationClient = getStationClient;
         _lockStationClient = lockStationClient;
         _unlockStationClient = unlockStationClient;
         _unblockStationClient = unblockStationClient;
-        _sendJamStateRequestClient = sendJamStateRequestClient; 
+        _sendJamStateRequestClient = sendJamStateRequestClient;
         _mapper = mapper;
     }
 
@@ -46,10 +46,10 @@ public class StationController : Controller
     /// <response code="404">Station with given id not found.</response>
     [HttpGet]
     [Route("/station/{id:Guid}")]
-    public async Task<ActionResult<StationDto>> GetStation(Guid id)
+    public async Task<ActionResult<StationStateDto>> GetStation(Guid id)
     {
         var response = await _getStationClient.GetResponse<GotStation>(new GetStation(id));
-        var stationDto = _mapper.Map<StationDto>(response.Message.Station);
+        var stationDto = _mapper.Map<StationStateDto>(response.Message.Station);
         return Ok(stationDto);
     }
 
@@ -62,10 +62,10 @@ public class StationController : Controller
     [HttpPost]
     [Route("/station/{id:Guid}/lock")]
     public async Task<ActionResult<bool>> LockStation(
-        [Required]Guid id,
-        [FromQuery][Required] string reason,
-        [FromQuery][Required] string lockDescription,
-        [FromQuery][Required] LockedOrderHandlingType lockedOrderHandling
+        [Required] Guid id,
+        [FromQuery] [Required] string reason,
+        [FromQuery] [Required] string lockDescription,
+        [FromQuery] [Required] LockedOrderHandlingType lockedOrderHandling
     )
     {
         string? email = User.GetEmail();
@@ -87,7 +87,7 @@ public class StationController : Controller
     /// <response code="404">Station with given id not found.</response>
     [HttpPatch]
     [Route("/station/{id:Guid}/unlock")]
-    public async Task<ActionResult<bool>> UnlockStation([Required]Guid id)
+    public async Task<ActionResult<bool>> UnlockStation([Required] Guid id)
     {
         string? email = User.GetEmail();
         if (email == null)

@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Views;
 using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.Domain.Repositories;
@@ -40,4 +41,11 @@ public interface INewGraphRepository
     /// </summary>
     /// <param name="id">Id of the routing edge.</param>
     Task<bool> RoutingEdgeExistsAsync(Guid id);
+
+    /// <summary>
+    /// Returns the area covered by the nodes and stations of each level. A station belongs to the level of its
+    /// first interaction node.
+    /// </summary>
+    /// <returns>One area per level, empty if there is no node.</returns>
+    Task<IReadOnlyList<LevelArea>> GetLevelAreasAsync();
 }

@@ -201,10 +201,10 @@ public class AgvController : Controller
     /// <returns>The agv graph of that agv.</returns>
     [HttpGet]
     [Route("/agv/{correlationId:guid}/graph")]
-    public async Task<ActionResult<GraphDto>> GetAgvGraph(Guid correlationId)
+    public async Task<ActionResult<AgvGraphDto>> GetAgvGraph(Guid correlationId)
     {
         var response = await _getAgvGraphClient.GetResponse<GotAgvGraph>(new GetAgvGraph(correlationId));
-        var graph = _mapper.Map<GraphDto>(response.Message.AgvGraph);
+        var graph = _mapper.Map<AgvGraphDto>(response.Message.AgvGraph);
         return Ok(graph);
     }
 

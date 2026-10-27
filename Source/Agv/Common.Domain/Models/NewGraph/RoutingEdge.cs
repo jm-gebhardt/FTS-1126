@@ -44,7 +44,7 @@ public record RoutingEdge : RoutingResource
     public double? RotationAtStart { get; init; }
 
     /// <summary>
-    /// Rotation at the start of the edge in [rad]. If null, there is no specific rotation before traversing this edge.
+    /// Rotation at the end of the edge in [rad]. If null, there is no specific rotation before traversing this edge.
     /// </summary>
     public double? RotationAtEnd { get; init; }
 

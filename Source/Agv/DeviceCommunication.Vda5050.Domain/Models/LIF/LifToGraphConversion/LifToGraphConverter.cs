@@ -23,9 +23,9 @@ public static class LifToGraphConverter
     public static GraphSegment ToGraphSegment(LifLayoutCollection layoutCollection, IReadOnlyDictionary<string, Guid> agvTypeIdentifiers, ILogger logger)
     {
         var container = new GraphContainer(agvTypeIdentifiers)
-                        {
-                            LifId = layoutCollection.MetaInformation.Creator
-                        };
+        {
+            LifId = layoutCollection.MetaInformation.Creator
+        };
 
         layoutCollection.Layouts.ForEach(layout => AddNodes(layout, container));
         layoutCollection.Layouts.ForEach(layout => AddEdges(layout, container));
@@ -92,6 +92,8 @@ public static class LifToGraphConverter
                     continue;
                 }
 
+                var actions = nodeHelper.GetActions(vehicleTypeId);
+
                 foreach (var loadStateId in GetLoadStateIds(vehicleTypeId))
                 {
                     var thetas = nodeHelper.GetThetas(vehicleTypeId);
@@ -103,7 +105,7 @@ public static class LifToGraphConverter
 
                     foreach (double theta in thetas)
                     {
-                        container.Add(nodeId, new RoutingNode(Guid.NewGuid(), agvTypeId, loadStateId, theta));
+                        container.Add(nodeId, new RoutingNode(Guid.NewGuid(), agvTypeId, loadStateId, theta) { Actions = [.. actions] });
                     }
                 }
             }
@@ -234,19 +236,19 @@ public static class LifToGraphConverter
         }
 
         container.Add(edgeId, new RoutingEdge(Guid.NewGuid(),
-                                                agvTypeId,
-                                                startRoutingNode.Id,
-                                                endRoutingNode.Id,
-                                                length,
-                                                edgeProperty.VehicleOrientation,
-                                                GetOrientationType(edgeProperty.OrientationType),
-                                                rotationAtStart,
-                                                rotationAtEnd,
-                                                rotationAllowed,
-                                                edgeProperty.MaxSpeed,
-                                                edgeProperty.MaxRotationSpeed,
-                                                trajectory));
-        }
+            agvTypeId,
+            startRoutingNode.Id,
+            endRoutingNode.Id,
+            length,
+            edgeProperty.VehicleOrientation,
+            GetOrientationType(edgeProperty.OrientationType),
+            rotationAtStart,
+            rotationAtEnd,
+            rotationAllowed,
+            edgeProperty.MaxSpeed,
+            edgeProperty.MaxRotationSpeed,
+            trajectory));
+    }
 
     /// <summary>
     /// Gets the load state ids based on the given load restriction. Simplified temporary logic with hardcoded load state ids which are matching in TransportOrder.

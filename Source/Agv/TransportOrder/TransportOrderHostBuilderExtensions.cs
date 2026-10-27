@@ -187,6 +187,7 @@ public static class TransportOrderHostBuilderExtensions
 
         services.AddTransient<IGraphRepository, EfGraphRepository>();
         services.AddSingleton<INewGraphRepository, NewGraphRepository>();
+        services.AddTransient<IViewRepository, EfViewRepository>();
         services.AddTransient<IRoutingResourceConflictRepository, EfRoutingResourceConflictRepository>();
         services.AddTransient<INodeRepository, GraphNodeRepository>();
         services.AddTransient<IMaintenanceLogRepository, EfMaintenanceLogRepository>();

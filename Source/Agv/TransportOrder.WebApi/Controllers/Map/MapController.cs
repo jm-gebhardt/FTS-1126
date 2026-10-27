@@ -99,7 +99,7 @@ public class MapController : Controller
     [Produces("image/png")]
     public async Task<ActionResult> GetBaseBackgroundImage(Guid correlationId)
     {
-        var response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId, GetBaseImage:true));
+        var response = await _getBackgroundImageClient.GetResponse<GotBackgroundImage>(new GetBackgroundImage(correlationId, GetBaseImage: true));
 
         return File(response.Message.Image, "image/png");
     }
@@ -145,7 +145,7 @@ public class MapController : Controller
     public async Task<ActionResult> DeleteBackground(Guid correlationId)
     {
         await _deleteBackgroundClient.GetResponse<Success>(new DeleteBackground(correlationId));
-        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemMapBackgroundImageDeleted} });
+        await _loggingService.LogSystem(_logger, LogCodes.SystemOperatorInteraction, "Operator interaction", "Operator interacted with system", new Dictionary<string, object?> { { LogLabels.User, User.GetEmail() }, { LogLabels.Operation, LogCodes.SystemMapBackgroundImageDeleted } });
 
         return NoContent();
     }
@@ -193,10 +193,10 @@ public class MapController : Controller
     /// <response code="404">Map with given correlationId not found.</response>
     [HttpGet]
     [Route("/map/{correlationId:guid}/graph")]
-    public async Task<ActionResult<GraphDto>> GetMapGraph(Guid correlationId)
+    public async Task<ActionResult<AgvGraphDto>> GetMapGraph(Guid correlationId)
     {
         var response = await _getMapGraphClient.GetResponse<GotMapGraph>(new GetMapGraph(correlationId));
-        var graph = _mapper.Map<GraphDto>(response.Message.Graph);
+        var graph = _mapper.Map<AgvGraphDto>(response.Message.Graph);
         return Ok(graph);
     }
 
@@ -237,10 +237,10 @@ public class MapController : Controller
     /// <returns></returns>
     [HttpGet]
     [Route("/map/{correlationId:guid}/stations")]
-    public async Task<ActionResult<ICollection<StationDto>>> GetStationsForMap(Guid correlationId)
+    public async Task<ActionResult<ICollection<StationStateDto>>> GetStationsForMap(Guid correlationId)
     {
         var response = await _getMapStationsClient.GetResponse<GotMapStations>(new GetMapStations(correlationId));
-        var stationsDto = _mapper.Map<List<StationDto>>(response.Message.Stations);
+        var stationsDto = _mapper.Map<List<StationStateDto>>(response.Message.Stations);
         return Ok(stationsDto);
     }
 

@@ -8,7 +8,7 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Map;
 /// The station dto.
 /// </summary>
 [PublicAPI]
-public record StationDto
+public record StationStateDto
 {
     /// <summary>
     /// The id of the station.
@@ -28,12 +28,12 @@ public record StationDto
     /// <summary>
     /// Length of the station [m].
     /// </summary>
-    public double Length { get;  set; }
+    public double Length { get; set; }
 
     /// <summary>
     /// Width of the station [m].
     /// </summary>
-    public double Width { get;  set; }
+    public double Width { get; set; }
 
     /// <summary>
     /// The primary type of the station.
@@ -119,7 +119,7 @@ public record StationDto
     /// <summary>
     /// ctor called by AutoMapper.
     /// </summary>
-    private StationDto()
+    private StationStateDto()
     {
         Name = string.Empty;
     }

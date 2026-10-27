@@ -96,7 +96,7 @@ public class AgvsController : Controller
         var response = await _getAgvsClient.GetResponse<GotAgvs>(new GetAgvs(new List<Guid>()));
         var agvs = _mapper.Map<List<AgvDto>>(response.Message.Agvs);
         return Ok(agvs);
-        
+
         // check if map/NODE-1 is right
     }
 
@@ -140,14 +140,14 @@ public class AgvsController : Controller
     /// <response code="400">One or more of given correlation ids does not belong to a known agv.</response>
     [HttpPost]
     [Route("/agvs/graph")]
-    public async Task<ActionResult<IEnumerable<GraphDto>>> GetAgvGraphs([FromQuery] ICollection<Guid> correlationIds)
+    public async Task<ActionResult<IEnumerable<AgvGraphDto>>> GetAgvGraphs([FromQuery] ICollection<Guid> correlationIds)
     {
         if (correlationIds.Count == 0)
         {
-            return Ok(new List<GraphDto>());
+            return Ok(new List<AgvGraphDto>());
         }
         var response = await _getAgvGraphsClient.GetResponse<GotAgvGraphs>(new GetAgvGraphs(correlationIds));
-        var graphs = _mapper.Map<List<GraphDto>>(response.Message.Graphs);
+        var graphs = _mapper.Map<List<AgvGraphDto>>(response.Message.Graphs);
         return Ok(graphs);
     }
 
@@ -381,7 +381,7 @@ public class AgvsController : Controller
         var logs = response.Message.MaintenanceLogs
             .GroupBy(log => log.AgvCorrelationId)
             .ToDictionary(
-                group => group.Key, 
+                group => group.Key,
                 group => (ICollection<AgvMaintenanceLogDto>)group
                     .Select(log => _mapper.Map<AgvMaintenanceLogDto>(log))
                     .ToList()
