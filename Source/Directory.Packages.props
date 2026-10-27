@@ -48,10 +48,10 @@
     <PackageVersion Include="Microsoft.IdentityModel.Protocols" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.22.7" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.22.7" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.22.7" />
-    <PackageVersion Include="Quartz" Version="3.22.7" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.22.9" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.22.9" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.22.9" />
+    <PackageVersion Include="Quartz" Version="3.22.9" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
@@ -94,7 +94,7 @@
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.7.1" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.7.1" />
     <PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
-    <PackageVersion Include="Polly" Version="8.8.0" />
+    <PackageVersion Include="Polly" Version="8.8.1" />
     <!-- ====================================== -->
   </ItemGroup>
 </Project>
