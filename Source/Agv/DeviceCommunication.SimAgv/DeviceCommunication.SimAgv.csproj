@@ -2,7 +2,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.DeviceCommunication.SimAgv</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
         <PackageReference Include="AutoMapper" />

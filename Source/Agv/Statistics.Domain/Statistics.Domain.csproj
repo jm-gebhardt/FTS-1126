@@ -2,7 +2,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.Statistics.Domain</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
     </ItemGroup>

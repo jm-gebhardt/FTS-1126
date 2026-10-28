@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.TransportOrder.Core</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="Azure.Identity" />

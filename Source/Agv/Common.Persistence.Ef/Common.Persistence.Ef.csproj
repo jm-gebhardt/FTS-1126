@@ -3,7 +3,7 @@
       <AssemblyName>Gebhardt.Acc.Common.Persistence.Ef</AssemblyName>
       <OutputType>Library</OutputType>
   </PropertyGroup>
-   <Import Project="..\SharedProjectSettings.csproj" />
+   <Import Project="..\SharedProjectsSettings.props" />
    <ItemGroup>
        <PackageReference Include="Azure.Identity" />
        <PackageReference Include="MassTransit.Prometheus" />

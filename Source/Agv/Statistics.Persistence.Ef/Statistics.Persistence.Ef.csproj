@@ -2,7 +2,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.Statistics.Persistence.Ef</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="Azure.Identity" />

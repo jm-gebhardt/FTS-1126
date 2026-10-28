@@ -3,7 +3,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.TriggerCargoCheck</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
       <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
       <ProjectReference Include="..\Common.Messages\Common.Messages.csproj" />

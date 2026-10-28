@@ -3,7 +3,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.OrderTranslator.Domain</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="YamlDotNet" />
         <PackageReference Include="JetBrains.Annotations" />

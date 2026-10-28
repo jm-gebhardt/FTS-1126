@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.WCSCommunication</AssemblyName>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="Azure.Identity" />
         <PackageReference Include="MassTransit.Prometheus"  />

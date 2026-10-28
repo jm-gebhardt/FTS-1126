@@ -4,7 +4,7 @@
         <IsPackable>false</IsPackable>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
       <ProjectReference Include="..\Common.Testing\Common.Testing.csproj" />
       <ProjectReference Include="..\PrismatCommunication.Domain\PrismatCommunication.Domain.csproj" />

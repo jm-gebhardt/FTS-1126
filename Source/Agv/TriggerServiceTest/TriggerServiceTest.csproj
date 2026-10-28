@@ -4,7 +4,7 @@
         <AssemblyName>Gebhardt.Acc.TriggerService.Test</AssemblyName>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="MassTransit"/>

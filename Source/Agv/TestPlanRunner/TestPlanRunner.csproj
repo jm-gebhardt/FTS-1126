@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.TestPlanRunner</AssemblyName>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="MassTransit.Prometheus" />

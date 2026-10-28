@@ -4,7 +4,7 @@
         <IsPackable>false</IsPackable>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
-    <Import Project="..\..\Agv\SharedProjectSettings.csproj" />
+    <Import Project="..\..\Agv\SharedProjectsSettings.props" />
 
     <PropertyGroup>
         <OpenApiConfigLocation>Api\transportorder.nswag</OpenApiConfigLocation>

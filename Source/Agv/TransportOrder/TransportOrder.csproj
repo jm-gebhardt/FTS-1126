@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.TransportOrder</AssemblyName>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="MassTransit.Prometheus" />
         <PackageReference Include="MassTransit.EntityFrameworkCore"  />
