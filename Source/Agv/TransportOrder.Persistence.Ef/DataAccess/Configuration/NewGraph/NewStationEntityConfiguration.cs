@@ -19,6 +19,7 @@ public class NewStationEntityConfiguration : IEntityTypeConfiguration<Station>
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.ShortName).HasMaxLength(DbStringLimits.Description);
 
+        builder.Property(e => e.LifStationId).HasMaxLength(DbStringLimits.Name);
         builder.Property(e => e.X);
         builder.Property(e => e.Y);
         builder.Property(e => e.Theta);

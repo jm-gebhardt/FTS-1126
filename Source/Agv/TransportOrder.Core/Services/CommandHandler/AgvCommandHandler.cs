@@ -2202,6 +2202,8 @@ public class AgvCommandHandler :
             await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvConfigurationInvalid, correlationId, null, "AGV configuration invalid", $"AGV {agvSerialNumber} received invalid configuration",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
         }
+
+        await context.Publish(new AgvAgvTypeUpdated(agv.CorrelationId));
     }
 
     /// <inheritdoc cref="AgvCommandHandler"/>

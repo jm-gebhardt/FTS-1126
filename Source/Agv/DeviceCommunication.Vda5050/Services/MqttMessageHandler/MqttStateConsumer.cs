@@ -39,6 +39,9 @@ public class MqttStateConsumer : IConsumer<MqttState>
     {
         _stateParser.Parse(context.Message);
         _logger.LogDebug("Received {MessageType} from {AgvId}", nameof(MqttState), _stateParser.SerialNumber);
+
+        await SendTrafficManagementAgvStatus(context); //todo: publish batch?
+        
         await SendAgvStatusAsync(context);
         await SendAgvPositionAsync(context);
         await SendAgvErrorStatusAsync(context);
@@ -54,8 +57,14 @@ public class MqttStateConsumer : IConsumer<MqttState>
             {
                 agv.SetCommunicationSpecification(routingKey);
             }
+
             await context.Publish(new AgvDiscovered(agv.CorrelationId, agv, null));
         }
+    }
+
+    private async Task SendTrafficManagementAgvStatus(ConsumeContext<MqttState> context)
+    {
+        await context.Publish(_stateParser.AgvTrafficManagementStatus);
     }
 
     private async Task SendAgvStatusAsync(ConsumeContext<MqttState> context)

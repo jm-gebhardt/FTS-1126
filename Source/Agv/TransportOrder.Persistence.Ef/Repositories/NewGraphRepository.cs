@@ -1,4 +1,5 @@
 using Gebhardt.Acc.Common.Domain.Models.NewGraph;
+using Gebhardt.Acc.TransportOrder.Domain.Models.Views;
 using Gebhardt.Acc.TransportOrder.Domain.Repositories;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
 using JetBrains.Annotations;
@@ -85,13 +86,13 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
     }
 
     /// <inheritdoc/>
-    public async Task<Graph> GetGraphAsync()
+    public async Task<Graph> GetGraphAsync(CancellationToken cancellationToken = default)
     {
-        await using var context = await contextFactory.CreateDbContextAsync();
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync();
-        var edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync();
-        var stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync();
+        var nodes = await context.Set<Node>().Include(n => n.RoutingNodes).ToListAsync(cancellationToken);
+        var edges = await context.Set<Edge>().Include(n => n.RoutingEdges).ToListAsync(cancellationToken);
+        var stations = await context.Set<Station>().Include(s => s.InteractionNodes).ToListAsync(cancellationToken);
 
         var graph = new Graph(nodes, edges, stations);
 
@@ -118,7 +119,7 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
 
         await context.SaveChangesAsync();
     }
-    
+
     /// <inheritdoc/>
     public async Task<bool> DeleteGraphSegmentAsync(Guid graphSegmentId)
     {
@@ -158,5 +159,37 @@ public class NewGraphRepository(IDbContextFactory<TransportOrderDbContext> conte
         await using var context = await contextFactory.CreateDbContextAsync();
 
         return await context.Set<RoutingEdge>().AsNoTracking().AnyAsync(e => e.Id == id);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<LevelArea>> GetLevelAreasAsync()
+    {
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        var nodeAreas = await context.Set<Node>()
+            .GroupBy(n => n.LevelId)
+            .Select(level => new LevelArea(level.Key,
+                new ViewArea(level.Min(n => n.X),
+                    level.Min(n => n.Y),
+                    level.Max(n => n.X),
+                    level.Max(n => n.Y))))
+            .ToListAsync();
+
+        var stationAreas = await context.Set<Station>()
+            .Select(s => new { LevelId = s.InteractionNodes.Select(n => n.LevelId).FirstOrDefault(), s.X, s.Y })
+            .GroupBy(s => s.LevelId)
+            .Select(level => new LevelArea(level.Key,
+                new ViewArea(level.Min(s => s.X),
+                    level.Min(s => s.Y),
+                    level.Max(s => s.X),
+                    level.Max(s => s.Y))))
+            .ToListAsync();
+
+        return nodeAreas
+            .Concat(stationAreas)
+            .GroupBy(l => l.LevelId)
+            .Select(level => new LevelArea(level.Key,
+                level.Select(l => l.Area).Aggregate((area, other) => area.Union(other))))
+            .ToList();
     }
 }

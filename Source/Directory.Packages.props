@@ -35,62 +35,62 @@
     <PackageVersion Include="Gebhardt.Core.Observability" Version="10.8.5" />
     <PackageVersion Include="Gebhardt.Core.Observability.Abstractions" Version="10.8.5" />
     <PackageVersion Include="OpenTelemetry.Resources.Container" Version="1.20.0-beta.1" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.0" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.20.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.20.1" />
     <!-- Only update together with notification center version in AgvDevComb -->
     <PackageVersion Include="Gebhardt.Core.NotificationCenter.Contracts" Version="[0.1.94]" />
     <!-- ====================================== -->
     <!-- Do not update to v9+ (commercial license required). Stay on v8.x (open source) -->
-    <PackageVersion Include="MassTransit" Version="8.5.11" />
-    <PackageVersion Include="MassTransit.Abstractions" Version="8.5.11" />
+    <PackageVersion Include="MassTransit" Version="8.5.12" />
+    <PackageVersion Include="MassTransit.Abstractions" Version="8.5.12" />
     <PackageVersion Include="MassTransit.Prometheus" Version="8.1.3" />
-    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.11" />
-    <PackageVersion Include="MassTransit.Quartz" Version="8.5.11" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.11" />
+    <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.12" />
+    <PackageVersion Include="MassTransit.Quartz" Version="8.5.12" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.12" />
     <!-- ====================================== -->
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
-    <PackageVersion Include="System.IO.Hashing" Version="9.0.21" />
+    <PackageVersion Include="System.IO.Hashing" Version="9.0.22" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.7" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.14" />
     <PackageVersion Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" Version="0.6.2" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.14" />
     <PackageVersion Include="Microsoft.IdentityModel.Abstractions" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Logging" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
-    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.22.6" />
-    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.22.6" />
-    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.22.6" />
-    <PackageVersion Include="Quartz" Version="3.22.6" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.22.9" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.22.9" />
+    <PackageVersion Include="Quartz.Plugins.TimeZoneConverter" Version="3.22.9" />
+    <PackageVersion Include="Quartz" Version="3.22.9" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
     <PackageVersion Include="KubernetesClient" Version="18.0.13" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
-    <PackageVersion Include="RestSharp" Version="113.1.0" />
+    <PackageVersion Include="RestSharp" Version="114.1.0" />
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
-    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.13" />
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     <PackageVersion Include="SignalRSwaggerGen" Version="4.9.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Filters" Version="10.0.1" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.5.1" />
@@ -112,7 +112,7 @@
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.7.1" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.7.1" />
     <PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
-    <PackageVersion Include="Polly" Version="8.8.0" />
+    <PackageVersion Include="Polly" Version="8.8.1" />
     <!-- ====================================== -->
   </ItemGroup>
   <ItemGroup>

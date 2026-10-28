@@ -18,7 +18,7 @@ public interface IAgvRepository
     /// <summary>
     /// Get list of all AGVs
     /// </summary>
-    Task<ICollection<Agv>> GetAllAgvsAsync();
+    Task<ICollection<Agv>> GetAllAgvsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get list of all AGVs where the graph exists

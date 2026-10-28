@@ -1,8 +1,9 @@
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
+using RoutingActionType = Gebhardt.Acc.Common.Domain.Models.NewGraph.RoutingActionType;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.LIF.LifToGraphConversion;
 
-internal class NodeHelper 
+internal class NodeHelper
 {
     public Node Node { get; }
 
@@ -114,5 +115,28 @@ internal class NodeHelper
         double dx = Node.NodePosition.X - otherNodeHelper.Node.NodePosition.X;
         double dy = Node.NodePosition.Y - otherNodeHelper.Node.NodePosition.Y;
         return Math.Sqrt(dx * dx + dy * dy) < PositionTolerance;
+    }
+
+    private static RoutingActionType? ToRoutingActionType(string actionType)
+    {
+        return actionType.ToLowerInvariant() switch
+        {
+            "pick" => RoutingActionType.Pick,
+            "drop" => RoutingActionType.Drop,
+            "startcharging" => RoutingActionType.Charge,
+            _ => null
+        };
+    }
+
+    public List<RoutingActionType> GetActions(string vehicleTypeId)
+    {
+        return Node.VehicleTypeNodeProperties
+            .Where(p => p.VehicleTypeId == vehicleTypeId)
+            .SelectMany(p => p.Actions ?? [])
+            .Select(a => ToRoutingActionType(a.ActionType))
+            .OfType<RoutingActionType>()
+            .Distinct()
+            .Order()
+            .ToList();
     }
 }

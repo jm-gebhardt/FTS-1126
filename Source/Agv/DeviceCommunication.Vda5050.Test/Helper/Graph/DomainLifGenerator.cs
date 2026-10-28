@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Helper;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 
@@ -17,6 +18,11 @@ public static class DomainLifGenerator
     public const string EndNodeId = "N2";
     public const string EdgeId = "E1";
     public const string StationId = "StationId";
+    public const string PickAction = "pick";
+    public const string DropAction = "drop";
+    public const string StartChargingAction = "startCharging";
+    public const string StopChargingAction = "stopCharging";
+    private const double NodeTheta = 0;
 
     private const string ProjectIdentification = "TestProject";
     private const string Creator = "Gebhardt";
@@ -34,12 +40,14 @@ public static class DomainLifGenerator
         return new MetaInformation(Creator, DateTimeOffset.UtcNow, LayoutVersion, ProjectIdentification);
     }
 
-    private static Node GenerateNode(string nodeId, double x, double y, string vehicleTypeId = VehicleTypeId)
+    private static Node GenerateNode(string nodeId, double x, double y, string vehicleTypeId = VehicleTypeId, IReadOnlyCollection<string>? actionTypes = null)
     {
-        return new Node(nodeId, new NodePosition(x, y), [new VehicleTypeNodeProperty(Guid.NewGuid(), vehicleTypeId)], nodeName: nodeId);
+        var property = actionTypes is null ? new VehicleTypeNodeProperty(Guid.NewGuid(), vehicleTypeId) : new VehicleTypeNodeProperty(Guid.NewGuid(), vehicleTypeId, actionTypes.Select(a => new VehicleTypeNodePropertyAction(a, BlockingType.HARD)).ToList(), NodeTheta);
+
+        return new Node(nodeId, new NodePosition(x, y), [property], nodeName: nodeId);
     }
 
-    public static Layout GenerateLayout(string layoutId = LayoutId, string? layoutLevelId = LevelId, string vehicleTypeId = VehicleTypeId)
+    public static Layout GenerateLayout(string layoutId = LayoutId, string? layoutLevelId = LevelId, string vehicleTypeId = VehicleTypeId, IReadOnlyCollection<string>? startNodeActionTypes = null)
     {
         string startNodeId = BuildLayoutScopedId(StartNodeId, layoutId);
         string endNodeId = BuildLayoutScopedId(EndNodeId, layoutId);
@@ -51,7 +59,7 @@ public static class DomainLifGenerator
             layoutId,
             LayoutVersion,
             [new Edge(edgeId, endNodeId, startNodeId, [new VehicleTypeEdgeProperty(Guid.NewGuid(), vehicleTypeId)])],
-            [GenerateNode(startNodeId, 1, 2, vehicleTypeId), GenerateNode(endNodeId, 2, 1, vehicleTypeId)],
+            [GenerateNode(startNodeId, 1, 2, vehicleTypeId, startNodeActionTypes), GenerateNode(endNodeId, 2, 1, vehicleTypeId)],
             [new Station(Guid.NewGuid(), stationId, [startNodeId], [Guid.NewGuid()], stationPosition: new StationPosition(1, 1))],
             layoutLevelId: layoutLevelId);
     }

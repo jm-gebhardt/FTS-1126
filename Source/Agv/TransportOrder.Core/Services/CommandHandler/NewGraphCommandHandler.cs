@@ -21,7 +21,7 @@ public class NewGraphCommandHandler(INewGraphRepository repository, ILogger<Grap
     {
         await repository.AddOrUpdateGraphSegmentAsync(context.Message.GraphSegment);
         await context.Publish(new GraphSegmentAdded(context.Message.GraphSegment));
-        
+
         var graph = await repository.GetGraphAsync();
         await context.Publish(new GraphUpdated(context.Message.CorrelationId, graph));
     }
@@ -36,7 +36,10 @@ public class NewGraphCommandHandler(INewGraphRepository repository, ILogger<Grap
             await context.RespondAsync(new Failed());
             return;
         }
-        
+
+        var graph = await repository.GetGraphAsync();
+        await context.Publish(new GraphUpdated(context.Message.CorrelationId, graph));
+
         await context.RespondAsync(new Success());
     }
 }

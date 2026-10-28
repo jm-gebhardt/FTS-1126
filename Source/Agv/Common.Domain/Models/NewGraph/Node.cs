@@ -22,6 +22,16 @@ public record Node : GraphResource
     /// Identifier for the level the node is on.
     /// </summary>
     public string? LevelId { get; init; }
+    
+    /// <summary>
+    /// MapId according to VDA5050/LIF.
+    /// </summary>
+    public string? MapId { get; init; }
+    
+    /// <summary>
+    /// NodeId in the LIF.
+    /// </summary>
+    public string LifNodeId { get; init; }
 
     /// <summary>
     /// List of routing nodes associated with this node.
@@ -34,8 +44,9 @@ public record Node : GraphResource
     public List<RoutingEdge> RoutingEdges { get; init; } = [];
 
     /// <inheritdoc cref="Node"/>
-    public Node(Guid id, string name, string shortName, double x, double y, string? levelId) : base(id, name, shortName)
+    public Node(Guid id, string name, string shortName, string lifNodeId, double x, double y, string? levelId, string? mapId) : base(id, name, shortName)
     {
+        LifNodeId = lifNodeId;
         X = x;
         Y = y;
         LevelId = levelId;
@@ -46,5 +57,6 @@ public record Node : GraphResource
     /// </summary>
     public Node()
     {
+        LifNodeId = null!;
     }
 }

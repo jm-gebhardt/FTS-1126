@@ -14,7 +14,7 @@ namespace Gebhardt.Acc.TransportOrder.Test.WebApi.Profiles;
 public class AgvGraphProfileTest
 {
     /// <summary>
-    /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for direct edge type.
+    /// Maps the <see cref="AgvGraph"/> to <see cref="AgvGraphDto"/> and should map correctly for direct edge type.
     /// </summary>
     [TestMethod]
     public void Map_ShouldMapAllPropertiesCorrectly_WhereAgvGraphIsMappedToGraph()
@@ -37,7 +37,7 @@ public class AgvGraphProfileTest
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
-        var graph = mapper.Map<GraphDto>(agvGraph);
+        var graph = mapper.Map<AgvGraphDto>(agvGraph);
 
         graph.ShouldNotBeNull();
 
@@ -60,7 +60,7 @@ public class AgvGraphProfileTest
     }
 
     /// <summary>
-    /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for slanted edge type.
+    /// Maps the <see cref="AgvGraph"/> to <see cref="AgvGraphDto"/> and should map correctly for slanted edge type.
     /// </summary>
     [TestMethod]
     public void MapAgvGraphToGraphDto_Slanted_AllPropertiesMapped()
@@ -86,7 +86,7 @@ public class AgvGraphProfileTest
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
-        var graph = mapper.Map<GraphDto>(agvGraph);
+        var graph = mapper.Map<AgvGraphDto>(agvGraph);
 
         graph.ShouldNotBeNull();
 
@@ -111,7 +111,7 @@ public class AgvGraphProfileTest
     }
 
     /// <summary>
-    /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for Bezier2 edge type.
+    /// Maps the <see cref="AgvGraph"/> to <see cref="AgvGraphDto"/> and should map correctly for Bezier2 edge type.
     /// </summary>
     [TestMethod]
     public void MapAgvGraphToGraphDto_Bezier2_AllPropertiesMapped()
@@ -137,7 +137,7 @@ public class AgvGraphProfileTest
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
-        var graph = mapper.Map<GraphDto>(agvGraph);
+        var graph = mapper.Map<AgvGraphDto>(agvGraph);
 
         graph.ShouldNotBeNull();
 
@@ -162,7 +162,7 @@ public class AgvGraphProfileTest
     }
 
     /// <summary>
-    /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for Bezier3 edge type.
+    /// Maps the <see cref="AgvGraph"/> to <see cref="AgvGraphDto"/> and should map correctly for Bezier3 edge type.
     /// </summary>
     [TestMethod]
     public void MapAgvGraphToGraphDto_Bezier3_AllPropertiesMapped()
@@ -188,7 +188,7 @@ public class AgvGraphProfileTest
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
-        var graph = mapper.Map<GraphDto>(agvGraph);
+        var graph = mapper.Map<AgvGraphDto>(agvGraph);
 
         graph.ShouldNotBeNull();
 
@@ -213,7 +213,7 @@ public class AgvGraphProfileTest
     }
 
     /// <summary>
-    /// Maps the <see cref="AgvGraph"/> to <see cref="GraphDto"/> and should map correctly for Bezier5 edge type.
+    /// Maps the <see cref="AgvGraph"/> to <see cref="AgvGraphDto"/> and should map correctly for Bezier5 edge type.
     /// </summary>
     [TestMethod]
     public void MapAgvGraphToGraphDto_Bezier5_AllPropertiesMapped()
@@ -239,7 +239,7 @@ public class AgvGraphProfileTest
             }, Guid.NewGuid());
 
         var mapper = MappingHelper.GetMapper(new AgvGraphProfile());
-        var graph = mapper.Map<GraphDto>(agvGraph);
+        var graph = mapper.Map<AgvGraphDto>(agvGraph);
 
         graph.ShouldNotBeNull();
 

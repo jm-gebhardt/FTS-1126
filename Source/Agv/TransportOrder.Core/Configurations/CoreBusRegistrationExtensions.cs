@@ -53,6 +53,7 @@ using Gebhardt.Acc.TransportOrder.Messages.Requests.Stations;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.System.Monitoring;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Trigger;
+using Gebhardt.Acc.TransportOrder.Messages.Requests.Views;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Zone.Queries;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -235,7 +236,7 @@ public static class CoreBusRegistrationExtensions
 
         busRegistrationConfigurator.AddConsumer<GetNewGraphRequestHandler>();
         busRegistrationConfigurator.AddRequestClient<Gebhardt.Acc.Common.Messages.NewGraph.Requests.GetGraph>();
-        
+
         busRegistrationConfigurator.AddConsumer<GraphCommandHandler>();
         busRegistrationConfigurator.AddConsumer<StationTypeRequestHandler>();
         busRegistrationConfigurator.AddConsumer<BoundingBoxEventHandler>();
@@ -413,6 +414,8 @@ public static class CoreBusRegistrationExtensions
     {
         RegisterMediatorGraphHandlers(configurator);
 
+        RegisterMediatorViewHandlers(configurator);
+
         RegisterMediatorMapHandlers(configurator);
 
         RegisterMediatorAgvRequestHandlers(configurator);
@@ -451,6 +454,31 @@ public static class CoreBusRegistrationExtensions
         configurator.AddRequestClient<GetBoundingBoxConflicts>();
         configurator.AddRequestClient<GetNodeBoundingBoxConflicts>();
         configurator.AddRequestClient<GetEdgeBoundingBoxConflicts>();
+
+        configurator.AddConsumer<GraphOverviewRequestHandler>();
+        configurator.AddRequestClient<GetGraphOverview>();
+    }
+
+    private static void RegisterMediatorViewHandlers(IMediatorRegistrationConfigurator configurator)
+    {
+        configurator.AddRequestClient<GetView>();
+        configurator.AddRequestClient<GetViews>();
+        configurator.AddRequestClient<GetViewBackgroundImage>();
+
+        configurator.AddConsumer<ViewHandler>(c =>
+        {
+            var partitioner = c.CreatePartitioner(PartitionCount);
+            partitioner.PartitionMessageById<AddView, ViewHandler>(c);
+            partitioner.PartitionMessageById<UpdateView, ViewHandler>(c);
+            partitioner.PartitionMessageById<DeleteView, ViewHandler>(c);
+            partitioner.PartitionMessageById<SetViewBackground, ViewHandler>(c);
+            partitioner.PartitionMessageById<DeleteViewBackground, ViewHandler>(c);
+        });
+        configurator.AddRequestClient<AddView>();
+        configurator.AddRequestClient<UpdateView>();
+        configurator.AddRequestClient<DeleteView>();
+        configurator.AddRequestClient<SetViewBackground>();
+        configurator.AddRequestClient<DeleteViewBackground>();
     }
 
     private static void RegisterMediatorErrorHandlers(IMediatorRegistrationConfigurator configurator)

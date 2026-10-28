@@ -1,4 +1,4 @@
-using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+﻿using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
 using Gebhardt.Acc.Common.Messages.Route;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Manager;
@@ -17,14 +17,14 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(1, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0], IsInAutomaticMode = false };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0], isAutomatic: false);
         var request = new RouteRequest(agv, [nodes[1]], Guid.NewGuid());
 
         fixture.RouteManager.InvokeRoute(request);
 
         var actionFailed = await fixture.GetFirstPublishedMessageAsync<ActionFailedByAgv>();
         actionFailed.CorrelationId.ShouldBe(request.ActionCorrelationId);
-        actionFailed.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        actionFailed.AgvCorrelationId.ShouldBe(agv.Id);
         fixture.RouteManager.Routes.ShouldBeEmpty();
     }
 
@@ -33,7 +33,7 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(1, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[1]], Guid.NewGuid()));
         var existingRoute = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         var secondRequest = new RouteRequest(agv, [nodes[1]], Guid.NewGuid());
@@ -50,7 +50,7 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var targetNode = RouteManagerTestFixture.CreateIsolatedNode();
-        var agv = new RoutingAgvStub { CurrentRoutingNode = null };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(currentRoutingNode: null);
         var request = new RouteRequest(agv, [targetNode], Guid.NewGuid());
 
         fixture.RouteManager.InvokeRoute(request);
@@ -66,7 +66,7 @@ public class RouteManagerTest
         var fixture = new RouteManagerTestFixture();
         var startNode = RouteManagerTestFixture.CreateIsolatedNode();
         var unreachableNode = RouteManagerTestFixture.CreateIsolatedNode(10);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = startNode };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(startNode);
         var request = new RouteRequest(agv, [unreachableNode], Guid.NewGuid());
 
         fixture.RouteManager.InvokeRoute(request);
@@ -81,7 +81,7 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         var request = new RouteRequest(agv, [nodes[2]], Guid.NewGuid());
 
         fixture.RouteManager.InvokeRoute(request);
@@ -91,12 +91,12 @@ public class RouteManagerTest
 
         var routePlanned = await fixture.GetFirstPublishedMessageAsync<RoutePlanned>();
         routePlanned.RouteId.ShouldBe(route.Id);
-        routePlanned.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        routePlanned.AgvCorrelationId.ShouldBe(agv.Id);
         routePlanned.RouteSteps.Select(s => s.RouteStepId).ShouldBe(route.Steps.Select(s => s.RouteStepId));
 
         var actionStarted = await fixture.GetFirstPublishedMessageAsync<ActionStartedByAgv>();
         actionStarted.CorrelationId.ShouldBe(request.ActionCorrelationId);
-        actionStarted.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        actionStarted.AgvCorrelationId.ShouldBe(agv.Id);
     }
 
     [TestMethod]
@@ -104,7 +104,7 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
 
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[2]], Guid.NewGuid()));
 
@@ -122,7 +122,7 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(5, 3);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
 
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[5]], Guid.NewGuid()));
 
@@ -141,7 +141,7 @@ public class RouteManagerTest
         var fixture = new RouteManagerTestFixture();
         var (nodes, edges) = RouteManagerTestFixture.CreateChain(3, 1);
         fixture.ReservationManager.TryReserve(edges[1], Guid.NewGuid(), out _).ShouldBeTrue();
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
 
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[3]], Guid.NewGuid()));
 
@@ -158,14 +158,14 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var startNode = RouteManagerTestFixture.CreateIsolatedNode();
-        var agv = new RoutingAgvStub { CurrentRoutingNode = startNode };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(startNode);
         var request = new RouteRequest(agv, [startNode], Guid.NewGuid());
 
         fixture.RouteManager.InvokeRoute(request);
 
         var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
         actionCompleted.CorrelationId.ShouldBe(request.ActionCorrelationId);
-        actionCompleted.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        actionCompleted.AgvCorrelationId.ShouldBe(agv.Id);
         fixture.RouteManager.Routes.ShouldBeEmpty();
     }
 
@@ -187,12 +187,12 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, edges) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         var request = new RouteRequest(agv, [nodes[2]], Guid.NewGuid());
         fixture.RouteManager.InvokeRoute(request);
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
 
-        fixture.RouteManager.AbortRoute(agv.CorrelationId, request.ActionCorrelationId);
+        fixture.RouteManager.AbortRoute(agv.Id, request.ActionCorrelationId);
 
         fixture.RouteManager.Routes.ShouldBeEmpty();
         route.Steps.ShouldAllBe(s => s.Status == RouteStepStatus.Failed);
@@ -206,18 +206,18 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         var request = new RouteRequest(agv, [nodes[2]], Guid.NewGuid());
         fixture.RouteManager.InvokeRoute(request);
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
 
-        fixture.RouteManager.AbortRoute(agv.CorrelationId, request.ActionCorrelationId);
+        fixture.RouteManager.AbortRoute(agv.Id, request.ActionCorrelationId);
 
         fixture.RouteManager.Routes.ShouldBeEmpty();
 
         var routeAborted = await fixture.GetFirstPublishedMessageAsync<RouteAborted>();
         routeAborted.RouteId.ShouldBe(route.Id);
-        routeAborted.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        routeAborted.AgvCorrelationId.ShouldBe(agv.Id);
     }
 
     [TestMethod]
@@ -225,7 +225,7 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[2]], Guid.NewGuid()));
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         var firstStep = route.Steps.First();
@@ -242,12 +242,12 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[2]], Guid.NewGuid()));
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         var firstStep = route.Steps.First();
 
-        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(Guid.NewGuid(), agv.CorrelationId,
+        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(Guid.NewGuid(), agv.Id,
             [new RouteStepState(firstStep.RouteStepId, CommonRouteStepStatus.Completed)]));
 
         fixture.RouteManager.Routes.ShouldHaveSingleItem().ShouldBeSameAs(route);
@@ -259,12 +259,12 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(2, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[2]], Guid.NewGuid()));
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         var firstStep = route.Steps.First();
 
-        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.CorrelationId,
+        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.Id,
             [new RouteStepState(firstStep.RouteStepId, CommonRouteStepStatus.Acknowledged)]));
 
         firstStep.Status.ShouldBe(RouteStepStatus.Acknowledged);
@@ -276,13 +276,13 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(5, 3);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         fixture.RouteManager.InvokeRoute(new RouteRequest(agv, [nodes[5]], Guid.NewGuid()));
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         List<RouteStep> steps = [.. route.Steps];
         await fixture.GetFirstPublishedMessageAsync<RouteStepsReleased>();
 
-        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.CorrelationId,
+        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.Id,
             [new RouteStepState(steps[0].RouteStepId, CommonRouteStepStatus.Completed)]));
 
         steps[0].Status.ShouldBe(RouteStepStatus.Completed);
@@ -299,13 +299,13 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(1, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         var request = new RouteRequest(agv, [nodes[1]], Guid.NewGuid());
         fixture.RouteManager.InvokeRoute(request);
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         var lastStep = route.Steps.Last();
 
-        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.CorrelationId,
+        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.Id,
             [new RouteStepState(lastStep.RouteStepId, CommonRouteStepStatus.Completed)]));
 
         lastStep.Status.ShouldBe(RouteStepStatus.Completed);
@@ -313,7 +313,7 @@ public class RouteManagerTest
 
         var actionCompleted = await fixture.GetFirstPublishedMessageAsync<ActionCompletedByAgv>();
         actionCompleted.CorrelationId.ShouldBe(request.ActionCorrelationId);
-        actionCompleted.AgvCorrelationId.ShouldBe(agv.CorrelationId);
+        actionCompleted.AgvCorrelationId.ShouldBe(agv.Id);
     }
 
     [TestMethod]
@@ -321,13 +321,13 @@ public class RouteManagerTest
     {
         var fixture = new RouteManagerTestFixture();
         var (nodes, _) = RouteManagerTestFixture.CreateChain(3, 1);
-        var agv = new RoutingAgvStub { CurrentRoutingNode = nodes[0] };
+        var agv = RouteManagerTestFixture.CreateRoutingAgv(nodes[0]);
         var request = new RouteRequest(agv, [nodes[3]], Guid.NewGuid());
         fixture.RouteManager.InvokeRoute(request);
         var route = fixture.RouteManager.Routes.ShouldHaveSingleItem();
         var firstStep = route.Steps.First();
 
-        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.CorrelationId,
+        fixture.RouteManager.ProcessRouteSteps(new RouteStepsProcessed(route.Id, agv.Id,
             [new RouteStepState(firstStep.RouteStepId, CommonRouteStepStatus.Failed, "TestFailure")]));
 
         route.Steps.ShouldAllBe(s => s.Status == RouteStepStatus.Failed);

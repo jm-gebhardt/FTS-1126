@@ -61,7 +61,7 @@ internal class RouteGenerator(ILogger<RouteGenerator> logger)
             }
         }
 
-        logger.LogWarning("AGV {ActionCorrelationId} no route found from {StartNode} to any of the target nodes {TargetNodes} (EnqueuedCount: {EnqueuedCount})", request.ActionCorrelationId, request.StartNode, request.TargetNodeCandidates, queue.EnqueuedCount);
+        logger.LogWarning("AGV {ActionCorrelationId} no route found from {StartNode} to any of the target nodes {TargetNodes} (EnqueuedCount: {EnqueuedCount})", request.Agv.Id, request.StartNode, string.Join(", ", request.TargetNodeCandidates), queue.EnqueuedCount);
         return null;
     }
 

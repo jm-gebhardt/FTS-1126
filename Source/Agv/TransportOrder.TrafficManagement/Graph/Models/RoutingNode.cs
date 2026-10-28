@@ -1,5 +1,4 @@
 ﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
@@ -15,25 +14,21 @@ public class RoutingNode : RoutingResource
     /// <summary>
     /// The load state of the routing node.
     /// </summary>
-    [UsedImplicitly]
     public LoadState LoadState { get; }
 
     /// <summary>
     /// The theta value of the routing node, which may represent the orientation of the AGV.
     /// </summary>
-    [UsedImplicitly]
     public double Theta { get; }
 
     /// <summary>
     /// Collection of incoming edges to this routing node.
     /// </summary>
-    [UsedImplicitly]
     public IReadOnlyCollection<RoutingEdge> IncomingEdges => _incomingEdges;
 
     /// <summary>
     /// Collection of outgoing edges from this routing node.
     /// </summary>
-    [UsedImplicitly]
     public IReadOnlyCollection<RoutingEdge> OutgoingEdges => _outgoingEdges;
 
     /// <summary>
@@ -57,4 +52,6 @@ public class RoutingNode : RoutingResource
     {
         _outgoingEdges.Add(routingEdge);    
     }
+
+    public override string Description => $"{ParentNode.Name}.{AgvType.AgvTypeIdentifier}.{LoadState.Description}.Theta={Theta:f2}";
 }

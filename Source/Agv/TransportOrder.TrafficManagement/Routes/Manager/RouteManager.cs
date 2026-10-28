@@ -27,17 +27,17 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
     {
         var agv = request.Agv;
 
-        if (!agv.IsInAutomaticMode)
+        if (!agv.IsAutomatic)
         {
-            logger.LogError("Route for AGV {AgvCorrelationId} cannot be invoked because the AGV is not in automatic mode", agv.CorrelationId);
-            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.CorrelationId));
+            logger.LogError("Route for AGV {AgvCorrelationId} cannot be invoked because the AGV is not in automatic mode", agv.Id);
+            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.Id));
             return;
         }
 
-        if (_routes.ContainsKey(agv.CorrelationId))
+        if (_routes.ContainsKey(agv.Id))
         {
-            logger.LogError("Route for AGV {AgvCorrelationId} already exists", agv.CorrelationId);
-            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.CorrelationId));
+            logger.LogError("Route for AGV {AgvCorrelationId} already exists", agv.Id);
+            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.Id));
             return;
         }
 
@@ -45,8 +45,8 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
 
         if (startNode is null)
         {
-            logger.LogWarning("AGV {AgvCorrelationId} has no valid start node", agv.CorrelationId);
-            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.CorrelationId));
+            logger.LogWarning("AGV {AgvCorrelationId} has no valid start node", agv.Id);
+            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.Id));
             return;
         }
 
@@ -56,17 +56,17 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
 
         if (route is null)
         {
-            logger.LogError("No route found for AGV {AgvCorrelationId}", agv.CorrelationId);
-            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.CorrelationId));
+            logger.LogError("No route found for AGV {AgvCorrelationId}", agv.Id);
+            bus.Publish(new ActionFailedByAgv(request.ActionCorrelationId, agv.Id));
             return;
         }
 
-        logger.LogInformation("Route created for AGV {AgvCorrelationId} \n\n{Route}\n", agv.CorrelationId, string.Join("\n", route.Steps.Select(s => s.ToString())));
+        logger.LogInformation("Route created for AGV {AgvCorrelationId} \n\n{Route}\n", agv.Id, string.Join("\n", route.Steps.Select(s => s.ToString())));
 
-        _routes[agv.CorrelationId] = route;
+        _routes[agv.Id] = route;
 
-        bus.Publish(new RoutePlanned(route.Id, route.Agv.CorrelationId, [.. route.Steps.Select(s => s.ToMessage())]));
-        bus.Publish(new ActionStartedByAgv(route.ActionCorrelationId, agv.CorrelationId));
+        bus.Publish(new RoutePlanned(route.Id, route.Agv.Id, [.. route.Steps.Select(s => s.ToMessage())]));
+        bus.Publish(new ActionStartedByAgv(route.ActionCorrelationId, agv.Id));
 
         ExecuteRoute(route);
     }
@@ -90,8 +90,8 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
 
         _routes.Remove(agvId);
 
-        bus.Publish(new RouteAborted(route.Id, route.Agv.CorrelationId));
-        bus.Publish(new ActionAbortedByAgv(route.ActionCorrelationId, route.Agv.CorrelationId));
+        bus.Publish(new RouteAborted(route.Id, route.Agv.Id));
+        bus.Publish(new ActionAbortedByAgv(route.ActionCorrelationId, route.Agv.Id));
 
         return true;
     }
@@ -113,14 +113,14 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
     {
         var agv = route.Agv;
 
-        if (!agv.IsInAutomaticMode)
+        if (!agv.IsAutomatic)
         {
             return;
         }
 
         if (route.Steps.All(s => s.IsCompleted))
         {
-            logger.LogInformation("Route for AGV {AgvCorrelationId} is completed (all steps completed)", route.Agv.CorrelationId);
+            logger.LogInformation("Route for AGV {AgvCorrelationId} is completed (all steps completed)", route.Agv.Id);
             CompleteRoute(route);
             return;
         }
@@ -138,7 +138,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
                 break;
             }
 
-            if (!TryReserveStep(nextStep, route.Agv.CorrelationId))
+            if (!TryReserveStep(nextStep, route.Agv.Id))
             {
                 break;
             }
@@ -149,7 +149,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
             reservationLength += nextStep.Length;
         }
 
-        bus.Publish(new RouteStepsReleased(route.Id, route.Agv.CorrelationId, [.. reservedSteps.Select(s => s.RouteStepId)]));
+        bus.Publish(new RouteStepsReleased(route.Id, route.Agv.Id, [.. reservedSteps.Select(s => s.RouteStepId)]));
     }
 
     public void ProcessRouteSteps(RouteStepsProcessed routeStepsProcessed)
@@ -196,6 +196,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
 
                     UnreserveRouteStep(routeStep);
                     routeStep.SetCompleted();
+                    UpdateAgvPositionAfterRouteStepCompleted(routeStep, route);
 
                     isAnyStepCompleted = true;
                     if (routeStep == lastRouteStep) { isLastStepCompleted = true; }
@@ -204,7 +205,7 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
                 case CommonRouteStepStatus.Failed:
                     routeStep.SetFailed();
 
-                    bus.Publish(new ActionFailedByAgv(route.ActionCorrelationId, route.Agv.CorrelationId));
+                    bus.Publish(new ActionFailedByAgv(route.ActionCorrelationId, route.Agv.Id));
                     //todo: handle failed route step (e.g., abort route, forward failure reason).
                     AbortRoute(routeStepsProcessed.AgvCorrelationId, route.ActionCorrelationId);
                     return;
@@ -218,6 +219,22 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
         else if (isAnyStepCompleted)
         {
             ExecuteRoute(route);
+        }
+    }
+
+    private void UpdateAgvPositionAfterRouteStepCompleted(RouteStep routeStep, Route route)
+    {
+        var prevousSteps = route.Steps.TakeWhile(s => s != routeStep);
+        Trace.Assert(prevousSteps.All(s => s.IsCompleted));
+
+        var subsequentSteps = route.Steps.SkipWhile(s => s != routeStep).Skip(1);
+        Trace.Assert(subsequentSteps.All(s => !s.IsCompleted));
+
+        var agv = route.Agv;
+        if (routeStep.RoutingEdge.EndNode != agv.CurrentRoutingNode)
+        {
+            agv.CurrentRoutingNode = routeStep.RoutingEdge.EndNode;
+            logger.LogInformation("State updated: {AgvState}", agv);
         }
     }
 
@@ -246,8 +263,8 @@ internal class RouteManager(RouteGenerator routeGenerator, ReservationManager re
     {
         Trace.Assert(route.Steps.All(s => s.IsCompleted));
 
-        _routes.Remove(route.Agv.CorrelationId);
+        _routes.Remove(route.Agv.Id);
 
-        bus.Publish(new ActionCompletedByAgv(route.ActionCorrelationId, route.Agv.CorrelationId));
+        bus.Publish(new ActionCompletedByAgv(route.ActionCorrelationId, route.Agv.Id));
     }
 }

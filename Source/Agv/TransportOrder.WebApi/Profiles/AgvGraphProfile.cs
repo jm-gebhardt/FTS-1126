@@ -19,9 +19,9 @@ public class AgvGraphProfile : WebApiProfile
         CreateMap<GraphNode, GraphNodeDto>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.Type, opt => opt.MapFrom(source => source.Type.First()));
-        CreateMap<Graph, GraphDto>()
+        CreateMap<Graph, AgvGraphDto>()
             // Graph is a record type, therefore we must initialize all properties in the ctor
-            .ForCtorParam(nameof(GraphDto.Edges), opt =>
+            .ForCtorParam(nameof(AgvGraphDto.Edges), opt =>
                 opt.MapFrom((src, ctx) => new GraphEdgeValueResolver().Resolve(src, null!, null!, ctx)));
     }
 }

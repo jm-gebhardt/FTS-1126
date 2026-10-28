@@ -25,7 +25,7 @@ public class StationProfileTest
         station.SetSize(3.0, 2.0);
         var mapper = MappingHelper.GetMapper(new StationProfile());
 
-        var stationDto = mapper.Map<StationDto>(station);
+        var stationDto = mapper.Map<StationStateDto>(station);
 
         stationDto.ShouldNotBeNull();
         stationDto.ShouldSatisfyAllConditions(
@@ -50,7 +50,7 @@ public class StationProfileTest
         Station? station = null;
         var mapper = MappingHelper.GetMapper(new StationProfile());
 
-        var stationDto = mapper.Map<StationDto>(station);
+        var stationDto = mapper.Map<StationStateDto>(station);
 
         stationDto.ShouldBeNull();
     }

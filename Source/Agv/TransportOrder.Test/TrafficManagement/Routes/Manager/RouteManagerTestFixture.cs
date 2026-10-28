@@ -57,20 +57,18 @@ internal sealed class RouteManagerTestFixture : MassTransitTestFixture
         return (nodes, edges);
     }
 
+    public static RoutingAgv CreateRoutingAgv(
+        RoutingNode? currentRoutingNode,
+        bool isAutomatic = true,
+        bool hasFatalError = false,
+        bool isIdle = false)
+    {
+        return new RoutingAgv(Guid.NewGuid(), _agvType, currentRoutingNode, isAutomatic, hasFatalError, isIdle);
+    }
+
     public static RoutingNode CreateIsolatedNode(double x = 0)
     {
         return RoutingResourceGenerator.CreateRoutingNode(_agvType, x);
     }
 }
 
-/// <summary>
-/// Configurable AGV stub for route manager tests.
-/// </summary>
-internal sealed class RoutingAgvStub : IRoutingAgv
-{
-    public Guid CorrelationId { get; } = Guid.NewGuid();
-
-    public RoutingNode? CurrentRoutingNode { get; init; }
-
-    public bool IsInAutomaticMode { get; init; } = true;
-}

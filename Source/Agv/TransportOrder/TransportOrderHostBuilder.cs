@@ -2,7 +2,6 @@
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Core.Configurations;
-using Gebhardt.Acc.TransportOrder.TrafficManagement.Configurations;
 using Gebhardt.Acc.TransportOrder.WebApi.Extensions;
 using Gebhardt.Core.Hosting.Configuration;
 using Microsoft.AspNetCore.Builder;
@@ -36,7 +35,6 @@ public static class TransportOrderHostBuilder
             {
                 conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
             })
-            .ConfigureServices((_, services) => services.AddTrafficManagementGraphInitializer())
             .AddMassTransit(initialLogger)
             .AddTransportOrderCore(options)
             .ConfigureServices((_, services) =>

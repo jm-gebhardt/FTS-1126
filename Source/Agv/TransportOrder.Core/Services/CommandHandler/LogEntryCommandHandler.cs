@@ -26,22 +26,24 @@ public class LogEntryCommandHandler(ILogger<LogEntryCommandHandler> logger, ILog
 
         var variables = entry.Variables.ToDictionary(kv => kv.Key, object? (kv) => kv.Value);
 
+        var agvId = entry.AgvCorrelationId ?? Guid.Empty;
+
         switch (entry.Category)
         {
             case Categories.Battery:
-                await loggingService.LogBattery(logger, level, entry.LogCode, entry.AgvCorrelationId!.Value, null,
+                await loggingService.LogBattery(logger, level, entry.LogCode, agvId, null,
                     "Log entry received",
                     $"Received {level} {entry.Category.ToString()} log entry", variables);
                 break;
 
             case Categories.Agv:
-                await loggingService.LogAgv(logger, level, entry.LogCode, entry.AgvCorrelationId!.Value, null,
+                await loggingService.LogAgv(logger, level, entry.LogCode, agvId, null,
                     "Log entry received",
                     $"Received {level} {entry.Category.ToString()} log entry", variables);
                 break;
 
             case Categories.Order:
-                await loggingService.LogOrder(logger, level, entry.LogCode, entry.AgvCorrelationId!.Value, entry.ActionGroupCorrelationId!.Value,
+                await loggingService.LogOrder(logger, level, entry.LogCode, agvId, entry.ActionGroupCorrelationId!.Value,
                     "Log entry received",
                     $"Received {level} {entry.Category.ToString()} log entry", variables);
                 break;

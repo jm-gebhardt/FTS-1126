@@ -50,9 +50,9 @@ public class AgvRepository : IAgvRepository
     public int Count => Agvs.Count();
 
     /// <inheritdoc />
-    public async Task<ICollection<Agv>> GetAllAgvsAsync()
+    public async Task<ICollection<Agv>> GetAllAgvsAsync(CancellationToken cancellationToken = default)
     {
-        return await Agvs.ToListAsync();
+        return await Agvs.ToListAsync(cancellationToken: cancellationToken);
     }
 
     /// <inheritdoc />

@@ -1,13 +1,17 @@
 using Gebhardt.Acc.Common.Messages.ActionGroups;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Commands;
 using Gebhardt.Acc.Common.Messages.ActionGroups.Events;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.Common.Messages.Route;
+using Gebhardt.Acc.TransportOrder.Messages.Events.Agv;
+using Gebhardt.Acc.TransportOrder.Messages.Events.AgvType;
 using Gebhardt.Acc.TransportOrder.Messages.Events.Graph;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.TrafficManagement;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Agvs;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 using Gebhardt.Acc.TransportOrder.TrafficManagement.Routes.Manager;
+using Gebhardt.Acc.TransportOrder.TrafficManagement.Tick;
 using JetBrains.Annotations;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -20,7 +24,7 @@ namespace Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
 /// (or configure multiple consumers to use the same receive endpoint with a concurrency limit).
 /// </summary>
 [UsedImplicitly]
-internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvider agvProvider, GraphManager graphManager, TrafficManagementTickState tickState, ILogger<TrafficManagementEventHandler> logger) :
+internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvider agvProvider, GraphProvider graphProvider, TrafficManagementTickState tickState, ILogger<TrafficManagementEventHandler> logger) :
     IConsumer<StartRouteToNode>,
     IConsumer<StartRouteWithPick>,
     IConsumer<StartRouteWithDrop>,
@@ -32,7 +36,11 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
     IConsumer<ActionAborted>,
     IConsumer<RouteStepsProcessed>,
     IConsumer<TrafficManagementTick>,
-    IConsumer<GraphSegmentAdded>
+    IConsumer<GraphSegmentAdded>,
+    IConsumer<AgvDiscovered>,
+    IConsumer<AgvAgvTypeUpdated>,
+    IConsumer<AgvTypeAdded>,
+    IConsumer<AgvTrafficManagementStatusReceived>
 {
     private static readonly TimeSpan _minimumTickInterval = TimeSpan.FromTicks(TrafficManagementTickPublisher.TickInterval.Ticks * 4 / 5);
 
@@ -40,15 +48,13 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
     {
         var message = context.Message;
 
-        var agv = agvProvider.GetAgv(message.AgvId);
-
-        if (agv is null)
+        if (!agvProvider.TryGetAgv(message.AgvId, out var agv))
         {
             await context.RespondAsync(new Rejected($"AGV '{message.AgvId}' not found"));
             return;
         }
 
-        var targetNode = graphManager.GetNodeByShortName(message.NodeShortName);
+        var targetNode = graphProvider.GetNodeByShortName(message.NodeShortName);
 
         if (targetNode is null)
         {
@@ -67,15 +73,13 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
     {
         var message = context.Message;
 
-        var agv = agvProvider.GetAgv(message.AgvId);
-
-        if (agv is null)
+        if (!agvProvider.TryGetAgv(message.AgvId, out var agv))
         {
             await context.RespondAsync(new Rejected($"AGV '{message.AgvId}' not found"));
             return;
         }
 
-        var targetNode = graphManager.GetNodeByShortName(message.NodeShortName);
+        var targetNode = graphProvider.GetNodeByShortName(message.NodeShortName);
 
         if (targetNode is null)
         {
@@ -100,15 +104,13 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
     {
         var message = context.Message;
 
-        var agv = agvProvider.GetAgv(message.AgvId);
-
-        if (agv is null)
+        if (!agvProvider.TryGetAgv(message.AgvId, out var agv))
         {
             await context.RespondAsync(new Rejected($"AGV '{message.AgvId}' not found"));
             return;
         }
 
-        var targetNode = graphManager.GetNodeByShortName(message.NodeShortName);
+        var targetNode = graphProvider.GetNodeByShortName(message.NodeShortName);
 
         if (targetNode is null)
         {
@@ -164,7 +166,11 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
     {
         var message = context.Message;
 
-        var agv = agvProvider.GetAgv(message.CorrelationId);
+        if (!agvProvider.TryGetAgv(message.CorrelationId, out var agv))
+        {
+            logger.LogError("Could not find agv information for {correlationId}", message.CorrelationId);
+            return Task.CompletedTask;
+        }
 
         if (agv is null)
         {
@@ -218,7 +224,7 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
             return Task.CompletedTask; // discarded: a tick was already processed too recently
         }
 
-        logger.LogInformation("Processing traffic management tick.");
+        //logger.LogInformation("Processing traffic management tick.");
 
         routeManager.ExecuteRoutes();
 
@@ -227,10 +233,11 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
 
     public Task Consume(ConsumeContext<GraphSegmentAdded> context)
     {
-        return graphManager.AddGraphSegmentAsync(context.Message.GraphSegment, context.CancellationToken);
+        graphProvider.AddGraphSegment(context.Message.GraphSegment);
+        return Task.CompletedTask;
     }
-
-    private RouteRequest GetRouteRequestFromAgvAction(AgvAction agvAction, IRoutingAgv agv)
+    
+    private RouteRequest GetRouteRequestFromAgvAction(AgvAction agvAction, RoutingAgv agv)
     {
         // mapping from GraphNode to new Node should not be necessary later
         string? targetNodeName = agvAction.Target.Node?.Name;
@@ -240,7 +247,7 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
             throw new InvalidOperationException("Target node name is null.");
         }
 
-        var targetNode = graphManager.GetNodeByShortName(targetNodeName);
+        var targetNode = graphProvider.GetNodeByShortName(targetNodeName);
 
         if (targetNode is null)
         {
@@ -277,5 +284,27 @@ internal class TrafficManagementEventHandler(RouteManager routeManager, AgvProvi
         };
 
         return routeRequest;
+    }
+
+    public async Task Consume(ConsumeContext<AgvTypeAdded> context) //todo: handle update and remove
+    {
+        await graphProvider.AddOrUpdateAgvTypesAsync(context.CancellationToken);
+    }
+
+    public async Task Consume(ConsumeContext<AgvDiscovered> context)
+    {
+        await agvProvider.InitializeAsync(context.CancellationToken);
+    } 
+    
+    public async Task Consume(ConsumeContext<AgvAgvTypeUpdated> context)
+    {
+        await agvProvider.InitializeAsync(context.CancellationToken);
+    }
+
+    public Task Consume(ConsumeContext<AgvTrafficManagementStatusReceived> context)
+    {
+        agvProvider.UpdateAgvStatus(context.Message);
+
+        return Task.CompletedTask;
     }
 }

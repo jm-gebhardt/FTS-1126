@@ -19,7 +19,7 @@ public class AgvProviderTestFixture() : SimulatedAgvStateMachineTestFixture(Time
     {
         public Task Consume(ConsumeContext<GetGraph> context)
         {
-            List<Node> nodes = [new(Guid.NewGuid(), "", "", 0, 0, "")];
+            List<Node> nodes = [new(Guid.NewGuid(), "", "", "",0, 0, "", "")];
             return context.RespondAsync(new GotGraph(new Graph(nodes, [], [])));
         }
     }

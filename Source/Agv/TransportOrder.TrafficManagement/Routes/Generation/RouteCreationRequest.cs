@@ -11,7 +11,7 @@ internal record RouteCreationRequest
     /// <summary>
     /// The AGV for which the route is being created.
     /// </summary>
-    public IRoutingAgv Agv { get; }
+    public RoutingAgv Agv { get; }
     
     /// <summary>
     /// The starting node for the route creation.
@@ -37,7 +37,7 @@ internal record RouteCreationRequest
     /// Initializes a new instance of the <see cref="RouteCreationRequest"/> class.
     /// </summary>
     public RouteCreationRequest(
-        IRoutingAgv agv, 
+        RoutingAgv agv, 
         RoutingNode startNode, 
         IEnumerable<RoutingNode> targetNodeCandidates, 
         Guid actionCorrelationId, 

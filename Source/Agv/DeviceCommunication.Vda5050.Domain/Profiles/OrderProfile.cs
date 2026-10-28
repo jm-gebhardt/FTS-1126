@@ -15,5 +15,6 @@ public class OrderProfile : Profile
     {
         CreateMap<string, OrientationType>();
         CreateMap<Models.Lif.Trajectory, Trajectory>();
+        CreateMap<Models.Lif.ControlPoint, ControlPoint>();
     }
 }
