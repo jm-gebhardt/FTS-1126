@@ -93,6 +93,8 @@ public class ActionEventHandlerTest
         if (shouldComplete)
         {
             await fixture.ShouldHavePublishedAsync<CompleteActionOfActionGroup>();
+            var command = fixture.TestHarness.Published.Select<CompleteActionOfActionGroup>().Single().Context.Message;
+            command.Revision.ShouldBe(completedRevision ?? action.Revision);
         }
         else
         {

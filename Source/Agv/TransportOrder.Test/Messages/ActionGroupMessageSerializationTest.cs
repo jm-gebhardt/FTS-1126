@@ -12,6 +12,15 @@ namespace Gebhardt.Acc.TransportOrder.Test.Messages;
 public class ActionGroupMessageSerializationTest
 {
     [TestMethod]
+    public void CompleteActionOfActionGroup_WithRevision_SerializesAllProperties()
+    {
+        var message = new CompleteActionOfActionGroup(Guid.NewGuid(), Guid.NewGuid(), Revision: 3);
+        var fixture = new MessageSerialisationTestFixture();
+
+        fixture.ValidateSerialization(message);
+    }
+
+    [TestMethod]
     public void QueueActionGroup_ValidData_SerializesAllProperties()
     {
         var message = new QueueActionGroup(AgvActionGenerator.GeneratePickDropActionGroup(), false);

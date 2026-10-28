@@ -766,6 +766,105 @@ public class ActionCommandHandlerTest
     }
 
     [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_MoveUpdatedToDrop_IgnoresOldCompletionAndAcceptsCurrentRevision()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(
+            assignedAgv: agv.CorrelationId,
+            infoToAgv: new Dictionary<InfoToAgvKey, string>(),
+            pickActionState: ActionState.Completed,
+            moveActionState: ActionState.Started);
+        var move = actionGroup.Actions[1];
+        var drop = actionGroup.Actions[2];
+        var moveCompletion = new CompleteActionOfActionGroup(move.CorrelationId, actionGroup.CorrelationId, Revision: move.Revision);
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .WithNode(_stationNode)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(drop.CorrelationId, actionGroup.CorrelationId, agv.CorrelationId, _stationNode.Id));
+        await fixture.ShouldHavePublishedAsync<UpdateActionCommand>();
+        move.ActionType.ShouldBe(ActionType.Drop);
+        move.Revision.ShouldBe(1);
+        drop.ShouldSkip.ShouldBeTrue();
+        fixture.ActionGroupRepository.Invocations.Clear();
+
+        await fixture.PublishMessageAsync(moveCompletion);
+
+        move.State.ShouldBe(ActionState.Started);
+        move.CompletedDate.ShouldBeNull();
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Never);
+        await fixture.ShouldNotHavePublishedAsync<DropActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<CheckAgvLoad>();
+        await fixture.ShouldNotHavePublishedAsync<NonChargingActionCompleted>();
+        await fixture.ShouldNotHavePublishedAsync<Fault<CompleteActionOfActionGroup>>();
+
+        fixture.WithHasCargo(false);
+        await fixture.TestHarness.Bus.Publish(new CompleteActionOfActionGroup(move.CorrelationId, actionGroup.CorrelationId, Revision: move.Revision));
+        await fixture.ConsumerHarness.Consumed.ShouldHaveConsumedCountAsync<CompleteActionOfActionGroup>(2);
+        await fixture.ShouldHavePublishedAsync<DropActionCompleted>();
+        await fixture.ShouldHavePublishedAsync<ActionGroupCompleted>();
+        move.State.ShouldBe(ActionState.Completed);
+        move.CompletedDate.ShouldNotBeNull();
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Consume_SetTargetForAction_MoveAlreadyCompleted_PreservesCompletionAndDoesNotConvertMove()
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GenerateIncompletePickDropActionGroupWithoutDropTarget(
+            assignedAgv: agv.CorrelationId,
+            pickActionState: ActionState.Completed,
+            moveActionState: ActionState.Started);
+        var move = actionGroup.Actions[1];
+        var drop = actionGroup.Actions[2];
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .WithNode(_stationNode)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new CompleteActionOfActionGroup(move.CorrelationId, actionGroup.CorrelationId, Revision: move.Revision));
+        DateTime? completedDate = move.CompletedDate;
+        completedDate.ShouldNotBeNull();
+
+        await fixture.PublishMessageAsync(new SetTargetForAction(drop.CorrelationId, actionGroup.CorrelationId, agv.CorrelationId, _stationNode.Id));
+
+        move.State.ShouldBe(ActionState.Completed);
+        move.CompletedDate.ShouldBe(completedDate);
+        move.ActionType.ShouldBe(ActionType.Move);
+        drop.ShouldSkip.ShouldBeFalse();
+        drop.Target.NodeId.ShouldBe(_stationNode.Id);
+        await fixture.ShouldNotHavePublishedAsync<UpdateActionCommand>();
+        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
+    }
+
+    [DataRow(null)]
+    [DataRow(1)]
+    [TestMethod]
+    public async Task Consume_CompleteActionOfActionGroup_CurrentOrUnspecifiedRevision_CompletesAction(int? revision)
+    {
+        var agv = AgvGenerator.GenerateBusyAgv();
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            pickActionState: ActionState.Started, assignedAgv: agv.CorrelationId);
+        var action = actionGroup.Actions.First();
+        action.IncrementRevision();
+        ActionGroupTestFixtureBase<ActionCommandHandler> fixture = new ActionCommandHandlerTestFixture()
+            .AddAgv(agv)
+            .WithHasCargo(true)
+            .AddActionGroup(actionGroup);
+
+        await fixture.PublishMessageAsync(new CompleteActionOfActionGroup(action.CorrelationId, actionGroup.CorrelationId, Revision: revision));
+
+        action.State.ShouldBe(ActionState.Completed);
+        await fixture.ShouldHavePublishedAsync<PickActionCompleted>();
+        fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Once);
+    }
+
+    [TestMethod]
     public async Task Consume_CompleteActionOfActionGroup_RepeatedCommand_PublishesCompletionSideEffectsOnce()
     {
         var agv = AgvGenerator.GenerateBusyAgv();

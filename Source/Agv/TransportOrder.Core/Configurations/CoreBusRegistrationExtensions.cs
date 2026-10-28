@@ -313,14 +313,14 @@ public static class CoreBusRegistrationExtensions
                 x.UsePartitioner(partitioner, p => p.Message.AgvCorrelationId));
 
             var actionPartitioner = c.CreatePartitioner(PartitionCount);
+            // Completion and target updates must serialize by action group through the revision check and save.
             c.Message<CompleteActionOfActionGroup>(x =>
                 {
                     x.UsePartitioner(actionPartitioner, p => p.Message.CorrelationId);
 
                     x.UseMessageRetry(r =>
                     {
-                        // Retry once of the cargo has not been updated yet
-                        // Used to compensate race conditions on events of updated messages 
+                        // Allow cargo updates to arrive before completing a pick or drop.
                         r.Interval(6, TimeSpan.FromSeconds(5));
                         r.Handle<CargoStateMismatchException>();
                     });

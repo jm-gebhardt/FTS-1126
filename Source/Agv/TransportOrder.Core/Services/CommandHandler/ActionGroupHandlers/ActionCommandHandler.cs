@@ -761,6 +761,12 @@ public class ActionCommandHandler :
 
         var actionGroup = await _actionGroupRepository.GetRequiredActionGroupByActionIdAsync(correlationId);
         var action = actionGroup.Actions.Single(a => a.CorrelationId == correlationId);
+        if (context.Message.Revision < action.Revision)
+        {
+            _logger.LogWarning("Ignoring completion of action {ActionCorrelationId} in action group {ActionGroupCorrelationId} in outdated revision {Revision}, current revision is {CurrentRevision}",
+                action.CorrelationId, actionGroup.CorrelationId, context.Message.Revision, action.Revision);
+            return;
+        }
         if (action.State == ActionState.Completed || action.CompletedDate != null)
         {
             _logger.LogInformation("Ignoring duplicate completion of action {ActionCorrelationId} in action group {ActionGroupCorrelationId}, completed at {CompletedDate}",

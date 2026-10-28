@@ -68,7 +68,8 @@ public class ActionEventHandler(IActionGroupRepository actionGroupRepository, IA
             return;
         }
 
-        await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId));
+        await context.Publish(new CompleteActionOfActionGroup(actionCorrelationId, actionGroup.CorrelationId,
+            Revision: context.Message.Revision ?? action.Revision));
     }
 
     /// <inheritdoc />
