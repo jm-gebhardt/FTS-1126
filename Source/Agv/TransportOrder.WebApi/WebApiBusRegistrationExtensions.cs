@@ -33,6 +33,8 @@ public static class WebApiBusRegistrationExtensions
         busRegistrationConfigurator.AddConsumer<SystemChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<QueueChangedConsumer>();
         busRegistrationConfigurator.AddConsumer<AgvTypeChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<GraphChangedConsumer>();
+        busRegistrationConfigurator.AddConsumer<ViewChangedConsumer>();
 
         return busRegistrationConfigurator;
     }

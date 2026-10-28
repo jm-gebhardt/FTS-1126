@@ -14,7 +14,7 @@ public class StationProfile : WebApiProfile
     /// <inheritdoc cref="StationProfile" />
     public StationProfile()
     {
-        CreateMap<Station, StationDto>()
+        CreateMap<Station, StationStateDto>()
             .ForMember(x => x.Id, x => x.MapFrom(c => c.Id))
             .ForMember(x => x.ReservedOrOccupiedBy, x => x.MapFrom(c => c.NodeLock != null ? c.NodeLock.AgvCorrelationId : null))
             .ForMember(x => x.State, x => x.MapFrom(c =>

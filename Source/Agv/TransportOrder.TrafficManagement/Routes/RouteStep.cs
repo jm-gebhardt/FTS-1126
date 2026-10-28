@@ -64,6 +64,11 @@ internal class RouteStep(RoutingEdge routingEdge, double drivingTime, double cos
 
     public void SetAcknowledged()
     {
+        if (Status is RouteStepStatus.Acknowledged)
+        {
+            return;
+        }
+
         Debug.Assert(Status is RouteStepStatus.Released);
         Status = RouteStepStatus.Acknowledged;
     }
@@ -92,7 +97,7 @@ internal class RouteStep(RoutingEdge routingEdge, double drivingTime, double cos
 
     public override string ToString()
     {
-        return $"{GetStatusPrefix()} {RoutingEdge.StartNode.Id} -> {RoutingEdge.EndNode.Id}";
+        return $"{GetStatusPrefix()} {RoutingEdge}";
     }
 
     private string GetStatusPrefix()

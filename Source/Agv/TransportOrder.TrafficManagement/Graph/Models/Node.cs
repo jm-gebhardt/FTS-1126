@@ -1,13 +1,13 @@
-using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// Represents a node in the graph.
 /// </summary>
-[PublicAPI]
 public class Node : GraphResource
 {
+    private readonly List<Edge> _incomingEdges = [];
+    private readonly List<Edge> _outgoingEdges = [];
     private readonly List<RoutingNode> _routingNodes = [];
     private readonly List<RoutingEdge> _routingEdges = [];
 
@@ -25,16 +25,26 @@ public class Node : GraphResource
     /// Identifier for the level the node is on.
     /// </summary>
     public string? LevelId { get; }
+    
+    /// <summary>
+    /// MapId according to VDA5050/LIF.
+    /// </summary>
+    public string? MapId { get; }
+    
+    /// <summary>
+    /// NodeId in the LIF.
+    /// </summary>
+    public string LifNodeId { get; }
 
     /// <summary>
     /// Collection of incoming edges to the node.
     /// </summary>
-    public List<Edge> IncomingEdges { get; } = [];
+    public IReadOnlyCollection<Edge> IncomingEdges => _incomingEdges;
 
     /// <summary>
     /// Collection of outgoing edges from the node.
     /// </summary>
-    public List<Edge> OutgoingEdges { get; } = [];
+    public IReadOnlyCollection<Edge> OutgoingEdges => _outgoingEdges;
 
     /// <summary>
     /// Collection of routing nodes associated with this node.
@@ -47,11 +57,23 @@ public class Node : GraphResource
     public IReadOnlyCollection<RoutingEdge> RoutingEdges => _routingEdges;
 
     /// <inheritdoc cref="Node"/>
-    public Node(Guid id, string name, string shortName, double x, double y, string? levelId) : base(id, name, shortName)
+    public Node(Guid id, string name, string shortName, string lifNodeId, double x, double y, string? levelId, string? mapId) : base(id, name, shortName)
     {
+        LifNodeId = lifNodeId;
         X = x;
         Y = y;
         LevelId = levelId;
+        MapId = mapId;
+    }
+
+    internal void AttachIncomingEdge(Edge edge)
+    {
+        _incomingEdges.Add(edge);
+    }
+
+    internal void AttachOutgoingEdge(Edge edge)
+    {
+        _outgoingEdges.Add(edge);
     }
 
     internal void AddRoutingNode(RoutingNode routingNode)
@@ -62,5 +84,10 @@ public class Node : GraphResource
     internal void AddRoutingEdge(RoutingEdge routingEdge)
     {
         _routingEdges.Add(routingEdge);
+    }
+
+    public override string ToString()
+    {
+        return $"{nameof(Node)} {Name}, X={X:f3}, Y={Y:f3}, LevelId={LevelId}, MapId={MapId}, Id={Id}";
     }
 }

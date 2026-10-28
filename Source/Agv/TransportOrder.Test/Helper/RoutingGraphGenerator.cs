@@ -17,7 +17,7 @@ public static class RoutingGraphGenerator
     {
         var nodeId = Guid.NewGuid();
         string nodeName = name ?? nodeId.ToString();
-        var node = new Node(nodeId, nodeName, nodeName, x, y, null);
+        var node = new Node(nodeId, nodeName, nodeName, nodeName,x, y, null, null);
         var type = agvType ?? AgvTypeGenerator.GenerateAgvType(AgvTypeIdentifier);
         var loadState = type.LoadStates.First(state => !state.IsLoaded);
 
@@ -40,7 +40,7 @@ public static class RoutingGraphGenerator
     {
         var edgeId = Guid.NewGuid();
         string edgeName = edgeId.ToString();
-        var edge = new Edge(edgeId, edgeName, edgeName, startNode.Id, endNode.Id);
+        var edge = new Edge(edgeId, edgeName, edgeName, edgeName, startNode.Id, endNode.Id);
         var startRoutingNode = GetRoutingNode(startNode);
         var endRoutingNode = GetRoutingNode(endNode);
         double edgeLength = length ?? Math.Sqrt(Math.Pow(endNode.X - startNode.X, 2) + Math.Pow(endNode.Y - startNode.Y, 2));

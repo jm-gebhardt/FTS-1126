@@ -1,14 +1,6 @@
-﻿
-using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using ActionRoutingEdge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.ActionRoutingEdge;
-using Edge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Edge;
-using GraphResource = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.GraphResource;
-using Node = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Node;
-using RoutingEdge = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingEdge;
-using RoutingNode = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.RoutingNode;
-using Station = Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models.Station;
+﻿using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 using CommonGraph = Common.Domain.Models.NewGraph.Graph;
 using CommonNode = Common.Domain.Models.NewGraph.Node;
@@ -40,7 +32,7 @@ internal static class GraphMapper
 
         foreach (var commonNode in commonNodes)
         {
-            var node = new Node(commonNode.Id, commonNode.Name, commonNode.ShortName, commonNode.X, commonNode.Y, commonNode.LevelId);
+            var node = new Node(commonNode.Id, commonNode.Name, commonNode.ShortName,commonNode.LifNodeId, commonNode.X, commonNode.Y, commonNode.LevelId, commonNode.MapId);
             nodes.Add(node.Id, node);
         }
 
@@ -56,7 +48,11 @@ internal static class GraphMapper
             var startNode = nodes[commonEdge.StartNodeId];
             var endNode = nodes[commonEdge.EndNodeId];
 
-            var edge = new Edge(commonEdge.Id, commonEdge.Name, commonEdge.ShortName, startNode, endNode);
+            var edge = new Edge(commonEdge.Id, commonEdge.Name, commonEdge.ShortName, commonEdge.LifEdgeId, startNode, endNode);
+
+            startNode.AttachOutgoingEdge(edge);
+            endNode.AttachIncomingEdge(edge);
+
             edges.Add(edge.Id, edge);
         }
 
@@ -69,9 +65,9 @@ internal static class GraphMapper
 
         foreach (var commonStation in commonStations)
         {
-            var interactionNode = commonStation.InteractionNodeIds.Select(i => nodes[i]).ToList();
+            var interactionNodes = commonStation.InteractionNodeIds.Select(i => nodes[i]).ToList();
 
-            var station = new Station(commonStation.Id, commonStation.Name, commonStation.ShortName, commonStation.StationHeight, commonStation.X, commonStation.Y, commonStation.Theta, interactionNode);
+            var station = new Station(commonStation.Id, commonStation.Name, commonStation.ShortName, commonStation.LifStationId, commonStation.StationHeight, commonStation.X, commonStation.Y, commonStation.Theta, interactionNodes);
 
             stations.Add(station);
         }
@@ -147,9 +143,11 @@ internal static class GraphMapper
         var startNode = routingNodes[commonRoutingEdge.StartNodeId];
         var endNode = routingNodes[commonRoutingEdge.EndNodeId];
 
+        RoutingEdge routingEdge;
+
         if (commonRoutingEdge is CommonActionRoutingEdge actionRoutingEdge)
         {
-            return new ActionRoutingEdge(commonRoutingEdge.Id,
+            routingEdge = new ActionRoutingEdge(commonRoutingEdge.Id,
                                         parent,
                                         agvType,
                                         startNode,
@@ -165,8 +163,9 @@ internal static class GraphMapper
                                         commonRoutingEdge.Trajectory,
                                         actionRoutingEdge.ActionType);
         }
-
-        return new RoutingEdge(commonRoutingEdge.Id,
+        else
+        {
+                    routingEdge = new RoutingEdge(commonRoutingEdge.Id,
                                 parent,
                                 agvType,
                                 startNode,
@@ -180,5 +179,11 @@ internal static class GraphMapper
                                 commonRoutingEdge.MaxSpeed, 
                                 commonRoutingEdge.MaxRotationSpeed,
                                 commonRoutingEdge.Trajectory);
+        }
+
+        startNode.AttachOutgoingEdge(routingEdge);
+        endNode.AttachIncomingEdge(routingEdge);
+
+        return routingEdge;
     }
 }

@@ -23,6 +23,7 @@ public class NewEdgeEntityConfiguration : IEntityTypeConfiguration<Edge>
 
         builder.Property(e => e.ShortName).HasMaxLength(DbStringLimits.Description);
         builder.Property(e => e.Name).HasMaxLength(DbStringLimits.Name);
+        builder.Property(e => e.LifEdgeId).HasMaxLength(DbStringLimits.Name);
 
         builder.HasOne<Node>()
             .WithMany()

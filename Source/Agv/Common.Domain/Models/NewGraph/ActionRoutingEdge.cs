@@ -1,5 +1,4 @@
-﻿
-// ReSharper disable UnusedType.Global
+﻿// ReSharper disable UnusedType.Global
 
 using JetBrains.Annotations;
 
@@ -30,7 +29,7 @@ public record ActionRoutingEdge : RoutingEdge
         double? maxSpeed,
         double? maxRotationSpeed,
         Trajectory? trajectory,
-        RoutingActionType actionType) 
+        RoutingActionType actionType)
         : base(id, agvTypeId, startNodeId, endNodeId, length, vehicleOrientation, orientationType, rotationAtStart, rotationAtEnd, rotationAllowed, maxSpeed, maxRotationSpeed, trajectory)
     {
         ActionType = actionType;
@@ -53,6 +52,7 @@ public enum RoutingActionType
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     Pick,
     Drop,
-    Rotate
+    Rotate,
+    Charge
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

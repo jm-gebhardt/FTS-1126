@@ -1,13 +1,11 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// An edge in the routing graph on which an action can be run.
 /// </summary>
-[UsedImplicitly]
 public class ActionRoutingEdge : RoutingEdge
 {
     /// <inheritdoc/>
@@ -43,9 +41,5 @@ public class ActionRoutingEdge : RoutingEdge
         ActionType = actionType;
     }
 
-    /// <summary>
-    /// The action type.
-    /// </summary>
-    [UsedImplicitly]
     public RoutingActionType ActionType { get; }
 }

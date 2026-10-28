@@ -20,6 +20,7 @@ using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Agv;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.AgvType;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Filters.SignificanceCheckers;
+using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Map;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.Queue;
 using Gebhardt.Acc.TransportOrder.WebApi.Hubs.RestrictedArea;
@@ -81,6 +82,7 @@ public static class WebHostBuilderExtensions
             services.AddTransient<IRestrictedAreaPublisher, RestrictedAreaPublisher>();
             services.AddTransient<IQueuePublisher, QueuePublisher>();
             services.AddTransient<IAgvTypePublisher, AgvTypePublisher>();
+            services.AddTransient<IGraphPublisher, GraphPublisher>();
 
             services.AddSingleton(typeof(ISemaphoreProvider<>), typeof(SemaphoreProvider<>));
             services.AddSingleton(typeof(IConcurrentDictionaryProvider<>), typeof(ConcurrentDictionaryProvider<>));
@@ -104,6 +106,7 @@ public static class WebHostBuilderExtensions
             services.AddHub<TriggerHub>();
             services.AddHub<RestrictedAreaHub>();
             services.AddHub<QueueHub>();
+            services.AddHub<GraphHub>();
 
             services.AddScoped<ExceptionHandlerMiddleware>();
 
@@ -255,6 +258,7 @@ public static class WebHostBuilderExtensions
             endpoints.MapHub<RestrictedAreaHub>(RestrictedAreaHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<QueueHub>(QueueHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
             endpoints.MapHub<AgvTypeHub>(AgvTypeHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
+            endpoints.MapHub<GraphHub>(GraphHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
 
             endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions
             {

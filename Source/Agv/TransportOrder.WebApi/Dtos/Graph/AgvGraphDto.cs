@@ -8,4 +8,4 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Dtos.Graph;
 /// <param name="Nodes">The list of nodes in the graph</param>
 /// <param name="Edges">The list of edges in the graph.</param>
 [PublicAPI]
-public record GraphDto(List<GraphNodeDto> Nodes, List<GraphEdgeDto> Edges);
+public record AgvGraphDto(List<GraphNodeDto> Nodes, List<GraphEdgeDto> Edges);

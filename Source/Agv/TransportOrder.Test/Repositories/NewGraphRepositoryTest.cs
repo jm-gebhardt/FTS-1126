@@ -42,19 +42,19 @@ public class NewGraphRepositoryTest
         var edgeAcId = Guid.NewGuid();
         var stationId = Guid.NewGuid();
 
-        var nodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
-        var nodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
+        var nodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null, null);
+        var nodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null, null);
         await fixture.GraphRepository.AddOrUpdateGraphSegmentAsync(Fixture.CreateGraph(
             [nodeA, nodeB],
-            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA.Id, nodeB.Id)],
+            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA.Id, nodeB.Id)],
             [Fixture.CreateStation(stationId, nodeA)]));
 
-        var movedNodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null);
-        var reuploadedNodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
-        var nodeC = new Node(nodeCId, Fixture.NodeCName, Fixture.NodeCName, 2, 2, null);
+        var movedNodeA = new Node(nodeAId, Fixture.NodeAName, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null, null);
+        var reuploadedNodeB = new Node(nodeBId, Fixture.NodeBName, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null, null);
+        var nodeC = new Node(nodeCId, Fixture.NodeCName, Fixture.NodeCName, Fixture.NodeCName, 2, 2, null, null);
         await fixture.GraphRepository.AddOrUpdateGraphSegmentAsync(Fixture.CreateGraph(
             [movedNodeA, reuploadedNodeB, nodeC],
-            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, movedNodeA.Id, reuploadedNodeB.Id), new Edge(edgeAcId, Fixture.EdgeAcName, Fixture.EdgeAcName, movedNodeA.Id, nodeC.Id)],
+            [new Edge(edgeAbId, Fixture.EdgeAbName, Fixture.EdgeAbName, Fixture.EdgeAbName, movedNodeA.Id, reuploadedNodeB.Id), new Edge(edgeAcId, Fixture.EdgeAcName, Fixture.EdgeAcName, Fixture.EdgeAcName, movedNodeA.Id, nodeC.Id)],
             [Fixture.CreateStation(stationId, nodeC)]));
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
@@ -69,7 +69,7 @@ public class NewGraphRepositoryTest
     {
         var fixture = new Fixture();
         var nodeId = Guid.NewGuid();
-        var node = new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
+        var node = new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null, null);
         await fixture.GraphRepository.AddOrUpdateGraphSegmentAsync(Fixture.CreateGraph([node]));
 
         var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
@@ -77,7 +77,7 @@ public class NewGraphRepositoryTest
         await fixture.AddRoutingResourcesAsync((routingNode, node));
 
         await fixture.GraphRepository.AddOrUpdateGraphSegmentAsync(Fixture.CreateGraph(
-            [new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null)]));
+            [new Node(nodeId, Fixture.NodeAName, Fixture.NodeAName, Fixture.NodeAName, Fixture.MovedNodePosition, Fixture.MovedNodePosition, null, null)]));
 
         var loaded = await fixture.GraphRepository.GetGraphAsync();
         var loadedNode = loaded.Nodes.ShouldHaveSingleItem();
@@ -102,16 +102,16 @@ public class NewGraphRepositoryTest
     {
         var fixture = new Fixture();
 
-        var nodeA = new Node(Guid.NewGuid(), Fixture.NodeAName, Fixture.NodeAName, 0, 0, null);
-        var nodeB = new Node(Guid.NewGuid(), Fixture.NodeBName, Fixture.NodeBName, 1, 1, null);
-        var edge = new Edge(Guid.NewGuid(), Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA.Id, nodeB.Id);
-        var station = new Station(Guid.NewGuid(), Fixture.StationName, Fixture.StationName,  0, 0, null, null, []);
+        var nodeA = new Node(Guid.NewGuid(), Fixture.NodeAName, Fixture.NodeAName, Fixture.NodeAName, 0, 0, null, null);
+        var nodeB = new Node(Guid.NewGuid(), Fixture.NodeBName, Fixture.NodeBName, Fixture.NodeBName, 1, 1, null, null);
+        var edge = new Edge(Guid.NewGuid(), Fixture.EdgeAbName, Fixture.EdgeAbName, Fixture.EdgeAbName, nodeA.Id, nodeB.Id);
+        var station = new Station(Guid.NewGuid(), Fixture.StationName, Fixture.StationName, Fixture.StationName, 0, 0, null, null, []);
         await fixture.AddResourcesAsync([nodeA, nodeB], [edge], [station]);
 
         var agvType = AgvTypeGenerator.GenerateAgvType(Fixture.AgvTypeName);
-        var routingNodeA = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid() , 0);
-        var routingNodeB = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid() , 0);
-        var routingEdge = new RoutingEdge(Guid.NewGuid(), agvType.Id, routingNodeA.Id, routingNodeB.Id, 5.0, Math.PI, OrientationType.Tangential,  null, null,
+        var routingNodeA = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid(), 0);
+        var routingNodeB = new RoutingNode(Guid.NewGuid(), agvType.Id, Guid.NewGuid(), 0);
+        var routingEdge = new RoutingEdge(Guid.NewGuid(), agvType.Id, routingNodeA.Id, routingNodeB.Id, 5.0, Math.PI, OrientationType.Tangential, null, null,
             false, null, null, null);
 
         await fixture.AddRoutingResourcesAsync(

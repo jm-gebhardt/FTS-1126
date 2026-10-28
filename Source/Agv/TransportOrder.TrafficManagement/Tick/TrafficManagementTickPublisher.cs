@@ -1,7 +1,8 @@
+using Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
 using MassTransit;
 using Microsoft.Extensions.Hosting;
 
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Tick;
 
 /// <summary>
 /// Publishes a <see cref="TrafficManagementTick"/> to the bus on a fixed interval, unconditionally.

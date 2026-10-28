@@ -27,6 +27,8 @@ public class NewNodeEntityConfiguration : IEntityTypeConfiguration<Node>
         builder.Property(e => e.X);
         builder.Property(e => e.Y);
         builder.Property(e => e.LevelId).HasMaxLength(DbStringLimits.Name);
+        builder.Property(e => e.MapId).HasMaxLength(DbStringLimits.Name);
+        builder.Property(e => e.LifNodeId).HasMaxLength(DbStringLimits.Name);
 
         builder.HasMany(e => e.RoutingNodes)
             .WithOne()

@@ -6,7 +6,7 @@ namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Routes;
 /// <summary>
 /// Represents a route for an AGV, consisting of a sequence of RouteSteps.
 /// </summary>
-internal class Route(IRoutingAgv agv, List<RouteStep> steps, Guid actionCorrelationId)
+internal class Route(RoutingAgv agv, List<RouteStep> steps, Guid actionCorrelationId)
 {
     /// <summary>
     /// Unique identifier for the route.
@@ -16,7 +16,7 @@ internal class Route(IRoutingAgv agv, List<RouteStep> steps, Guid actionCorrelat
     /// <summary>
     /// The AGV for which this route is planned.
     /// </summary>
-    public IRoutingAgv Agv { get; } = agv;
+    public RoutingAgv Agv { get; } = agv;
 
     /// <summary>
     /// Sequence of RouteSteps that make up this route.
@@ -41,6 +41,6 @@ internal class Route(IRoutingAgv agv, List<RouteStep> steps, Guid actionCorrelat
 
     public override string ToString()
     {
-        return $"RouteId: {Id}, AgvId: {Agv.CorrelationId}, ActionCorrelationId: {ActionCorrelationId}, Steps: \n {string.Join("\n", steps.Select(s => s.ToString()))}]";
+        return $"RouteId: {Id}, AgvId: {Agv.Id}, ActionCorrelationId: {ActionCorrelationId}, Steps: \n {string.Join("\n", steps.Select(s => s.ToString()))}]";
     }
 }

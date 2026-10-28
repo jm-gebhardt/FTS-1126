@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using Gebhardt.Acc.Common.Logging;
+using Gebhardt.Acc.Common.Services;
 using Gebhardt.Acc.TransportOrder;
 using Gebhardt.Acc.TransportOrder.Core.CmdOptions;
 using Gebhardt.Acc.TransportOrder.Persistence.Ef.DataAccess;
@@ -41,6 +42,10 @@ try
         dbContext.SetCommandTimeOut();
         await dbContext.Database.MigrateAsync();
     }
+
+    var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+    var startupServices = host.Services.GetServices<IStartupService>();
+    await Task.WhenAll(startupServices.Select(startupService => startupService.RunAsync(lifetime.ApplicationStopping)));
 
     host.Run();
     return 0;

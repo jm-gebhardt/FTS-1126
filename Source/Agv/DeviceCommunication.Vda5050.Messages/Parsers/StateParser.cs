@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using Gebhardt.Acc.Common.Domain.Models;
 using Gebhardt.Acc.Common.Domain.Utilities;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
-using Microsoft.Extensions.Logging;
-using System.Collections.ObjectModel;
+using Gebhardt.Acc.Common.Messages.AgvManagement.Events;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Exceptions;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Orders;
+using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
+using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Parsers;
 
@@ -51,6 +52,11 @@ public class StateParser(ILogger logger, IMapper mapper)
     public OrderState OrderState { get; private set; } = null!;
 
     /// <summary>
+    /// The current agv traffic management status
+    /// </summary>
+    public AgvTrafficManagementStatusReceived AgvTrafficManagementStatus { get; private set; } = null!;
+
+    /// <summary>
     /// Parse the <see cref="MqttState"/>.
     /// </summary>
     /// <param name="state">The state.</param>
@@ -64,6 +70,30 @@ public class StateParser(ILogger logger, IMapper mapper)
         GetInformation(state);
         ConvertFieldViolationToWarning(state);
         GetOrderState(state);
+        GetTrafficManagementStatus(state);
+    }
+
+    private void GetTrafficManagementStatus(MqttState state)
+    {
+        bool hasFatalError = state.Errors.Any(e => e.ErrorLevel == MqttErrorLevel.Fatal);
+
+        //According to VDA5050 3.0(chapter 6.6.8).Differs form current 'Busy' definition -> todo: unify
+        bool isIdle = state.NodeStates.Count == 0 && state.EdgeStates.Count == 0 && state.ActionStates.All(s => s.ActionStatus is MqttActionStatus.Finished or MqttActionStatus.Failed);
+
+        AgvTrafficManagementStatus = new AgvTrafficManagementStatusReceived
+        {
+            AgvId = CorrelationId,
+            IsPositionInitialized = state.AgvPosition?.PositionInitialized ?? false,
+            X = state.AgvPosition?.X ?? 0,
+            Y = state.AgvPosition?.Y ?? 0,
+            Theta = state.AgvPosition?.Theta ?? 0,
+            LastLifNodeId = state.LastNodeId,  //todo: convert to internal Id here? LifNodeId + MapId + LifLayout -> InternalNodeId
+            MapId = state.AgvPosition?.MapId,
+            IsLoaded = state.Loads?.Any() ?? false,
+            IsAutomatic = GetAutomatic(state),
+            HasFatalError = hasFatalError,
+            IsIdle = isIdle
+        };
     }
 
     private void GetSerialNumber(MqttState state)

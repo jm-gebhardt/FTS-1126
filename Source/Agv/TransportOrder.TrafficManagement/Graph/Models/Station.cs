@@ -6,6 +6,11 @@ namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 public class Station : GraphResource
 {
     /// <summary>
+    /// StationId in the LIF.
+    /// </summary>
+    public string LifStationId { get; }
+    
+    /// <summary>
     /// These are the nodes that represent the position at which interaction with this station takes place.
     /// </summary>
     public IReadOnlyCollection<Node> InteractionNodes { get; }
@@ -31,13 +36,18 @@ public class Station : GraphResource
     public double? Theta { get; }
 
     /// <inheritdoc cref="Station"/>
-    // ReSharper disable once MemberCanBePrivate.Global
-    public Station(Guid id, string name, string shortName, double? stationHeight, double x, double y, double? theta, List<Node> interactionNodes) : base(id, name, shortName)
+    public Station(Guid id, string name, string shortName, string lifStationId, double? stationHeight, double x, double y, double? theta, List<Node> interactionNodes) : base(id, name, shortName)
     {
+        LifStationId = lifStationId;
         StationHeight = stationHeight;
         X = x;
         Y = y;
         Theta = theta;
         InteractionNodes = interactionNodes;
+    }
+
+    public override string ToString()
+    {
+        return $"{nameof(Station)} {Name}, X={X:f3}, Y={Y:f3}, StationHeight={StationHeight:f3}, Theta={Theta:f2}, Id={Id}";
     }
 }

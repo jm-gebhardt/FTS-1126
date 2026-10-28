@@ -13,6 +13,11 @@ public record Station : GraphResource
     private IReadOnlyList<Guid>? _interactionNodeIds;
 
     /// <summary>
+    /// StationId in the LIF.
+    /// </summary>
+    public string LifStationId { get; init; }
+    
+    /// <summary>
     /// X position of the station on the layout in reference to the global origin.
     /// </summary>
     public double X { get; init; }
@@ -52,8 +57,9 @@ public record Station : GraphResource
     public double? StationHeight { get; init; }
 
     /// <inheritdoc cref="Station"/>
-    public Station(Guid id, string name, string shortName, double x, double y, double? theta, double? stationHeight, List<Guid> interactionNodeIds) : base(id, name, shortName)
+    public Station(Guid id, string name, string shortName, string lifStationId, double x, double y, double? theta, double? stationHeight, List<Guid> interactionNodeIds) : base(id, name, shortName)
     {
+        LifStationId = lifStationId;
         StationHeight = stationHeight;
         InteractionNodeIds = interactionNodeIds;
         X = x;
@@ -66,6 +72,7 @@ public record Station : GraphResource
     /// </summary>
     public Station()
     {
+        LifStationId = null!;
     }
 
     /// <summary>

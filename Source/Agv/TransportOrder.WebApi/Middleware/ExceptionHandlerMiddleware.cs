@@ -35,6 +35,7 @@ public class ExceptionHandlerMiddleware(ILogger<BaseExceptionHandlerMiddleware> 
             NodeNotAvailableException => HttpStatusCode.Conflict,
             NoNodesAvailableException => HttpStatusCode.Conflict,
             ResetAgvErrorFailedException => HttpStatusCode.InternalServerError,
+            ViewNotFoundException => HttpStatusCode.BadRequest,
             NotFoundException => HttpStatusCode.NotFound,
             AllAgvsOfflineException => HttpStatusCode.Conflict,
             AgvNotInZoneException => HttpStatusCode.Conflict,

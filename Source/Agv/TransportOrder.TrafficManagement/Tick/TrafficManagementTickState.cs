@@ -1,4 +1,4 @@
-namespace Gebhardt.Acc.TransportOrder.TrafficManagement.EventHandler;
+namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Tick;
 
 /// <summary>
 /// Tracks when the last <see cref="TrafficManagementTick"/> was actually processed, so the consumer can
