@@ -3,7 +3,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.PrismatCommunication.Messages</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
      <ItemGroup>
     </ItemGroup>
     <ItemGroup>

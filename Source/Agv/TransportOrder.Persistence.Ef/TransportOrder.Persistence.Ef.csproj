@@ -2,7 +2,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.TransportOrder.Persistence.Ef</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AppAny.Quartz.EntityFrameworkCore.Migrations.SqlServer" />
         <PackageReference Include="AutoMapper" />

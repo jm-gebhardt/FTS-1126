@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.Common.TelegramCommunication</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />

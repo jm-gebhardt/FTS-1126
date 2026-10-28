@@ -13,5 +13,5 @@
       <ProjectReference Include="..\StationCommunication.Domain\StationCommunication.Domain.csproj" />
       <ProjectReference Include="..\StationCommunication.Messages\StationCommunication.Messages.csproj" />
     </ItemGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
 </Project>

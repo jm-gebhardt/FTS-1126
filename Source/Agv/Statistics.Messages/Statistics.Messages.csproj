@@ -2,7 +2,7 @@
     <PropertyGroup>
         <AssemblyName>Gebhardt.Acc.Statistics.Messages</AssemblyName>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

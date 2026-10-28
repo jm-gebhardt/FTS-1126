@@ -3,7 +3,7 @@
   <PropertyGroup>
       <AssemblyName>Gebhardt.Acc.StationCommunication.Domain</AssemblyName>
   </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" />

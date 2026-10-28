@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.Common.Messages</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="Gebhardt.Core.Observability" />
         <PackageReference Include="Gebhardt.Core.Observability.Abstractions" />

@@ -28,7 +28,7 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then echo "linux-musl-arm64" > /tmp/rid; \
 # Copy only what package resolution needs, preserving directory layout (--parents).
 COPY Directory.Packages.props Directory.Build.props ./
 COPY --parents Agv/**/*.csproj ./
-COPY Agv/SharedProjectSettings.csproj Agv/NuGet.Config Agv/CompileAgv.sln ./Agv/
+COPY Agv/SharedProjectsSettings.props Agv/NuGet.Config Agv/CompileAgv.sln ./Agv/
 
 # Restore the whole solution once. The package cache mount is shared across services and across
 # runs, so packages are downloaded only when a version actually changes.

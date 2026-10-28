@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.Common.WebApi</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="MassTransit.Prometheus" />
         <PackageReference Include="MassTransit" />

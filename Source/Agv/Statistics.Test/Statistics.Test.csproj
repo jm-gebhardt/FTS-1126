@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.Statistics.Test</AssemblyName>
         <NoWarn>1591</NoWarn>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AutoMapper" />
         <PackageReference Include="JetBrains.Annotations" />

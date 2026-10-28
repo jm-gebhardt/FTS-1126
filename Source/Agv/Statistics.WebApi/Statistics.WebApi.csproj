@@ -3,7 +3,7 @@
         <AssemblyName>Gebhardt.Acc.Statistics.WebApi</AssemblyName>
         <OutputType>Library</OutputType>
     </PropertyGroup>
-    <Import Project="..\SharedProjectSettings.csproj" />
+    <Import Project="..\SharedProjectsSettings.props" />
     <ItemGroup>
         <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
         <PackageReference Include="AutoMapper" />
