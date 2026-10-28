@@ -229,7 +229,7 @@ public class DoppelspielCommandHandler(
             delayedOrder.Assign(agvCorrelationId, true);
             actionGroup.SetDoppelspielpartner(delayedOrder.CorrelationId, ActionType.Drop);
             await actionGroupRepository.UpdateAsync(delayedOrder);
-            await actionGroupRepository.UpdateAsync(actionGroup);
+            await actionGroupRepository.SetDoppelspielPartnerAsync(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).CorrelationId, delayedOrder.CorrelationId);
             await context.Publish(new QueueActionGroup(mapper.Map<ActionGroup>(delayedOrder), false));
             await WaitUntilQueued(delayedOrder.CorrelationId);
             await context.RespondAsync(new DoppelspielPartnerQueued(delayedOrder.CorrelationId));
@@ -281,7 +281,7 @@ public class DoppelspielCommandHandler(
             delayedOrder.Assign(actionGroup.AssignedAgv.GetValueOrDefault());
             actionGroup.SetDoppelspielpartner(delayedOrder.CorrelationId, ActionType.Drop);
             await actionGroupRepository.UpdateAsync(delayedOrder);
-            await actionGroupRepository.UpdateAsync(actionGroup);
+            await actionGroupRepository.SetDoppelspielPartnerAsync(dropAction.CorrelationId, delayedOrder.CorrelationId);
             await context.Publish(new QueueActionGroup(mapper.Map<ActionGroup>(delayedOrder), false));
             logger.LogInformation("Queued order {HostOrder} with pick node {Node} as Doppelspielpartner for Order {DropOrder}", delayedOrder.CorrelationId, dropTarget.Name, actionGroup.CorrelationId);
         });
@@ -379,7 +379,7 @@ public class DoppelspielCommandHandler(
             delayedOrder.Assign(actionGroup.AssignedAgv.GetValueOrDefault(), true);
             actionGroup.SetDoppelspielpartner(delayedOrder.CorrelationId, ActionType.Drop);
             await actionGroupRepository.UpdateAsync(delayedOrder);
-            await actionGroupRepository.UpdateAsync(actionGroup);
+            await actionGroupRepository.SetDoppelspielPartnerAsync(actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).CorrelationId, delayedOrder.CorrelationId);
             await context.Publish(new QueueActionGroup(mapper.Map<ActionGroup>(delayedOrder), false));
             logger.LogInformation("Queued order {HostOrder} with pick node {Node} as Doppelspielpartner for Order {DropOrder} during passing of Doppelspiel trigger", delayedOrder.CorrelationId, dropTarget.Name, actionGroup.CorrelationId);
             await context.Publish(new DroppingAgvPassedDoppelspielTriggerPoint(action.Target.Node!, actionGroup.AssignedAgv!.Value, actionGroup.CorrelationId, delayedOrder.CorrelationId));
@@ -484,7 +484,6 @@ public class DoppelspielCommandHandler(
         {
             pickActionGroup.SetTargetAndAssign(context.Message.AssignableAgv, ActionType.Pick, currentAction.Target.Node!);
             await actionGroupRepository.UpdateAsync(pickActionGroup);
-            await actionGroupRepository.UpdateAsync(actionGroup);
             await context.Publish(new QueueActionGroup(mapper.Map<ActionGroup>(pickActionGroup), false));
             logger.LogInformation("Queued order {HostOrder} with pick node {Node} during assignment of delayed order to head of queue", pickActionGroup.CorrelationId, currentAction.Target.Node!.Name);
             await context.RespondAsync(new AssignedDelayedOrder(pickActionGroup.CorrelationId));

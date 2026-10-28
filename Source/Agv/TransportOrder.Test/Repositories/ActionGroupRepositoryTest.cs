@@ -15,6 +15,57 @@ namespace Gebhardt.Acc.TransportOrder.Test.Repositories;
 [TestClass]
 public class ActionGroupRepositoryTest
 {
+    [TestMethod]
+    public async Task SetDoppelspielPartnerAsync_AfterConcurrentCompletion_PreservesPersistedLifecycleState()
+    {
+        var actionGroup = AgvActionGenerator.GeneratePickDropActionGroup(
+            assignedAgv: Guid.NewGuid(), pickActionState: ActionState.Completed, dropActionState: ActionState.Started);
+        var fixture = await new ActionGroupRepositoryTestFixture()
+            .WithActionGroup(actionGroup)
+            .BuildAsync();
+        var repository = fixture.ActionGroupRepository;
+        var staleGroup = await repository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+        var staleDrop = staleGroup.Actions.First(a => a.ActionType == ActionType.Drop);
+        var partnerOrder = Guid.NewGuid();
+
+        var completedGroup = await repository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+        completedGroup.CompleteAction(staleDrop.CorrelationId, DateTimeOffset.UtcNow);
+        completedGroup.Actions.First(a => a.CorrelationId == staleDrop.CorrelationId).IncrementRevision();
+        await repository.UpdateAsync(completedGroup);
+        var before = await repository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+
+        staleGroup.SetDoppelspielpartner(partnerOrder, ActionType.Drop);
+        await repository.SetDoppelspielPartnerAsync(staleDrop.CorrelationId, partnerOrder);
+
+        var after = await repository.GetRequiredActionGroupByIdAsync(actionGroup.CorrelationId);
+        var drop = after.Actions.First(a => a.CorrelationId == staleDrop.CorrelationId);
+        var completedDrop = before.Actions.First(a => a.CorrelationId == staleDrop.CorrelationId);
+        after.State.ShouldBe(ActionGroupState.Completed);
+        after.CompletedDate.ShouldBe(before.CompletedDate);
+        after.AssignedAgv.ShouldBe(before.AssignedAgv);
+        after.StartedDate.ShouldBe(before.StartedDate);
+        drop.State.ShouldBe(ActionState.Completed);
+        drop.CompletedDate.ShouldBe(completedDrop.CompletedDate);
+        drop.StartedDate.ShouldBe(completedDrop.StartedDate);
+        drop.ActionType.ShouldBe(completedDrop.ActionType);
+        drop.Revision.ShouldBe(completedDrop.Revision);
+        drop.Target.NodeId.ShouldBe(completedDrop.Target.NodeId);
+        drop.ShouldSkip.ShouldBe(completedDrop.ShouldSkip);
+        drop.IsRegisteredForDoppelspiel.ShouldBeTrue();
+        drop.DoppelspielPartner.ShouldBe(partnerOrder);
+        after.Actions.First(a => a.ActionType == ActionType.Pick).DoppelspielPartner.ShouldBeNull();
+        staleDrop.State.ShouldBe(ActionState.Started);
+    }
+
+    [TestMethod]
+    public async Task SetDoppelspielPartnerAsync_UnknownAction_Throws()
+    {
+        var fixture = await new ActionGroupRepositoryTestFixture().BuildAsync();
+
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            fixture.ActionGroupRepository.SetDoppelspielPartnerAsync(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
     private static void VerifyActionGroup(ActionGroup actualActionGroup, ActionGroup expectedActionGroup)
     {
         actualActionGroup.ShouldNotBeNull();

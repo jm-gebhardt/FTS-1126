@@ -696,6 +696,19 @@ public class EfActionGroupRepository : IActionGroupRepository
     }
 
     /// <inheritdoc />
+    public async Task SetDoppelspielPartnerAsync(Guid actionCorrelationId, Guid partnerOrder)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var actionGroup = await context.Set<ActionGroup>()
+            .AsTracking()
+            .Include(g => g.Actions)
+            .SingleAsync(g => g.Actions.Any(a => a.CorrelationId == actionCorrelationId));
+        var action = actionGroup.Actions.Single(a => a.CorrelationId == actionCorrelationId);
+        action.SetDoppelspielPartner(partnerOrder);
+        await context.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
     public async Task UpdateAsync(ActionGroup actionGroup)
     {
         Dictionary<Guid, GraphNode> savedNodes = StripNodes(actionGroup);

@@ -256,6 +256,13 @@ public interface IActionGroupRepository
     Task UpdateAsync(ActionGroup actionGroup);
 
     /// <summary>
+    /// Sets an action's Doppelspiel partner and registration without changing action or action-group lifecycle state.
+    /// </summary>
+    /// <param name="actionCorrelationId">The action to register.</param>
+    /// <param name="partnerOrder">The partner action group.</param>
+    Task SetDoppelspielPartnerAsync(Guid actionCorrelationId, Guid partnerOrder);
+
+    /// <summary>
     ///  Gets the average deviation between the actual and estimated
     /// duration [s] of an action group for the given target nodes.
     /// </summary>

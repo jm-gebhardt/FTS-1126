@@ -449,6 +449,12 @@ public class DoppelspielCommandHandlerTest
 
         doppelspielPartnerQueued.CorrelationId.ShouldBe(nextPickActionGroup.CorrelationId);
         await fixture.ShouldHavePublishedAsync<QueueActionGroup>();
+        var dropActionId = actionGroup.Actions.First(a => a.ActionType == ActionType.Drop).CorrelationId;
+        fixture.ActionGroupRepository.Verify(r => r.SetDoppelspielPartnerAsync(
+            dropActionId, nextPickActionGroup.CorrelationId), Times.Once);
+        fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(
+            It.Is<TransportOrder.Domain.Models.ActionGroup.ActionGroup>(g => g.CorrelationId == actionGroup.CorrelationId)), Times.Never);
+        fixture.ActionGroupRepository.Verify(r => r.UpdateAsync(nextPickActionGroup), Times.Once);
     }
 
     [DataRow(ActionState.Failed)]
