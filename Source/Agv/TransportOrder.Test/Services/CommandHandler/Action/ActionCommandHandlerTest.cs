@@ -795,12 +795,6 @@ public class ActionCommandHandlerTest
         move.State.ShouldBe(ActionState.Started);
         move.CompletedDate.ShouldBeNull();
         fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Never);
-        await fixture.ShouldNotHavePublishedAsync<DropActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<ActionGroupCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<CheckAgvLoad>();
-        await fixture.ShouldNotHavePublishedAsync<NonChargingActionCompleted>();
-        await fixture.ShouldNotHavePublishedAsync<Fault<CompleteActionOfActionGroup>>();
-
         fixture.WithHasCargo(false);
         await fixture.TestHarness.Bus.Publish(new CompleteActionOfActionGroup(move.CorrelationId, actionGroup.CorrelationId, Revision: move.Revision));
         await fixture.ConsumerHarness.Consumed.ShouldHaveConsumedCountAsync<CompleteActionOfActionGroup>(2);
@@ -809,6 +803,11 @@ public class ActionCommandHandlerTest
         move.State.ShouldBe(ActionState.Completed);
         move.CompletedDate.ShouldNotBeNull();
         fixture.ActionGroupRepository.Verify(x => x.UpdateAsync(It.IsAny<ActionGroup>()), Times.Once);
+        fixture.TestHarness.Published.Select<DropActionCompleted>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<ActionGroupCompleted>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<CheckAgvLoad>().Count().ShouldBe(1);
+        fixture.TestHarness.Published.Select<NonChargingActionCompleted>().Count().ShouldBe(1);
+        await fixture.ShouldNotHavePublishedAsync<Fault<CompleteActionOfActionGroup>>();
     }
 
     [TestMethod]
