@@ -93,7 +93,7 @@ public class VdmaLifExtensionsTest
 
         var result = trajectory.ToTrajectory();
 
-        result.Degree.ShouldBe(3L);
+        result.Degree.ShouldBe(3);
         result.KnotVector.ShouldBe([0.0, 1.0]);
         result.ControlPoints.ShouldHaveSingleItem();
         result.ControlPoints.Single().X.ShouldBe(1.0);

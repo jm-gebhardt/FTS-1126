@@ -86,7 +86,7 @@ public class MqttStateSignificanceChecker : ISignificanceChecker<MqttState>
     {
         return ReferenceEquals(a, b) ||
                (a is not null && b is not null &&
-                AreIntsEqual(a.Degree, b.Degree) &&
+                AreFloatsEqual(a.Degree, b.Degree) &&
                 AreListsEqual(a.KnotVector, b.KnotVector, (x, y) => AreFloatsEqual(x, y)) &&
                 AreListsEqual(a.ControlPoints, b.ControlPoints, ControlPointEqual));
     }

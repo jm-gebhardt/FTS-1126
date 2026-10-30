@@ -269,7 +269,7 @@ public static class Vda5050Mapper
             errors.Add($"edge {edgeId}: trajectory needs more than {trajectory.Degree} control points");
             valid = false;
         }
-        if (valid && knots.Count != points.Count + trajectory.Degree + 1)
+        if (valid && knots.Count != (int)(points.Count + trajectory.Degree + 1.0))
         {
             errors.Add($"edge {edgeId}: knotVector must contain {points.Count + trajectory.Degree + 1} values but has {knots.Count}");
             valid = false;
@@ -289,7 +289,7 @@ public static class Vda5050Mapper
             ? new Trajectory(
                 [.. points.Select(p => new ControlPoint(p.X, p.Y, p.Weight ?? 1.0f))],
                 [.. knots.Select(k => (double)k)],
-                trajectory.Degree)
+                (int)trajectory.Degree)
             : null;
     }
 }

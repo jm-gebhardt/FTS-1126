@@ -11,7 +11,7 @@ public record MqttTrajectory
     /// <summary>
     /// Defines the number of control points that influence any given point on the curve.
     /// </summary>
-    public int Degree { get; set; }
+    public float Degree { get; set; }
 
     /// <summary>
     /// Sequence of parameter values that determine where and how the control points affect the NURBS curve.

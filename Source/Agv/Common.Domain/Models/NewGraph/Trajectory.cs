@@ -13,7 +13,7 @@ public record Trajectory
     private const double Tolerance = 1e-9;
 
     /// <inheritdoc cref="Trajectory"/>
-    public Trajectory(IReadOnlyList<ControlPoint> controlPoints, double[] knotVector, long? degree = null)
+    public Trajectory(IReadOnlyList<ControlPoint> controlPoints, double[] knotVector, int? degree = null)
     {
         ControlPoints = controlPoints;
         KnotVector = knotVector;
