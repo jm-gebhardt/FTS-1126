@@ -7,7 +7,6 @@
     <Import Project="..\SharedProjectSettings.csproj" />
   <ItemGroup>
     <PackageReference Include="MQTTnet" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" />
     <PackageReference Include="SignalRSwaggerGen" />
