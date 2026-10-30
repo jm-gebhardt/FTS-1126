@@ -87,5 +87,7 @@ public class TransportOrderDbContext : BaseDbContext<TransportOrderDbContext>, I
         modelBuilder.ApplyConfiguration(new RoutingEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ActionRoutingEdgeEntityConfiguration());
         modelBuilder.ApplyConfiguration(new RoutingResourceConflictEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ViewEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ViewBackgroundImageEntityConfiguration());
     }
 }

@@ -1509,6 +1509,11 @@ public class AgvCommandHandler :
         var agv = await _agvDb.Agvs.GetAgvAsync(agvCorrelationId, cancellationToken);
         if (isQueueing.HasValue)
         {
+            if (agv.IsQueueing != isQueueing.Value)
+            {
+                _logger.LogInformation("Setting IsQueueing for agv {AgvCorrelationId} from {OldIsQueueing} to {NewIsQueueing} during transition to idle from action completion", 
+                    agv.CorrelationId, agv.IsQueueing, isQueueing.Value);
+            }
             agv.IsQueueing = isQueueing.Value;
         }
         await TransitionToIdleAsync(publishEndpoint, agv, cancellationToken);
@@ -2197,6 +2202,8 @@ public class AgvCommandHandler :
             await _loggingService.LogAgv(_logger, LogLevel.Warning, LogCodes.AgvConfigurationInvalid, correlationId, null, "AGV configuration invalid", $"AGV {agvSerialNumber} received invalid configuration",
                 new Dictionary<string, object?> { { LogLabels.AgvSerialNumber, agvSerialNumber } });
         }
+
+        await context.Publish(new AgvAgvTypeUpdated(agv.CorrelationId));
     }
 
     /// <inheritdoc cref="AgvCommandHandler"/>

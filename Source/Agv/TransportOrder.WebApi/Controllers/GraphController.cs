@@ -2,6 +2,7 @@ using AutoMapper;
 using Gebhardt.Acc.TransportOrder.Messages.Extensions;
 using Gebhardt.Acc.TransportOrder.Messages.Requests.Graph;
 using Gebhardt.Acc.TransportOrder.WebApi.Dtos.GraphAnalysis;
+using Gebhardt.Acc.TransportOrder.WebApi.Dtos.NewGraph;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +20,22 @@ public class GraphController(
     IRequestClient<GetBoundingBoxConflicts> getConflictsClient,
     IRequestClient<GetNodeBoundingBoxConflicts> getNodeConflictsClient,
     IRequestClient<GetEdgeBoundingBoxConflicts> getEdgeConflictsClient,
+    IRequestClient<GetGraphOverview> getGraphOverviewClient,
     IMapper mapper
 ) : Controller
 {
+    /// <summary>
+    /// Returns the entire graph with its nodes, edges, stations and the AGV states.
+    /// </summary>
+    /// <response code="200">Ok</response>
+    [HttpGet]
+    [Route("/graph")]
+    public async Task<ActionResult<GraphDto>> GetGraph(CancellationToken cancellationToken)
+    {
+        var response = await getGraphOverviewClient.GetResponse<GotGraphOverview>(new GetGraphOverview(Guid.NewGuid()), cancellationToken);
+        return Ok(mapper.Map<GraphDto>((response.Message.Graph, response.Message.LoadStates)));
+    }
+
     /// <summary>
     /// Returns bounding box polygons for all graph resources of the given AGV type, optionally filtered by resource type.
     /// </summary>

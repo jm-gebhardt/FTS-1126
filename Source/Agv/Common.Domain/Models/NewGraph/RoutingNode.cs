@@ -18,6 +18,11 @@ public record RoutingNode : RoutingResource
     /// </summary>
     public double Theta { get; init; }
 
+    /// <summary>
+    /// The actions an AGV can run at the routing node.
+    /// </summary>
+    public List<RoutingActionType> Actions { get; init; } = [];
+
     /// <inheritdoc cref="RoutingNode"/>
     public RoutingNode(Guid id, Guid agvTypeId, Guid loadStateId, double theta) : base(id, agvTypeId)
     {

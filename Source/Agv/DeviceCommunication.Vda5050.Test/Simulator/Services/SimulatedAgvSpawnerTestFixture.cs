@@ -37,7 +37,7 @@ public class SimulatedAgvSpawnerTestFixture : MassTransitTestFixture
     public SimulatedAgvSpawnerTestFixture WithGraphNode()
     {
         var nodes = _graph.Nodes.ToList();
-        nodes.Add(new Node(Guid.NewGuid(), "Gebhardt.R1", "R1", 0,0, ""));
+        nodes.Add(new Node(Guid.NewGuid(), "Gebhardt.R1", "R1", "R1",0,0, "", ""));
         _graph = new Graph(nodes, _graph.Edges, _graph.Stations);
         return this;
     }

@@ -121,20 +121,11 @@ public class RouteGeneratorTest
 
     private static RouteCreationRequest CreateRequest(RoutingNode startNode, IReadOnlyCollection<RoutingNode> targetNodeCandidates)
     {
-        return new RouteCreationRequest(new RoutingAgvStub(startNode), startNode, targetNodeCandidates, Guid.NewGuid(), []);
+        return new RouteCreationRequest(new RoutingAgv(Guid.NewGuid(), _agvType, startNode, true, false, true), startNode, targetNodeCandidates, Guid.NewGuid(), []);
     }
 
     private static RouteGenerator CreateRouteGenerator()
     {
         return new RouteGenerator(NullLogger<RouteGenerator>.Instance);
-    }
-
-    private sealed class RoutingAgvStub(RoutingNode currentRoutingNode) : IRoutingAgv
-    {
-        public Guid CorrelationId { get; } = Guid.NewGuid();
-
-        public RoutingNode? CurrentRoutingNode { get; } = currentRoutingNode;
-
-        public bool IsInAutomaticMode => true;
     }
 }

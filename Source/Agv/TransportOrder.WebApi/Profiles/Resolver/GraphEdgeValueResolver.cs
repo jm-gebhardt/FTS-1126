@@ -8,10 +8,10 @@ namespace Gebhardt.Acc.TransportOrder.WebApi.Profiles.Resolver;
 /// The custom value resolver.
 /// Maps from AgvGraph to the GraphEdgeDtos.
 /// </summary>
-public class GraphEdgeValueResolver : IValueResolver<Graph, GraphDto, object>
+public class GraphEdgeValueResolver : IValueResolver<Graph, AgvGraphDto, object>
 {
     /// <inheritdoc />
-    public object Resolve(Graph source, GraphDto destination, object destMember, ResolutionContext context)
+    public object Resolve(Graph source, AgvGraphDto destination, object destMember, ResolutionContext context)
     {
         var graphEdges = new List<GraphEdgeDto>();
 

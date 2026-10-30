@@ -54,4 +54,12 @@ public static class Orientation
     {
         return alpha1.OrientationEquals(alpha2);
     }
+    
+    /// <summary>
+    /// Smallest absolute angle difference in radians (0..π), handles wrap-around at ±π.
+    /// </summary>
+    public static double GetOrientationDifference(double a, double b)
+    {
+        return Math.Abs(Math.IEEERemainder(a - b, 2 * Math.PI));
+    }
 }

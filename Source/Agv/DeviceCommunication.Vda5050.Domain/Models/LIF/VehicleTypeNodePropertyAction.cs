@@ -40,7 +40,8 @@ public class VehicleTypeNodePropertyAction
     public ICollection<NodeActionParameter>? ActionParameters { get; set; }
 
     /// <summary>
-    /// Type of action (e.g., move, load, unload).
+    /// Type of action as defined by VDA 5050 (e.g., pick, drop, startCharging) or a vehicle-specific custom action.
+    /// Only pick, drop and startCharging are currently mapped to routing actions; other values are ignored.
     /// </summary>
     public string ActionType { get; set; } = string.Empty;
 

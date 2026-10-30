@@ -24,7 +24,7 @@ public class NewGraphRepositoryTestFixture : TransportOrderDbFixture
 
     public static Station CreateStation(Guid id, params Node[] interactionNodes)
     {
-        var station = new Station(id, StationName, StationName, 0, 0, 0, 0, interactionNodes.Select(n => n.Id).ToList());
+        var station = new Station(id, StationName, StationName, StationName, 0, 0, 0, 0, interactionNodes.Select(n => n.Id).ToList());
 
         return station;
     }

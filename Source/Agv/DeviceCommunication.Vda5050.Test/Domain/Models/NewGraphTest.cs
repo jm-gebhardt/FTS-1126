@@ -1,3 +1,4 @@
+using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.LIF.LifToGraphConversion;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Test.Helper.Graph;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -34,7 +35,7 @@ public class NewGraphTest
             DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.EndNodeId),
             DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.StartNodeId, DomainLifGenerator.OtherLayoutId),
             DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.EndNodeId, DomainLifGenerator.OtherLayoutId)
-        ], ignoreOrder: true);
+        ], true);
     }
 
     [TestMethod]
@@ -63,5 +64,30 @@ public class NewGraphTest
         var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, DomainLifGenerator.AgvTypeIdentifiers, NullLogger.Instance);
 
         graph.Nodes.ShouldAllBe(n => n.LevelId == DomainLifGenerator.LevelId);
+    }
+
+    [TestMethod]
+    public void ConvertToGraph_NodeActions_MapsPickDropAndStartChargingToRoutingNodeActions()
+    {
+        string[] actionTypes = [DomainLifGenerator.StartChargingAction, DomainLifGenerator.DropAction, DomainLifGenerator.StopChargingAction, DomainLifGenerator.PickAction];
+        var layoutCollection = DomainLifGenerator.GenerateCollection(DomainLifGenerator.GenerateLayout(startNodeActionTypes: actionTypes));
+
+        var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, DomainLifGenerator.AgvTypeIdentifiers, NullLogger.Instance);
+
+        var startNode = graph.Nodes.Single(n => n.Id == DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.StartNodeId));
+        startNode.RoutingNodes.ShouldNotBeEmpty();
+        startNode.RoutingNodes.ShouldAllBe(r => r.Actions.SequenceEqual(new[] { RoutingActionType.Pick, RoutingActionType.Drop, RoutingActionType.Charge }));
+    }
+
+    [TestMethod]
+    public void ConvertToGraph_NoNodeActions_RoutingNodesHaveNoActions()
+    {
+        var layoutCollection = DomainLifGenerator.GenerateCollection(DomainLifGenerator.GenerateLayout(startNodeActionTypes: []));
+
+        var graph = LifToGraphConverter.ToGraphSegment(layoutCollection, DomainLifGenerator.AgvTypeIdentifiers, NullLogger.Instance);
+
+        var startNode = graph.Nodes.Single(n => n.Id == DomainLifGenerator.GenerateInternalNodeId(DomainLifGenerator.StartNodeId));
+        startNode.RoutingNodes.ShouldNotBeEmpty();
+        startNode.RoutingNodes.ShouldAllBe(r => r.Actions.Count == 0);
     }
 }

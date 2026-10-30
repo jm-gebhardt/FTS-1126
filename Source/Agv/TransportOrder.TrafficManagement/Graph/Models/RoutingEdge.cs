@@ -1,13 +1,11 @@
 ﻿using Gebhardt.Acc.Common.Domain.Models.NewGraph;
 using Gebhardt.Acc.TransportOrder.Domain.Models.AgvTypes;
-using JetBrains.Annotations;
 
 namespace Gebhardt.Acc.TransportOrder.TrafficManagement.Graph.Models;
 
 /// <summary>
 /// An edge in the routing graph. Each routing edge connects two routing nodes and represents a possible transition between them.
 /// </summary>
-[PublicAPI]
 public class RoutingEdge : RoutingResource
 {
     /// <summary>
@@ -41,7 +39,7 @@ public class RoutingEdge : RoutingResource
     public double? RotationAtStart { get; }
 
     /// <summary>
-    /// Rotation at the start of the edge in [rad]. If null, there is no specific rotation before traversing this edge.
+    /// Rotation at the end of the edge in [rad]. If null, there is no specific rotation before traversing this edge.
     /// </summary>
     public double? RotationAtEnd { get; }
 
@@ -64,6 +62,8 @@ public class RoutingEdge : RoutingResource
     /// Optional trajectory associated with this edge. If null, the edge does not have a specific trajectory defined.
     /// </summary>
     public Trajectory? Trajectory { get; }
+    
+    public override string Description => $"{StartNode.Description} -> {EndNode.Description}";
 
     /// <inheritdoc cref="RoutingEdge"/>
     public RoutingEdge(
@@ -94,5 +94,10 @@ public class RoutingEdge : RoutingResource
         MaxSpeed = maxSpeed;
         MaxRotationSpeed = maxRotationSpeed;
         Trajectory = trajectory;
+    }
+
+    public override string ToString()
+    {
+        return $"{nameof(RoutingEdge)} {StartNode} -> {EndNode}, Length={Length:f3}";
     }
 }

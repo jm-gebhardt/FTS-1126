@@ -85,6 +85,11 @@ public record AgvAction : CorrelatedBy<Guid>, IParentedBy<Guid>, ISaga
     public bool IsSkipped { get; set; }
 
     /// <summary>
+    /// Incremented each time the action is updated on the agv while it runs.
+    /// </summary>
+    public int Revision { get; init; }
+
+    /// <summary>
     /// Information that will be sent to the agv.
     /// </summary>
     public Dictionary<InfoToAgvKey, string>? InfoToAgv { get; set; }
