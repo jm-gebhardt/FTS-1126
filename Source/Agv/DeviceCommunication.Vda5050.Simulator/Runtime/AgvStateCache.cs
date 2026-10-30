@@ -1,0 +1,31 @@
+﻿using System.Collections.Concurrent;
+using DeviceCommunication.Vda5050.Simulator.Domain;
+
+namespace DeviceCommunication.Vda5050.Simulator.Runtime;
+
+public sealed class AgvStateCache : IAgvStateCache
+{
+    private readonly ConcurrentDictionary<Guid, (AgvIdentity Id, AgvStateSnapshot Snapshot)> _states = new();
+
+    public void Set(AgvIdentity id, AgvStateSnapshot snapshot)
+    {
+        _states.AddOrUpdate(
+            id.Id,
+            _ => (id, snapshot),
+            (_, existing) => snapshot.HeaderId >= existing.Snapshot.HeaderId ? (id, snapshot) : existing);
+    }
+
+    public bool TryGet(Guid correlationId, out AgvIdentity? id, out AgvStateSnapshot snapshot)
+    {
+        if (_states.TryGetValue(correlationId, out var entry))
+        {
+            id = entry.Id;
+            snapshot = entry.Snapshot;
+            return true;
+        }
+
+        id = null;
+        snapshot = null!;
+        return false;
+    }
+}
