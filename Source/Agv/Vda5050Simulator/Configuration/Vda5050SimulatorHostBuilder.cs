@@ -9,6 +9,7 @@ using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Utilities;
 using Gebhardt.Acc.Common.WebApi.Constants;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Middleware;
+using Gebhardt.Acc.Vda5050Simulator.WebApi.Endpoints;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -42,8 +43,10 @@ public static class Vda5050SimulatorHostBuilder
             .ConfigureServices((context, services) =>
             {
                 services.AddScoped<ExceptionHandlerMiddleware>();
-                services.AddControllers()
-                    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Insert(0, new AnnotatedEnumConverterFactory()); });
+                services.ConfigureHttpJsonOptions(options => { options.SerializerOptions.Converters.Insert(0, new AnnotatedEnumConverterFactory()); });
+                services.AddCors();
+                services.AddEndpointsApiExplorer();
+                services.AddValidation();
                 services.AddHealthChecks();
 
                 var keycloak = context.Configuration.GetSection("KEYCLOAK");
@@ -140,7 +143,8 @@ public static class Vda5050SimulatorHostBuilder
                         app.UseAuthorization();
                         app.UseEndpoints(endpoints =>
                         {
-                            endpoints.MapControllers();
+                            endpoints.MapAgvTypeConfigurationEndpoints();
+                                                        endpoints.MapSimulatedAgvEndpoints();
                             endpoints.MapHub<SimulatedAgvStateHub>(SimulatedAgvStateHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
                             endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions { Predicate = _ => true });
                             endpoints.MapHealthChecks(HealthDetailedEndpoint, new HealthCheckOptions
