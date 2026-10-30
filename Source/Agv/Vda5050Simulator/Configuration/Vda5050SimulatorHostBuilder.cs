@@ -19,6 +19,7 @@ using Gebhardt.Acc.Vda5050Simulator.Messaging;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Hubs;
 using Prometheus;
+using RabbitMQ.Client;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -47,7 +48,14 @@ public static class Vda5050SimulatorHostBuilder
                 services.AddCors();
                 services.AddEndpointsApiExplorer();
                 services.AddValidation();
-                services.AddHealthChecks();
+                services.AddSingleton<IConnection>(sp =>
+                {
+                    var factory = new ConnectionFactory { Uri = new Uri(sp.GetRequiredService<MassTransitConfiguration>().Url.ToString()) };
+                    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+                });
+                services.AddHealthChecks()
+                    .AddDbContextCheck<Vda5050SimulatorDbContext>()
+                    .AddRabbitMQ();
 
                 var keycloak = context.Configuration.GetSection("KEYCLOAK");
                 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -169,7 +169,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Vda5050
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransportOrder.TrafficManagement", "TransportOrder.TrafficManagement\TransportOrder.TrafficManagement.csproj", "{4577A43C-86C9-6715-A79F-E5C1F7D468AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vda5050Simulator", "Vda5050Simulator\Vda5050Simulator.csproj", "{02A5E4DA-8C67-58EC-B783-DF00C5A9B013}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeviceCommunication.Vda5050.Simulator", "Vda5050Simulator\DeviceCommunication.Vda5050.Simulator.csproj", "{4FAF513A-D861-2CA5-A5A0-AC9461D7B378}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -457,10 +457,10 @@ Global
 		{4577A43C-86C9-6715-A79F-E5C1F7D468AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4577A43C-86C9-6715-A79F-E5C1F7D468AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4577A43C-86C9-6715-A79F-E5C1F7D468AD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{02A5E4DA-8C67-58EC-B783-DF00C5A9B013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{02A5E4DA-8C67-58EC-B783-DF00C5A9B013}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{02A5E4DA-8C67-58EC-B783-DF00C5A9B013}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{02A5E4DA-8C67-58EC-B783-DF00C5A9B013}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FAF513A-D861-2CA5-A5A0-AC9461D7B378}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FAF513A-D861-2CA5-A5A0-AC9461D7B378}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FAF513A-D861-2CA5-A5A0-AC9461D7B378}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FAF513A-D861-2CA5-A5A0-AC9461D7B378}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -537,7 +537,6 @@ Global
 		{9F9D4B28-CEE0-4916-A956-D9AC22503ECA} = {896EEA92-CFB5-4A39-812A-E47E038AFF65}
 		{AE5C4E5B-931D-4D6B-B5FF-8A9F04C2D441} = {49E5CFD7-5AF0-43F7-A6CF-DB58A76BCEC9}
 		{4577A43C-86C9-6715-A79F-E5C1F7D468AD} = {25F449AB-5656-4B35-8D64-AECF2E04E57A}
-		{02A5E4DA-8C67-58EC-B783-DF00C5A9B013} = {FB55BE42-2305-4398-A4F7-1B839AFFF3FA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8AF26A4-DDC8-432C-9E5A-C27502C1D249}
