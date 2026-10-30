@@ -304,7 +304,8 @@ public sealed class AgvModel
             _errors.ToList(),
             new AgvPosition(_x, _y, _theta, _mapId, _positionInitialized),
             _operatingMode,
-            _loads.ToList());
+            _loads.ToList(),
+            new Velocity(Driving && _activeEdgeSequenceId >= 0 ? _edgeSpeed : 0, 0, 0));
     }
 
     private OrderResult TryStartOrder(Order order)

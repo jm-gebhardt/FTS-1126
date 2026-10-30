@@ -51,6 +51,9 @@ public static class Vda5050StateDtoMapper
                     ActionStatus = (ActionStatusDto)(int)a.Status
                 })
                 .ToList(),
+
+            Velocity = new VelocityDto { Vx = snapshot.Velocity.Vx, Vy = snapshot.Velocity.Vy, Omega = snapshot.Velocity.Omega },
+
             BatteryState = new BatteryStateDto { BatteryCharge = snapshot.BatteryCharge, Charging = snapshot.Charging },
             Errors = snapshot.Errors
                 .Select(e => new ErrorDto

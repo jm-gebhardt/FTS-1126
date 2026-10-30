@@ -8,6 +8,16 @@ internal sealed class MqttSettings
     public string Host { get; init; } = "127.0.0.1";
     
     public int Port { get; init; } = 1883;
+
+    public bool UseTls { get; init; }
+
+    public bool AllowUntrustedCertificates { get; init; }
+
+    public string CaFile { get; init; } = string.Empty;
+
+    public string ClientCertFile { get; init; } = string.Empty;
+
+    public string ClientKeyFile { get; init; } = string.Empty;
     
     public string Username { get; init; } = string.Empty;
     
@@ -64,12 +74,50 @@ internal static class Program
         var factory = new MqttClientFactory();
         using var client = factory.CreateMqttClient();
 
-        var options = new MqttClientOptionsBuilder()
+        var optionsBuilder = new MqttClientOptionsBuilder()
             .WithTcpServer(mqtt.Host, mqtt.Port)
             .WithCredentials(mqtt.Username, mqtt.Password)
+            .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V311)
             .WithClientId(mqtt.ClientId)
-            .WithCleanSession()
-            .Build();
+            .WithCleanSession();
+
+        if (mqtt.UseTls)
+        {
+            var certificates = new List<System.Security.Cryptography.X509Certificates.X509Certificate2>();
+            if (!string.IsNullOrWhiteSpace(mqtt.ClientCertFile))
+            {
+                var clientCert = string.IsNullOrWhiteSpace(mqtt.ClientKeyFile)
+                    ? System.Security.Cryptography.X509Certificates.X509Certificate2.CreateFromPemFile(mqtt.ClientCertFile)
+                    : System.Security.Cryptography.X509Certificates.X509Certificate2.CreateFromPemFile(mqtt.ClientCertFile, mqtt.ClientKeyFile);
+                // re-import so the private key is usable by SChannel
+                certificates.Add(System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12(
+                    clientCert.Export(System.Security.Cryptography.X509Certificates.X509ContentType.Pfx), null));
+            }
+
+            System.Security.Cryptography.X509Certificates.X509Certificate2? ca = string.IsNullOrWhiteSpace(mqtt.CaFile)
+                ? null
+                : System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadCertificateFromFile(mqtt.CaFile);
+
+            optionsBuilder.WithTlsOptions(o =>
+            {
+                o.UseTls();
+                if (certificates.Count > 0)
+                {
+                    o.WithClientCertificates(certificates);
+                }
+
+                if (mqtt.AllowUntrustedCertificates)
+                {
+                    o.WithCertificateValidationHandler(_ => true);
+                }
+                else if (ca != null)
+                {
+                    o.WithTrustChain(new System.Security.Cryptography.X509Certificates.X509Certificate2Collection(ca));
+                }
+            });
+        }
+
+        var options = optionsBuilder.Build();
 
         var subscribeOptions = factory.CreateSubscribeOptionsBuilder()
             .WithTopicFilter(mqtt.Topic)

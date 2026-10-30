@@ -56,12 +56,15 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
             LastNodeSequenceId = snapshot.LastNodeSequenceId,
             Driving = snapshot.Driving,
             OperatingMode = Enum.Parse<MqttOperatingMode>(snapshot.OperatingMode.ToString()),
-            AgvPosition = snapshot.Position is { } p
-                ? new MqttAgvPosition { X = p.X, Y = p.Y, Theta = p.Theta, MapId = p.MapId, PositionInitialized = p.PositionInitialized }
-                : null,
+
+            AgvPosition = snapshot.Position is { } p ? new MqttAgvPosition { X = p.X, Y = p.Y, Theta = p.Theta, MapId = p.MapId, PositionInitialized = p.PositionInitialized } : null,
+
+            Velocity = new MqttVelocity { Vx = snapshot.Velocity.Vx, Vy = snapshot.Velocity.Vy, Omega = snapshot.Velocity.Omega },
+
             Loads = snapshot.Loads
                 .Select(l => new MqttLoad { LoadId = l.LoadId, LoadType = l.LoadType, LoadPosition = l.LoadPosition })
                 .ToList(),
+
             ActionStates = snapshot.ActionStates
                 .Select(a => new MqttActionState
                 {
@@ -70,7 +73,9 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
                     ActionStatus = Enum.Parse<MqttActionStatus>(a.Status.ToString())
                 })
                 .ToList(),
+
             BatteryState = new MqttBatteryState { BatteryCharge = snapshot.BatteryCharge, Charging = snapshot.Charging },
+
             Errors = snapshot.Errors
                 .Select(e => new MqttError
                 {
@@ -82,14 +87,18 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
                         .ToList()
                 })
                 .ToList(),
+
             NodeStates = snapshot.NodeStates
                 .Select(n => new MqttNodeState { NodeId = n.NodeId, SequenceId = n.SequenceId, Released = n.Released })
                 .ToList(),
+
             EdgeStates = snapshot.EdgeStates
                 .Select(e => new MqttEdgeState { EdgeId = e.EdgeId, SequenceId = e.SequenceId, Released = e.Released })
                 .ToList(),
+
             SafetyState = new MqttSafetyState { EStop = MqttEStop.None, FieldViolation = false }
         };
+
         Enqueue(id, Vda5050Specifications.Subtopics.State, message, retain: false, qualityOfService: 0);
     }
 
