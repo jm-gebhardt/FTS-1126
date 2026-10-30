@@ -61,6 +61,4 @@ public record AgvTypeConfigurationDto
     public int InitialBatteryChargeDeviation { get; init; }
 
     public double MaxSpeed { get; init; }
-
-
 }

@@ -74,7 +74,7 @@ public sealed class FleetHost(ISimulationClock clock, IAgvPublisher publisher, I
         return null;
     }
 
-    public bool TryGetAgv(Guid correlationId, out AgvIdentity id)
+    public bool TryGetAgv(Guid correlationId, out AgvIdentity? id)
     {
         foreach (var actor in _actors.Values)
         {
@@ -84,7 +84,7 @@ public sealed class FleetHost(ISimulationClock clock, IAgvPublisher publisher, I
                 return true;
             }
         }
-        id = default;
+        id = null;
         return false;
     }
 

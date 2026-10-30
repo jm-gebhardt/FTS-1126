@@ -20,7 +20,6 @@ public sealed record OrderResult(OrderDecision Decision, Error? Error = null);
 public sealed class AgvModel
 {
     private const int MaxErrors = 20;
-    private const int NurbsSamples = 50;
     private readonly OrderedDictionary<string, ActionState> _actionStates = new(StringComparer.Ordinal);
     private readonly List<NodeState> _nodeStates = [];
     private readonly List<EdgeState> _edgeStates = [];
@@ -72,7 +71,7 @@ public sealed class AgvModel
 
     public double BatteryCharge { get; private set; } = 100;
 
-    public bool IsCharging { get; private set; }
+    public bool IsCharging { get; } = false;
     
     /// <summary>
     /// True while the AGV still has nodes or edges to traverse or actions that are not finished or failed.
@@ -524,7 +523,7 @@ public sealed class AgvModel
 
         if (edge.Trajectory is { } trajectory)
         {
-            points = trajectory.Sample(NurbsSamples).ToList();
+            points = trajectory.Sample().ToList();
         }
         else
         {

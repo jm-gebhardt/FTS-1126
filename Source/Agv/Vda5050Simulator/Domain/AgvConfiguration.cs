@@ -1,5 +1,3 @@
-using Gebhardt.Acc.Common.Domain.Utilities;
-
 namespace Gebhardt.Acc.Vda5050Simulator.Domain;
 
 public record AgvConfiguration(string Manufacturer, string SeriesName, string SerialNumber) 

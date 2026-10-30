@@ -109,7 +109,7 @@ public sealed class MqttSendQueue(IOptions<MqttOptions> options) : IAgvPublisher
         {
             mqttFactsheet = JsonSerializer.Deserialize<MqttFactsheet>(factsheetJson, SystemTextJsonMessageSerializer.Options);
         }
-        catch (JsonException exception)
+        catch (JsonException)
         {
             return;
         }

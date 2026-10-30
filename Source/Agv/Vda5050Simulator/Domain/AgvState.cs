@@ -38,6 +38,7 @@ public sealed record AgvPosition(double X, double Y, double Theta, string MapId,
 public sealed record Load(string LoadId, string? LoadType, string? LoadPosition);
 
 public sealed record Velocity(double Vx, double Vy, double Omega);
+
 /// <summary>
 /// Immutable view of the AGV state at one point in (virtual) time, ready to be published.
 /// </summary>

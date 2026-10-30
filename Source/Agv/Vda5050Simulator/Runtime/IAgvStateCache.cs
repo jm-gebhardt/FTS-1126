@@ -15,5 +15,5 @@ public interface IAgvStateCache
     /// <summary>
     /// Gets the latest state of the AGV with the given correlation id.
     /// </summary>
-    bool TryGet(Guid correlationId, out AgvIdentity id, out AgvStateSnapshot snapshot);
+    bool TryGet(Guid correlationId, out AgvIdentity? id, out AgvStateSnapshot snapshot);
 }

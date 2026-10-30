@@ -1,10 +1,7 @@
-﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Constants;
-using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
+﻿using Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
 using Gebhardt.Acc.Vda5050Simulator.Domain;
 using Gebhardt.Acc.Vda5050Simulator.Runtime;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTnet;
 using MQTTnet.Protocol;
@@ -156,7 +153,7 @@ public sealed class MqttGateway(IOptions<MqttOptions> options, FleetHost fleet, 
 
     private void OnMessageReceived(string topic, string payload)
     {
-        if (!TopicParser.TryParse(topic, out var id, out string subtopic))
+        if (!TopicParser.TryParse(topic, out var id, out string subtopic) || id == null)
         {
             logger.LogWarning("Ignoring message on unexpected topic {Topic}", topic);
             return;

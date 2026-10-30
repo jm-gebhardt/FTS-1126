@@ -15,7 +15,7 @@ public sealed class AgvStateCache : IAgvStateCache
             (_, existing) => snapshot.HeaderId >= existing.Snapshot.HeaderId ? (id, snapshot) : existing);
     }
 
-    public bool TryGet(Guid correlationId, out AgvIdentity id, out AgvStateSnapshot snapshot)
+    public bool TryGet(Guid correlationId, out AgvIdentity? id, out AgvStateSnapshot snapshot)
     {
         if (_states.TryGetValue(correlationId, out var entry))
         {
@@ -24,7 +24,7 @@ public sealed class AgvStateCache : IAgvStateCache
             return true;
         }
 
-        id = default;
+        id = null;
         snapshot = null!;
         return false;
     }

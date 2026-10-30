@@ -1,6 +1,4 @@
 using Gebhardt.Acc.Vda5050Simulator.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Runtime;

@@ -3,12 +3,9 @@ using Gebhardt.Acc.Common.WebApi;
 using Gebhardt.Acc.Common.WebApi.Swagger;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Controllers;
 using Gebhardt.Acc.Vda5050Simulator.WebApi.Hubs;
-using Gebhardt.Acc.Vda5050Simulator.WebApi.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Gebhardt.Acc.Vda5050Simulator.Configuration;
 
@@ -39,7 +36,7 @@ public static class SwaggerExtensions
             options.SupportNonNullableReferenceTypes();
             options.UseAllOfToExtendReferenceSchemas();
             options.UseAllOfForInheritance();
-            options.CustomSchemaIds(Gebhardt.Acc.Vda5050Simulator.WebApi.Swagger.CustomSchemaSelector.GetSchemaId);
+            options.CustomSchemaIds(WebApi.Swagger.CustomSchemaSelector.GetSchemaId);
             options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
             {
                 In = ParameterLocation.Header,
@@ -70,7 +67,7 @@ public static class SwaggerExtensions
             {
                 if (request.Headers.TryGetValue("X-Forwarded-Prefix", out var serverPath))
                 {
-                    swaggerDoc.Servers = new List<Microsoft.OpenApi.OpenApiServer>
+                    swaggerDoc.Servers = new List<OpenApiServer>
                     {
                         new() { Description = "Server behind Proxy", Url = serverPath }
                     };

@@ -44,7 +44,7 @@ public static class SimulatedAgvEndpoints
 
     private static IResult SwitchOperatingMode(Guid correlationId, AgvOperatingMode operatingMode, FleetHost fleet)
     {
-        if (!fleet.TryGetAgv(correlationId, out var id))
+        if (!fleet.TryGetAgv(correlationId, out var id) || id == null)
         {
             return TypedResults.NotFound();
         }
@@ -55,7 +55,7 @@ public static class SimulatedAgvEndpoints
 
     private static async Task<IResult> SetToPosition(Guid correlationId, AgvPositionDto position, FleetHost fleet, CancellationToken cancellationToken)
     {
-        if (!fleet.TryGetAgv(correlationId, out var id))
+        if (!fleet.TryGetAgv(correlationId, out var id) || id == null)
         {
             return TypedResults.NotFound();
         }
@@ -66,7 +66,7 @@ public static class SimulatedAgvEndpoints
 
     private static async Task<IResult> AddLoad(Guid correlationId, AddLoadDto load, FleetHost fleet, CancellationToken cancellationToken)
     {
-        if (!fleet.TryGetAgv(correlationId, out var id))
+        if (!fleet.TryGetAgv(correlationId, out var id)|| id == null)
         {
             return TypedResults.NotFound();
         }
@@ -77,7 +77,7 @@ public static class SimulatedAgvEndpoints
 
     private static async Task<IResult> RemoveLoad(Guid correlationId, string loadId, FleetHost fleet, CancellationToken cancellationToken)
     {
-        if (!fleet.TryGetAgv(correlationId, out var id))
+        if (!fleet.TryGetAgv(correlationId, out var id) || id == null)
         {
             return TypedResults.NotFound();
         }
@@ -88,7 +88,7 @@ public static class SimulatedAgvEndpoints
 
     private static IResult GetState(Guid correlationId, IAgvStateCache stateCache, IOptions<MqttOptions> mqttOptions)
     {
-        if (!stateCache.TryGet(correlationId, out var id, out var state))
+        if (!stateCache.TryGet(correlationId, out var id, out var state) || id == null)
         {
             return TypedResults.NotFound();
         }

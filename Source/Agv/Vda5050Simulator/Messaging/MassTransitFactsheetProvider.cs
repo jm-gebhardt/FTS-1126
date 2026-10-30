@@ -16,7 +16,7 @@ public sealed class MassTransitFactsheetProvider(IBus bus, ILogger<MassTransitFa
 
     public async Task<string?> GetAsync(AgvIdentity agvIdentity, CancellationToken cancellationToken)
     {
-        if (_cache.TryGetValue(agvIdentity.AgvTypeIdentifier, out var cached))
+        if (_cache.TryGetValue(agvIdentity.AgvTypeIdentifier, out string? cached))
         {
             return cached;
         }
