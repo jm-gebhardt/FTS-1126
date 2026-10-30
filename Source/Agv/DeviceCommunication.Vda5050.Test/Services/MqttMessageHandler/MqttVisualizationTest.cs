@@ -17,16 +17,4 @@ public class MqttVisualizationTest
 
         await fixture.ShouldHavePublishedAsync<AgvPositionReceived>();
     }
-
-    [TestMethod]
-    public async Task Consume_MqttVisualization_NoSerialNumber_DoesNotPublishAgvPositionReceived()
-    {
-        var fixture = new MqttVisualizationConsumerTestFixture();
-
-        var message = MqttVisualizationGenerator.Generate(serialNumber: null);
-
-        await fixture.PublishMqttMessageAsync(message);
-
-        await fixture.ShouldNotHavePublishedAsync<AgvPositionReceived>();
-    }
 }

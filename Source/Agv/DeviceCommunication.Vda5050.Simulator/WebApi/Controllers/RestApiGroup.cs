@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.WebApi.Swagger;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Controllers;
+namespace DeviceCommunication.Vda5050.Simulator.WebApi.Controllers;
 
 /// <summary>
 /// Api Group for REST

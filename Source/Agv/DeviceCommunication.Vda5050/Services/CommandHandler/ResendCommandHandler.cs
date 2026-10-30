@@ -48,7 +48,7 @@ public class ResendCommandHandler(
            [
                new MqttInstantAction
                 {
-                    ActionType = Vda5050Specifications.ActionTypes.RequestFactsheet,
+                    ActionType = Vda5050Specifications.ActionTypes.FactsheetRequest,
                     ActionId = Guid.NewGuid().ToString(),
                     BlockingType = BlockingType.NONE
                 }

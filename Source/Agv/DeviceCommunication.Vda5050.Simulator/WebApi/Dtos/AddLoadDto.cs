@@ -1,11 +1,8 @@
-using JetBrains.Annotations;
-
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
+namespace DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
 
 /// <summary>
 /// Provides a dto for adding a load to an agv.
 /// </summary>
-[PublicAPI]
 public record AddLoadDto
 {
     /// <summary>

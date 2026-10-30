@@ -1,20 +1,19 @@
-using Gebhardt.Acc.Common.Messages;
-using JetBrains.Annotations;
-
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
+﻿
+namespace DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
 
 /// <summary>
 /// VDA5050 state of a simulated agv.
 /// </summary>
-[PublicAPI]
-public record Vda5050StateDto : IMessageCreatedDate
+public record Vda5050StateDto
 {
     /// <summary>
     /// Correlation id of the agv this state belongs to.
     /// </summary>
     public Guid CorrelationId { get; init; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Creation date of the message.
+    /// </summary>
     public DateTime MessageCreatedDate { get; init; }
 
     /// <summary>
@@ -153,7 +152,6 @@ public record Vda5050StateDto : IMessageCreatedDate
 /// <summary>
 /// Current operating mode of the AGV.
 /// </summary>
-[PublicAPI]
 public enum OperatingModeDto
 {
     /// <summary/>
@@ -175,7 +173,6 @@ public enum OperatingModeDto
 /// <summary>
 /// Map-object that is currently stored on the vehicle.
 /// </summary>
-[PublicAPI]
 public record MapDto
 {
     /// <summary>
@@ -202,7 +199,6 @@ public record MapDto
 /// <summary>
 /// Information on the status of the map.
 /// </summary>
-[PublicAPI]
 public enum MapStatusDto
 {
     /// <summary>
@@ -219,7 +215,6 @@ public enum MapStatusDto
 /// <summary>
 /// State of a node that needs to be traversed for fulfilling the order.
 /// </summary>
-[PublicAPI]
 public record NodeStateDto
 {
     /// <summary>
@@ -252,7 +247,6 @@ public record NodeStateDto
 /// <summary>
 /// Position of a node on the map.
 /// </summary>
-[PublicAPI]
 public record NodePositionDto
 {
     /// <summary>X coordinate in meters.</summary>
@@ -271,7 +265,6 @@ public record NodePositionDto
 /// <summary>
 /// State of an edge that needs to be traversed for fulfilling the order.
 /// </summary>
-[PublicAPI]
 public record EdgeStateDto
 {
     /// <summary>
@@ -304,7 +297,6 @@ public record EdgeStateDto
 /// <summary>
 /// Trajectory described as a NURBS.
 /// </summary>
-[PublicAPI]
 public record TrajectoryDto
 {
     /// <summary>
@@ -326,7 +318,6 @@ public record TrajectoryDto
 /// <summary>
 /// Control point of a NURBS trajectory.
 /// </summary>
-[PublicAPI]
 public record ControlPointDto
 {
     /// <summary>X coordinate in meters.</summary>
@@ -344,7 +335,6 @@ public record ControlPointDto
 /// <summary>
 /// Load that is currently handled by the AGV.
 /// </summary>
-[PublicAPI]
 public record LoadDto
 {
     /// <summary>
@@ -379,7 +369,6 @@ public record LoadDto
 /// <summary>
 /// Point of reference for the location of a bounding box in AGV coordinate system.
 /// </summary>
-[PublicAPI]
 public record BoundingBoxReferenceDto
 {
     /// <summary>X coordinate in meters.</summary>
@@ -400,7 +389,6 @@ public record BoundingBoxReferenceDto
 /// <summary>
 /// Dimensions of a load's bounding box.
 /// </summary>
-[PublicAPI]
 public record LoadDimensionsDto
 {
     /// <summary>Absolute length of the load's bounding box in meters.</summary>
@@ -416,7 +404,6 @@ public record LoadDimensionsDto
 /// <summary>
 /// State of an action that is currently being executed or waiting for execution.
 /// </summary>
-[PublicAPI]
 public record ActionStateDto
 {
     /// <summary>
@@ -448,7 +435,6 @@ public record ActionStateDto
 /// <summary>
 /// State of an action.
 /// </summary>
-[PublicAPI]
 public enum ActionStatusDto
 {
     /// <summary>Waiting for the trigger (passing the node, entering the edge).</summary>
@@ -473,7 +459,6 @@ public enum ActionStatusDto
 /// <summary>
 /// Contains all battery-related information.
 /// </summary>
-[PublicAPI]
 public record BatteryStateDto
 {
     /// <summary>
@@ -505,7 +490,6 @@ public record BatteryStateDto
 /// <summary>
 /// Error reported by the AGV.
 /// </summary>
-[PublicAPI]
 public record ErrorDto
 {
     /// <summary>
@@ -537,7 +521,6 @@ public record ErrorDto
 /// <summary>
 /// Reference to provide more information related to an error.
 /// </summary>
-[PublicAPI]
 public record ErrorReferenceDto
 {
     /// <summary>
@@ -554,7 +537,6 @@ public record ErrorReferenceDto
 /// <summary>
 /// Severity level of an error.
 /// </summary>
-[PublicAPI]
 public enum ErrorLevelDto
 {
     /// <summary>AGV is ready to start (e.g., maintenance cycle expiration warning).</summary>
@@ -567,7 +549,6 @@ public enum ErrorLevelDto
 /// <summary>
 /// Information reported by the AGV for visualization or debugging purposes.
 /// </summary>
-[PublicAPI]
 public record InformationDto
 {
     /// <summary>
@@ -594,7 +575,6 @@ public record InformationDto
 /// <summary>
 /// Reference related to an information object.
 /// </summary>
-[PublicAPI]
 public record InfoReferenceDto
 {
     /// <summary>
@@ -611,7 +591,6 @@ public record InfoReferenceDto
 /// <summary>
 /// Level of an information object.
 /// </summary>
-[PublicAPI]
 public enum InfoLevelDto
 {
     /// <summary>Used for visualization.</summary>
@@ -624,7 +603,6 @@ public enum InfoLevelDto
 /// <summary>
 /// Contains all safety-related information.
 /// </summary>
-[PublicAPI]
 public record SafetyStateDto
 {
     /// <summary>
@@ -641,7 +619,6 @@ public record SafetyStateDto
 /// <summary>
 /// Acknowledge type of an e-stop.
 /// </summary>
-[PublicAPI]
 public enum EStopDto
 {
     /// <summary>Auto-acknowledgeable e-stop is activated, e.g., by bumper or protective field.</summary>
@@ -660,7 +637,6 @@ public enum EStopDto
 /// <summary>
 /// Current position of the AGV on a map in world coordinates.
 /// </summary>
-[PublicAPI]
 public record Vda5050AgvPositionDto
 {
     /// <summary>X coordinate in meters.</summary>
@@ -697,7 +673,6 @@ public record Vda5050AgvPositionDto
 /// <summary>
 /// The AGV's velocity in vehicle coordinates.
 /// </summary>
-[PublicAPI]
 public record VelocityDto
 {
     /// <summary>The AGV's velocity in its x direction.</summary>

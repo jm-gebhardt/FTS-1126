@@ -97,7 +97,7 @@ public class OrderExecutionStateMachineTest
 
         // 2) Receive first status from agv
         var saga = fixture.GetSaga(startOrderCommand.CorrelationId);
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.ValidationError, [new ErrorReference { ReferenceKey = "Validation", ReferenceValue = "Failed for reason xy" }]);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.ValidationError, [new ErrorReference { ReferenceKey = "Validation", ReferenceValue = "Failed for reason xy" }]);
         var status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId, status));
@@ -123,7 +123,7 @@ public class OrderExecutionStateMachineTest
         saga.CurrentState.Name.ShouldBe(nameof(OrderExecutionStateMachine.Running));
 
         // AGV reports an orderError (e.g., AGV got stuck)
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.OrderError,
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.OrderError,
             [new ErrorReference { ReferenceKey = "reason", ReferenceValue = "AGV stuck" }]);
         await fixture.PublishMessageAsync(new OrderStateReceived(startOrderCommand.CorrelationId,
             OrderGenerator.GenerateOrderState(order.OrderId, 0, 2, false, errors: [error])));

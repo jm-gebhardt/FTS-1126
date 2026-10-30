@@ -227,7 +227,7 @@ public class StateParser(ILogger logger, IMapper mapper)
             OrderUpdateId = state.OrderUpdateId,
             LastNodeSequenceId = state.LastNodeSequenceId,
             NewBaseRequest = state.NewBaseRequest,
-            Errors = AgvErrors?.Where(e => Vda5050Specifications.OrderErrors.IsOrderError(e.ErrorType)).ToList() ?? [],
+            Errors = AgvErrors?.Where(e => Vda5050Specifications.ErrorTypes.IsOrderError(e.ErrorType)).ToList() ?? [],
             ActionStates = mapper.Map<List<OrderActionState>>(state.ActionStates)
         };
     }

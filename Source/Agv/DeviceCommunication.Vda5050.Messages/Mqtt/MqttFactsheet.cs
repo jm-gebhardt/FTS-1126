@@ -14,34 +14,8 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Messages.Mqtt;
 [PublicAPI]
 [EntityName("amq.topic")] // Specifies the RabbitMq exchange where the message is published
 [RoutingKey("*.*.*.*.factsheet")] // Specifies the topic where subscribers can receive the message
-public record MqttFactsheet
+public record MqttFactsheet: MqttHeader
 {
-    /// <summary>
-    /// HeaderId of the message.
-    /// The headerId is defined per topic and incremented by 1 with each sent (but not necessarily received) message.
-    /// </summary>
-    public int HeaderId { get; set; }
-
-    /// <summary>
-    /// Timestamp in ISO8601 format (YYYY-MM-DDTHH:mm:ss.ffZ).
-    /// </summary>
-    public DateTimeOffset Timestamp { get; set; }
-
-    /// <summary>
-    /// Version of the VD[M]A-5050 protocol [Major].[Minor].[Patch].
-    /// </summary>
-    public string Version { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Manufacturer of the AGV.
-    /// </summary>
-    public string Manufacturer { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Serial number of the AGV.
-    /// </summary>
-    public string SerialNumber { get; set; } = string.Empty;
-
     /// <summary>
     /// General classification and capabilities of the AGV.
     /// </summary>

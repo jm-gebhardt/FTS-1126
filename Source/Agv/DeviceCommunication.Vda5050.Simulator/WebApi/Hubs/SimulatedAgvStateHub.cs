@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Hubs;
+namespace DeviceCommunication.Vda5050.Simulator.WebApi.Hubs;
 
 /// <summary>
-/// Hub for simulated agv VDA5050 state.
+/// Hub for simulated agv state.
 /// </summary>
 [Authorize]
 public class SimulatedAgvStateHub : Hub<ISimulatedAgvStateClient>

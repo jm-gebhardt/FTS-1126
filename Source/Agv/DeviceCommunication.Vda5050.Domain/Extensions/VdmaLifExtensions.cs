@@ -242,7 +242,7 @@ public static class VdmaLifExtensions
             return new Trajectory(
                 controlPoints: trajectory.ControlPoints.Select(cp => cp.ToControlPoint()).ToArray(),
                 knotVector: trajectory.KnotVector,
-                degree: trajectory.Degree
+                degree: (int?)trajectory.Degree
             );
         }
     }

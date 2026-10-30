@@ -1,11 +1,8 @@
-﻿using JetBrains.Annotations;
-
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
+namespace DeviceCommunication.Vda5050.Simulator.WebApi.Dtos;
 
 /// <summary>
 /// Provides a dto for agv positions.
 /// </summary>
-[PublicAPI]
 public record AgvPositionDto
 {
     /// <summary>

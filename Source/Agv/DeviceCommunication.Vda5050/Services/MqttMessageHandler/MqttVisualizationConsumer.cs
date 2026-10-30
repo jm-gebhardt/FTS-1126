@@ -20,7 +20,7 @@ public class MqttVisualizationConsumer(ILogger<MqttVisualizationConsumer> logger
     public async Task Consume(ConsumeContext<MqttVisualization> context)
     {
         var mqttPosition = context.Message.AgvPosition;
-        string? serialNumber = context.Message.SerialNumber;
+        string serialNumber = context.Message.SerialNumber;
         if (string.IsNullOrEmpty(serialNumber))
         {
             logger.LogError("Missing serialNumber in {MessageType} message: {Visualization}", nameof(MqttVisualization), context.Message);

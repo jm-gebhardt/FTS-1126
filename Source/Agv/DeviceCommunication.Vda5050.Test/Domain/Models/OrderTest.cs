@@ -170,7 +170,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Running;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.OrderError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.OrderError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.UpdateState();
@@ -199,7 +199,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Failed;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.ValidationError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.ValidationError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.ValidationFailed.ShouldBeTrue();
@@ -210,7 +210,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Running;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.ValidationError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.ValidationError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.ValidationFailed.ShouldBeFalse();
@@ -221,7 +221,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Failed;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.OrderUpdateError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.OrderUpdateError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.UpdateFailed.ShouldBeTrue();
@@ -232,7 +232,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Created;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.OrderUpdateError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.OrderUpdateError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.UpdateFailed.ShouldBeFalse();
@@ -243,7 +243,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Failed;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.OrderError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.OrderError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.Failed.ShouldBeTrue();
@@ -254,7 +254,7 @@ public class OrderTest
     {
         var order = OrderGenerator.GeneratePickOrder("map/NODE-10", "PS01", 3);
         order.State = State.Created;
-        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.OrderErrors.OrderError);
+        var error = OrderGenerator.GenerateAgvError(Vda5050Specifications.ErrorTypes.OrderError);
         order.Status = OrderGenerator.GenerateOrderState(order.OrderId, 0, 0, false, errors: [error]);
 
         order.Failed.ShouldBeFalse();

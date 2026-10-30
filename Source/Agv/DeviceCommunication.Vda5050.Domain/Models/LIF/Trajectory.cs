@@ -9,7 +9,7 @@ namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Domain.Models.Lif;
 public class Trajectory
 {
     /// <inheritdoc cref="Trajectory"/>
-    public Trajectory(ICollection<ControlPoint> controlPoints, double[] knotVector, long? degree = null)
+    public Trajectory(ICollection<ControlPoint> controlPoints, double[] knotVector, int? degree = null)
     {
         ControlPoints = controlPoints;
         KnotVector = knotVector;
@@ -29,7 +29,7 @@ public class Trajectory
     /// <summary>
     /// Degree of the trajectory curve. Default is 1. Range: [1 ... 3]
     /// </summary>
-    public long? Degree { get; set; }
+    public int? Degree { get; set; }
 
     /// <summary>
     /// Knot vector for the trajectory.

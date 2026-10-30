@@ -28,7 +28,7 @@ public static class Vda5050Specifications
         public const string StopCharging = "stopCharging";
         public const string WaitForTrigger = "waitForTrigger";
         public const string CancelOrder = "cancelOrder";
-        public const string RequestFactsheet = "factsheetRequest";
+        public const string FactsheetRequest = "factsheetRequest";
 
         /// <summary>
         /// True, if the given action type is predefined in Vda5050.
@@ -61,10 +61,17 @@ public static class Vda5050Specifications
     public static class Subtopics
     {
         public const string InstantActions = "instantActions";
+        
         public const string Order = "order";
+        
+        public const string Factsheet = "factsheet";
+
+        public const string Connection = "connection";
+
+        public const string State = "state";
     }
 
-    public static class OrderErrors
+    public static class ErrorTypes
     {
         public const string OrderError = "orderError";
         public const string OrderUpdateError = "orderUpdateError";

@@ -1,7 +1,7 @@
 using Gebhardt.Acc.Common.WebApi.Swagger;
 using JetBrains.Annotations;
 
-namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Hubs;
+namespace DeviceCommunication.Vda5050.Simulator.WebApi.Hubs;
 
 /// <summary>
 /// Api Group for SignalR
