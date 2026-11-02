@@ -48,7 +48,12 @@ parameters:
         rootNamespace: 'Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator'
         dockerImageName: 'gebhardt/fleet-manager/devicecommunication.vda5050.simulator'
         artifactName: 'docker-image-devicecommunication-vda5050-simulator'
-        publishMigrator: false
+        migratorArtifactName: 'migrator-image-devicecommunication-vda5050-simulator'
+        generateMigrationsScript: ''
+        migrationsManifest: 'Source/Agv/DeviceCommunication.Vda5050.Simulator/migrations.json'
+        migrationsOutputPath: 'artifacts/db/migrations/devicecommunication-vda5050-simulator'
+        migrationsArtifactName: 'migrations-devicecommunication-vda5050-simulator'
+        publishMigrator: true
       - serviceName: 'OrderTranslator'
         stagePrefix: 'OrderTranslator'
         servicePublishProject: '$(Build.Repository.LocalPath)/Source/Agv/OrderTranslator/OrderTranslator.csproj'

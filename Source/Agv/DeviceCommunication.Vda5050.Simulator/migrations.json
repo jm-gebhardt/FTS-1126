@@ -1,0 +1,15 @@
+{
+  "$schema": "https://gbsd.io/schemas/migrations.schema.json",
+  "srcRoot": "Source/Agv",
+  "objRoot": "Source/artifacts/obj",
+  "contexts": [
+    {
+      "context": "Vda5050SimulatorDbContext",
+      "providers": [
+        {
+          "project": "DeviceCommunication.Vda5050.Simulator"
+        }
+      ]
+    }
+  ]
+}

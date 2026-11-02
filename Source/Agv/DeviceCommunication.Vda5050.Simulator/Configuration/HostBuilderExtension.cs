@@ -16,6 +16,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.BackgroundServices;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.Services.StateMachines;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -109,7 +110,8 @@ public static class HostBuilderExtension
             {
                 services.AddDbContextFactory<Vda5050SimulatorDbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(Vda5050SimulatorDbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(Vda5050SimulatorDbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<Vda5050SimulatorDbContext>.MigrationTableName);
