@@ -4,7 +4,12 @@ steps:
         dotnet tool uninstall --global JetBrains.ReSharper.GlobalTools
         dotnet tool uninstall --local JetBrains.ReSharper.GlobalTools
         dotnet tool install --local JetBrains.ReSharper.GlobalTools --version 2026.2.3
-        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration)
+        # Use the dotnet SDK's MSBuild (same as restore/build) instead of the auto-detected Visual Studio one,
+        # which cannot resolve references with <UseArtifactsOutput> and reports bogus "Cannot resolve symbol" errors.
+        $dotnetPath = (Get-Command dotnet).Source
+        $sdkVersion = dotnet --version
+        $msbuildPath = Join-Path (Split-Path $dotnetPath) "sdk/$sdkVersion/MSBuild.dll"
+        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json  --no-build --properties:Configuration=$(Build.Configuration) --dotnetcore="$dotnetPath" --toolset-path="$msbuildPath"
         dotnet run $(ResharperDirectory)/check-suggestions.cs
         # Check logs.txt
         $logContent = Get-Content ./resharper-logs.txt
