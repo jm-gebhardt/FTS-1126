@@ -4,21 +4,21 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Gebhardt.Core.Application" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Application.Abstractions" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Application.Testing" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Architecture.Testing" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Domain" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.Application" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Application.Abstractions" Version="10.3.7" />
+    <PackageVersion Include="Gebhardt.Core.Application.Testing" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Architecture.Testing" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Domain" Version="10.8.5" />
     <PackageVersion Include="Gebhardt.Core.EditorConfig" Version="1.2.14" />
-    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.PostgreSql" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.SqlServer" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Hosting" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Logging" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.MassTransit" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Testing" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.Testcontainers" Version="10.2.2" />
-    <PackageVersion Include="Gebhardt.Core.WebApi" Version="10.2.2" />
+    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.PostgreSql" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.EntityFrameworkCore.SqlServer" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Hosting" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Logging" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.MassTransit" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Testing" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.Testcontainers" Version="10.8.5" />
+    <PackageVersion Include="Gebhardt.Core.WebApi" Version="10.8.5" />
     <!-- ====================================== -->
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
