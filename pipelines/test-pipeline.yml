@@ -72,19 +72,12 @@ stages:
         command: build
         projects: '$(SourceDirectory)/$(Build.Target)'
         arguments: '--configuration $(Build.Configuration)'
-    # inspectcode re-analyses all 72 projects from cold without a persisted cache.
-    - task: Cache@2
-      displayName: 'Cache ReSharper analysis'
-      inputs:
-        key: 'jb | "$(Agent.OS)" | "$(ReSharperVersion)" | Source/Agv/CompileAgv.sln.DotSettings'
-        restoreKeys: |
-          jb | "$(Agent.OS)" | "$(ReSharperVersion)"
-          jb | "$(Agent.OS)"
-        path: $(Pipeline.Workspace)/jb-caches
+    # TEMP: ReSharper analysis cache disabled to test whether a stale restored cache
+    # causes the "Cannot resolve symbol" failures on this branch.
     - powershell: |
         echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"
         dotnet tool restore
-        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json --no-build --properties:Configuration=$(Build.Configuration) --caches-home=$(Pipeline.Workspace)/jb-caches
+        dotnet jb inspectcode $(SourceDirectory)/$(Build.Target) --output=resharper-results.json --no-build --properties:Configuration=$(Build.Configuration)
         dotnet run $(ResharperDirectory)/check-suggestions.cs
         # Check logs.txt
         $logContent = Get-Content ./resharper-logs.txt
