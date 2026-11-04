@@ -4,6 +4,8 @@ using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Extensions;
 using Gebhardt.Acc.OrderTranslator.CmdOptions;
 using Gebhardt.Acc.OrderTranslator.Domain.Services;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +34,10 @@ public static class OrderTranslatorHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SimulateOptions? simulateOptions, ILogger initialLogger)
     {
         var hostBuilder = GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddOrderTranslator()
             .ConfigureWebHost(h =>
@@ -48,12 +54,19 @@ public static class OrderTranslatorHostBuilder
                             app.UseDeveloperExceptionPage();
                         }
                         app.UseMetricServer();
+                        
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapHealthProbes();
+                        });
                         app.UseHealthChecks(HealthEndpoint);
                     }));
 
         hostBuilder.ConfigureServices(s =>
         {
             s.ConfigureAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            s.AddRouting();
             s.AddHealthChecks()
                 .AddCheck<StartupHealthCheck>("Startup",  tags: new[] { "ready" });
         });

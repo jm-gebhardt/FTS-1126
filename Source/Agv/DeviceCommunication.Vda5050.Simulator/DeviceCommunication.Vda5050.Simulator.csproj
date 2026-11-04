@@ -6,6 +6,9 @@
   </PropertyGroup>
 	<Import Project="..\SharedProjectSettings.csproj" />
 	<ItemGroup>
+	<PackageReference Include="Gebhardt.Core.Hosting" />
+	<PackageReference Include="Gebhardt.Core.EntityFrameworkCore" />
+	<PackageReference Include="Gebhardt.Core.WebApi" />
 	<PackageReference Include="MassTransit" />
 	<PackageReference Include="JetBrains.Annotations" />
 	<PackageReference Include="FluentValidation" />

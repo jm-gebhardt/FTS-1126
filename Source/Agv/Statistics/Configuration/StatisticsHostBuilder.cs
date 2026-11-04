@@ -2,6 +2,7 @@
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.Statistics.WebApi;
+using Gebhardt.Core.Hosting.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +28,10 @@ public static class StatisticsHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, ILogger initialLogger, string quartzSchedulerId, string quartzSchedulerName)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger)
             .AddStatistics()
             .ConfigureServices((_, services) =>

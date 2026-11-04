@@ -25,6 +25,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
+using Gebhardt.Core.WebApi.Extensions;
 
 namespace Gebhardt.Acc.DeviceCommunication.Vda5050.Simulator.WebApi.Configuration;
 
@@ -193,6 +194,7 @@ public static class WebHostBuilderExtension
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthProbes();
                 endpoints.MapHub<SimulatedAgvStateHub>(SimulatedAgvStateHub.UrlPath, o => { o.AllowStatefulReconnects = true; });
                 endpoints.MapHealthChecks(HealthEndpoint, new HealthCheckOptions
                 {

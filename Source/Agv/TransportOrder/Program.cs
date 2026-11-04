@@ -13,6 +13,20 @@ var initialLogger = InitialLogger.Create<Program>();
 
 try
 {
+    bool swaggerCli = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "SwaggerCli");
+
+    if (swaggerCli)
+    {
+        var swaggerHostBuilder = TransportOrderHostBuilder.CreateHostBuilder(args, new ProductionOptions(), initialLogger, isSimulation: false);
+        swaggerHostBuilder.UseDefaultServiceProvider((_, providerOptions) =>
+        {
+            providerOptions.ValidateScopes = false;
+            providerOptions.ValidateOnBuild = false;
+        });
+
+        _ = swaggerHostBuilder.Build();
+        return 0;
+    }
     ProductionOptions? productionOptions = null;
     SimulationOptions? simulationOptions = null;
     Parser.Default.ParseArguments<ProductionOptions, SimulationOptions>(args)

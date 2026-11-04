@@ -73,13 +73,13 @@ stages:
         projects: '$(SourceDirectory)/$(Build.Target)'
         arguments: '--configuration $(Build.Configuration)'
     # inspectcode re-analyses all 72 projects from cold without a persisted cache.
+    # Exact-key only: a fallback restore of a cache built with a different build layout
+    # (e.g. another branch's Directory.Build.props) leaves stale project models and
+    # produces thousands of bogus "Cannot resolve symbol" errors.
     - task: Cache@2
       displayName: 'Cache ReSharper analysis'
       inputs:
-        key: 'jb | "$(Agent.OS)" | "$(ReSharperVersion)" | Source/Agv/CompileAgv.sln.DotSettings'
-        restoreKeys: |
-          jb | "$(Agent.OS)" | "$(ReSharperVersion)"
-          jb | "$(Agent.OS)"
+        key: 'jb | "$(Agent.OS)" | "$(ReSharperVersion)" | Source/Agv/CompileAgv.sln.DotSettings | Source/Directory.Build.props | Source/Directory.Packages.props'
         path: $(Pipeline.Workspace)/jb-caches
     - powershell: |
         echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/dotnet"

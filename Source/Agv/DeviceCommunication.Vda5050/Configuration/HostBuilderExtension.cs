@@ -18,6 +18,7 @@ using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.DataAccess;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Persistence.Ef.Repositories;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.BackgroundServices;
 using Gebhardt.Acc.DeviceCommunication.Vda5050.Services.StateMachines;
+using Gebhardt.Core.EntityFrameworkCore;
 using MassTransit;
 using MassTransit.Configuration;
 using Microsoft.EntityFrameworkCore;
@@ -96,10 +97,15 @@ public static class HostBuilderExtension
             ConfigurationTypeManager.Instance.InitializeConfigurationTypes();
             hostBuilder.ConfigureServices((context, services) =>
             {
-                services.ConfigureTracing(context.Configuration);
+                if (!context.HostingEnvironment.IsEnvironment("SwaggerCli"))
+                {
+                    services.ConfigureTracing(context.Configuration);
+                }
                 services.AddDbContextFactory<DeviceCommunicationVda5050DbContext>(builder =>
                 {
-                    string? connectionString = context.Configuration.GetConnectionString(DeviceCommunicationVda5050DbContext.ConfigSectionName);
+                    string? connectionString = context.Configuration.GetConnectionString(DbProviders.SqlServer)
+                                               ?? context.Configuration.GetConnectionString(
+                                                   DeviceCommunicationVda5050DbContext.ConfigSectionName);
                     builder.UseSqlServer(connectionString, m =>
                     {
                         m.MigrationsHistoryTable(IDbContext<DeviceCommunicationVda5050DbContext>.MigrationTableName);

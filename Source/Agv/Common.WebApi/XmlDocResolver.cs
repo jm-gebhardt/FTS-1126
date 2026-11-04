@@ -28,7 +28,9 @@ public static class XmlDocResolver
 
             foreach (var m in members)
             {
-                targetMemberElements.Add(m.Attribute("name")!.Value, m);
+                // Use TryAdd to gracefully skip duplicate member entries that may occur
+                // when multiple XML doc files contain the same member.
+                targetMemberElements.TryAdd(m.Attribute("name")!.Value, m);
             }
         }
 

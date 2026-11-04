@@ -2,8 +2,11 @@
 using Gebhardt.Acc.Common.Configurations.SettingsProviders;
 using Gebhardt.Acc.Common.Configurations;
 using Gebhardt.Acc.PrismatCommunication.CmdOptions;
+using Gebhardt.Core.Hosting.Configuration;
+using Gebhardt.Core.WebApi.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Prometheus;
@@ -29,10 +32,15 @@ public static class PrismatCommunicationHostBuilder
     public static IHostBuilder CreateHostBuilder(string[] args, SimulateOptions? simulationOptions, ILogger initialLogger)
     {
         return GebhardtStartup.CreateHostBuilder(args)
+            .ConfigureAppConfiguration((context, conf) =>
+            {
+                conf.AddCoreConfiguration(context.HostingEnvironment.EnvironmentName);
+            })
             .AddMassTransit(initialLogger, simulationOptions)
             .AddPrismatCommunication(simulationOptions, initialLogger)
             .ConfigureServices((_, services) =>
             {
+                services.AddRouting();
                 services.AddQuartz(q =>
                 {
                     q.SchedulerId = QuartzSchedulerId;
@@ -51,6 +59,11 @@ public static class PrismatCommunicationHostBuilder
                     .Configure(app =>
                     {
                         app.UseMetricServer();
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapHealthProbes();
+                        });
                         if (simulationOptions != null)
                         {
                             app.UseDeveloperExceptionPage();
